@@ -1,0 +1,17 @@
+_T=2013-11-27_18:35:11_11782	 echo "This Juliard's School of music graduate has been one of NYC's favorite imports for years." | python unitok.py -l english
+_T=2013-11-27_18:35:47_11782	 echo "This Juliard's School of music graduate has been one of NYC's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:43:46_11782	 python
+_T=2013-11-27_18:43:52_11782	 echo "This Juliard 's School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:43:59_11782	 echo "This Juliard 's School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:44:12_11782	 echo "This Juliard 's School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:45:12_11782	 echo "This Juliard 'am School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:45:26_11782	 echo "This Juliard n't School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:45:47_11782	 echo "This Juliard I'm School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:45:54_11782	 echo "This Juliard I'me School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:46:03_11782	 echo "This Juliard I've School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:48:55_11782	 echo "This Juliard 've School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:49:00_11782	 echo "This Juliard 'e School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:49:05_11782	 echo "This Juliard 's School of music graduate has been one of NYC 's favorite imports for years." | python unitok.py
+_T=2013-11-27_18:50:59_11782	 locate unitok.py
+_T=2013-11-27_18:51:48_11782	 vi /home/siva/SemanticParsing/code/GeoquerySentences/src/unitok.py
+_T=2013-11-27_18:52:12_11782	 vi /home/siva/SemanticParsing/code/FreePar/scripts/cai-yates-preprocessing/unitok.py
