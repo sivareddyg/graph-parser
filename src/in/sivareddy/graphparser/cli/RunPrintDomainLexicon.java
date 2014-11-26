@@ -1,5 +1,21 @@
 package in.sivareddy.graphparser.cli;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.parsing.CreateGroundedLexicon;
+import in.sivareddy.graphparser.util.KnowledgeBase;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -8,23 +24,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
-import in.sivareddy.graphparser.parsing.CreateGroundedLexicon;
-import in.sivareddy.graphparser.util.KnowledgeBase;
 
 public class RunPrintDomainLexicon extends AbstractCli {
 
@@ -42,6 +44,9 @@ public class RunPrintDomainLexicon extends AbstractCli {
   private OptionSpec<String> kbZipFile;
   // output lexicon
   private OptionSpec<String> inputFile;
+
+  // Key from which the semantic parse is read from.
+  private OptionSpec<String> semanticParseKey;
 
   // output lexicon
   private OptionSpec<String> outputLexiconFile;
@@ -91,6 +96,10 @@ public class RunPrintDomainLexicon extends AbstractCli {
         .accepts("inputFile", "Input file which contains ccgParses and entity annotations")
         .withRequiredArg().ofType(String.class).defaultsTo("stdin");
 
+    semanticParseKey = parser
+        .accepts("semanticParseKey", "key from which the semantic parses are read from")
+        .withRequiredArg().ofType(String.class).defaultsTo("synPars");
+
   }
 
   @Override
@@ -123,12 +132,8 @@ public class RunPrintDomainLexicon extends AbstractCli {
           options.valueOf(specialCasesFile));
 
       boolean ignorePronouns = true;
-      CreateGroundedLexicon creator = new CreateGroundedLexicon(kb,
-          ccgAutoLexicon,
-          lexicalFields,
-          argIdentifierFields,
-          relationTypingFeilds,
-          ignorePronouns);
+      CreateGroundedLexicon creator = new CreateGroundedLexicon(kb, ccgAutoLexicon, lexicalFields,
+          argIdentifierFields, relationTypingFeilds, ignorePronouns);
 
       String input = options.valueOf(inputFile);
       BufferedReader br;
@@ -158,8 +163,26 @@ public class RunPrintDomainLexicon extends AbstractCli {
           }
 
           JsonObject jsonSentence = parser.parse(line).getAsJsonObject();
-          List<Set<String>> semanticParses =
-              creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
+
+          String semanticParseKeyString = options.valueOf(semanticParseKey);
+          List<Set<String>> semanticParses;
+          if (semanticParseKeyString == "synPars") {
+            semanticParses = creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
+          } else {
+            if (!jsonSentence.has(semanticParseKeyString))
+              continue;
+            semanticParses = new ArrayList<>();
+            JsonArray semPars = jsonSentence.get(semanticParseKeyString).getAsJsonArray();
+            Set<String> semanticParse = new HashSet<>();
+            for (JsonElement semPar : semPars) {
+              JsonArray predicates = semPar.getAsJsonArray();
+              for (JsonElement predicate : predicates) {
+                semanticParse.add(predicate.getAsString());
+              }
+              semanticParses.add(semanticParse);
+            }
+          }
+
           if (semanticParses.size() == 0) {
             line = br.readLine();
             continue;

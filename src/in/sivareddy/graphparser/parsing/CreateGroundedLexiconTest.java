@@ -1,5 +1,13 @@
 package in.sivareddy.graphparser.parsing;
 
+import com.google.common.collect.Lists;
+
+import org.junit.Test;
+
+import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.parsing.CreateGroundedLexicon.CreateGroundedLexiconRunnable;
+import in.sivareddy.graphparser.util.KnowledgeBase;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -11,13 +19,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import org.junit.Test;
-
-import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
-import in.sivareddy.graphparser.parsing.CreateGroundedLexicon.CreateGroundedLexiconRunnable;
-import in.sivareddy.graphparser.util.KnowledgeBase;
-import com.google.common.collect.Lists;
 
 public class CreateGroundedLexiconTest {
 
@@ -35,15 +36,10 @@ public class CreateGroundedLexiconTest {
     CcgAutoLexicon ccgAutoLexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
         "./data/unary_rules.txt", "./data/binary_rules.txt", "./data/lexicon_specialCases.txt");
     boolean ignorePronouns = true;
-    CreateGroundedLexicon creator = new CreateGroundedLexicon(kb,
-        ccgAutoLexicon,
-        lexicalFields,
-        childIdentifierFields,
-        relationTypingFeilds,
-        ignorePronouns);
+    CreateGroundedLexicon creator = new CreateGroundedLexicon(kb, ccgAutoLexicon, lexicalFields,
+        childIdentifierFields, relationTypingFeilds, ignorePronouns);
 
-    BufferedReader br =
-        new BufferedReader(new FileReader("data/tests/sample_business_sentences.txt"));
+    BufferedReader br = new BufferedReader(new FileReader("data/tests/deplambda.graphparser.txt"));
     // BufferedReader br = new BufferedReader(new FileReader("working/1.txt"));
 
     long startTime = System.currentTimeMillis();
@@ -74,13 +70,15 @@ public class CreateGroundedLexiconTest {
         count++;
         lines.add(line);
         if (count % 1000 == 0) {
-          Runnable worker = new CreateGroundedLexiconRunnable(lines, creator, false);
+          Runnable worker =
+              new CreateGroundedLexiconRunnable(lines, creator, "dependency_lambda", false);
           threadPool.execute(worker);
           lines = Lists.newArrayList();
         }
         line = br.readLine();
       }
-      Runnable worker = new CreateGroundedLexiconRunnable(lines, creator, false);
+      Runnable worker =
+          new CreateGroundedLexiconRunnable(lines, creator, "dependency_lambda", false);
       threadPool.execute(worker);
       // finish all existing threads in the queue
       threadPool.shutdown();

@@ -10,45 +10,18 @@ import re
 
 measure_types = { 0: "type.int", 1: "type.float", 3: "type.datetime", 4: "type.datetime"}
 
+entity_lexicon = sys.argv[1]
+lexicon = {}
+for line in open(entity_lexicon):
+  (word, mid) = line.strip().split('\t')
+  lexicon[word] = mid
+
 def document_to_graphparser_input(document):
   gdoc = {}
+  head_to_freebase_id = {}
   
   if 'text' in document:
     gdoc['sentence'] = document['text']
-  
-  # Process entities
-  token_to_mention_or_measure_head = {}  # {int : int}
-  head_to_freebase_id = {}  # {int: str}
-  head_to_phrase = {}  # { int : str}
-  if 'entity' in document:
-    for entity in document['entity']:
-      if 'mention' in entity:
-        for mention in entity['mention']:
-          if mention['type'] == 0:  # mention is a named entity
-            head = mention['phrase']['head']
-            head_to_phrase[head] = entity['name']
-            for token_index in range(mention['phrase']['start'], mention['phrase']['end'] + 1):
-              if token_index != head:
-                token_to_mention_or_measure_head[token_index] = head
-            
-            if 'profile' in entity:
-              profile =  entity['profile']
-              if 'identifier' in profile:
-                for identifier in profile['identifier']:
-                  if 'domain' in identifier and identifier['domain'] == 2:  # FREEBASE_MID
-                    head_to_freebase_id[head] = identifier['id'].strip("/").replace("/", ".")
-            
-  if 'measure' in document:
-    for measure in document['measure']:
-      # If there is a head, use it, else treat the first word in the phrase as head.
-      head = measure['phrase']['head']  if 'head' in measure else measure['phrase']['start']
-      head_to_phrase[head] = str(measure['value']) if 'value' in measure else measure['phrase']['start']
-      for token_index in range(measure['phrase']['start'], measure['phrase']['end'] + 1):
-        if token_index != head:
-          token_to_mention_or_measure_head[token_index] = head
-      if 'type' in measure:
-        measure_type = measure['type']
-        head_to_freebase_id[head] = measure_types.get(measure_type, 'type.float')
       
   old_token_index_to_new = {}
   # Populate words
@@ -59,7 +32,6 @@ def document_to_graphparser_input(document):
     old_token_index_to_new[token_index] = new_word_index
      
     # Store only the heads
-    if token_index in token_to_mention_or_measure_head: continue
     new_word_index += 1
     
     words.append({})
@@ -78,20 +50,16 @@ def document_to_graphparser_input(document):
         word['lemma'] = word['word']
       else:
         word['lemma'] = word['word'].lower()
-      
-    if token_index in head_to_phrase:
-      word['word'] = "_".join(head_to_phrase[token_index].split())
-      word['lemma'] = word['word']
-  
-  # Populate entities in graphparser doc
-  gdoc['entities'] = []
-  entities = gdoc['entities']
-  for head_token in sorted(head_to_freebase_id.keys()):
-    entities.append({})
-    entity = entities[-1]
-    entity['index'] = old_token_index_to_new[head_token]
-    entity['entity'] = head_to_freebase_id[head_token]
-    entity['name'] = "_".join(head_to_phrase[head_token].split())
+        
+  entities = []
+  for i, word in enumerate(gdoc['words']):
+    if word['word'] in lexicon:
+      entity = {}
+      entity['entity'] = lexicon[word['word']]
+      entity['index'] = i
+      entities.append(entity)
+      head_to_freebase_id[i] = entity['entity']
+  gdoc['entities'] = entities
   
   if '[nlp_saft.GraphParserLambda.extension]' in document:
     lambdas = document['[nlp_saft.GraphParserLambda.extension]']
@@ -152,7 +120,7 @@ def process_lambda(words, head_to_freebase_id, old_token_index_to_new, old_lambd
         arg2 = str(old_token_index_to_new[arg2]) + ":" + head_to_freebase_id[int(arg2)]
       else:
         arg2 = str(old_token_index_to_new[arg2]) + ":x"
-      if predicate.lower() not in ['what']:
+      if predicate.lower() not in ['what', 'where', 'when', 'who']:
         new_lambda.add("%s(%s , %s)" %(predicate.lower(), str(arg1), str(arg2)))
       continue
       
@@ -240,7 +208,8 @@ if __name__ == "__main__":
     # gdoc = document_to_graphparser_input(document)
     #print i
   #if True:
-    try:
+    #try:
+    
       document = simplejson.loads(line.strip())  
       #try:
       gdoc = document_to_graphparser_input(document)
@@ -250,8 +219,8 @@ if __name__ == "__main__":
         cache.add(sentence)
       #except:
       #  sys.stderr.write("Bug in document_to_graphparser\n")
-    except:
+    #except:
     #  sys.stderr.write("Json cannot parse\n")
-      sys.stderr.write(line)
+    #  sys.stderr.write(line)
     #  break
     #print line

@@ -19,23 +19,23 @@ while 1:
             sent = re.sub("how[\s]+many[\s]", "how-many ", sent);
         if re.match("how[\s]+much[\s]", sent):
             sent = re.sub("how[\s]+much[\s]", "how-much ", sent);
-        if re.match("when[\s]", sent) and not re.match("when[\s]+is[\s]", sent):
-            sent = re.sub("when[\s]", "what year ", sent);
-        if re.match("when[\s]+is[\s]", sent):
-            sent = re.sub("when[\s]+is[\s]", "what is ", sent);
+        #if re.match("when[\s]", sent) and not re.match("when[\s]+is[\s]", sent):
+        #    sent = re.sub("when[\s]", "what year ", sent);
+        #if re.match("when[\s]+is[\s]", sent):
+        #    sent = re.sub("when[\s]+is[\s]", "what is ", sent);
         #if re.match("where[\s]+was[\s]", sent):
         #    sent = re.sub("where[\s]+was[\s]", "in what location was ", sent);
-        if re.match("where .* to [^\s]+$", sent):
-            sent = re.sub("where (.* to) ([^\s]+)$", "what \\2 \\1", sent)
-        if re.match("where[\s]+", sent):
+        #if re.match("where .* to [^\s]+$", sent):
+        #    sent = re.sub("where (.* to) ([^\s]+)$", "what \\2 \\1", sent)
+        #if re.match("where[\s]+", sent):
             # sent = re.sub("where[\s]+", "what location ", sent)
-            if not re.search(" ((at)|(from)|(in)|(to)|(of))$", sent):
-                sent = sent + " at" 
+        #    if not re.search(" ((at)|(from)|(in)|(to)|(of))$", sent):
+        #        sent = sent + " at" 
         if re.match("how[\s]+did[\s]", sent):
             sent = re.sub("how[\s]+did[\s]", "what did ", sent)
             sent = sent + " of"
-        if  re.match("what year", sent) and not re.match("what year .* in[\s]*$", sent):
-            sent = sent + " in "
+        # if  re.match("what year", sent) and not re.match("what year .* in[\s]*$", sent):
+        #    sent = sent + " in "
         
         sent = re.sub(" ((the)|(a)) ((name[s]?)|(kind[s]?)|(type[s]?)) of", "", sent)
         sent = re.sub(" ((name[s]?)|(kind[s]?)|(type[s]?)) of", "", sent)

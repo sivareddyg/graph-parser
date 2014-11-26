@@ -1,0 +1,9 @@
+_T=2013-08-26_18:39:41_13137	 mv ~/Downloads/virt_jena.jar ~/Downloads/virtjdbc3.jar .
+_T=2013-08-26_18:40:25_13137	 java -jar virt_jena.jar
+_T=2013-08-26_18:40:38_13137	 java -cp virtjdbc3.jar virtuoso.jdbc3.Driver
+_T=2013-08-26_18:44:54_13137	 mv ~/Downloads/jenajars.zip .
+_T=2013-08-26_18:44:57_13137	 unzip jenajars.zip
+_T=2013-08-26_18:45:15_13137	 mv ~/Downloads/virt_jena2.jar .
+_T=2013-08-27_10:37:59_13137	 mv ~/Downloads/guava-14.0.1.jar .
+_T=2013-12-27_16:01:13_12332	 darkstar
+_T=2013-12-27_16:01:20_12332	 top

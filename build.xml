@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. --><project basedir="." default="build" name="graphparser">
+    <property environment="env"/>
+    <property name="ECLIPSE_HOME" value="../../../../users/sivareddy/eclipse44/stable/"/>
+    <property name="junit.output.dir" value="junit"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.7"/>
+    <property name="source" value="1.7"/>
+    <path id="JUnit 4.libraryclasspath">
+        <pathelement location="${ECLIPSE_HOME}plugins/org.junit_4.11.0.v201303080030/junit.jar"/>
+        <pathelement location="${ECLIPSE_HOME}plugins/org.hamcrest.core_1.3.0.v201303031735.jar"/>
+    </path>
+    <path id="graphparser.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="lib/guava-14.0.1.jar"/>
+        <pathelement location="lib/gson-2.2.2.jar"/>
+        <pathelement location="lib/jopt-simple-4.4.jar"/>
+        <pathelement location="lib/commons-logging.jar"/>
+        <pathelement location="lib/virtjdbc3.jar"/>
+        <pathelement location="lib/virt_jena.jar"/>
+        <pathelement location="lib/iri.jar"/>
+        <pathelement location="lib/icu4j_3_4.jar"/>
+        <pathelement location="lib/xercesImpl.jar"/>
+        <pathelement location="lib/commons-lang3-3.1.jar"/>
+        <pathelement location="lib/arq.jar"/>
+        <path refid="JUnit 4.libraryclasspath"/>
+        <pathelement location="lib/jena.jar"/>
+        <pathelement location="lib/log4j-1.2.12.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/BUILD"/>
+                <exclude name="**/METADATA"/>
+                <exclude name="**/OWNERS"/>
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="graphparser.classpath"/>
+        </javac>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+        <copy todir="${ant.library.dir}">
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </copy>
+        <unzip dest="${ant.library.dir}">
+            <patternset includes="jdtCompilerAdapter.jar"/>
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </unzip>
+    </target>
+    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+        <antcall target="build"/>
+    </target>
+    <target name="CategoryTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.tests.CategoryTest" todir="${junit.output.dir}"/>
+            <classpath refid="graphparser.classpath"/>
+        </junit>
+    </target>
+    <target name="VirtuosoSPARQLExample1">
+        <java classname="jena.virtuoso.openlinksw.com.VirtuosoSPARQLExample1" failonerror="true" fork="yes">
+            <classpath refid="graphparser.classpath"/>
+        </java>
+    </target>
+    <target name="CcgAutoLexiconTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.tests.CcgAutoLexiconTest" todir="${junit.output.dir}"/>
+            <classpath refid="graphparser.classpath"/>
+        </junit>
+    </target>
+    <target name="CcgParseToUngroundedSemanticParse (1)">
+        <java classname="in.sivareddy.graphparser.ccg.tests.CcgParseToUngroundedSemanticParse" failonerror="true" fork="yes">
+            <classpath refid="graphparser.classpath"/>
+        </java>
+    </target>
+    <target name="CcgParseTreeTest (2)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.tests.CcgParseTreeTest" todir="${junit.output.dir}"/>
+            <classpath refid="graphparser.classpath"/>
+        </junit>
+    </target>
+    <target name="junitreport">
+        <junitreport todir="${junit.output.dir}">
+            <fileset dir="${junit.output.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${junit.output.dir}"/>
+        </junitreport>
+    </target>
+</project>

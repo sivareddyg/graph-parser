@@ -1,16 +1,5 @@
 package in.sivareddy.graphparser.ccg;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -26,6 +15,17 @@ import in.sivareddy.graphparser.ccg.SemanticCategory.SemanticCategoryType;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.Direction;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class CcgParseTree {
   /*- (<T S[dcl] ba 1 2> 
    		(<T NP lex 0 1> (<L N Cameron Cameron NNP I-PER I-NP N>)) 
@@ -35,7 +35,8 @@ public class CcgParseTree {
    */
 
   /**
-   * Class which provides all the functions to create ccg parse trees and create semantic parses
+   * Class which provides all the functions to create ccg parse trees and create
+   * semantic parses
    *
    * @author Siva Reddy
    *
@@ -85,22 +86,8 @@ public class CcgParseTree {
       }
     }
 
-    public final static ImmutableSet<String> types = ImmutableSet.of("conj",
-        "tr",
-        "lex",
-        "fa",
-        "ba",
-        "gfc",
-        "gbc",
-        "gbx",
-        "fc",
-        "bc",
-        "bx",
-        "lp",
-        "rp",
-        "ltc",
-        "rtc",
-        "other");
+    public final static ImmutableSet<String> types = ImmutableSet.of("conj", "tr", "lex", "fa",
+        "ba", "gfc", "gbc", "gbx", "fc", "bc", "bx", "lp", "rp", "ltc", "rtc", "other");
   }
 
   protected CcgAutoLexicon autoLexicon = null;
@@ -119,8 +106,9 @@ public class CcgParseTree {
   public boolean IGNOREPRONOUNS = true;
 
   /**
-   * candc parser uses weird combinators when standard combinators, binary and unary rules fail.
-   * Semantics gets messed up when these combinators are used. I recommend to ignore those parses.
+   * candc parser uses weird combinators when standard combinators, binary and
+   * unary rules fail. Semantics gets messed up when these combinators are used.
+   * I recommend to ignore those parses.
    *
    */
   public static class FunnyCombinatorException extends Exception {
@@ -196,11 +184,7 @@ public class CcgParseTree {
     private int key = -1;
     private LexicalItem copula;
 
-    public LexicalItem(String synCat,
-        String word,
-        String lemma,
-        String pos,
-        String neType,
+    public LexicalItem(String synCat, String word, String lemma, String pos, String neType,
         Category cat) {
       // (<L N Titanic Titanic NNP O I-NP N>)
       super();
@@ -213,21 +197,25 @@ public class CcgParseTree {
       this.currentCategory = cat;
       key = getNodeCount();
       nodesIndexMap.put(key, this);
-      currentCategory.getSyntacticCategory().getIndex().setVariableValue(key);
+      if (currentCategory != null)
+        currentCategory.getSyntacticCategory().getIndex().setVariableValue(key);
       copula = this;
     }
 
     /**
-     * Copy lexical item without unifying the new index variables with the original index variables
-     * in syntactic and semantic category.
+     * Copy lexical item without unifying the new index variables with the
+     * original index variables in syntactic and semantic category.
      *
      * @return
      */
     public LexicalItem shallowCopy() {
-      Category copyCat = currentCategory.shallowCopy();
+      Category copyCat = null;
+      if (currentCategory != null) {
+        currentCategory.shallowCopy();
+      }
       LexicalItem item = new LexicalItem(synCat, word, lemma, pos, neType, copyCat);
       return item;
-    };
+    }
 
     @Override
     public int hashCode() {
@@ -321,12 +309,8 @@ public class CcgParseTree {
 
     @Override
     public String toString() {
-      return Objects
-          .toStringHelper(this)
-          .addValue(word)
-          .addValue(pos)
-          .addValue(currentCategory)
-          .toString();
+      return Objects.toStringHelper(this).addValue(word).addValue(pos).addValue(mid)
+          .addValue(currentCategory).toString();
     }
 
     public String lexicaliseRelationName() {
@@ -679,8 +663,7 @@ public class CcgParseTree {
         		&& !cat2.getSyntacticCategory().isBasic())*/
         if (comb2 == CcgCombinator.conj) {
           result = cat2;
-        }
- else {
+        } else {
           result = Category.coordinationApplication(cat2);
         }
         break;
@@ -778,8 +761,8 @@ public class CcgParseTree {
   }
 
   /**
-   * Returns semantic parses of a the current ccg parse. For sentences with integers, multiple
-   * parses may be given containing the predicate COUNT
+   * Returns semantic parses of a the current ccg parse. For sentences with
+   * integers, multiple parses may be given containing the predicate COUNT
    *
    * @return
    */
@@ -790,8 +773,8 @@ public class CcgParseTree {
   /**
    * Returns semantic parses of a the current ccg parse
    *
-   * @param handleNumbers if set true, for sentences containing integers, multiple parses may be
-   *        given containing the predicate COUNT
+   * @param handleNumbers if set true, for sentences containing integers,
+   *        multiple parses may be given containing the predicate COUNT
    * @return
    */
   public Set<Set<String>> getLexicalisedSemanticPredicates(boolean handleNumbers) {
@@ -1112,12 +1095,8 @@ public class CcgParseTree {
                 // senentece is in the form of
                 // "The founder of X is Y"
                 if (lexicalPosTags.contains(copulaHeadNode.pos)) {
-                  headIndex = headNode
-                      .getCategory()
-                      .getSyntacticCategory()
-                      .getParent()
-                      .getArgument()
-                      .getIndex();
+                  headIndex = headNode.getCategory().getSyntacticCategory().getParent()
+                      .getArgument().getIndex();
                   if (headIndex.getVariableValue() != null
                       && headIndex.getVariableValue().isInitialised()) {
                     copulaHeadNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
@@ -1190,11 +1169,7 @@ public class CcgParseTree {
 
               // senentece is in the form of "The founder of X is Y"
               if (lexicalPosTags.contains(copulaHeadNode.pos)) {
-                headIndex = headNode
-                    .getCategory()
-                    .getSyntacticCategory()
-                    .getParent()
-                    .getArgument()
+                headIndex = headNode.getCategory().getSyntacticCategory().getParent().getArgument()
                     .getIndex();
                 if (headIndex.getVariableValue() != null
                     && headIndex.getVariableValue().isInitialised()) {

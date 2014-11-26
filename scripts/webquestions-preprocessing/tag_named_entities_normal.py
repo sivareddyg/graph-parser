@@ -127,10 +127,10 @@ def extract(sentence, gazetteer_tree):
                 grouped_sent.append(sent[i])
             grouped_word = []
             for i in range(entity[1][0], entity[1][1]+1):
-                grouped_word.append(sent[i])
+              grouped_word.append(sent[i][0].upper() + sent[i][1:])
             grouped_word_all = "_".join(grouped_word)
-            if re.match("[^a-z]", grouped_word_all) and len(grouped_word) > 1:
-                grouped_word_all = "the_" + grouped_word_all 
+            #if re.match("[^a-z]", grouped_word_all) and len(grouped_word) > 1:
+            #    grouped_word_all = "The_" + grouped_word_all
             grouped_word_all = grouped_word_all[0].upper() + grouped_word_all[1:] 
             grouped_sent.append(grouped_word_all)
             cur_word = entity[1][1] + 1

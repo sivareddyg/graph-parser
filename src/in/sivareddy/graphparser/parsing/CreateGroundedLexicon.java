@@ -1,5 +1,29 @@
 package in.sivareddy.graphparser.parsing;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.ccg.CcgParseTree;
+import in.sivareddy.graphparser.ccg.CcgParseTree.CcgParser;
+import in.sivareddy.graphparser.ccg.CcgParseTree.FunnyCombinatorException;
+import in.sivareddy.graphparser.ccg.CcgParseTree.LexicalItem;
+import in.sivareddy.graphparser.ccg.SemanticCategory.SemanticCategoryType;
+import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
+import in.sivareddy.graphparser.util.KnowledgeBase;
+import in.sivareddy.graphparser.util.KnowledgeBase.Relation;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,57 +39,24 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.tuple.Pair;
-
-import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
-import in.sivareddy.graphparser.ccg.CcgParseTree;
-import in.sivareddy.graphparser.ccg.CcgParseTree.CcgParser;
-import in.sivareddy.graphparser.ccg.CcgParseTree.FunnyCombinatorException;
-import in.sivareddy.graphparser.ccg.CcgParseTree.LexicalItem;
-import in.sivareddy.graphparser.ccg.SemanticCategory.SemanticCategoryType;
-import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
-import in.sivareddy.graphparser.util.KnowledgeBase;
-import in.sivareddy.graphparser.util.KnowledgeBase.Relation;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 public class CreateGroundedLexicon {
   private ConcurrentMap<Relation, ConcurrentMap<Relation, Double>> predicateToGroundedRelationMap;
   private ConcurrentMap<Relation, Double> predicateCounts;
   private ConcurrentMap<String, ConcurrentMap<String, Double>> langTypeToGroundedTypeMap;
   private ConcurrentMap<String, Double> typeCounts;
 
-  public static Map<String, String> cardinalTypes = ImmutableMap
-      .<String, String>builder()
-      .put("I-DAT", "type.datetime")
-      .put("DATE", "type.datetime")
-      .put("PERCENT", "type.float")
-      .put("TIME", "type.datetime")
-      .put("MONEY", "type.float")
-      .put("CD.int", "type.int")
-      .put("CD.float", "type.float")
-      .build();
+  public static Map<String, String> cardinalTypes = ImmutableMap.<String, String> builder()
+      .put("I-DAT", "type.datetime").put("DATE", "type.datetime").put("PERCENT", "type.float")
+      .put("TIME", "type.datetime").put("MONEY", "type.float").put("CD.int", "type.int")
+      .put("CD.float", "type.float").build();
 
   Pattern floatPattern = Pattern.compile(".*[\\.][0-9].*");
 
   private KnowledgeBase kb;
   private CcgParser ccgParser;
 
-  public CreateGroundedLexicon(KnowledgeBase kb,
-      CcgAutoLexicon ccgAutoLexicon,
-      String[] lexicalFields,
-      String[] argIdentifierFields,
-      String[] relationTypingFeilds,
+  public CreateGroundedLexicon(KnowledgeBase kb, CcgAutoLexicon ccgAutoLexicon,
+      String[] lexicalFields, String[] argIdentifierFields, String[] relationTypingFeilds,
       boolean ignorePronouns) {
     ccgParser = new CcgParser(ccgAutoLexicon, lexicalFields, argIdentifierFields,
         relationTypingFeilds, ignorePronouns);
@@ -82,13 +73,15 @@ public class CreateGroundedLexicon {
     Gson gson = new Gson();
     private CreateGroundedLexicon creator;
     boolean printSentences;
+    String semanticParseKey;
 
     public CreateGroundedLexiconRunnable(List<String> jsonSentences, CreateGroundedLexicon creator,
-        boolean printSentences) {
+        String semanticParseKey, boolean printSentences) {
       Preconditions.checkArgument(jsonSentences != null);
       this.jsonSentences = jsonSentences;
       this.creator = creator;
       this.printSentences = printSentences;
+      this.semanticParseKey = semanticParseKey;
     }
 
     @Override
@@ -100,9 +93,26 @@ public class CreateGroundedLexicon {
           continue;
         }
         JsonObject jsonSentence = parser.parse(line).getAsJsonObject();
-        List<Set<String>> semanticParses =
-            creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
-        if (semanticParses.size() == 0) {
+        List<Set<String>> semanticParses;
+        if (semanticParseKey == "synPars") {
+          semanticParses = creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
+        } else {
+          semanticParses = new ArrayList<>();
+          semanticParses = new ArrayList<>();
+          if (!jsonSentence.has(semanticParseKey))
+            continue;
+          JsonArray semPars = jsonSentence.get(semanticParseKey).getAsJsonArray();
+          Set<String> semanticParse = new HashSet<>();
+          for (JsonElement semPar : semPars) {
+            JsonArray predicates = semPar.getAsJsonArray();
+            for (JsonElement predicate : predicates) {
+              semanticParse.add(predicate.getAsString());
+            }
+            semanticParses.add(semanticParse);
+          }
+        }
+
+        if (semanticParses == null || semanticParses.size() == 0) {
           continue;
         }
 
@@ -137,7 +147,8 @@ public class CreateGroundedLexicon {
   /**
    * lexicalise arguments to domain entities
    *
-   * @param jsonSentence - Sentence containing candc syntactic parse and information about entities
+   * @param jsonSentence - Sentence containing candc syntactic parse and
+   *        information about entities
    * @param nparses - no of semantic parses to consider
    *
    * @return

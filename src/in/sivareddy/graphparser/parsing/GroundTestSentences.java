@@ -1,5 +1,15 @@
 package in.sivareddy.graphparser.parsing;
 
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.parsing.GroundedGraphs.LexicalGraph;
+import in.sivareddy.graphparser.util.GroundedLexicon;
+import in.sivareddy.graphparser.util.KnowledgeBase;
+import in.sivareddy.graphparser.util.RdfGraphTools;
+import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.ml.basic.Feature;
 import in.sivareddy.ml.learning.StructuredPercepton;
 
@@ -15,17 +25,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
-import in.sivareddy.graphparser.parsing.GroundedGraphs.LexicalGraph;
-import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.KnowledgeBase;
-import in.sivareddy.graphparser.util.RdfGraphTools;
-import in.sivareddy.graphparser.util.Schema;
 
 public class GroundTestSentences {
 
@@ -75,39 +74,15 @@ public class GroundTestSentences {
     StructuredPercepton learningModel = new StructuredPercepton();
 
     // GroundedLexicon groundedLexicon = null;
-    GroundedGraphs graphCreator = new GroundedGraphs(schema,
-        kb,
-        groundedLexicon,
-        normalCcgAutoLexicon,
-        questionCcgAutoLexicon,
-        relationLexicalIdentifiers,
-        relationTypingIdentifiers,
-        learningModel,
-        urelGrelFlag,
-        urelPartGrelPartFlag,
-        utypeGtypeFlag,
-        gtypeGrelFlag,
-        grelGrelFlag,
-        wordGrelPartFlag,
-        wordGrelFlag,
-        argGrelPartFlag,
-        argGrelFlag,
-        wordBigramGrelPartFlag,
-        stemMatchingFlag,
-        mediatorStemGrelPartMatchingFlag,
-        argumentStemMatchingFlag,
-        argumentStemGrelPartMatchingFlag,
-        graphIsConnectedFlag,
-        graphHasEdgeFlag,
-        countNodesFlag,
-        edgeNodeCountFlag,
-        useLexiconWeightsRel,
-        useLexiconWeightsType,
-        duplicateEdgesFlag,
-        initialEdgeWeight,
-        initialTypeWeight,
-        initialWordWeight,
-        stemFeaturesWeight);
+    GroundedGraphs graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
+        normalCcgAutoLexicon, questionCcgAutoLexicon, relationLexicalIdentifiers,
+        relationTypingIdentifiers, learningModel, urelGrelFlag, urelPartGrelPartFlag,
+        utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, wordGrelPartFlag, wordGrelFlag,
+        argGrelPartFlag, argGrelFlag, wordBigramGrelPartFlag, stemMatchingFlag,
+        mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
+        argumentStemGrelPartMatchingFlag, graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
+        edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
+        initialEdgeWeight, initialTypeWeight, initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));
@@ -172,7 +147,7 @@ public class GroundTestSentences {
           }
           System.out.println("Gold Results : " + goldResults);
 
-          List<LexicalGraph> graphs = graphCreator.buildUngroundedGraph(jsonSentence, 1);
+          List<LexicalGraph> graphs = graphCreator.buildUngroundedGraph(jsonSentence, "synPars", 1);
           /*- while (results.hasNext()) {
           	QuerySolution result = results.nextSolution();
           	System.out.println(result);
@@ -192,16 +167,9 @@ System.out.println("# Ungrounded Graphs");
             for (LexicalGraph ungroundedGraph : graphs) {
               System.out.print(ungroundedGraph);
               System.out.println("Connected: " + ungroundedGraph.isConnected() + "\n");
-              List<LexicalGraph> currentGroundedGraphs =
-                  graphCreator.createGroundedGraph(ungroundedGraph,
-                      nbestLexicon,
-                      nbestGraphs,
-                      useSchema,
-                      useKB,
-                      groundFreeVariables,
-                      useEmtpyTypes,
-                      ignoreTypes,
-                      false);
+              List<LexicalGraph> currentGroundedGraphs = graphCreator.createGroundedGraph(
+                  ungroundedGraph, nbestLexicon, nbestGraphs, useSchema, useKB, groundFreeVariables,
+                  useEmtpyTypes, ignoreTypes, false);
               groundedGraphs.addAll(currentGroundedGraphs);
             }
             Collections.sort(groundedGraphs);
@@ -290,15 +258,9 @@ if (areEqual) {
           Double precision = (positive_hits + 0.0) / (positive_hits + negative_hits) * 100;
           Double recall = (positive_hits + 0.0) / (total_hits) * 100;
           Double fmeas = 2 * precision * recall / (precision + recall);
-          System.out.println(String
-              .format("Nbest:%d Positives:%d Negatives:%d Total:%d Prec:%.1f Rec:%.1f Fmeas:%.1f",
-                  key,
-                  positive_hits,
-                  negative_hits,
-                  total_hits,
-                  precision,
-                  recall,
-                  fmeas));
+          System.out.println(String.format(
+              "Nbest:%d Positives:%d Negatives:%d Total:%d Prec:%.1f Rec:%.1f Fmeas:%.1f", key,
+              positive_hits, negative_hits, total_hits, precision, recall, fmeas));
         }
       }
       System.out.println("===============================================");
@@ -331,8 +293,8 @@ if (areEqual) {
     // relationLexicalIdentifiers, argumentLexicalIdenfiers,
     // relationTypingIdentifiers, true);
 
-    RdfGraphTools rdfGraphTools = new RdfGraphTools("jdbc:virtuoso://kinloch:1111",
-        "http://kinloch:8890/sparql", "dba", "dba", 2);
+    RdfGraphTools rdfGraphTools = new RdfGraphTools("jdbc:virtuoso://oscart.hot:1111",
+        "http://oscart.hot:8890/sparql", "dba", "dba", 2);
     run(schema, kb, groundedLexicon, rdfGraphTools);
   }
 }

@@ -1,13 +1,5 @@
 package in.sivareddy.graphparser.cli;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
@@ -17,6 +9,13 @@ import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.KnowledgeBase;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class RunGraphToQueryTrainingMain extends AbstractCli {
 
@@ -46,6 +45,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   // Training Corpora
   private OptionSpec<String> trainingCorpora;
   private OptionSpec<String> supervisedCorpus;
+  private OptionSpec<String> semanticParseKey;
 
   private OptionSpec<Integer> trainingSampleSize;
   private OptionSpec<Integer> nthreads;
@@ -137,6 +137,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
         .withRequiredArg().ofType(String.class).defaultsTo("");
     supervisedCorpus = parser.accepts("supervisedCorpus", "annotated training corpus file")
         .withRequiredArg().ofType(String.class).defaultsTo("");
+    semanticParseKey = parser.accepts("semanticParseKey", "key from which a semantic parse is read")
+        .withRequiredArg().ofType(String.class).defaultsTo("synPars");
 
     logFile =
         parser.accepts("logFile", "log file").withRequiredArg().ofType(String.class).required();
@@ -305,6 +307,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
       String supervisedTrainingFile = options.valueOf(supervisedCorpus);
       String corupusTrainingFile = options.valueOf(trainingCorpora);
+      String semanticParseKeyString = options.valueOf(semanticParseKey);
 
       String logfile = options.valueOf(logFile);
       boolean debugEnabled = true;
@@ -372,55 +375,19 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       // Denotation feature
       boolean validQueryFlagVal = options.valueOf(validQueryFlag);
 
-      GraphToQueryTrainingMain graphToQueryModel = new GraphToQueryTrainingMain(schemaObj,
-          kb,
-          groundedLexicon,
-          normalCcgAutoLexicon,
-          questionCcgAutoLexicon,
-          rdfGraphTools,
-          kbGraphUri,
-          testfile,
-          devfile,
-          supervisedTrainingFile,
-          corupusTrainingFile,
-          debugEnabled,
-          trainingSampleSizeCount,
-          logfile,
-          nBestTrainSyntacticParsesVal,
-          nBestTestSyntacticParsesVal,
-          nbestEdgesVal,
-          nbestGraphsVal,
-          useSchemaVal,
-          useKBVal,
-          groundFreeVariablesVal,
-          useEmptyTypesVal,
-          ignoreTypesVal,
-          urelGrelFlagVal,
-          urelPartGrelPartFlagVal,
-          utypeGtypeFlagVal,
-          gtypeGrelFlagVal,
-          wordGrelPartFlagVal,
-          wordGrelFlagVal,
-          wordBigramGrelPartFlagVal,
-          argGrelPartFlagVal,
-          argGrelFlagVal,
-          stemMatchingFlagVal,
-          mediatorStemGrelPartMatchingFlagVal,
-          argumentStemMatchingFlagVal,
-          argumentStemGrelPartMatchingFlagVal,
-          graphIsConnectedFlagVal,
-          graphHasEdgeFlagVal,
-          countNodesFlagVal,
-          edgeNodeCountFlagVal,
-          duplicateEdgesFlagVal,
-          grelGrelFlagVal,
-          useLexiconWeightsRelVal,
-          useLexiconWeightsTypeVal,
-          initialEdgeWeightVal,
-          initialTypeWeightVal,
-          initialWordWeightVal,
-          stemFeaturesWeightVal,
-          validQueryFlagVal);
+      GraphToQueryTrainingMain graphToQueryModel = new GraphToQueryTrainingMain(schemaObj, kb,
+          groundedLexicon, normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools, kbGraphUri,
+          testfile, devfile, supervisedTrainingFile, corupusTrainingFile, semanticParseKeyString,
+          debugEnabled, trainingSampleSizeCount, logfile, nBestTrainSyntacticParsesVal,
+          nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal, useSchemaVal, useKBVal,
+          groundFreeVariablesVal, useEmptyTypesVal, ignoreTypesVal, urelGrelFlagVal,
+          urelPartGrelPartFlagVal, utypeGtypeFlagVal, gtypeGrelFlagVal, wordGrelPartFlagVal,
+          wordGrelFlagVal, wordBigramGrelPartFlagVal, argGrelPartFlagVal, argGrelFlagVal,
+          stemMatchingFlagVal, mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
+          argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal, graphHasEdgeFlagVal,
+          countNodesFlagVal, edgeNodeCountFlagVal, duplicateEdgesFlagVal, grelGrelFlagVal,
+          useLexiconWeightsRelVal, useLexiconWeightsTypeVal, initialEdgeWeightVal,
+          initialTypeWeightVal, initialWordWeightVal, stemFeaturesWeightVal, validQueryFlagVal);
       graphToQueryModel.train(iterationCount, threadCount);
 
     } catch (IOException e) {
