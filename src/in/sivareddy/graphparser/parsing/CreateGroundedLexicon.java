@@ -518,7 +518,7 @@ Map<String, Set<String>> varsToEvents = Maps.newHashMap();
       jsonSentence.addProperty("negationCount", negationCount);
     }
 
-    System.err.println(jsonSentence.get("sentence").getAsString());
+    // System.err.println(jsonSentence.get("sentence").getAsString());
 
     // System.out.println();
     // return isUseful;

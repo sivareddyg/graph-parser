@@ -187,12 +187,6 @@ public class RunPrintDomainLexicon extends AbstractCli {
             line = br.readLine();
             continue;
           }
-          Integer sentenceHash = jsonSentence.get("sentence").getAsString().hashCode();
-          if (sentenceCache.contains(sentenceHash)) {
-            line = br.readLine();
-            continue;
-          }
-          sentenceCache.add(sentenceHash);
 
           boolean isUsefulSentence = false;
           for (Set<String> semanticParse : semanticParses) {

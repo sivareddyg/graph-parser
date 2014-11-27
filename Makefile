@@ -1,3 +1,170 @@
+# Creates deplambda webquestions testing and training data
+# If the tokenization is disabled in the workflow, you will be able to use all
+# the examples, or else some of the examples cannot be used.
+create_deplambda_supervised_input_data:
+	cat data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/dump_sentences.py > data/deplambda/webquestions.train.txt
+	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/dump_sentences.py > data/deplambda/webquestions.test.txt
+	cat data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/dependency_semantic_parser/create_entity_lexicon.py > data/deplambda/entity_lexicon.txt
+
+# Copies all documents from oscar's cns to current folder.
+copy_deplambda_output:
+	rm data/deplambda/webquestions.test.documents.txt
+	rm data/deplambda/webquestions.train.documents.txt
+	rm -r data/deplambda/unsupervised
+	fileutil cp /cns/lb-d/home/oscart/e/siva-tacl-data/graphparser-questions-test/output data/deplambda/webquestions.test.documents.txt
+	fileutil cp /cns/lb-d/home/oscart/e/siva-tacl-data/graphparser-questions-train/output data/deplambda/webquestions.train.documents.txt
+	fileutil cp /cns/lb-d/home/oscart/e/siva-tacl-data/graphparser-lambda-expressions/* data/deplambda/unsupervised
+
+# Converts deplambda documents in json format to graphparsers json format.
+convert_deplambda_output_to_graphparser:
+	cat data/deplambda/unsupervised/* | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py | gzip > data/deplambda/unsupervised.graphparser.txt.gz
+	cat data/deplambda/webquestions.train.documents.txt | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_questions.py data/deplambda/entity_lexicon.txt | python scripts/dependency_semantic_parser/add_answers.py data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json > data/deplambda/webquestions.train.graphparser.txt
+	cat data/deplambda/webquestions.test.documents.txt | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_questions.py data/deplambda/entity_lexicon.txt | python scripts/dependency_semantic_parser/add_answers.py data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json > data/deplambda/webquestions.test.graphparser.txt
+
+# Create dependency based grounded lexicon.
+create_deplambda_grounded_lexicon:
+	mkdir -p data/deplambda/sentences_training
+	mkdir -p data/deplambda/grounded_lexicon
+	zcat data/deplambda/unsupervised.graphparser.txt.gz \
+	| java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	--relationLexicalIdentifiers lemma \
+	--semanticParseKey dependency_lambda \
+	--argumentLexicalIdentifiers mid \
+	--candcIndexFile data/candc_markedup.modified \
+	--unaryRulesFile data/unary_rules.txt \
+	--binaryRulesFile data/binary_rules.txt \
+	--specialCasesFile data/lexicon_specialCases.txt \
+	--relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	--outputLexiconFile data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
+	| gzip > data/deplambda/sentences_training/deplambda_training_sentences.txt.gz
+
+# Create ccg based grounded lexicon.
+create_ccg_grounded_lexicon:
+	mkdir -p data/deplambda/sentences_training
+	mkdir -p data/deplambda/grounded_lexicon
+	zcat data/deplambda/unsupervised.graphparser.txt.gz \
+	| java -Xms2048m -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	--relationLexicalIdentifiers lemma \
+	--semanticParseKey ccg_lambda \
+	--argumentLexicalIdentifiers mid \
+	--candcIndexFile data/candc_markedup.modified \
+	--unaryRulesFile data/unary_rules.txt \
+	--binaryRulesFile data/binary_rules.txt \
+	--specialCasesFile data/lexicon_specialCases.txt \
+	--relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	--outputLexiconFile data/deplambda/grounded_lexicon/ccg_grounded_lexicon.txt \
+	| gzip > data/deplambda/sentences_training/ccg_training_sentences.txt.gz
+
+# Supervised Expermients
+
+# Deplambda results
+deplambda_supervised:
+	mkdir -p working/deplambda_supervised
+	java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/dummy.txt \
+	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 1 \
+	-trainingSampleSize 600 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 500 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes true \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight 1.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint oscart.hot.corp.google.com \
+	-semanticParseKey dependency_lambda \
+	-trainingCorpora "data/dummy.txt.gz" \
+	-supervisedCorpus data/deplambda/webquestions.train.graphparser.txt \
+	-testFile data/deplambda/webquestions.test.graphparser.txt \
+	-logFile working/deplambda_supervised/business_film_people.log.txt \
+	> working/deplambda_supervised/business_film_people.txt
+
+# CCG Supervised Results
+deplambda_supervised:
+	mkdir -p working/ccg_supervised
+	java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/dummy.txt \
+	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 1 \
+	-trainingSampleSize 600 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 500 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes true \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight 1.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint oscart.hot.corp.google.com \
+	-semanticParseKey ccg_lambda \
+	-trainingCorpora "data/dummy.txt.gz" \
+	-supervisedCorpus data/deplambda/webquestions.train.graphparser.txt \
+	-testFile data/deplambda/webquestions.test.graphparser.txt \
+	-logFile working/ccg_supervised/business_film_people.log.txt \
+	> working/ccg_supervised/business_film_people.txt
+
+############################################### TACL Experiments  ################################################
+
 # Ignore
 create_grounded_lexicon_and_filter_sentences_%:
 	mkdir -p data/freebase/sentences_training
@@ -20,44 +187,6 @@ create_grounded_lexicon_and_filter_sentences:
 	make create_grounded_lexicon_and_filter_sentences_business
 	make create_grounded_lexicon_and_filter_sentences_film
 	make create_grounded_lexicon_and_filter_sentences_people
-
-# Create deplambda lexicon
-create_deplambda_lexicon:
-	mkdir -p data/freebase/sentences_training
-	mkdir -p data/freebase/grounded_lexicon
-	zcat data/deplambda/data-00085-of-00100.graphparser.gz \
-	| java -Xms2048m -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
-	--relationLexicalIdentifiers lemma \
-	--semanticParseKey dependency_lambda \
-	--argumentLexicalIdentifiers mid \
-	--candcIndexFile data/candc_markedup.modified \
-	--unaryRulesFile data/unary_rules.txt \
-	--binaryRulesFile data/binary_rules.txt \
-	--specialCasesFile data/lexicon_specialCases.txt \
-	--relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
-	--outputLexiconFile data/freebase/grounded_lexicon/deplambda_grounded_lexicon.txt \
-	| gzip > data/freebase/sentences_training/deplambda_training_sentences.txt.gz
-
-# Create deplambda webquestions testing and training data
-create_deplambda_supervised_input_data:
-	cat data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/dump_sentences.py > data/deplambda/webquestions.train.txt
-	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/dump_sentences.py > data/deplambda/webquestions.test.txt
-	cat data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/dependency_semantic_parser/create_entity_lexicon.py > data/deplambda/entity_lexicon.txt
-
-copy_deplambda_output:
-	rm data/deplambda/webquestions.test.documents.txt
-	rm data/deplambda/webquestions.train.documents.txt
-	rm -r data/deplambda/unsupervised
-	fileutil cp /cns/lb-d/home/oscart/e/siva-tacl-data/graphparser-questions-test/output data/deplambda/webquestions.test.documents.txt
-	fileutil cp /cns/lb-d/home/oscart/e/siva-tacl-data/graphparser-questions-train/output data/deplambda/webquestions.train.documents.txt
-	fileutil cp /cns/lb-d/home/oscart/e/siva-tacl-data/graphparser-lambda-expressions/* data/deplambda/unsupervised
-
-convert_deplambda_output_to_graphparser:
-	cat data/deplambda/unsupervised/* | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py | gzip > data/deplambda/unsupervised.graphparser.txt.gz
-	cat data/deplambda/webquestions.train.documents.txt | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_questions.py data/deplambda/entity_lexicon.txt | python scripts/dependency_semantic_parser/add_answers.py data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json > data/deplambda/webquestions.train.graphparser.txt
-	cat data/deplambda/webquestions.test.documents.txt | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_questions.py data/deplambda/entity_lexicon.txt | python scripts/dependency_semantic_parser/add_answers.py data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json > data/deplambda/webquestions.test.graphparser.txt
-	cat data/deplambda/webquestions.train.documents.txt
 
 # Ignore
 filter_training_sentences_%:
@@ -294,57 +423,5 @@ tacl_unsupervised_paraphrase:
 	-testFile data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.paraphrase.json \
 	-logFile working/tacl_unsupervised_paraphrase/business_film_people.log.txt \
 	> working/tacl_unsupervised_paraphrase/business_film_people.txt
-
-# Deplambda results
-deplambda_supervised:
-	mkdir -p working/deplambda_supervised
-	java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
-	-schema data/freebase/schema/business_film_people_schema.txt \
-	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-lexicon data/dummy.txt \
-	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
-	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
-	-nthreads 1 \
-	-trainingSampleSize 600 \
-	-iterations 20 \
-	-nBestTrainSyntacticParses 1 \
-	-nBestTestSyntacticParses 1 \
-	-nbestGraphs 500 \
-	-useSchema true \
-	-useKB true \
-	-groundFreeVariables true \
-	-useEmptyTypes true \
-	-ignoreTypes false \
-	-urelGrelFlag true \
-	-urelPartGrelPartFlag false \
-	-utypeGtypeFlag true \
-	-gtypeGrelFlag false \
-	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
-	-argGrelPartFlag false \
-	-stemMatchingFlag true \
-	-mediatorStemGrelPartMatchingFlag true \
-	-argumentStemMatchingFlag true \
-	-argumentStemGrelPartMatchingFlag true \
-	-graphIsConnectedFlag false \
-	-graphHasEdgeFlag true \
-	-countNodesFlag false \
-	-edgeNodeCountFlag false \
-	-duplicateEdgesFlag true \
-	-grelGrelFlag true \
-	-useLexiconWeightsRel true \
-	-useLexiconWeightsType true \
-	-validQueryFlag true \
-	-initialEdgeWeight 1.0 \
-	-initialTypeWeight 1.0 \
-	-initialWordWeight -0.05 \
-	-stemFeaturesWeight 0.0 \
-	-endpoint oscart.hot.corp.google.com \
-	-semanticParseKey dependency_lambda \
-	-trainingCorpora "data/dummy.txt.gz" \
-	-supervisedCorpus data/deplambda/webquestions.train.graphparser.txt \
-	-testFile data/deplambda/webquestions.test.graphparser.txt \
-	-logFile working/deplambda_supervised/business_film_people.log.txt \
-	> working/deplambda_supervised/business_film_people.txt
 
 

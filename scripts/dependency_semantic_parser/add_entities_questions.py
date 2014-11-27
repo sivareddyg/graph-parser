@@ -16,7 +16,7 @@ for line in open(entity_lexicon):
 for line in sys.stdin:
   sent = simplejson.loads(line)
   entities = []
-  for i, word in enumerate(sent['words']):
+  for i, word in enumerate(sent['tok']):
     if word['word'] in lexicon:
       entity = {}
       entity['entity'] = lexicon[word['word']]
