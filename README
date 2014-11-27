@@ -1,4 +1,19 @@
 ################## GraphParser #################
 
+The Makefile has the following commands specific to deplambda project which
+hopefully are self-explanatory from the names.
+
+1. create_deplambda_supervised_input_data:
+2. copy_deplambda_output:
+3. convert_deplambda_output_to_graphparser
+4. create_deplambda_grounded_lexicon
+5. create_ccg_grounded_lexicon
+6. deplambda_supervised
+7. ccg_supervised
+8. deplambda_supervised_with_unsupervised_lexicon
+9. ccg_supervised_with_unsupervised_lexicon
+10. deplambda_unsupervised
+11. ccg_unsupervised
+
 All libraries required by Graph Parser
 (http://sivareddy.in/papers/reddy2014semanticparsing.pdf)

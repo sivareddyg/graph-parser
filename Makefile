@@ -22,6 +22,8 @@ convert_deplambda_output_to_graphparser:
 	cat data/deplambda/webquestions.test.documents.txt | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_questions.py data/deplambda/entity_lexicon.txt | python scripts/dependency_semantic_parser/add_answers.py data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json > data/deplambda/webquestions.test.graphparser.txt
 
 # Create dependency based grounded lexicon.
+# Unfortunately, this cannot run parallel version since I have to write
+# sentences into a single file.
 create_deplambda_grounded_lexicon:
 	mkdir -p data/deplambda/sentences_training
 	mkdir -p data/deplambda/grounded_lexicon
@@ -59,7 +61,7 @@ create_ccg_grounded_lexicon:
 
 # Supervised Expermients
 
-# Deplambda results
+# Deplambda results without unsupervised lexicon.
 deplambda_supervised:
 	mkdir -p working/deplambda_supervised
 	java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
@@ -111,8 +113,8 @@ deplambda_supervised:
 	-logFile working/deplambda_supervised/business_film_people.log.txt \
 	> working/deplambda_supervised/business_film_people.txt
 
-# CCG Supervised Results
-deplambda_supervised:
+# CCG Supervised Results without unsupervised lexicon.
+ccg_supervised:
 	mkdir -p working/ccg_supervised
 	java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
@@ -162,6 +164,213 @@ deplambda_supervised:
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
 	-logFile working/ccg_supervised/business_film_people.log.txt \
 	> working/ccg_supervised/business_film_people.txt
+
+# Deplambda results with unsupervised lexicon.
+deplambda_supervised_with_unsupervised_lexicon:
+	mkdir -p working/deplambda_supervised_with_unsupervised_lexicon
+	java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 1 \
+	-trainingSampleSize 600 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 500 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes true \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight 1.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint oscart.hot.corp.google.com \
+	-semanticParseKey dependency_lambda \
+	-trainingCorpora "data/dummy.txt.gz" \
+	-supervisedCorpus data/deplambda/webquestions.train.graphparser.txt \
+	-testFile data/deplambda/webquestions.test.graphparser.txt \
+	-logFile working/deplambda_supervised_with_unsupervised_lexicon/business_film_people.log.txt \
+	> working/deplambda_supervised_with_unsupervised_lexicon/business_film_people.txt
+
+# CCG Supervised Results with unsupervised lexicon.
+ccg_supervised_with_unsupervised_lexicon:
+	mkdir -p working/ccg_supervised_with_unsupervised_lexicon
+	java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/ccg_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 1 \
+	-trainingSampleSize 600 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 500 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes true \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight 1.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint oscart.hot.corp.google.com \
+	-semanticParseKey ccg_lambda \
+	-trainingCorpora "data/dummy.txt.gz" \
+	-supervisedCorpus data/deplambda/webquestions.train.graphparser.txt \
+	-testFile data/deplambda/webquestions.test.graphparser.txt \
+	-logFile working/ccg_supervised_with_unsupervised_lexicon/business_film_people.log.txt \
+	> working/ccg_supervised_with_unsupervised_lexicon/business_film_people.txt
+
+# deplambda with unsupervised training
+deplambda_unsupervised:
+	mkdir -p working/deplambda_unsupervised
+	java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 1 \
+	-trainingSampleSize 600 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 500 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes true \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight 1.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint oscart.hot.corp.google.com \
+	-semanticParseKey dependency_lambda \
+	-trainingCorpora "TODO" \
+	-supervisedCorpus data/deplambda/webquestions.train.graphparser.txt \
+	-testFile data/deplambda/webquestions.test.graphparser.txt \
+	-logFile working/deplambda_unsupervised/business_film_people.log.txt \
+	> working/deplambda_unsupervised/business_film_people.txt
+
+# ccg with unsupervised training.
+ccg_unsupervised:
+	mkdir -p working/ccg_unsupervised
+	java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/ccg_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 1 \
+	-trainingSampleSize 600 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 500 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes true \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight 1.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint oscart.hot.corp.google.com \
+	-semanticParseKey ccg_lambda \
+	-trainingCorpora "TODO" \
+	-testFile data/deplambda/webquestions.test.graphparser.txt \
+	-logFile working/ccg_unsupervised/business_film_people.log.txt \
+	> working/ccg_unsupervised/business_film_people.txt
 
 ############################################### TACL Experiments  ################################################
 
