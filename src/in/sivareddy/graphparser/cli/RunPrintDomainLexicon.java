@@ -155,10 +155,10 @@ public class RunPrintDomainLexicon extends AbstractCli {
           sentenceCache = Sets.newHashSet();
         }
 
-        String line = br.readLine();
+        String line = "";
         while (line != null) {
+          line = br.readLine();
           if (line.equals("") || line.charAt(0) == '#') {
-            line = br.readLine();
             continue;
           }
 
@@ -184,7 +184,6 @@ public class RunPrintDomainLexicon extends AbstractCli {
           }
 
           if (semanticParses.size() == 0) {
-            line = br.readLine();
             continue;
           }
 
@@ -197,7 +196,6 @@ public class RunPrintDomainLexicon extends AbstractCli {
           if (isUsefulSentence) {
             System.out.println(gson.toJson(jsonSentence));
           }
-          line = br.readLine();
         }
       } finally {
         br.close();

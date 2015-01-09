@@ -1,0 +1,5 @@
+_T=2015-01-09_15:02:48_11531	 scp -r graph-parser.jar $bravas:/disk/scratch/users/s1051585/graph-parser-google
+_T=2015-01-09_15:20:45_11531	 scp -r graph-parser.jar $bravas:/disk/scratch/users/s1051585/graph-parser-google
+_T=2015-01-09_15:38:02_11531	 vim .gitignore
+_T=2015-01-09_15:38:08_11531	 vim .gitignore
+_T=2015-01-09_15:38:11_11531	 git add .
