@@ -158,7 +158,7 @@ public class RunPrintDomainLexicon extends AbstractCli {
         String line = "";
         while (line != null) {
           line = br.readLine();
-          if (line.equals("") || line.charAt(0) == '#') {
+          if (line == null || line.equals("") || line.charAt(0) == '#') {
             continue;
           }
 
