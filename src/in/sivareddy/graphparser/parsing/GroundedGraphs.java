@@ -126,10 +126,12 @@ public class GroundedGraphs {
     // ccg parser initialisation
     String[] argumentLexicalIdenfiers = {"mid"};
     boolean ignorePronouns = true;
-    normalCcgParser = new CcgParser(normalCcgAutoLexicon, relationLexicalIdentifiers,
-        argumentLexicalIdenfiers, relationTypingIdentifiers, ignorePronouns);
-    questionCcgParser = new CcgParser(questionCcgAutoLexicon, relationLexicalIdentifiers,
-        argumentLexicalIdenfiers, relationTypingIdentifiers, ignorePronouns);
+    normalCcgParser =
+        new CcgParser(normalCcgAutoLexicon, relationLexicalIdentifiers, argumentLexicalIdenfiers,
+            relationTypingIdentifiers, ignorePronouns);
+    questionCcgParser =
+        new CcgParser(questionCcgAutoLexicon, relationLexicalIdentifiers, argumentLexicalIdenfiers,
+            relationTypingIdentifiers, ignorePronouns);
 
     this.groundedLexicon = groundedLexicon;
     this.kb = kb;
@@ -398,13 +400,13 @@ public class GroundedGraphs {
       newGraph.addFeature(newGraph.argStemMatchingFeature);
       newGraph.argumentsStemsMatched = Sets.newHashSet(argumentsStemsMatched);
 
-      newGraph.mediatorStemGrelPartMatchingFeature.setFeatureValue(
-          mediatorStemGrelPartMatchingFeature.getFeatureValue());
+      newGraph.mediatorStemGrelPartMatchingFeature
+          .setFeatureValue(mediatorStemGrelPartMatchingFeature.getFeatureValue());
       newGraph.addFeature(newGraph.mediatorStemGrelPartMatchingFeature);
       newGraph.mediatorStemGrelPartMatchedNodes = Sets.newHashSet(mediatorStemGrelPartMatchedNodes);
 
-      newGraph.argStemGrelPartMatchingFeature.setFeatureValue(
-          argStemGrelPartMatchingFeature.getFeatureValue());
+      newGraph.argStemGrelPartMatchingFeature.setFeatureValue(argStemGrelPartMatchingFeature
+          .getFeatureValue());
       newGraph.addFeature(newGraph.argStemGrelPartMatchingFeature);
       newGraph.argumentStemGrelPartMatchedNodes = Sets.newHashSet(argumentStemGrelPartMatchedNodes);
 
@@ -426,7 +428,8 @@ public class GroundedGraphs {
       for (LexicalItem node : super.getNodes()) {
         graphString.append(Objects.toStringHelper(node).addValue(node.getWordPosition())
             .addValue(node.getWord()).addValue(node.getLemma()).addValue(node.getPos())
-            .addValue(node.getCategory()).toString() + "\n");
+            .addValue(node.getCategory()).toString()
+            + "\n");
       }
 
       graphString.append("Edges: \n");
@@ -452,9 +455,10 @@ public class GroundedGraphs {
       Map<LexicalItem, TreeSet<Type<LexicalItem>>> eventTypes = super.getEventTypes();
       for (LexicalItem node : eventTypes.keySet()) {
         for (Type<LexicalItem> type : eventTypes.get(node))
-          graphString.append("(" + type.getParentNode().getWordPosition() + ","
-              + type.getModifierNode().getWordPosition() + ")" + "\t" + type.getEntityType()
-              + '\n');
+          graphString
+              .append("(" + type.getParentNode().getWordPosition() + ","
+                  + type.getModifierNode().getWordPosition() + ")" + "\t" + type.getEntityType()
+                  + '\n');
       }
 
       graphString.append("EventEventModifiers: \n");
@@ -462,9 +466,10 @@ public class GroundedGraphs {
           super.getEventEventModifiers();
       for (LexicalItem node : eventEventModifiers.keySet()) {
         for (Type<LexicalItem> type : eventEventModifiers.get(node))
-          graphString.append("(" + type.getParentNode().getWordPosition() + ","
-              + type.getModifierNode().getWordPosition() + ")" + "\t" + type.getEntityType()
-              + '\n');
+          graphString
+              .append("(" + type.getParentNode().getWordPosition() + ","
+                  + type.getModifierNode().getWordPosition() + ")" + "\t" + type.getEntityType()
+                  + '\n');
       }
 
       return graphString.toString();
@@ -472,10 +477,9 @@ public class GroundedGraphs {
   }
 
   /**
-   * Constructs ungrounded semantic graphs from ccg parses of a given sentence.
-   * Sentence is in json format containing information about entities, ccg
-   * derivations
-   *
+   * Constructs ungrounded semantic graphs from ccg parses of a given sentence. Sentence is in json
+   * format containing information about entities, ccg derivations
+   * 
    * @param jsonSentence
    * @param nbest
    * @return
@@ -485,10 +489,9 @@ public class GroundedGraphs {
   }
 
   /**
-   * Constructs ungrounded semantic graphs from ccg parses of a given sentence.
-   * Sentence is in json format containing information about entities, ccg
-   * derivations
-   *
+   * Constructs ungrounded semantic graphs from ccg parses of a given sentence. Sentence is in json
+   * format containing information about entities, ccg derivations
+   * 
    * @param jsonSentence
    * @param nbest
    * @param logger
@@ -503,7 +506,7 @@ public class GroundedGraphs {
     for (JsonElement word : jsonSentence.get("words").getAsJsonArray()) {
       words.add(word.getAsJsonObject().get("word").getAsString());
     }
-    logger.debug("Actual sentence: " + Joiner.on(" ").join(words));
+    logger.debug("Tokenized Sentence: " + Joiner.on(" ").join(words));
 
     if (key.equals("synPars")) {
       if (!jsonSentence.has("synPars"))
@@ -565,8 +568,8 @@ public class GroundedGraphs {
     Map<Integer, String> tokenToEntity = new HashMap<>();
     for (JsonElement entityElement : jsonSentence.get("entities").getAsJsonArray()) {
       JsonObject entityObject = entityElement.getAsJsonObject();
-      tokenToEntity.put(entityObject.get("index").getAsInt(),
-          entityObject.get("entity").getAsString());
+      tokenToEntity.put(entityObject.get("index").getAsInt(), entityObject.get("entity")
+          .getAsString());
     }
 
     List<LexicalItem> items = new ArrayList<>();
@@ -671,7 +674,7 @@ public class GroundedGraphs {
         Integer entityIndex = Integer.valueOf(matcher.group(2));
         String args = matcher.group(4);
 
-        System.out.println(predicate);
+        // System.out.println(predicate);
         // System.out.println(specialTypeName);
         // CHANGE THIS LATER
 
@@ -819,14 +822,19 @@ public class GroundedGraphs {
     return graph;
   }
 
-  public static Map<String, String> cardinalTypes = ImmutableMap.<String, String> builder()
+  public static Map<String, String> cardinalTypes = ImmutableMap.<String, String>builder()
       .put("I-DAT", "type.datetime").put("DATE", "type.datetime").put("PERCENT", "type.float")
       .put("TIME", "type.datetime").put("MONEY", "type.float").put("CD.int", "type.int")
       .put("CD.float", "type.float").put("FLOAT", "type.float").put("INT", "type.int").build();
   Pattern floatPattern = Pattern.compile(".*[\\.][0-9].*");
 
   private void lexicaliseArgumentsToDomainEntities(CcgParseTree ccgParse, JsonObject jsonSentence) {
-    JsonArray entities = jsonSentence.getAsJsonArray("entities");
+    JsonArray entities;
+    if (jsonSentence.has("entities"))
+      entities = jsonSentence.getAsJsonArray("entities");
+    else
+      entities = new JsonArray();
+
     JsonArray words = jsonSentence.getAsJsonArray("words");
     List<LexicalItem> leaves = ccgParse.getLeafNodes();
 
@@ -849,9 +857,10 @@ public class GroundedGraphs {
           posTag = "CD.int";
         }
       }
-      String mid = cardinalTypes.containsKey(candcNer) ? cardinalTypes.get(candcNer)
-          : (cardinalTypes.containsKey(stanfordNer) ? cardinalTypes.get(stanfordNer)
-              : (cardinalTypes.containsKey(posTag) ? cardinalTypes.get(posTag) : leaf.getMid()));
+      String mid =
+          cardinalTypes.containsKey(candcNer) ? cardinalTypes.get(candcNer) : (cardinalTypes
+              .containsKey(stanfordNer) ? cardinalTypes.get(stanfordNer) : (cardinalTypes
+              .containsKey(posTag) ? cardinalTypes.get(posTag) : leaf.getMid()));
       leaf.setMid(mid);
     }
 
@@ -869,9 +878,9 @@ public class GroundedGraphs {
   	return createGroundedGraph(graph, null, nbestEdges, nbestGraphs, useEntityTypes, useKB, groundFreeVariables, false);
   }*/
 
-  public List<LexicalGraph> createGroundedGraph(LexicalGraph graph, int nbestEdges, int nbestGraphs,
-      boolean useEntityTypes, boolean useKB, boolean groundFreeVariables, boolean useEmtpyTypes,
-      boolean ignoreTypes, boolean testing) {
+  public List<LexicalGraph> createGroundedGraph(LexicalGraph graph, int nbestEdges,
+      int nbestGraphs, boolean useEntityTypes, boolean useKB, boolean groundFreeVariables,
+      boolean useEmtpyTypes, boolean ignoreTypes, boolean testing) {
     return createGroundedGraph(graph, null, nbestEdges, nbestGraphs, useEntityTypes, useKB,
         groundFreeVariables, useEmtpyTypes, ignoreTypes, testing);
   }
@@ -911,13 +920,15 @@ public class GroundedGraphs {
         continue;
 
       // ground the edge
-      groundedGraphs = groundTheEdge(groundedGraphs, graph, edge, restrictedNodes, nbestEdges,
-          nbestGraphs, useEntityTypes, useKB, groundFreeVariables, testing);
+      groundedGraphs =
+          groundTheEdge(groundedGraphs, graph, edge, restrictedNodes, nbestEdges, nbestGraphs,
+              useEntityTypes, useKB, groundFreeVariables, testing);
 
       // sort descending order
       Collections.sort(groundedGraphs);
-      groundedGraphs = groundedGraphs.size() < nbestGraphs ? groundedGraphs
-          : groundedGraphs.subList(0, nbestGraphs);
+      groundedGraphs =
+          groundedGraphs.size() < nbestGraphs ? groundedGraphs : groundedGraphs.subList(0,
+              nbestGraphs);
 
       if (!ignoreTypes) {
         // ground the node types
@@ -931,14 +942,15 @@ public class GroundedGraphs {
             	groundedGraphs = groundTheType(groundedGraphs, nodeType, additionalNodeTypes, nbestEdges, nbestGraphs, useEntityTypes, useKB);
             }*/
 
-Type<LexicalItem> nodeType = nodeTypes.get(0);
+            Type<LexicalItem> nodeType = nodeTypes.get(0);
             List<Type<LexicalItem>> additionalNodeTypes =
                 nodeTypes.size() > 1 ? nodeTypes.subList(1, nodeTypes.size())
                     : new ArrayList<Type<LexicalItem>>();
 
-            groundedGraphs = groundTheType(groundedGraphs, graph, nodeType, additionalNodeTypes,
-                restrictedNodes, nbestEdges, nbestGraphs, useEntityTypes, useKB,
-                groundFreeVariables, useEmtpyTypes, testing);
+            groundedGraphs =
+                groundTheType(groundedGraphs, graph, nodeType, additionalNodeTypes,
+                    restrictedNodes, nbestEdges, nbestGraphs, useEntityTypes, useKB,
+                    groundFreeVariables, useEmtpyTypes, testing);
           }
         }
 
@@ -957,16 +969,18 @@ Type<LexicalItem> nodeType = nodeTypes.get(0);
             List<Type<LexicalItem>> additionalNodeTypes =
                 nodeTypes.size() > 1 ? nodeTypes.subList(1, nodeTypes.size())
                     : new ArrayList<Type<LexicalItem>>();
-            groundedGraphs = groundTheType(groundedGraphs, graph, nodeType, additionalNodeTypes,
-                restrictedNodes, nbestEdges, nbestGraphs, useEntityTypes, useKB,
-                groundFreeVariables, useEmtpyTypes, testing);
+            groundedGraphs =
+                groundTheType(groundedGraphs, graph, nodeType, additionalNodeTypes,
+                    restrictedNodes, nbestEdges, nbestGraphs, useEntityTypes, useKB,
+                    groundFreeVariables, useEmtpyTypes, testing);
           }
         }
 
         // sort descending order
         Collections.sort(groundedGraphs);
-        groundedGraphs = groundedGraphs.size() < nbestGraphs ? groundedGraphs
-            : groundedGraphs.subList(0, nbestGraphs);
+        groundedGraphs =
+            groundedGraphs.size() < nbestGraphs ? groundedGraphs : groundedGraphs.subList(0,
+                nbestGraphs);
       }
     }
 
@@ -1055,8 +1069,7 @@ Type<LexicalItem> nodeType = nodeTypes.get(0);
         	}
         }*/
 
-EdgeNodeCountFeature edgeNodeCountFeature =
-            new EdgeNodeCountFeature(new Double(nodeCount));
+        EdgeNodeCountFeature edgeNodeCountFeature = new EdgeNodeCountFeature(new Double(nodeCount));
         gGraph.addFeature(edgeNodeCountFeature);
         if (testing) {
           gGraph.setScore(learningModel.getScoreTesting(gGraph.getFeatures()));
@@ -1067,13 +1080,15 @@ EdgeNodeCountFeature edgeNodeCountFeature =
     }
 
     Collections.sort(groundedGraphs);
-    groundedGraphs = groundedGraphs.size() < nbestGraphs ? groundedGraphs
-        : groundedGraphs.subList(0, nbestGraphs);
+    groundedGraphs =
+        groundedGraphs.size() < nbestGraphs ? groundedGraphs : groundedGraphs.subList(0,
+            nbestGraphs);
 
 
     return groundedGraphs;
   }
 
+  @SuppressWarnings("unused")
   private Map<Type<LexicalItem>, List<Type<LexicalItem>>> organiseTypes(
       List<Type<LexicalItem>> nodeTypes) {
     // returns a map containing the main type and all its subtypes
@@ -1121,8 +1136,8 @@ EdgeNodeCountFeature edgeNodeCountFeature =
     return map;
   }
 
-  private static Set<String> standardTypes =
-      Sets.newHashSet("type.datetime", "type.int", "type.float");
+  private static Set<String> standardTypes = Sets.newHashSet("type.datetime", "type.int",
+      "type.float");
 
   public static boolean nodeIsLexicalised(LexicalItem node) {
     return (standardTypes.contains(node.getMid()) || node.getMid().startsWith("m."));
@@ -1130,9 +1145,9 @@ EdgeNodeCountFeature edgeNodeCountFeature =
 
   private List<LexicalGraph> groundTheType(List<LexicalGraph> groundedGraphs,
       LexicalGraph ungroundedGraph, Type<LexicalItem> nodeType,
-      List<Type<LexicalItem>> additionalNodeTypes, Set<LexicalItem> restrictedNodes, int nbestTypes,
-      int nbestGraphs, boolean useEntityTypes, boolean useKB, boolean groundFreeVariables,
-      boolean useEmptyTypes, boolean testing) {
+      List<Type<LexicalItem>> additionalNodeTypes, Set<LexicalItem> restrictedNodes,
+      int nbestTypes, int nbestGraphs, boolean useEntityTypes, boolean useKB,
+      boolean groundFreeVariables, boolean useEmptyTypes, boolean testing) {
     EntityType unGroundedEntityType = nodeType.getEntityType();
     LexicalItem parentNode = nodeType.getParentNode();
     LexicalItem modifierNode = nodeType.getModifierNode();
@@ -1149,8 +1164,9 @@ EdgeNodeCountFeature edgeNodeCountFeature =
         groundedEntityTypes = Lists.newArrayList();
         for (String gtype : gtypes) {
           EntityType groundedEntityType = new EntityType(gtype);
-          Double prob = groundedLexicon.getUtypeGtypeProb(unGroundedEntityType.getType(),
-              groundedEntityType.getType());
+          Double prob =
+              groundedLexicon.getUtypeGtypeProb(unGroundedEntityType.getType(),
+                  groundedEntityType.getType());
           groundedEntityType.setWeight(prob);
           groundedEntityTypes.add(groundedEntityType);
         }
@@ -1190,8 +1206,9 @@ EdgeNodeCountFeature edgeNodeCountFeature =
           if (parentEdges == null)
             parentEdges = Sets.newHashSet();
           for (Edge<LexicalItem> edge : parentEdges) {
-            String edgeName = edge.getLeft().equals(parentNode) ? edge.getRelation().getLeft()
-                : edge.getRelation().getRight();
+            String edgeName =
+                edge.getLeft().equals(parentNode) ? edge.getRelation().getLeft() : edge
+                    .getRelation().getRight();
             ArrayList<String> edgeParts = Lists.newArrayList(Splitter.on(".").split(edgeName));
             int edgePartsLength = edgeParts.size();
             if (edgeParts.get(edgePartsLength - 1).equals("1")) {
@@ -1277,12 +1294,13 @@ EdgeNodeCountFeature edgeNodeCountFeature =
         for (Type<LexicalItem> additionalNodeType : additionalNodeTypes) {
           EntityType unGroundedAdditionalEntityType = additionalNodeType.getEntityType();
           EntityType groundedAdditionalType = groundedEntityType.copy();
-          Double prob = groundedLexicon.getUtypeGtypeProb(unGroundedAdditionalEntityType.getType(),
-              groundedAdditionalType.getType());
+          Double prob =
+              groundedLexicon.getUtypeGtypeProb(unGroundedAdditionalEntityType.getType(),
+                  groundedAdditionalType.getType());
           groundedAdditionalType.setWeight(prob);
 
-          newGraph.addType(additionalNodeType.getParentNode(), additionalNodeType.getModifierNode(),
-              groundedAdditionalType);
+          newGraph.addType(additionalNodeType.getParentNode(),
+              additionalNodeType.getModifierNode(), groundedAdditionalType);
 
           // adding utype gtype features
           if (utypeGtypeFlag) {
@@ -1327,8 +1345,9 @@ EdgeNodeCountFeature edgeNodeCountFeature =
     if (!stems.containsKey(modifierWord))
       stems.put(modifierWord, PorterStemmer.getStem(modifierWord));
     String modifierStem = stems.get(modifierWord);
-    Iterator<String> it = Splitter.on(CharMatcher.anyOf("._")).trimResults().omitEmptyStrings()
-        .split(grelLeftStripped).iterator();
+    Iterator<String> it =
+        Splitter.on(CharMatcher.anyOf("._")).trimResults().omitEmptyStrings()
+            .split(grelLeftStripped).iterator();
     while (it.hasNext()) {
       String part = it.next();
       if (!stems.containsKey(part))
@@ -1487,8 +1506,9 @@ EdgeNodeCountFeature edgeNodeCountFeature =
           newGraph.addFeature(urelGrelFeature);
           if (!learningModel.containsFeature(urelGrelFeature)) {
             if (useLexiconWeightsRel)
-              value = groundedLexicon.getUrelGrelProb(ungroundedRelation, groundedRelation)
-                  * initialEdgeWeight;
+              value =
+                  groundedLexicon.getUrelGrelProb(ungroundedRelation, groundedRelation)
+                      * initialEdgeWeight;
             else
               value = initialEdgeWeight;
             learningModel.setWeightIfAbsent(urelGrelFeature, value);
@@ -1675,12 +1695,12 @@ EdgeNodeCountFeature edgeNodeCountFeature =
               grelRightStripped = grelRightStripped.replaceAll("\\.[12]$", "");
             }
 
-            String grelLeftInverse = schema.getRelation2Inverse(grelLeftStripped) != null ? schema
-                .getRelation2Inverse(grelLeftStripped)
-                : grelLeftStripped;
-            String grelRightInverse = schema.getRelation2Inverse(grelRightStripped) != null ? schema
-                .getRelation2Inverse(grelRightStripped)
-                : grelRightStripped;
+            String grelLeftInverse =
+                schema.getRelation2Inverse(grelLeftStripped) != null ? schema
+                    .getRelation2Inverse(grelLeftStripped) : grelLeftStripped;
+            String grelRightInverse =
+                schema.getRelation2Inverse(grelRightStripped) != null ? schema
+                    .getRelation2Inverse(grelRightStripped) : grelRightStripped;
 
             List<String> parts = Lists.newArrayList(Splitter.on(".").split(grelLeftStripped));
             int toIndex = parts.size();
@@ -1718,10 +1738,10 @@ EdgeNodeCountFeature edgeNodeCountFeature =
               String modifierStem = stems.get(modifierWord);*/
               String modifierStem = modifierWord;
 
-              if ((stringContainsWord(grelLeftStripped, modifierStem)
-                  || stringContainsWord(grelLeftInverse, modifierStem)) && (
-                  stringContainsWord(grelRightStripped, modifierStem)
-                  || stringContainsWord(grelRightInverse, modifierStem))) {
+              if ((stringContainsWord(grelLeftStripped, modifierStem) || stringContainsWord(
+                  grelLeftInverse, modifierStem))
+                  && (stringContainsWord(grelRightStripped, modifierStem) || stringContainsWord(
+                      grelRightInverse, modifierStem))) {
                 ArgStemMatchingFeature s = newGraph.argStemMatchingFeature;
                 s.setFeatureValue(s.getFeatureValue() + 1.0);
                 newGraph.argumentsStemsMatched.add(modifierNode);
@@ -1749,15 +1769,15 @@ EdgeNodeCountFeature edgeNodeCountFeature =
               grelRightStripped = grelRightStripped.replaceAll("\\.[12]$", "");
             }
 
-            String grelLeftInverse = schema.getRelation2Inverse(grelLeftStripped) != null ? schema
-                .getRelation2Inverse(grelLeftStripped)
-                : grelLeftStripped;
+            String grelLeftInverse =
+                schema.getRelation2Inverse(grelLeftStripped) != null ? schema
+                    .getRelation2Inverse(grelLeftStripped) : grelLeftStripped;
             // if (!schema.hasMediatorArgument(grelLeftInverse))
             // grelLeftInverse += ".0";
 
-            String grelRightInverse = schema.getRelation2Inverse(grelRightStripped) != null ? schema
-                .getRelation2Inverse(grelRightStripped)
-                : grelRightStripped;
+            String grelRightInverse =
+                schema.getRelation2Inverse(grelRightStripped) != null ? schema
+                    .getRelation2Inverse(grelRightStripped) : grelRightStripped;
             // if (!schema.hasMediatorArgument(grelRightInverse))
             // grelRightInverse += ".0";
 
@@ -1767,8 +1787,9 @@ EdgeNodeCountFeature edgeNodeCountFeature =
             if (!grelLeftStripped.endsWith("inverse"))
               grelLeftStripped = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
             else
-              grelLeftStripped = Joiner.on(".").join(
-                  parts.subList(fromIndex > 0 ? fromIndex - 1 : 0, toIndex - 1));
+              grelLeftStripped =
+                  Joiner.on(".")
+                      .join(parts.subList(fromIndex > 0 ? fromIndex - 1 : 0, toIndex - 1));
 
             parts = Lists.newArrayList(Splitter.on(".").split(grelLeftInverse));
             toIndex = parts.size();
@@ -1776,8 +1797,9 @@ EdgeNodeCountFeature edgeNodeCountFeature =
             if (!grelLeftInverse.endsWith("inverse"))
               grelLeftInverse = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
             else
-              grelLeftInverse = Joiner.on(".").join(
-                  parts.subList(fromIndex > 0 ? fromIndex - 1 : 0, toIndex - 1));
+              grelLeftInverse =
+                  Joiner.on(".")
+                      .join(parts.subList(fromIndex > 0 ? fromIndex - 1 : 0, toIndex - 1));
 
             parts = Lists.newArrayList(Splitter.on(".").split(grelRightStripped));
             toIndex = parts.size();
@@ -1785,8 +1807,9 @@ EdgeNodeCountFeature edgeNodeCountFeature =
             if (!grelRightStripped.endsWith("inverse"))
               grelRightStripped = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
             else
-              grelRightStripped = Joiner.on(".").join(
-                  parts.subList(fromIndex > 0 ? fromIndex - 1 : 0, toIndex - 1));
+              grelRightStripped =
+                  Joiner.on(".")
+                      .join(parts.subList(fromIndex > 0 ? fromIndex - 1 : 0, toIndex - 1));
 
             parts = Lists.newArrayList(Splitter.on(".").split(grelRightInverse));
             toIndex = parts.size();
@@ -1794,8 +1817,9 @@ EdgeNodeCountFeature edgeNodeCountFeature =
             if (!grelRightInverse.contains("inverse"))
               grelRightInverse = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
             else
-              grelRightInverse = Joiner.on(".").join(
-                  parts.subList(fromIndex > 0 ? fromIndex - 1 : 0, toIndex - 1));
+              grelRightInverse =
+                  Joiner.on(".")
+                      .join(parts.subList(fromIndex > 0 ? fromIndex - 1 : 0, toIndex - 1));
 
             for (Type<LexicalItem> nodeType : nodeTypes) {
               LexicalItem modifierNode = nodeType.getModifierNode();
@@ -1813,10 +1837,10 @@ EdgeNodeCountFeature edgeNodeCountFeature =
               String modifierStem = stems.get(modifierWord);*/
               String modifierStem = modifierWord;
 
-              if ((stringContainsWord(grelLeftStripped, modifierStem)
-                  && stringContainsWord(grelLeftInverse, modifierStem)) || (
-                  stringContainsWord(grelRightStripped, modifierStem)
-                  && stringContainsWord(grelRightInverse, modifierStem))) {
+              if ((stringContainsWord(grelLeftStripped, modifierStem) && stringContainsWord(
+                  grelLeftInverse, modifierStem))
+                  || (stringContainsWord(grelRightStripped, modifierStem) && stringContainsWord(
+                      grelRightInverse, modifierStem))) {
                 ArgStemGrelPartMatchingFeature s = newGraph.argStemGrelPartMatchingFeature;
                 s.setFeatureValue(s.getFeatureValue() + 1.0);
                 newGraph.argumentStemGrelPartMatchedNodes.add(modifierNode);
@@ -1901,12 +1925,12 @@ EdgeNodeCountFeature edgeNodeCountFeature =
             grelRightStripped = grelRightStripped.replaceAll("\\.[12]$", "");
           }
 
-          String grelLeftInverse = schema.getRelation2Inverse(grelLeftStripped) != null ? schema
-              .getRelation2Inverse(grelLeftStripped)
-              : grelLeftStripped;
-          String grelRightInverse = schema.getRelation2Inverse(grelRightStripped) != null ? schema
-              .getRelation2Inverse(grelRightStripped)
-              : grelRightStripped;
+          String grelLeftInverse =
+              schema.getRelation2Inverse(grelLeftStripped) != null ? schema
+                  .getRelation2Inverse(grelLeftStripped) : grelLeftStripped;
+          String grelRightInverse =
+              schema.getRelation2Inverse(grelRightStripped) != null ? schema
+                  .getRelation2Inverse(grelRightStripped) : grelRightStripped;
 
           List<String> parts = Lists.newArrayList(Splitter.on(".").split(grelLeftStripped));
           int toIndex = parts.size();
@@ -1938,10 +1962,10 @@ EdgeNodeCountFeature edgeNodeCountFeature =
 
             // boolean isMediatorRel =
             // schema.hasMediatorArgument(grelLeftStripped);
-            if ((stringContainsWord(grelLeftStripped, mediatorStem)
-                || stringContainsWord(grelLeftInverse, mediatorStem)) && (
-                stringContainsWord(grelRightStripped, mediatorStem)
-                || stringContainsWord(grelRightInverse, mediatorStem))) {
+            if ((stringContainsWord(grelLeftStripped, mediatorStem) || stringContainsWord(
+                grelLeftInverse, mediatorStem))
+                && (stringContainsWord(grelRightStripped, mediatorStem) || stringContainsWord(
+                    grelRightInverse, mediatorStem))) {
               StemMatchingFeature s = newGraph.stemMatchingFeature;
               s.setFeatureValue(s.getFeatureValue() + 1.0);
               newGraph.mediatorsStemsMatched.add(mediator);
@@ -1968,10 +1992,10 @@ EdgeNodeCountFeature edgeNodeCountFeature =
               String modifierStem = stems.get(modifierNodeString);*/
               String modifierStem = modifierNodeString;
 
-              if ((stringContainsWord(grelLeftStripped, modifierStem)
-                  || stringContainsWord(grelLeftInverse, modifierStem)) && (
-                  stringContainsWord(grelRightStripped, modifierStem)
-                  || stringContainsWord(grelRightInverse, modifierStem))) {
+              if ((stringContainsWord(grelLeftStripped, modifierStem) || stringContainsWord(
+                  grelLeftInverse, modifierStem))
+                  && (stringContainsWord(grelRightStripped, modifierStem) || stringContainsWord(
+                      grelRightInverse, modifierStem))) {
                 StemMatchingFeature s = newGraph.stemMatchingFeature;
                 s.setFeatureValue(s.getFeatureValue() + 1.0);
                 newGraph.mediatorsStemsMatched.add(modifierNode);
@@ -1988,15 +2012,15 @@ EdgeNodeCountFeature edgeNodeCountFeature =
             grelRightStripped = grelRightStripped.replaceAll("\\.[12]$", "");
           }
 
-          String grelLeftInverse = schema.getRelation2Inverse(grelLeftStripped) != null ? schema
-              .getRelation2Inverse(grelLeftStripped)
-              : grelLeftStripped;
+          String grelLeftInverse =
+              schema.getRelation2Inverse(grelLeftStripped) != null ? schema
+                  .getRelation2Inverse(grelLeftStripped) : grelLeftStripped;
           // if (!schema.hasMediatorArgument(grelLeftInverse))
           // grelLeftInverse += ".0";
 
-          String grelRightInverse = schema.getRelation2Inverse(grelRightStripped) != null ? schema
-              .getRelation2Inverse(grelRightStripped)
-              : grelRightStripped;
+          String grelRightInverse =
+              schema.getRelation2Inverse(grelRightStripped) != null ? schema
+                  .getRelation2Inverse(grelRightStripped) : grelRightStripped;
           // if (!schema.hasMediatorArgument(grelRightInverse))
           // grelRightInverse += ".0";
 
@@ -2047,10 +2071,10 @@ EdgeNodeCountFeature edgeNodeCountFeature =
 
             // boolean isMediatorRel =
             // schema.hasMediatorArgument(grelLeftStripped);
-            if ((stringContainsWord(grelLeftStripped, mediatorStem)
-                && stringContainsWord(grelLeftInverse, mediatorStem)) || (
-                stringContainsWord(grelRightStripped, mediatorStem)
-                && stringContainsWord(grelRightInverse, mediatorStem))) {
+            if ((stringContainsWord(grelLeftStripped, mediatorStem) && stringContainsWord(
+                grelLeftInverse, mediatorStem))
+                || (stringContainsWord(grelRightStripped, mediatorStem) && stringContainsWord(
+                    grelRightInverse, mediatorStem))) {
               MediatorStemGrelPartMatchingFeature s = newGraph.mediatorStemGrelPartMatchingFeature;
               s.setFeatureValue(s.getFeatureValue() + 1.0);
               newGraph.mediatorStemGrelPartMatchedNodes.add(mediator);
@@ -2077,10 +2101,10 @@ EdgeNodeCountFeature edgeNodeCountFeature =
               String modifierStem = stems.get(modifierNodeString);*/
               String modifierStem = modifierNodeString;
 
-              if ((stringContainsWord(grelLeftStripped, modifierStem)
-                  && stringContainsWord(grelLeftInverse, modifierStem)) || (
-                  stringContainsWord(grelRightStripped, modifierStem)
-                  && stringContainsWord(grelRightInverse, modifierStem))) {
+              if ((stringContainsWord(grelLeftStripped, modifierStem) && stringContainsWord(
+                  grelLeftInverse, modifierStem))
+                  || (stringContainsWord(grelRightStripped, modifierStem) && stringContainsWord(
+                      grelRightInverse, modifierStem))) {
                 MediatorStemGrelPartMatchingFeature s =
                     newGraph.mediatorStemGrelPartMatchingFeature;
                 s.setFeatureValue(s.getFeatureValue() + 1.0);
@@ -2119,18 +2143,17 @@ EdgeNodeCountFeature edgeNodeCountFeature =
   }
 
   /**
-   *
-   * If any of the entities is of standard type, remove relations that do not
-   * contain standard types as arguments. Additionally if the relation has
-   * type.datetime as argument, make sure the entity allows it.
-   *
+   * 
+   * If any of the entities is of standard type, remove relations that do not contain standard types
+   * as arguments. Additionally if the relation has type.datetime as argument, make sure the entity
+   * allows it.
+   * 
    * @param groundedRelation
    * @param node1
    * @param node2
    * @return
    */
-  private boolean checkValidRelation(Relation groundedRelation, LexicalItem node1,
-      LexicalItem node2) {
+  private boolean checkValidRelation(Relation groundedRelation, LexicalItem node1, LexicalItem node2) {
     String mid1 = node1.getMid();
     String mid2 = node2.getMid();
 

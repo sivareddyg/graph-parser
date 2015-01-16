@@ -177,7 +177,7 @@ System.out.println("# Ungrounded Graphs");
                 : groundedGraphs.subList(0, nbestGraphs);
 
             System.out.println("# Total number of Grounded Graphs: " + groundedGraphs.size());
-            int connectedGraphCount = 0;
+            // int connectedGraphCount = 0;
             int count = 0;
             boolean foundAnswer = false;
             Set<Feature> predGraphFeatures = null;

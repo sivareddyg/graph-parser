@@ -1,0 +1,5 @@
+{"sentence" : "Miyagi is a pulp culture icon who was brilliantly played by Pat Morita."}
+{"sentence" : "Cameron is the director of the movie which DiCaprio acted in."}
+{"sentence" : "Obama's birthplace is Kenya."}
+{"sentence" : "Obama birthplace is Kenya."}
+{"sentence" : "I went to Hilton hotel."}

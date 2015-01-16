@@ -1,4 +1,12 @@
-################## GraphParser #################
+# GraphParser 
+
+# Graph Parser Ungrounded Parser demo
+
+This allows you to extract semantic parses of natural language sentences. Usage is as follows
+
+cat input.txt | sh run.sh
+
+# Graph Parser Grounded Experiments
 
 The Makefile has the following commands specific to deplambda project which
 hopefully are self-explanatory from the names.

@@ -39,7 +39,7 @@ public class KnowledgeBase {
   /**
    * A relation contains two edges from a hypothetical node to entities in relation. Relation also
    * contains a weight describing how important the relation is.
-   *
+   * 
    */
   public static class Relation implements Comparable<Relation> {
     private String leftEdge;
@@ -89,7 +89,7 @@ public class KnowledgeBase {
       else if (double1 - double2 < -0.00001)
       	return 1;*/
 
-if (!leftEdge.equals(other.leftEdge)) {
+      if (!leftEdge.equals(other.leftEdge)) {
         return leftEdge.compareTo(other.leftEdge);
       }
 
@@ -158,12 +158,12 @@ if (!leftEdge.equals(other.leftEdge)) {
   }
 
   /**
-   *
+   * 
    * Entity Type contains the type of the entity, and its weight describing how important the weight
    * is
-   *
+   * 
    * @author Siva Reddy
-   *
+   * 
    */
   public static class EntityType implements Comparable<EntityType> {
     private String type;
@@ -245,7 +245,7 @@ if (!leftEdge.equals(other.leftEdge)) {
       else if (double1 - double2 < -0.00001)
       	return 1;*/
 
-return type.compareTo(arg0.type);
+      return type.compareTo(arg0.type);
     }
 
     public EntityType copy() {
@@ -254,11 +254,11 @@ return type.compareTo(arg0.type);
   }
 
   /**
-   *
+   * 
    * {@link Property} describe properties of {@link EntityType}s or {@link Relation}s.
-   *
+   * 
    * @author Siva Reddy
-   *
+   * 
    */
   public static class Property {
     private String propertyName;
@@ -355,8 +355,11 @@ return type.compareTo(arg0.type);
     typeCount = 3;
     relationCount = 0;
 
-    loadRelationsThatAreTypes(relationTypesFile);
-    loadKB(kbCompressedFile);
+    if (relationTypesFile != null)
+      loadRelationsThatAreTypes(relationTypesFile);
+    
+    if (kbCompressedFile != null)
+      loadKB(kbCompressedFile);
   }
 
   private void loadRelationsThatAreTypes(String relationTypesFile) throws IOException {

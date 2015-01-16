@@ -7,7 +7,6 @@
 	<classpathentry kind="lib" path="lib/commons-lang3-3.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging.jar"/>
 	<classpathentry kind="lib" path="lib/gson-2.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/guava-14.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/icu4j_3_4.jar"/>
 	<classpathentry kind="lib" path="lib/iri.jar"/>
 	<classpathentry kind="lib" path="lib/jena.jar"/>
@@ -19,5 +18,11 @@
 	<classpathentry kind="lib" path="lib/virtjdbc3.jar"/>
 	<classpathentry kind="lib" path="lib/xercesImpl.jar"/>
 	<classpathentry kind="lib" path="lib/junit-4.5.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-3.4.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-3.4-models.jar"/>
+	<classpathentry kind="lib" path="lib/edu.mit.jwi_2.3.0.jar"/>
+	<classpathentry kind="lib" path="lib/jewelcli-0.7.6.jar"/>
+	<classpathentry kind="lib" path="lib/guava-15.0.jar"/>
+	<classpathentry kind="lib" path="lib/mtj-1.0-snapshot.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

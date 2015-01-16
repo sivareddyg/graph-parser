@@ -51,6 +51,8 @@ public class GroundedLexicon {
   private Double typeCount = 0.0;
 
   public GroundedLexicon(String lexiconFileName) throws IOException {
+    if (lexiconFileName == null)
+      return;
     BufferedReader br = new BufferedReader(new FileReader(lexiconFileName));
     try {
       String line = br.readLine();
@@ -402,12 +404,12 @@ public class GroundedLexicon {
   /**
    * Returns 1 if urel, grel pair is found in the lexicon. Returns -1 if inverse of urel, inverse of
    * grel pair is found. Returns 0 if none.
-   *
+   * 
    * @param urel
    * @param grel
    * @return
-   *
-   *
+   * 
+   * 
    */
   public int hasUrelGrel(Relation urel, Relation grel) {
     Pair<Relation, Relation> pair = Pair.of(urel, grel);
