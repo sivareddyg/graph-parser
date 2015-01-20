@@ -3,3 +3,6 @@
 {"sentence" : "Obama's birthplace is Kenya."}
 {"sentence" : "Obama birthplace is Kenya."}
 {"sentence" : "I went to Hilton hotel."}
+{"sentence" : "The movie is amazing."}
+{"sentence" : "John saw hundred and forty four monkeys."}
+{"sentence" : "I saw a good movie director"}

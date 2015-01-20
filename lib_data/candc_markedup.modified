@@ -1,0 +1,3265 @@
+# C&C NLP tools
+# Copyright (c) Universities of Edinburgh, Oxford and Sydney
+# Copyright (c) James R. Curran
+#
+# This software is covered by a non-commercial use licence.
+# See LICENCE.txt for the full text of the licence.
+#
+# If LICENCE.txt is not included in this distribution
+# please email candc@it.usyd.edu.au to obtain a copy.
+# This is the 'markedup' file which maps from bare categories to the
+# categories marked up with head and dependency information.  This
+# file now also contains the mapping to grammatical relations based
+# on the Briscoe and Carroll scheme.
+#
+# Editing existing marked up categories in this file without regenerating
+# the training data and reestimating the model will lead to reduced
+# performance.  However, it is possible to change the mapping to grammatical
+# relations without affecting the existing model.
+#
+# The category information is in the following format:
+# <frequency> <bare_category>
+#   <#_of_slots> <markedup_category>
+#   [! <markedup_category>]
+#   <slot_1> <gr_1>
+#   <slot_2> <gr_2>
+# ...
+#
+# The exclamation marked entry is an alternative markedup category
+# with a different head passing scheme to match Briscoe and Carroll.
+#
+# The slots in the CCG markup aren't always numbered from left to right (for
+# historical reasons). This is an inconsistency we will fix in a later version.
+#
+# The gr annotation is based on the Briscoe and Carroll (B+C) GR scheme.
+# See the following technical report for details:
+#
+# Ted Briscoe
+# An Introduction to Tag Sequence Grammars and the RASP System Parser
+# Technical Report: UCAM-CL-TR-662
+# University of Cambridge Computing Laboratory
+#
+# Some things to fix:
+#
+# the subject in (S[adj]\NP)/NP gets ignored, which is correct except when the dependency has
+# come about through a unary rule. So we're currently not producing this unary rule dependency.
+# (There may be other cases like this.)
+#
+# The GR markup for the question categories at the end of the file needs looking at again
+#
+# The CCG dependencies haven't been changed, even where there are obvious improvements,
+# because this version of the markedup file was used to get the CL-paper results and
+# we'd like this to serve as part of the record of those results.
+
+# lexical constraint groups
+=be ai am are be been being is was were 's 'm 're
+=aux ai am are be been being is was were 's 'm 're
+=aux has have had 've
+=aux do did does 'd 'll ca can could may might must ought
+=aux shall should will wo would
+=aux get got gotten getting
+=det another other some such
+=part all both
+# now list the markedup categories
+,
+  0 ,{_}
+
+.
+  0 .{_}
+
+:
+  0 :{_}
+
+;
+  0 ;{_}
+
+LRB
+  0 LRB{_}
+
+N
+  0 N{_}
+
+NP
+  0 NP{_}
+
+NP[expl]
+  0 NP[expl]{_}
+
+PP
+  0 PP{_}
+
+RRB
+  0 RRB{_}
+
+S
+  0 S{_}
+
+S[dcl]
+  0 S[dcl]{_}
+
+S[frg]
+  0 S[frg]{_}
+
+S[intj]
+  0 S[intj]{_}
+
+S[wq]
+  0 S[wq]{_}
+
+conj
+  0 conj{_}
+
+N[num]
+  0 N[num]{_}
+
+NP[thr]
+  0 NP[thr]{_}
+
+N/N
+  1 (N{Y}/N{Y}<1>){_}
+  1 ncmod _ %f %l
+
+NP[nb]/N
+  1 (NP[nb]{Y}/N{Y}<1>){_}
+  1 ncmod part %f %l =part
+  1 det %f %l
+
+(NP\NP)/NP
+  2 ((NP{Y}\NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+((S\NP)\(S\NP))/NP
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/NP{W}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+# modified
+PP/NP
+  1 (PP{_}/NP{Y}<2>){_}
+  1 dobj %l %f
+
+(S[dcl]\NP)/NP
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f =be
+  2 dobj %l %f
+
+(S\NP)\(S\NP)
+  1 ((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}
+  1 ncmod _ %f %l
+
+(S[b]\NP)/NP
+  2 ((S[b]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f =be
+  2 dobj %l %f
+
+# modified
+(S[to]\NP)/(S[b]\NP)
+  2 ((S[to]{Y}\NP{Z}<1>){Y}/(S[b]{Y}<2>\NP{Z*}){Y}){_}
+  1 ignore
+  2 ignore
+
+# modified
+(S[dcl]\NP)/(S[b]\NP)
+  2 ((S[dcl]{Z}\NP{Y}<1>){Z}/(S[b]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[dcl]{Z}\NP{Y}<1>){Z}/(S[b]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+(NP[nb]/N)\NP
+  2 ((NP[nb]{Y}/N{Y}<1>){_}\NP{Z}<2>){_}
+  1 ncmod poss %f %2
+  2 ignore
+
+S[adj]\NP
+  1 (S[adj]{_}\NP{Y}<1>){_}
+  1 ignore
+
+# modified
+S[pss]\NP
+  1 (S[pss]{_}\NP{Y}<2>){_}
+  1 ncsubj %l %f obj
+
+(N/N)/(N/N)
+  1 ((N{Y}/N{Y}){Z}/(N{Y}/N{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(S[ng]\NP)/NP
+  2 ((S[ng]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 dobj %l %f
+
+(S\NP)/(S\NP)
+  1 ((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}
+  1 ncmod _ %f %l
+
+(S[dcl]\NP)/S[dcl]
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+S[dcl]\NP
+  1 (S[dcl]{_}\NP{Y}<1>){_}
+  1 ncsubj %l %f _
+
+# modified
+(S[dcl]\NP)/(S[pt]\NP)
+  2 ((S[dcl]{Z}\NP{Y}<1>){Z}/(S[pt]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[dcl]{Z}\NP{Y}<1>){Z}/(S[pt]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+S/S
+  1 (S[X]{Y}/S[X]{Y}<1>){_}
+  1 ncmod _ %f %l
+
+(NP\NP)/(S[dcl]\NP)
+  2 ((NP{Y}\NP{Y}<1>){_}/(S[dcl]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((NP{Y}\NP{Y}<1>){_}/(S[dcl]{Z}<2>\NP{_}){Z}){_}
+  1 cmod %l %f %2
+  2 ignore
+# "abbot who helps" in B+C: (cmod _ abbot helps) (ncsubj helps who)
+# "situation that encouraged": (ncsubj encouraged situation _) (cmod that situation encouraged)
+
+(S/S)/NP
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+# modified
+(S[dcl]\NP)/(S[adj]\NP)
+  2 ((S[dcl]{Z}\NP{Y}<1>){Z}/(S[adj]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+
+# modified
+(S[dcl]\NP)/(S[pss]\NP)
+  2 ((S[dcl]{Z}\NP{Y}<1>){Z}/(S[pss]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[dcl]{Z}\NP{Y}<1>){Z}/(S[pss]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+S[em]/S[dcl]
+  1 (S[em]{_}/S[dcl]{Y}<1>){_}
+  1 ignore
+
+((S\NP)\(S\NP))/((S\NP)\(S\NP))
+  1 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<1>){_}
+  1 ncmod _ %f %l
+
+# modified
+(S[dcl]\NP)/(S[ng]\NP)
+  2 ((S[dcl]{Z}\NP{Y}<1>){Z}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[dcl]{Z}\NP{Y}<1>){Z}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+((S\NP)\(S\NP))/S[dcl]
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/S[dcl]{W}<2>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+
+(S[dcl]\NP)/PP
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  2 ccomp _ %l %f =PP/S[dcl]
+
+(S[dcl]\NP)/(S[to]\NP)
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+S[b]\NP
+  1 (S[b]{_}\NP{Y}<1>){_}
+  1 ncsubj %l %f _
+
+NP\NP
+  1 (NP{Y}\NP{Y}<1>){_}
+  1 ncmod _ %f %l
+
+(S[pt]\NP)/NP
+  2 ((S[pt]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f =be
+  2 dobj %l %f
+
+# modified
+(S[pss]\NP)/PP
+  2 ((S[pss]{_}\NP{Y}<2>){_}/PP{Z}<3>){_}
+  1 ncsubj %l %f obj
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+
+(S[dcl]\NP)/S[em]
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  2 ccomp %f %l %c =S[em]/S[b]
+
+(S[adj]\NP)/(S[adj]\NP)
+  1 ((S[adj]{Y}\NP{Z}){Y}/(S[adj]{Y}<1>\NP{Z}){Y}){_}
+  1 ncmod _ %f %l
+
+NP/NP
+  1 (NP{Y}/NP{Y}<1>){_}
+  1 det %f %l =det
+  1 ncmod _ %f %l
+
+(S/S)/S[dcl]
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+
+(S[dcl]\S[dcl])\NP
+  2 ((S[dcl]{_}\S[dcl]{Y}<1>){_}\NP{Z}<2>){_}
+  1 cmod _ %l %f
+  2 ncsubj %l %f _
+# not sure about the order of %l %f on 1: doesn't seem to be consistent in B+C
+
+# modified
+(S[b]\NP)/(S[pss]\NP)
+  2 ((S[b]{Z}\NP{Y}<1>){Z}/(S[pss]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[b]{Z}\NP{Y}<1>){Z}/(S[pss]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+(NP\NP)/(NP\NP)
+  1 ((NP{Y}\NP{Y}){Z}/(NP{Y}\NP{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(S[b]\NP)/PP
+  2 ((S[b]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  2 ccomp _ %l %f =PP/S[dcl]
+
+(NP\NP)/N
+  2 ((NP{Y}\NP{Y}<1>){_}/N{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+S[ng]\NP
+  1 (S[ng]{_}\NP{Y}<1>){_}
+  1 ncsubj %l %f _
+
+((S[dcl]\NP)/PP)/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  3 dobj %l %f
+
+N\N
+  1 (N{Y}\N{Y}<1>){_}
+  1 ncmod _ %f %l
+
+(S[adj]\NP)/PP
+  2 ((S[adj]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}
+  1 ignore
+  2 iobj %l %f =PP/NP
+  2 xmod _ %l %f =PP/(S[ng]\NP)
+
+# modified
+((S[b]\NP)/PP)/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/PP{_}){_}/NP{W}<2>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  3 dobj %l %f
+
+(S[dcl]\S[dcl])/NP
+  2 ((S[dcl]{_}\S[dcl]{Y}<1>){_}/NP{Z}<2>){_}
+  1 cmod _ %f %l
+  2 ncsubj %l %f inv
+
+((S\NP)\(S\NP))/PP
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/PP{W}<2>){_}
+# 1 (pmod %f %l) POS==IN
+  1 ncmod _ %f %l # not clear what to do here; many different constructions in CCGbank
+  2 iobj %l %f =PP/NP
+# do we want to support POS constraints (and pmod)?
+
+# modified
+(S[b]\NP)/(S[adj]\NP)
+  2 ((S[b]{Z}\NP{Y}<1>){Z}/(S[adj]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+
+(S[ng]\NP)/PP
+  2 ((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  2 ccomp _ %l %f =PP/S[dcl]
+
+(S[pss]\NP)/(S[to]\NP)
+  2 ((S[pss]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f obj
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+((S\NP)\(S\NP))/(S[ng]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[ng]{W}<2>\NP{Z*}){W}){_}
+  1 xmod _ %f %l
+  2 xcomp _ %l %f
+
+((S\NP)\(S\NP))/N
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/N{W}<2>){_}
+  1 ncmod _ %f %2
+  2 det %f %l
+
+(NP\NP)/S[dcl]
+  2 ((NP{Y}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 cmod _ %f %2
+  2 ncmod _ %f %l
+
+(S[adj]\NP)/(S[to]\NP)
+  2 ((S[adj]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+PP/(S[ng]\NP)
+  1 (PP{_}/(S[ng]{Y}<1>\NP{Z}){Y}){_}
+  1 xcomp _ %l %f
+
+(NP\NP)/(S[ng]\NP)
+  2 ((NP{Y}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((NP{Y}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{Y}){Z}){_}
+  1 xmod _ %f %l
+  2 xcomp _ %l %f
+# GR markup here looks right -- shouldn't be passing NP head
+# this is consistent with B+C
+# but check for consistency with CCGbank before changing original
+
+((S[adj]\NP)\(S[adj]\NP))/NP
+  2 (((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}<1>\NP{Z}){Y}){_}/NP{W}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+S[pt]\NP
+  1 (S[pt]{_}\NP{Y}<1>){_}
+  1 ncsubj %l %f _
+
+(S[ng]\NP)/(S[to]\NP)
+  2 ((S[ng]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+(S/S)/(S/S)
+  1 ((S[X]{Y}/S[X]{Y}){Z}/(S[X]{Y}/S[X]{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(S[b]\NP)/(S[to]\NP)
+  2 ((S[b]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+((S[ng]\NP)/PP)/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  3 dobj %l %f
+
+((S[dcl]\NP)/(S[to]\NP))/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 dobj %l %f
+
+# modified
+(S[pt]\NP)/(S[pss]\NP)
+  2 ((S[pt]{Z}\NP{Y}<1>){Z}/(S[pss]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[pt]{Z}\NP{Y}<1>){Z}/(S[pss]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+S[qem]/S[dcl]
+  1 (S[qem]{_}/S[dcl]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+((S\NP)/(S\NP))/NP
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}/NP{W}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+N/S[em]
+  1 (N{_}/S[em]{Y}<1>){_}
+  1 ccomp %f %l %c =S[em]/S[dcl]
+
+# modified
+(S[pss]\NP)/NP
+  2 ((S[pss]{_}\NP{Y}<2>){_}/NP{Z}<3>){_}
+  1 ncsubj %l %f obj
+  2 obj2 %l %f
+
+(S[adj]\NP)/NP
+  2 ((S[adj]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ignore
+  2 dobj %l %f
+
+# modified
+(S[b]\NP)/(S[pt]\NP)
+  2 ((S[b]{Z}\NP{Y}<1>){Z}/(S[pt]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[b]{Z}\NP{Y}<1>){Z}/(S[pt]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+# modified
+(S[b]\NP)/(S[ng]\NP)
+  2 ((S[b]{Z}\NP{Y}<1>){Z}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[b]{Z}\NP{Y}<1>){Z}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+(NP\NP)/(S[dcl]/NP)
+  2 ((NP{Y}\NP{Y}<1>){_}/(S[dcl]{Z}<2>/NP{Y*}){Z}){_}
+  1 cmod %l %f %2
+  2 ignore # consistent with subject extraction case
+
+(S[pt]\NP)/PP
+  2 ((S[pt]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %c =be =PP/NP
+  2 iobj %f %l %c =PP/NP
+  2 xcomp %f %l %c =PP/(S[adj]\NP)
+
+PP/PP
+  1 (PP{Y}/PP{Y}<1>){_}
+  1 ncmod _ %f %l
+
+((S[b]\NP)/(S[to]\NP))/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 dobj %l %f
+
+(NP\NP)/PP
+  2 ((NP{Y}\NP{Y}<1>){_}/PP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 iobj %l %f =PP/NP
+
+# modified
+(S[pt]\NP)/(S[ng]\NP)
+  2 ((S[pt]{Z}\NP{Y}<1>){Z}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[pt]{Z}\NP{Y}<1>){Z}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+(S/S)/PP
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/PP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 iobj %l %f =PP/NP
+
+# modified
+(S[pt]\NP)/(S[adj]\NP)
+  2 ((S[pt]{Z}\NP{Y}<1>){Z}/(S[adj]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore
+  2 xcomp _ %l %f
+
+# modified
+(S[ng]\NP)/(S[pss]\NP)
+  2 ((S[ng]{Z}\NP{Y}<1>){Z}/(S[pss]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[ng]{Z}\NP{Y}<1>){Z}/(S[pss]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+conj/conj
+  1 (conj{Y}/conj{Y}<1>){_}
+  1 ncmod _ %f %l
+
+(S[adj]\NP)\NP
+  2 ((S[adj]{_}\NP{Y}<1>){_}\NP{Z}<2>){_}
+  1 ignore
+  2 ncmod _ %f %l
+# S[adj]\NP --> NP\NP unary rule needs fixing since we currently don't get dependency 1 which
+# we want in this case
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))/NP
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<1>){_}/NP{V}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+((S[dcl]\NP)/NP)/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 obj2 %l %f
+  3 dobj %l %f
+
+(S\S)/S[dcl]
+  2 ((S[X]{Y}\S[X]{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+
+(S[pt]\NP)/(S[to]\NP)
+  2 ((S[pt]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+((S[pt]\NP)/PP)/NP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  3 dobj %l %f
+
+S[asup]\NP
+  1 (S[asup]{_}\NP{Y}<1>){_}
+  1 ignore
+
+((N/N)/(N/N))\(S[adj]\NP)
+  2 (((N{Y}/N{Y}){Z}/(N{Y}/N{Y}){Z}<1>){_}\(S[adj]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %l # another "less than" construction
+  2 ncmod _ %f %l
+
+((NP\NP)/S[dcl])\((NP\NP)/NP)
+  3 (((NP{Y}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}\((NP{W}\NP{W}){V}/NP{U}){V}<3>){_}
+  1 cmod _ %f %2
+  2 ncmod _ %f %3
+  3 dobj %f %l # see "plan in which" in Depbank; so we're swapping args around here to match B+C
+
+(S[b]\NP)/S[em]
+  2 ((S[b]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  2 ccomp %f %l %c =S[em]/S[b]
+
+((S[b]\NP)/NP)/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 obj2 %l %f
+  3 dobj %l %f
+
+((S\NP)/(S\NP))/((S\NP)/(S\NP))
+  1 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}\NP{Z}){Y}){W}<1>){_}
+  1 ncmod _ %f %l
+
+NP/(S[dcl]/NP)
+  1 (NP{_}/(S[dcl]{Y}<1>/NP{Z}){Y}){_}
+  ! (NP{_}/(S[dcl]{Y}<1>/NP{_}){Y}){_}
+  1 ignore
+# maybe we want the co-indexed NPs for the non-GR case also; check CCGbank at some point
+# but keep for now because we want this markedup file (non-! cases) to be consistent with
+# the CL-paper
+
+(S[ng]\NP)/S[em]
+  2 ((S[ng]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  2 ccomp %f %l %c =S[em]/S[b]
+
+(S[b]\NP)/S[dcl]
+  2 ((S[b]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+(S[b]\NP)/S[qem]
+  2 ((S[b]{_}\NP{Y}<1>){_}/S[qem]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f # not really consistent with Depbank, but this one difficult to get consistent with B+C
+
+((S\NP)\(S\NP))\NP
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}\NP{W}<2>){_}
+  1 ncmod _ %f %2 # see "clobbered two years ago"
+  2 ncmod _ %f %l
+
+S\S
+  1 (S[X]{Y}\S[X]{Y}<1>){_}
+  1 ncmod _ %f %l
+
+((S[ng]\NP)/(S[to]\NP))/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 dobj %l %f
+
+((S[b]\NP)/(S[adj]\NP))/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/(S[adj]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+# modified
+(S[pss]\NP)/(S[adj]\NP)
+  2 ((S[pss]{Z}\NP{Y}<1>){Z}/(S[adj]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f obj
+  2 xcomp _ %l %f
+
+(N\N)/N
+  2 ((N{Y}\N{Y}<1>){_}/N{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+((S[dcl]\NP)/(S[adj]\NP))/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[adj]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+# modified
+(S[ng]\NP)/(S[adj]\NP)
+  2 ((S[ng]{Z}\NP{Y}<1>){Z}/(S[adj]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+
+(S/S)/(S[ng]\NP)
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/(S[ng]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f # see "After falling for three consecutive months"
+
+(S/S)/N
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/N{Z}<2>){_}
+  1 ncmod _ %f %2
+  2 det %f %l
+
+((S\NP)\(S\NP))/(S[adj]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[adj]{W}<2>\NP{Z*}){W}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f # not consistent with Depbank example but don't see alternative to xcomp here
+
+(S[adj]\NP)\(S[adj]\NP)
+  1 ((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}<1>\NP{Z}){Y}){_}
+  1 ncmod _ %f %l
+
+((S\NP)\(S\NP))\((S\NP)\(S\NP))
+  1 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<1>){_}
+  1 ncmod _ %f %l
+
+(S[for]/(S[to]\NP))/NP
+  2 ((S[for]{_}/(S[to]{Y}<1>\NP{Z*}){Y}){_}/NP{Z}<2>){_}
+  1 ccomp _ %l %f # see "for the board to ease interest rates" - B+C have Board as the argument of ccomp, which seems odd
+  2 ignore
+
+(S[dcl]\NP)/S[qem]
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/S[qem]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f # conflicting evidence in Depbank; this is easiest option
+
+(N\N)/NP
+  2 ((N{Y}\N{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l # little evidence for this one in Depbank
+  2 dobj %l %f
+
+((S[b]\NP)/(S[b]\NP))/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/(S[b]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 ignore # no dobj here for B+C, e.g. "help him avoid being Trumped"
+
+(N/N)\(N/N)
+  1 ((N{Y}/N{Y}){Z}\(N{Y}/N{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(N/N)\(S[adj]\NP)
+  2 ((N{Y}/N{Y}<1>){_}\(S[adj]{Z}<2>\NP{W}){Z}){_}
+  1 dobj %l %f
+  2 ncmod _ %f %l
+
+((N/N)/(N/N))/((N/N)/(N/N))
+  1 (((N{Y}/N{Y}){Z}/(N{Y}/N{Y}){Z}){W}/((N{Y}/N{Y}){Z}/(N{Y}/N{Y}){Z}){W}<1>){_}
+  1 ncmod _ %f %l
+
+NP/(S[dcl]\NP)
+  1 (NP{_}/(S[dcl]{Y}<1>\NP{Z}){Y}){_}
+  ! (NP{_}/(S[dcl]{Y}<1>\NP{_}){Y}){_}
+  1 ignore
+# might want to coindex NPs in non-GR case also
+
+(S[ng]\NP)/S[dcl]
+  2 ((S[ng]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+((NP\NP)/(S[dcl]\NP))/N
+  3 (((NP{Y}\NP{Y}<1>){_}/(S[dcl]{Z}<2>\NP{W}){Z}){_}/N{W}<3>){_}
+  1 cmod _ %f %2
+  2 ignore
+  3 det %f %l
+
+(S[pt]\NP)/S[em]
+  2 ((S[pt]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  2 ccomp %f %l %c =S[em]/S[b]
+
+(S/S)\NP
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}\NP{Z}<2>){_}
+  1 ncmod _ %f %2
+  2 ncmod _ %f %l
+
+# modified
+(S[q]/(S[b]\NP))/NP
+  2 ((S[q]{Y}/(S[b]{Y}<1>\NP{Z}){Y}){Y}/NP{Z}){_}
+  ! ((S[q]{Y}/(S[b]{Y}<1>\NP{Z}){Y}){Y}/NP{Z}<2>){_}
+  1 aux %f %l
+  2 ignore
+
+((NP\NP)\(NP\NP))/NP
+  2 (((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}<2>){_}/NP{W}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %l
+
+PP/(S[adj]\NP)
+  1 (PP{_}/(S[adj]{Y}<1>\NP{Z}){Y}){_}
+  1 xcomp _ %l %f
+
+((N/N)\(N/N))/NP
+  2 (((N{Y}/N{Y}){Z}\(N{Y}/N{Y}){Z}<1>){_}/NP{W}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+(S[b]\NP)/(S[b]\NP)
+  2 ((S[b]{_}\NP{Y}<1>){_}/(S[b]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+(S\S)/NP
+  2 ((S[X]{Y}\S[X]{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+(NP\NP)\NP
+  2 ((NP{Y}\NP{Y}<1>){_}\NP{Z}<2>){_}
+  1 ncmod _ %f %2
+  2 ncmod _ %f %l
+
+((S[adj]\NP)/(S[adj]\NP))/((S[adj]\NP)/(S[adj]\NP))
+  1 (((S[adj]{Y}\NP{Z}){Y}/(S[adj]{Y}\NP{Z}){Y}){W}/((S[adj]{Y}\NP{Z}){Y}/(S[adj]{Y}\NP{Z}){Y}){W}<1>){_}
+  1 ncmod _ %f %l
+
+((S[dcl]\NP[expl])/(S[to]\NP))/(S[adj]\NP)
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/(S[adj]{V}<3>\NP{U}){V}){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 xcomp _ %l %f
+
+(N/PP)/(S[adj]\NP)
+  2 ((N{_}/PP{Y}<1>){_}/(S[adj]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %2 %f
+  2 xcomp _ %l %f
+
+(NP\NP)\(NP\NP)
+  1 ((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(((S\NP)\(S\NP))/((S\NP)\(S\NP)))/NP
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<2>){_}/NP{V}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %l
+
+(((S\NP)\(S\NP))/((S\NP)\(S\NP)))/(((S\NP)\(S\NP))/((S\NP)\(S\NP)))
+  1 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}){V}/(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}){V}<1>){_}
+  1 ncmod _ %f %l
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))\NP
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<1>){_}\NP{V}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+
+((S\NP)\(S\NP))/(S[dcl]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[dcl]{W}<2>\NP{Z*}){W}){_}
+  1 cmod %l %f %2
+  2 ignore
+# not consistent with B+C but consistent with how we've markedup NP extraction
+
+(S[pt]\NP)/S[dcl]
+  2 ((S[pt]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+(NP/NP)/(NP/NP)
+  1 ((NP{Y}/NP{Y}){Z}/(NP{Y}/NP{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+((S[dcl]\NP)/(S[b]\NP))/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[b]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 ignore
+
+((N/N)/(N/N))/(S[asup]\NP)
+  2 (((N{Y}/N{Y}){Z}/(N{Y}/N{Y}){Z}<2>){_}/(S[asup]{W}<1>\NP{V}){W}){_}
+  1 xcomp _ %l %f
+  2 ncmod _ %f %l
+
+S[em]/S[b]
+  1 (S[em]{_}/S[b]{Y}<1>){_}
+  1 ignore
+
+((S[dcl]\NP)/(S[ng]\NP))/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+(NP\NP)/S[qem]
+  2 ((NP{Y}\NP{Y}<1>){_}/S[qem]{Z}<2>){_}
+  1 cmod _ %f %2
+  2 ncmod _ %f %l # no egs in Depbank; assumed to be same as (NP\NP)/S[dcl]
+
+(NP\NP)/(S[adj]\NP)
+  2 ((NP{Y}\NP{Y}<1>){_}/(S[adj]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %l %f
+  2 xcomp _ %f %l
+
+(((S\NP)\(S\NP))/(S[ng]\NP))/NP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[ng]{W}<2>\NP{V}){W}){_}/NP{U}<3>){_}
+  1 ncmod _ %l %f
+  2 ccomp _ %l %f
+  3 ignore
+# co-index the NPs to get subj of ing-verb?
+
+((N/N)\(N/N))/(N/N)
+  2 (((N{Y}/N{Y}){_}\(N{Z}/N{Z}){W}<1>){_}/(N{V}/N{V}){U}<2>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %l
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))/S[dcl]
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<1>){_}/S[dcl]{V}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+
+((S[adj]\NP)\(S[adj]\NP))/S[dcl]
+  2 (((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}<1>\NP{Z}){Y}){_}/S[dcl]{W}<2>){_}
+  1 cmod %l %2 %f
+  2 ncmod _ %f %l
+
+((S[dcl]\NP)/S[em])/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  3 dobj %l %f
+
+(S[adj]\NP)/S[em]
+  2 ((S[adj]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}
+  1 ignore
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  2 ccomp %f %l %c =S[em]/S[b]
+
+((S[ng]\NP)/(S[adj]\NP))/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/(S[adj]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+((S[pt]\NP)/(S[to]\NP))/NP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 dobj %l %f
+
+((S[ng]\NP)/NP)/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 obj2 %l %f
+  3 dobj %l %f
+
+((S[dcl]\NP)/NP)/(S[dcl]\NP)
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/(S[dcl]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 ignore # getting obj through rel pronoun category
+  3 ccomp _ %l %f
+
+PP/S[qem]
+  1 (PP{_}/S[qem]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+(S[adj]\NP)/S[dcl]
+  2 ((S[adj]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 ignore
+  2 ccomp _ %l %f
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))/N
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<1>){_}/N{V}<2>){_}
+  1 ncmod _ %f %l
+  2 det %f %l
+
+S[dcl]/NP
+  1 (S[dcl]{_}/NP{Y}<1>){_}
+  1 dobj %l %f
+
+(NP\NP)/(S[pss]\NP)
+  2 ((NP{Y}\NP{Y}<1>){_}/(S[pss]{Z}<2>\NP{W}){Z}){_}
+  1 xmod _ %f %l
+  2 xcomp _ %l %f
+
+(S/S)/(S[adj]\NP)
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/(S[adj]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+S[qem]/(S[to]\NP)
+  1 (S[qem]{_}/(S[to]{Y}<1>\NP{Z}){Y}){_}
+  1 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+# modified
+((S[pss]\NP)/(S[to]\NP))/PP
+  3 (((S[pss]{_}\NP{Y}<2>){_}/(S[to]{Z}<3>\NP{W}){Z}){_}/PP{V}<4>){_}
+  1 ncsubj %l %f obj
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 iobj %l %f =PP/NP
+
+((S[dcl]\NP[expl])/S[em])/(S[adj]\NP)
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/S[em]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  3 xcomp _ %l %f
+
+# modified
+(S[pss]\NP)/S[em]
+  2 ((S[pss]{_}\NP{Y}<2>){_}/S[em]{Z}<3>){_}
+  1 ncsubj %l %f obj
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  2 ccomp %f %l %c =S[em]/S[b]
+
+((S[dcl]\NP)/PP)/(S[adj]\NP)
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  3 xcomp _ %l %f
+
+((NP\NP)\(NP\NP))/((NP\NP)\(NP\NP))
+  1 (((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}/((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}<1>){_}
+  1 ncmod _ %f %l
+
+PP\PP
+  1 (PP{Y}\PP{Y}<1>){_}
+  1 ncmod _ %f %l
+
+(S[dcl]\NP[expl])/(S[b]\NP)
+  2 ((S[dcl]{_}\NP[expl]{Y}<1>){_}/(S[b]{Z}<2>\NP{W}){Z}){_}
+  ! ((S[dcl]{Z}\NP[expl]{Y}<1>){Z}/(S[b]{Z}<2>\NP{Y}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+((S[b]\NP)/(S[ng]\NP))/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+(PP\PP)\NP
+  2 ((PP{Y}\PP{Y}<1>){_}\NP{Z}<2>){_}
+  1 ncmod _ %f %2 # not consistent with Depbank but difficult to get right
+  2 ncmod _ %f %l
+
+(S[dcl]\PP)/NP
+  2 ((S[dcl]{_}\PP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncsubj %l %f _ # PPs can be subjects according to Ted's tech report (but no examples in Depbank)
+  2 dobj %l %f
+
+S[dcl]/S[dcl]
+  1 (S[dcl]{_}/S[dcl]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+# modified
+S[wq]/S[q]
+  1 (S[wq]{Y}/S[q]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+S/S[dcl]
+  1 (S{_}/S[dcl]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+(S[dcl]\(S[adj]\NP))/NP
+  2 ((S[dcl]{_}\(S[adj]{Y}<1>\NP{Z*}){Y}){_}/NP{Z}<2>){_}
+  1 xsubj %l %f inv
+  2 xcomp _ %l %f =be
+  2 dobj %l %f
+
+((S\NP)\(S\NP))/(S[pss]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[pss]{W}<2>\NP{Z*}){W}){_}
+  1 xmod _ %f %l
+  2 xcomp _ %l %f
+
+((S\NP)/(S\NP))/N
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<2>\NP{Z}){Y}){_}/N{W}<1>){_}
+  1 det %f %l
+  2 ncmod _ %f %1
+
+# modified - which
+((NP\NP)/(S[dcl]\NP))\(NP/NP)
+  3 (((NP{Y}\NP{Y}<1>){_}/(S[dcl]{Z}<2>\NP{Y}){Z}){_}\(NP{V}/NP{V}){U}<3>){_}
+  1 ncmod _ %f %l
+  2 ignore
+  3 ncmod _ %f %l
+# "all of which" construction; difficult to get looking like B+C
+
+(((NP\NP)/(NP\NP))\((NP\NP)/(NP\NP)))/((NP\NP)/(NP\NP))
+  2 ((((NP{Y}\NP{Y}){Z}/(NP{Y}\NP{Y}){Z}){_}\((NP{Y}\NP{Y}){Z}/(NP{Y}\NP{Y}){Z}){W}<1>){_}/((NP{Y}\NP{Y}){U}/(NP{Y}\NP{Y}){U}){V}<2>){_}
+  1 dobj %l %f # no egs but similar to ((N/N)\(N/N))/(N/N)
+  2 ncmod _ %l %f
+
+((NP\NP)/(NP\NP))/NP
+  3 (((NP{Y}\NP{Y}<1>){_}/(NP{Z}\NP{Z}){W}<3>){_}/NP{V}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+  3 ignore
+# "from the fall of 1962 through ..." difficult to get looking like B+C
+
+# modified
+S[wq]/(S[dcl]\NP)
+  1 (S[wq]{Y}/(S[dcl]{Y}<1>\NP{Z}){Y}){_}
+  1 xcomp _ %l %f
+
+NP/S[dcl]
+  1 (NP{_}/S[dcl]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+(PP\PP)/NP
+  2 ((PP{Y}\PP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l # different construction to B+C
+  2 dobj %l %f
+
+((S[dcl]\NP)/S[dcl])/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 dobj %l %f
+
+((S\NP)/(S\NP))/S[dcl]
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}/S[dcl]{W}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+
+(S[adj]\NP)/((S[to]\NP)/NP)
+  2 ((S[adj]{_}\NP{Y}<1>){_}/((S[to]{Z}<2>\NP{W}){Z}/NP{V}){Z}){_}
+  1 ignore
+  2 xcomp _ %l %f
+
+((S[adj]\NP)/PP)/NP
+  3 (((S[adj]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  1 ignore
+  2 ncmod _ %3 %f # "up .. from .." construction
+  3 dobj %l %f
+
+(((S\NP)\(S\NP))/PP)/NP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/PP{W}<2>){_}/NP{V}<3>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %3 %f # "up .. from .." construction
+  3 dobj %l %f
+
+N/S[dcl]
+  1 (N{_}/S[dcl]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+(((S[b]\NP)/PP)/PP)/NP
+  4 ((((S[b]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}/NP{V}<4>){_}
+  1 ncsubj %l %f _
+  2 ncmod _ %f %l # don't have two iobj's
+  3 iobj %l %f =PP/NP
+  4 dobj %l %f
+
+((S[adj]\NP)/S[em])/(S[adj]\NP)
+  3 (((S[adj]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ignore
+  2 ccomp %f %3 %c =S[em]/S[dcl]  # "so weak that ..." construction
+  3 ncmod _ %f %l
+
+((NP\NP)/PP)/NP
+  3 (((NP{Y}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %3 %f # no egs but this is the "up .. from .." construction
+  3 dobj %l %f
+
+((S\NP)/(S\NP))/PP
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}/PP{W}<2>){_}
+# 1 (pmod %f %l) POS==IN
+  1 ncmod _ %f %l # no egs so follow ((S\NP)\(S\NP))/PP
+  2 iobj %l %f =PP/NP
+# do we want to support POS constraints (and pmod)?
+
+# modified
+(S[ng]\NP)/(S[pt]\NP)
+  2 ((S[ng]{Z}\NP{Y}<1>){_}/(S[pt]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[ng]{Z}\NP{Y}<1>){Z}/(S[pt]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+(PP/PP)/NP
+  2 ((PP{_}/PP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %2 %f
+  2 dobj %l %f
+
+(S[ng]\NP)/S[qem]
+  2 ((S[ng]{_}\NP{Y}<1>){_}/S[qem]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f # no egs; consistent with (S[dcl]\NP)/S[qem]
+
+S[inv]/NP
+  1 (S[inv]{_}/NP{Y}<1>){_}
+  1 xcomp _ %l %f =be
+  1 dobj %l %f
+
+((S[pt]\NP)/NP)/NP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 obj2 %l %f
+  3 dobj %l %f
+
+((S[dcl]\NP)/PP)/PP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ncmod _ %f %l # don't have two iobj's
+  3 iobj %l %f =PP/NP
+
+(N/N)/N
+  2 ((N{Y}/N{Y}<1>){_}/N{Z}<2>){_}
+  1 ncmod _ %2 %f
+  2 det %f %l
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))/(((S\NP)\(S\NP))\((S\NP)\(S\NP)))
+  1 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}){V}/(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}){V}<1>){_}
+  1 ncmod _ %f %l
+
+((S[ng]\NP)/(S[b]\NP))/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/(S[b]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 ignore
+
+(NP\NP)/(S[b]\NP)
+  2 ((NP{Y}\NP{Y}<1>){_}/(S[b]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f # this category's behaviour unlike (NP\NP)/(S[dcl]\NP) in CCGbank
+
+((S/S)/(S[ng]\NP))/NP
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}/(S[ng]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+  3 ignore
+
+# modified
+(S[dcl]\NP)/(S[dcl]\NP)
+  2 ((S[dcl]{Z}\NP{Y}<1>){_}/(S[dcl]{Z}<2>\NP{W}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+
+(S[qem]/S[dcl])/(S[adj]\NP)
+  2 ((S[qem]{_}/S[dcl]{Y}<1>){_}/(S[adj]{Z}<2>\NP{W}){Z}){_}
+  1 ccomp _ %l %f
+  2 xcomp _ %l %f # no egs; hard to see what to do here
+
+(S[dcl]\NP)/S[for]
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/S[for]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+((S[b]\NP)/NP)/(S[adj]\NP)
+  3 (((S[b]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 dobj %l %f
+  3 xcomp _ %l %f
+
+((S[dcl]\NP)/NP)/PP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 dobj %l %f
+  3 iobj %l %f =PP/NP
+
+(S/S)/(S[pss]\NP)
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/(S[pss]{Z}<2>\NP{W}){Z}){_}
+  1 xmod _ %f %l
+  2 xcomp _ %l %f
+
+((S[adj]\NP)\(S[adj]\NP))/PP
+  2 (((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}<1>\NP{Z}){Y}){_}/PP{W}<2>){_}
+  1 ncmod _ %f %l
+  2 iobj %l %f =PP/NP
+
+(PP\NP)/NP
+  2 ((PP{_}\NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+(S[qem]/(S[dcl]/NP))/N
+  2 ((S[qem]{_}/(S[dcl]{Y}<1>/NP{Z}){Y}){_}/N{W}<2>){_}
+  1 ccomp _ %l %f
+  2 dobj %l %f # no egs
+
+(((S\NP)\(S\NP))\NP)/NP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}\NP{W}<2>){_}/NP{V}<3>){_}
+  1 ncmod _ %f %2 # no egs; guessing what B+C would do
+  2 ncmod _ %f %l
+  3 dobj %l %f
+
+(PP\PP)/(PP\PP)
+  1 ((PP{Y}\PP{Y}){Z}/(PP{Y}\PP{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(S[dcl]/S[dcl])/NP
+  2 ((S[dcl]{_}/S[dcl]{Y}<1>){_}/NP{Z}<2>){_}
+  1 ccomp _ %l %f
+  2 ncsubj %l %f inv
+
+(PP/(S[ng]\NP))/NP
+  2 ((PP{_}/(S[ng]{Y}<1>\NP{Z*}){Y}){_}/NP{Z}<2>){_}
+  1 ccomp _ %l %f
+  2 ignore # obj becomes subj of verb through co-indexing
+
+S[qem]/(S[dcl]\NP)
+  1 (S[qem]{_}/(S[dcl]{Y}<1>\NP{Z}){Y}){_}
+  ! (S[qem]{_}/(S[dcl]{Y}<1>\NP{_}){Y}){_}
+  1 ignore
+# might want to get co-indexed NPs on non-GR case also
+
+S[poss]/S[dcl]
+  1 (S[poss]{_}/S[dcl]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+((S\NP)\(S\NP))/S[em]
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/S[em]{W}<2>){_}
+  1 cmod _ %f %l
+  2 ccomp %f %l %c =S[em]/S[dcl]
+
+(N/N)/(S[asup]\NP)
+  2 ((N{Y}/N{Y}<1>){_}/(S[asup]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+conj\conj
+  1 (conj{Y}\conj{Y}<1>){_}
+  1 ncmod _ %f %l
+
+((NP\NP)/(S[ng]\NP))/NP
+  3 (((NP{Y}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+  3 ignore # obj becomes subj of verb through co-indexing
+
+((S[adj]\NP)\(S[adj]\NP))/(S[adj]\NP)
+  2 (((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}<1>\NP{Z}){Y}){_}/(S[adj]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+((S[dcl]\NP[expl])/(NP\NP))/NP
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/(NP{Z}\NP{Z}){W}<2>){_}/NP{V}<3>){_}
+  1 ncsubj %l %f _
+  2 ncmod _ %l %f # odd analysis in CCGbank for this category
+  3 dobj %l %f
+
+(NP/NP)/NP
+  2 ((NP{Y}/NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+((S[pt]\NP)/(S[adj]\NP))/NP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/(S[adj]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+((S\NP)\(S\NP))/(S[to]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[to]{W}<2>\NP{V}){W}){_}
+  1 xmod _ %f %l
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+(S[dcl]\NP)/S
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/S{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+(S/S)\(S/S)
+  1 ((S[X]{Y}/S[X]{Y}){Z}\(S[X]{Y}/S[X]{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(((S\NP)\(S\NP))\NP)/S[dcl]
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}\NP{W}<2>){_}/S[dcl]{V}<3>){_}
+  1 ncmod _ %f %2 # guess at what B+C would have
+  2 ncmod _ %f %l
+  3 ccomp _ %l %f
+
+((S[adj]\NP)/(S[to]\NP))/(S[adj]\NP)
+  2 (((S[adj]{Y}\NP{Z}){Y}/(S[to]{W}<2>\NP{Z}){W}){_}/(S[adj]{Y}<1>\NP{Z}){Y}){_}
+  1 ncmod _ %f %l
+  2 xcomp %f %1 %k =(S[to]\NP)/(S[b]\NP) # guess at what B+C would have "too difficult to maintain"
+
+(N/N)/NP
+  2 ((N{Y}/N{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+(S[ng]\NP)/(S[ng]\NP)
+  2 ((S[ng]{_}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+
+(((S[dcl]\NP)/PP)/PP)/NP
+  4 ((((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}/NP{V}<4>){_}
+  1 ncsubj %l %f _
+  2 ncmod _ %f %l # don't have two iobj's
+  3 iobj %l %f =PP/NP
+  4 dobj %l %f
+
+((S[dcl]\NP)/NP)/(S[adj]\NP)
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 dobj %l %f
+  3 xcomp _ %l %f
+
+((S[b]\NP)/NP)/PP
+  3 (((S[b]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 dobj %l %f
+  3 iobj %l %f =PP/NP
+
+S[qem]/(S[dcl]/NP)
+  1 (S[qem]{_}/(S[dcl]{Y}<1>/NP{Z}){Y}){_}
+  ! (S[qem]{_}/(S[dcl]{Y}<1>/NP{_}){Y}){_}
+  1 ccomp _ %l %f
+# might want to coindex object in non-GR case also
+
+# modified
+(S[pss]\NP)/(PP/NP)
+  2 ((S[pss]{_}\NP{Y}<2>){_}/(PP{Z}<3>/NP{W}){Z}){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f
+
+(((S\NP)\(S\NP))/(S[to]\NP))/N
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[to]{W}<2>\NP{V}){W}){_}/N{U}<3>){_}
+  1 ncmod _ %f %l
+  2 xmod %f %3 %k =(S[to]\NP)/(S[b]\NP) # "in order to become"
+  3 dobj %l %f
+
+(S[dcl]\(S[ng]\NP))/NP
+  2 ((S[dcl]{_}\(S[ng]{Y}<1>\NP{Z}){Y}){_}/NP{W}<2>){_}
+  1 xcomp _ %l %f
+  2 ncsubj %l %f inv
+# might want to coindex NPs
+
+((S[dcl]\NP[expl])/S[qem])/(S[adj]\NP)
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/S[qem]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 xcomp _ %l %f
+
+((S\NP)/(S\NP))/(S[adj]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[adj]{W}<2>\NP{Z*}){W}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f # consistent with ((S\NP)\(S\NP))/(S[adj]\NP)
+
+((S[dcl]\NP[expl])/(S[to]\NP))/NP
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/NP{V}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 dobj %l %f
+
+((S[b]\NP)/PP)/(S[adj]\NP)
+  3 (((S[b]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  3 xcomp _ %l %f
+
+((NP/NP)/(NP/NP))\(S[adj]\NP)
+  2 (((NP{Y}/NP{Y}){Z}/(NP{Y}/NP{Y}){Z}<1>){_}\(S[adj]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %l # another "less than" construction
+  2 ncmod _ %f %l
+
+(S[qem]/(S[dcl]/(S[adj]\NP)))/(S[adj]\NP)
+  2 ((S[qem]{_}/(S[dcl]{Y}<1>/(S[adj]{Z}\NP{W}){Z}){Y}){_}/(S[adj]{Z}<2>\NP{V}){Z}){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f # "how big it is" consistent with B+C
+
+((S\NP)/(S\NP))/(S[ng]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[ng]{W}<2>\NP{Z*}){W}){_}
+  1 xmod _ %f %l
+  2 xcomp _ %l %f
+
+((S\NP)/(S\NP))\(S[adj]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}\(S[adj]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %l # another "less than" construction
+  2 ncmod _ %f %l
+
+((S[adj]\NP)\(S[adj]\NP))/(S[ng]\NP)
+  2 (((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}<1>\NP{Z}){Y}){_}/(S[ng]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %l # "reponsible for buying"
+  2 xcomp _ %l %f
+
+((S\NP)\(S\NP))/S[qem]
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/S[qem]{W}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f # consistent with ((S\NP)\(S\NP))/S[dcl]
+
+((S[adj]\NP)\(S[adj]\NP))/((S[adj]\NP)\(S[adj]\NP))
+  1 (((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}\NP{Z}){Y}){W}/((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}\NP{Z}){Y}){W}<1>){_}
+  1 ncmod _ %f %l
+
+(S[dcl]/(S[b]\NP))/NP
+  2 ((S[dcl]{_}/(S[b]{Y}<1>\NP{Z*}){Y}){_}/NP{Z}<2>){_}
+  ! ((S[dcl]{Y}/(S[b]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}<2>){_}
+  1 aux %f %l
+  2 ignore # consistent with (S[q]/(S[b]\NP))/NP
+
+S[to]\NP
+  1 (S[to]{_}\NP{Y}<1>){_}
+  1 ignore
+
+(S[q]/NP)/NP
+  2 ((S[q]{_}/NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 xcomp _ %l %f =be
+  1 dobj %l %f
+  2 ncsubj %l %f inv
+
+((S[dcl]\S[dcl])\NP)/NP
+  3 (((S[dcl]{_}\S[dcl]{Y}<1>){_}\NP{Z}<2>){_}/NP{W}<3>){_}
+  1 cmod _ %l %f
+  2 ncsubj %l %f _
+  3 dobj %l %f
+
+((NP\NP)/(S[to]\NP))/NP
+  3 (((NP{Y}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 xmod %f %3 %k =(S[to]\NP)/(S[b]\NP) # "authority for administration to raise"
+  3 dobj %l %f
+
+(S/S)/(S[dcl]\NP)
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/(S[dcl]{Z}<2>\NP{W}){Z}){_}
+  1 cmod _ %f %2
+  2 ignore # "What's more ..."
+# co-index subj with lexical item? (so what becomes subj of 's)
+
+((S[b]\NP)/PP)/PP
+  3 (((S[b]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ncmod _ %f %l # don't have two iobj's
+  3 iobj %l %f =PP/NP
+
+(N/N)/(S[adj]\NP)
+  2 ((N{Y}/N{Y}<1>){_}/(S[adj]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+(((S\NP)\(S\NP))/((S\NP)\(S\NP)))/(S[asup]\NP)
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<2>){_}/(S[asup]{V}<1>\NP{U}){V}){_}
+  1 xcomp _ %l %f
+  2 ncmod _ %f %l
+
+((S\NP)\(S\NP))/(S[dcl]/NP)
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[dcl]{W}<2>/NP{V}){W}){_}
+  1 cmod %l %f %2
+  2 ignore # consistent with ((S\NP)\(S\NP))/(S[dcl]\NP)
+
+(NP/NP)/(S[asup]\NP)
+  2 ((NP{Y}/NP{Y}<1>){_}/(S[asup]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+((NP\NP)/(NP\NP))/((NP\NP)/(NP\NP))
+  1 (((NP{Y}\NP{Y}){Z}/(NP{Y}\NP{Y}){Z}){W}/((NP{Y}\NP{Y}){Z}/(NP{Y}\NP{Y}){Z}){W}<1>){_}
+  1 ncmod _ %f %l
+
+((N/N)\(N/N))/N
+  2 (((N{Y}/N{Y}){Z}\(N{Y}/N{Y}){Z}<2>){_}/N{W}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %l
+
+((S[dcl]\NP)/(S[pss]\NP))/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[pss]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+((S[dcl]\NP[expl])/S[for])/(S[adj]\NP)
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/S[for]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %3 %f # see "It's terrific for advertisers ..."
+  3 xcomp _ %l %f
+
+(NP/NP)\(S[adj]\NP)
+  2 ((NP{Y}/NP{Y}<1>){_}\(S[adj]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l # another "less than" construction
+  2 ncmod _ %f %l
+
+# modified
+S[wq]/(S[q]/NP)
+  1 (S[wq]{Y}/(S[q]{Y}<1>/NP{Z}){Y}){_}
+  ! (S[wq]{_}/(S[q]{Y}<1>/NP{_}){Y}){_}
+  1 ccomp _ %f %l
+# might want the co-indexing in the non-GR case also
+
+((S/S)\(S/S))/S[dcl]
+  2 (((S[X]{Y}/S[X]{Y}){Z}\(S[X]{Y}/S[X]{Y}){Z}<2>){_}/S[dcl]{W}<1>){_}
+  2 ncmod _ %f %l
+  1 ccomp _ %l %f
+
+((S/S)\(S/S))/NP
+  2 (((S[X]{Y}/S[X]{Y}){Z}\(S[X]{Y}/S[X]{Y}){Z}<2>){_}/NP{W}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %l %f
+
+# modified
+(S[qem]/(S[dcl]\NP))/N
+  2 ((S[qem]{Y}/(S[dcl]{Y}<1>\NP{Z*}){Y}){_}/N{Z}){_}
+  1 ccomp _ %l %f
+  2 ignore
+
+# modified
+((S[pss]\NP)/PP)/PP
+  3 (((S[pss]{_}\NP{Y}<2>){_}/PP{Z}<3>){_}/PP{W}<4>){_}
+  1 ncsubj %l %f _
+  2 ncmod _ %f %l # don't have two iobj's
+  3 iobj %l %f =PP/NP
+
+((S\NP)/(S\NP))/(S[pss]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[pss]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+((S\NP)\(S\NP))/S[inv]
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/S[inv]{W}<2>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+
+(((S\NP)\(S\NP))/(S[b]\NP))/NP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[b]{W}<2>\NP{V*}){W}){_}/NP{V}<3>){_}
+  1 ncmod _ %l %f
+  2 ccomp _ %l %f
+  3 ignore
+
+((S\NP)\(S\NP))/(S[b]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[b]{W}<2>\NP{Z*}){W}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+((S[ng]\NP)/(S[ng]\NP))/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+# the co-indexing looks wrong here
+
+((S[ng]\NP)/PP)/PP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ncmod _ %f %l # don't have two iobj's
+  3 iobj %l %f =PP/NP
+
+((S[dcl]\NP)/(S[to]\NP))/PP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/PP{V}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 iobj %l %f =PP/NP
+
+((S[adj]\NP)/PP)/PP
+  3 (((S[adj]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}
+  1 ignore
+  2 ncmod _ %f %l # don't have two iobj's
+  3 iobj %l %f =PP/NP
+
+(S\S)/(S\S)
+  1 ((S[X]{Y}\S[X]{Y}){Z}/(S[X]{Y}\S[X]{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(((S\NP)\(S\NP))/(S[to]\NP))/NP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[to]{W}<2>\NP{V*}){W}){_}/NP{V}<3>){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+((((S\NP)\(S\NP))/((S\NP)\(S\NP)))/(((S\NP)\(S\NP))/((S\NP)\(S\NP))))\(S[adj]\NP)
+  2 (((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}){V}/(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}){V}<2>){_}\(S[adj]{U}<1>\NP{T}){U}){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+
+((S[b]\NP)/(S[pss]\NP))/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/(S[pss]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+((S[adj]\NP)/(S[adj]\NP))/N
+  2 (((S[adj]{Y}\NP{Z}){Y}/(S[adj]{Y}<1>\NP{Z}){Y}){_}/N{W}<2>){_}
+  1 ncmod _ %f %2
+  2 det %f %l
+
+N/S[for]
+  1 (N{_}/S[for]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+(S\S)/PP
+  2 ((S[X]{Y}\S[X]{Y}<1>){_}/PP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 iobj %l %f =PP/NP
+
+(((S\NP)\(S\NP))/(S[pt]\NP))/NP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[pt]{W}<2>\NP{V}){W}){_}/NP{U}<3>){_}
+  1 cmod _ %l %f
+  2 ccomp _ %l %f
+  3 ignore
+# coindex the NPs to get the subject?
+
+((S[dcl]\NP)/(S[adj]\NP))/PP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[adj]{Z}<2>\NP{Y*}){Z}){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 iobj %l %f =PP/NP
+
+((S[b]\NP)/(S[to]\NP))/(S[adj]\NP)
+  3 (((S[b]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/(S[adj]{V}<3>\NP{U}){V}){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 xcomp _ %l %f
+
+(S/S)/(S[asup]\NP)
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/(S[asup]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+# modified
+(S[q]/(S[ng]\NP))/NP
+  2 ((S[q]{Y}/(S[ng]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}){_}
+  ! ((S[q]{Y}/(S[ng]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}<2>){_}
+  1 aux %f %l
+  2 ignore
+
+((S[pt]\NP)/(S[b]\NP))/NP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/(S[b]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 ignore
+
+(S[dcl]\(S[pss]\NP))/NP
+  2 ((S[dcl]{_}\(S[pss]{Y}<1>\NP{Z*}){Y}){_}/NP{Z}<2>){_}
+  1 xsubj %l %f inv
+  2 xcomp _ %l %f =be
+  2 dobj %l %f
+
+(((S[dcl]\NP)/(S[to]\NP))/(S[adj]\NP))/NP[expl]
+  4 ((((S[dcl]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/(S[adj]{V}<3>\NP{U}){V}){_}/NP[expl]{T}<4>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %3 %k =(S[to]\NP)/(S[b]\NP) # see "I find it hard to conceive"
+  3 xcomp _ %l %f
+  4 dobj %l %f
+
+(PP/PP)/(PP/PP)
+  1 ((PP{Y}/PP{Z}){W}/(PP{Y}/PP{Z}){W}<1>){_}
+  1 ncmod _ %f %l
+
+((NP\NP)\NP)/NP
+  3 (((NP{Y}\NP{Y}<1>){_}\NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %l %f # "an hour outside Tokyo"
+  3 dobj %l %f
+
+# modified
+(S[q]/(S[adj]\NP))/NP
+  2 ((S[q]{Y}/(S[adj]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}){_}
+  1 xcomp _ %l %f
+  2 ncsubj %l %f inv
+
+((S[pt]\NP)/(S[ng]\NP))/NP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))/PP
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<1>){_}/PP{V}<2>){_}
+  1 ncmod _ %f %l
+  2 iobj %l %f =PP/NP
+
+S\NP
+  1 (S{_}\NP{Y}<1>){_}
+  1 ignore # really odd analyses in CCGbank for this category
+
+((S[b]\NP)/S[qem])/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/S[qem]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj
+  2 ccomp
+  3 dobj
+
+((S[b]\NP)/S[em])/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  3 dobj %l %f
+
+(S[adj]\NP)/(S[ng]\NP)
+  2 ((S[adj]{_}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore
+  2 xcomp _ %l %f
+
+(NP/(S[dcl]/NP))/N
+  2 ((NP{Y}/(S[dcl]{Z}<1>/NP{Y*}){Z}){_}/N{Y}<2>){_}
+  1 ignore # object gets picked up through co-indexing
+  2 det %f %l
+
+((NP\NP)\(NP\NP))/(S[dcl]\NP)
+  2 (((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}<2>){_}/(S[dcl]{W}<1>\NP{V}){W}){_}
+  1 xcomp _ %l %f
+  2 ncmod _ %f %l
+
+((NP[nb]/N)\(NP[nb]/N))/(NP[nb]/N)
+  3 (((NP[nb]{Y}/N{Y}<1>){_}\(NP[nb]{Z}/N{Z}){W}<2>){_}/(NP[nb]{V}/N{V}){U}<3>){_}
+  1 det %f %l # not sure what to do with this one "up to 19 years"
+  2 ncmod _ %f %l
+  3 ncmod _ %f %l
+
+(N/N)\NP
+  2 ((N{Y}/N{Y}<1>){_}\NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+
+((N/N)\(N/N))/(S[adj]\NP)
+  2 (((N{Y}/N{Y}){Z}\(N{Y}/N{Y}){Z}<2>){_}/(S[adj]{W}<1>\NP{V}){W}){_}
+  1 xcomp _ %l %f
+  2 ncmod _ %f %l
+
+(S[pt]\NP)/(S[b]\NP)
+  2 ((S[pt]{_}\NP{Y}<1>){_}/(S[b]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+
+# modified
+(S[pss]\NP)/S[dcl]
+  2 ((S[pss]{_}\NP{Y}<2>){_}/S[dcl]{Z}<3>){_}
+  1 ncsubj %l %f obj
+  2 ccomp _ %l %f
+
+((S\NP)\(S\NP))/S[poss]
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/S[poss]{W}<2>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))/((S\NP)\(S\NP))
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){_}\((S{Y}\NP{Z}){Y}\(S{Y}\NP{Z}){Y}){W}<1>){_}/((S{U}\NP{Z}){U}\(S{U}\NP{Z}){U}){V}<2>){_}
+  1 ncmod _ %f %l # not sure what to do with modifiers as complements, so currently just assigning ncmod (which is becoming a bucket category)
+  2 ncmod _ %f %l
+
+((S[dcl]\NP)/S[qem])/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/S[qem]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 dobj %l %f
+
+PP/S[dcl]
+  1 (PP{_}/S[dcl]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+# modified
+(S[pss]\NP)/S[qem]
+  2 ((S[pss]{_}\NP{Y}<2>){_}/S[qem]{Z}<3>){_}
+  1 ncsubj %l %f obj
+  2 ccomp _ %l %f
+
+(((S\NP)\(S\NP))/(S[pss]\NP))/NP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[pss]{W}<2>\NP{V}){W}){_}/NP{U}<3>){_}
+  1 cmod _ %l %f
+  2 ccomp _ %l %f
+  3 ignore
+# coindex the NPs to get the subject?
+
+(S[ng]\NP)/S[for]
+  2 ((S[ng]{_}\NP{Y}<1>){_}/S[for]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+(S[ng]\NP)/(S[b]\NP)
+  2 ((S[ng]{_}\NP{Y}<1>){_}/(S[b]{Z}<2>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+
+(S[dcl]\NP)/S[wq]
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/S[wq]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+((S[dcl]\NP)\NP)/(S[b]\NP)
+  3 (((S[dcl]{_}\NP{Y}<1>){_}\NP{Z}<2>){_}/(S[b]{W}<3>\NP{V}){W}){_}
+  ! (((S[dcl]{W}\NP{Y}<1>){W}\NP{Z}<2>){W}/(S[b]{W}<3>\NP{V}){W}){_}
+  1 ignore # odd analysis in CCGbank; these are just auxiliaries
+  2 ignore
+  3 aux %l %f
+
+(S[dcl]/NP)/NP
+  2 ((S[dcl]{_}/NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 dobj %l %f
+  2 ncsubj %l %f inv
+
+((NP\NP)\(NP\NP))/S[dcl]
+  2 (((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}<2>){_}/S[dcl]{W}<1>){_}
+  1 ccomp _ %l %f
+  2 ncmod _ %f %l
+
+((S/S)/(S[pt]\NP))/NP
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}/(S[pt]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+  3 ignore
+
+((S[ng]\NP)/PP)/(S[adj]\NP)
+  3 (((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/(S[adj]{W}<3>\NP{Y*}){W}){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  3 xcomp _ %l %f
+
+(S[dcl]\(S[b]\NP))/NP
+  2 ((S[dcl]{_}\(S[b]{Y}<1>\NP{Z}){Y}){_}/NP{W}<2>){_}
+  1 xsubj %l %f _
+  2 dobj %l %f
+
+((S[dcl]\NP)/(S[to]\NP))/(S[adj]\NP)
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/(S[adj]{V}<3>\NP{U}){V}){_}
+  1 ncsubj %l %f _
+  2 ignore # odd analyses in CCGbank
+  3 xcomp _ %l %f
+
+((S[b]\NP)/(S[pt]\NP))/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/(S[pt]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+((S[b]\NP)/S[for])/(S[adj]\NP)
+  3 (((S[b]{_}\NP{Y}<1>){_}/S[for]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 xcomp _ %l %f
+
+((S/S)/(S[adj]\NP))/NP
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}/(S[adj]{Z}<2>\NP{W}){Z}){_}/NP{V}<3>){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+# modified
+(S[pss]\NP)/(S[ng]\NP)
+  2 ((S[pss]{_}\NP{Y}<2>){_}/(S[ng]{Z}<3>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))/(S[adj]\NP)
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<1>){_}/(S[adj]{V}<2>\NP{U}){V}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+((S[dcl]\NP[expl])/S[em])/NP
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/S[em]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  3 dobj %l %f
+
+((S/S)/(S/S))/NP
+  2 (((S[X]{Y}/S[X]{Y}){Z}/(S[X]{Y}/S[X]{Y}){Z}<1>){_}/NP{W}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+(S\S)/S[q]
+  2 ((S[X]{Y}\S[X]{Y}<1>){_}/S[q]{Z}<2>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+
+((S/S)/(S[b]\NP))/NP
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}/(S[b]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+  3 ignore # co-indexing gets subj
+
+((S/S)\NP)/NP
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}\NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+  3 dobj %l %f
+
+(S[pt]\NP)/S[qem]
+  2 ((S[pt]{_}\NP{Y}<1>){_}/S[qem]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+# modified
+(S[pss]\NP)/(S[pss]\NP)
+  2 ((S[pss]{_}\NP{Y}<2>){_}/(S[pss]{Z}<3>\NP{Y*}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+
+(S[dcl]\NP[expl])/(S[pt]\NP)
+  2 ((S[dcl]{_}\NP[expl]{Y}<1>){_}/(S[pt]{Z}<2>\NP{W}){Z}){_}
+  ! ((S[dcl]{Z}\NP[expl]{Y}<1>){Z}/(S[pt]{Z}<2>\NP{W}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+((S[dcl]\NP[expl])/S[em])/PP
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/S[em]{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  3 iobj %l %f =PP/NP
+
+((S[b]\NP)/S[dcl])/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 dobj %l %f
+
+(S[adj]\NP)/S[for]
+  2 ((S[adj]{_}\NP{Y}<1>){_}/S[for]{Z}<2>){_}
+  1 ignore
+  2 ccomp _ %l %f
+
+((S[adj]\NP)\NP)/PP
+  3 (((S[adj]{_}\NP{Y}<1>){_}\NP{Z}<2>){_}/PP{W}<3>){_}
+  1 ignore
+  2 ncmod _ %f %l
+  3 iobj %l %f =PP/NP
+
+(PP\PP)/N
+  2 ((PP{Y}\PP{Y}<1>){_}/N{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 det %f %l
+
+((NP\NP)\(NP\NP))\NP
+  2 (((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}<2>){_}\NP{W}<1>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+
+# modified
+(S[wq]/(S[q]/NP))/N
+  2 ((S[wq]{Y}/(S[q]{Y}<1>/NP{Z*}){Y}){Y}/N{Z}<2>){_}
+  1 ccomp _ %l %f
+  2 dobj %l %f
+
+((S/S)\NP)/S[dcl]
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}\NP{Z}<2>){_}/S[dcl]{W}<3>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+  3 ccomp _ %l %f
+
+((S[qem]/(S[dcl]\NP))/N)/(S[adj]\NP)
+  3 (((S[qem]{_}/(S[dcl]{Y}<1>\NP{Z}){Y}){_}/N{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncmod _ %f %l # consistent with ((S[qem]/(S[dcl]/NP))/N)/(S[adj]\NP)
+  2 ncmod _ %3 %f
+  3 dobj %l %f
+
+((S\NP)\(S\NP))/S
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/S{W}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+
+((S[ng]\NP)/NP)/PP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 dobj %l %f
+  3 iobj %l %f =PP/NP
+
+S[dcl]/S[inv]
+  1 (S[dcl]{_}/S[inv]{Y}<1>){_}
+  1 ncsubj %f %l _ # consistent with B+C's analysis
+
+(((S[b]\NP)/S[for])/(S[adj]\NP))/NP[expl]
+  4 ((((S[b]{_}\NP{Y}<1>){_}/S[for]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}/NP[expl]{U}<4>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %3 %f # consistent with B+C
+  3 xcomp _ %l %f
+  4 dobj %l %f
+
+(((S[adj]\NP)/(S[adj]\NP))/((S[adj]\NP)/(S[adj]\NP)))/(((S[adj]\NP)/(S[adj]\NP))/((S[adj]\NP)/(S[adj]\NP)))
+  1 ((((S[adj]{Y}\NP{Z}){Y}/(S[adj]{Y}\NP{Z}){Y}){W}/((S[adj]{Y}\NP{Z}){Y}/(S[adj]{Y}\NP{Z}){Y}){W}){V}/(((S[adj]{Y}\NP{Z}){Y}/(S[adj]{Y}\NP{Z}){Y}){W}/((S[adj]{Y}\NP{Z}){Y}/(S[adj]{Y}\NP{Z}){Y}){W}){V}<1>){_}
+  1 ncmod _ %f %l
+
+NP/((S[to]\NP)/NP)
+  1 (NP{_}/((S[to]{Y}<1>\NP{Z}){Y}/NP{W}){Y}){_}
+  ! (NP{_}/((S[to]{Y}<1>\NP{Z}){Y}/NP{_}){Y}){_}
+  1 ignore
+# might want to co-index NP in the non-GR case
+
+(NP/(S[dcl]\NP))/N
+  2 ((NP{_}/(S[dcl]{Y}<1>\NP{Z*}){Y}){_}/N{Z}<2>){_}
+  1 ignore # co-indexing gets subj
+  2 dobj %l %f
+
+(NP/NP)/(S[adj]\NP)
+  2 ((NP{Y}/NP{Y}<1>){_}/(S[adj]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %2 # guess at what B+C would have
+  2 ncmod _ %f %l
+
+((NP[nb]/N)/PP)/(S[adj]\NP)
+  3 (((NP[nb]{Y}/N{Y}<1>){_}/PP{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ignore # odd analysis in CCGbank
+  2 ncmod _ %3 %f # consistent with B+C "as many as ..."
+  3 dobj %l %f
+
+(N\N)/(N\N)
+  1 ((N{Y}\N{Y}){Z}/(N{Y}\N{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(S\S)/(S[ng]\NP)
+  2 ((S[X]{Y}\S[X]{Y}<1>){_}/(S[ng]{Z}<2>\NP{W}){Z}){_}
+  1 xmod _ %f %l
+  2 xcomp _ %l %f
+
+((S/S)/PP)/NP
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %3 %f # no egs; "with fast-food outlets on every corner"
+  3 dobj %l %f
+
+((S[qem]/(S[dcl]/NP))/N)/(S[adj]\NP)
+  3 (((S[qem]{_}/(S[dcl]{Y}<1>/NP{Z*}){Y}){_}/N{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %3 %f
+  3 dobj %l %f # attempt to be consistent with B+C "how many more of these shocks the small investor can stand"
+
+((S\NP)\(S\NP))/S[ng]
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/S[ng]{W}<2>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+
+(((S\NP)\(S\NP))/NP)/NP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/NP{W}<2>){_}/NP{V}<3>){_}
+  1 ncmod _ %f %l
+  2 obj2 %l %f # not sure what to do with this argument
+  3 dobj %l %f
+
+((S\NP)/(S\NP))\NP
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}\NP{W}<2>){_}
+  1 ncmod _ %f %2 # guess at what B+C would have
+  2 ncmod _ %f %l
+
+(S\NP)/NP
+  2 ((S{_}\NP{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l # most of these cases are prepostions in CCGbank
+  2 dobj %l %f
+
+((S[ng]\NP)/(S[pss]\NP))/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/(S[pss]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+S[frg]/NP
+  1 (S[frg]{_}/NP{Y}<1>){_}
+  1 dobj %l %f
+
+(S[dcl]\S[wq])/NP
+  2 ((S[dcl]{_}\S[wq]{Y}<1>){_}/NP{Z}<2>){_}
+  1 csubj %l %f _
+  2 dobj %l %f
+
+((S[b]\NP)/(S[to]\NP))/PP
+  3 (((S[b]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/PP{V}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 iobj %l %f =PP/NP
+
+((S[adj]\NP)\(S[adj]\NP))/(S[pss]\NP)
+  2 (((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}<1>\NP{Z}){Y}){_}/(S[pss]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+(NP\NP)/(S[to]\NP)
+  2 ((NP{Y}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+((S/S)/S[dcl])/(S[adj]\NP)
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}/S[dcl]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %3 # guess at what B+C would have
+  3 dobj %l %f
+
+(S\S)/(S[dcl]\NP)
+  2 ((S[X]{Y}\S[X]{Y}<1>){_}/(S[dcl]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+# modified
+((S[pss]\NP)/PP)/(S[adj]\NP)
+  3 (((S[pss]{_}\NP{Y}<2>){_}/PP{Z}<3>){_}/(S[adj]{W}<4>\NP{V}){W}){_}
+  1 ncsubj %l %f obj
+  2 iobj %l %f =PP/NP
+  3 xcomp _ %l %f
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))/(S[pss]\NP)
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<2>){_}/(S[pss]{V}<1>\NP{U}){V}){_}
+  1 xcomp _ %l %f
+  2 ncmod _ %f %l
+
+((((S\NP)\(S\NP))/((S\NP)\(S\NP)))/(((S\NP)\(S\NP))/((S\NP)\(S\NP))))/(S[asup]\NP)
+  2 (((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}){V}/(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}){V}<2>){_}/(S[asup]{U}<1>\NP{T}){U}){_}
+  1 xcomp _ %l %f
+  2 ncmod _ %f %l
+
+((S\NP)/(S\NP))\((S\NP)/(S\NP))
+  1 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}\NP{Z}){Y}){W}<1>){_}
+  1 ncmod _ %f %l
+
+((S\NP)/(S\NP))/(S[asup]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[asup]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+((S[ng]\NP)/S[em])/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  3 dobj %l %f
+
+((S[ng]\NP)/NP)/(S[adj]\NP)
+  3 (((S[ng]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 dobj %l %f
+  3 xcomp _ %l %f
+
+(S[dcl]/(S[pt]\NP))/NP
+  2 ((S[dcl]{_}/(S[pt]{Y}<1>\NP{Z*}){Y}){_}/NP{Z}<2>){_}
+  ! ((S[dcl]{Y}/(S[pt]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}<2>){_}
+  1 aux %f %l
+  2 ignore # subj got by co-indexing
+
+(((S[dcl]\NP)/S[em])/(S[adj]\NP))/NP[expl]
+  4 ((((S[dcl]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}/NP[expl]{U}<4>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %3 %c =S[em]/S[dcl]  # "make it clear that"
+  3 xcomp _ %l %f
+  4 dobj %l %f
+
+(S[dcl]\NP[expl])/(S[pss]\NP)
+  2 ((S[dcl]{_}\NP[expl]{Y}<1>){_}/(S[pss]{Z}<2>\NP{W}){Z}){_}
+  ! ((S[dcl]{Z}\NP[expl]{Y}<1>){Z}/(S[pss]{Z}<2>\NP{W}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+(((S[b]\NP)/(S[to]\NP))/(S[adj]\NP))/NP[expl]
+  4 ((((S[b]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/(S[adj]{V}<3>\NP{U}){V}){_}/NP[expl]{T}<4>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %3 %k =(S[to]\NP)/(S[b]\NP) # "make it hard to find"
+  3 xcomp _ %l %f
+  4 dobj %l %f
+
+S[adj]/S[adj]
+  1 (S[adj]{Y}/S[adj]{Y}<1>){_}
+  1 ncmod _ %f %l
+
+(PP\PP)/S[dcl]
+  2 ((PP{Y}\PP{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+
+(NP\NP)/S[inv]
+  2 ((NP{Y}\NP{Y}<1>){_}/S[inv]{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+
+(NP\NP)/S
+  2 ((NP{Y}\NP{Y}<1>){_}/S{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l # not sure about this one
+
+N/NP
+  1 (N{Y}/NP{Y}<1>){_}
+  1 dobj %l %f
+
+((S/S)/(S[to]\NP))/NP
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}/(S[to]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP) # "for its employees to sign ..."
+  3 ignore
+
+(S\S)/(S[b]\NP)
+  2 ((S[X]{Y}\S[X]{Y}<1>){_}/(S[b]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+(S\S)/N
+  2 ((S[X]{Y}\S[X]{Y}<1>){_}/N{Z}<2>){_}
+  1 ncmod _ %f %2
+  2 det %f %l
+
+((S[pt]\NP)/S[em])/NP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  3 dobj %l %f
+
+(((S\NP)/(S\NP))\((S\NP)/(S\NP)))/NP
+  2 ((((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}/(S[X]{Y}\NP{Z}){Y}){W}<2>){_}/NP{V}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %l
+
+((S[ng]\NP)/(S[to]\NP))/PP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 iobj %l %f =PP/NP
+
+(S[dcl]\(S[b]\NP))\NP
+  2 ((S[dcl]{_}\(S[b]{Y}<1>\NP{Z}){Y}){_}\NP{W}<2>){_}
+  1 ncmod _ %f %l # not sure about this " ... , Mr Weiss added"
+  2 ncsubj %l %f _
+
+(S[dcl]\S[b])\NP
+  2 ((S[dcl]{_}\S[b]{Y}<1>){_}\NP{Z}<2>){_}
+  1 ncmod _ %f %l # not sure about this " ... , Mr Bickwit said"
+  2 ncsubj %l %f _
+
+((S[dcl]\NP)/(S[pt]\NP))/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[pt]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+((S[dcl]\NP)/S[em])/PP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  3 iobj %l %f =PP/NP
+
+((S[dcl]\NP[expl])/(S[to]\NP))/PP
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/PP{V}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 iobj %l %f =PP/NP
+
+((S[adj]\NP)/S[dcl])/(S[adj]\NP)
+  3 (((S[adj]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ignore
+  2 ncmod _ %f %l  # not sure about this
+  3 ncmod _ %f %l
+
+(NP\NP)/S[q]
+  2 ((NP{Y}\NP{Y}<1>){_}/S[q]{Z}<2>){_}
+  1 cmod _ %f %2
+  2 ncmod _ %f %l # consistent with (NP\NP)/S[qem]
+
+((NP\NP)\(NP\NP))/(NP\NP)
+  2 (((NP{Y}\NP{Y}){_}\(NP{Z}\NP{Z}){W}<1>){_}/(NP{V}\NP{V}){U}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l # another "% to %" type case; go for default option
+
+# modified
+S[wq]/(S[b]\NP)
+  1 (S[wq]{Y}/(S[b]{Y}<1>\NP{Z}){Y}){_}
+  1 xcomp _ %l %f
+
+((S/S)/(S[pss]\NP))/NP
+  3 (((S[X]{Y}/S[X]{Y}<1>){_}/(S[pss]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+  3 ignore # co-indexing gets subj
+
+S/(S[dcl]\NP)
+  1 (S{_}/(S[dcl]{Y}<1>\NP{Z}){Y}){_}
+  ! (S{_}/(S[dcl]{Y}<1>\NP{_}){Y}){_}
+  1 ignore
+
+(((S\NP)\(S\NP))/(S[adj]\NP))/NP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[adj]{W}<2>\NP{V*}){W}){_}/NP{V}<3>){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+(((S\NP)\(S\NP))/PP)/(S[adj]\NP)
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/PP{W}<2>){_}/(S[adj]{V}<3>\NP{U}){V}){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %3 %f # "as much as ..."
+  3 dobj %l %f
+
+(((S[ng]\NP)/PP)/PP)/NP
+  4 ((((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}/NP{V}<4>){_}
+  1 ncsubj %l %f _
+  2 ncmod _ %f %l # don't have two iobj's
+  3 iobj %l %f =PP/NP
+  4 dobj %l %f
+
+(S[dcl]\S[wq])\NP
+  2 ((S[dcl]{_}\S[wq]{Y}<1>){_}\NP{Z}<2>){_}
+  1 ncmod _ %f %l # not sure about this " ... , he asked"
+  2 ncsubj %l %f _
+
+(S[dcl]\NP)/S[q]
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/S[q]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+((S[dcl]\NP[expl])/S[dcl])/(S[adj]\NP)
+  3 (((S[dcl]{_}\NP[expl]{Y}<1>){_}/S[dcl]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 (ccomp _ %3 %f # "it is doubtful any collaboration will take place"
+  3 xcomp _ %l %f
+
+((S[b]\NP)/S[for])/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}/S[for]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 xcomp _ %l %f =be
+  3 dobj %l %f
+
+((S[adj]\NP)/(S[to]\NP))/PP
+  3 (((S[adj]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{Y*}){Z}){_}/PP{W}<3>){_}
+  1 ignore
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 iobj %l %f =PP/NP
+
+(S[adj]\NP)/S[qem]
+  2 ((S[adj]{_}\NP{Y}<1>){_}/S[qem]{Z}<2>){_}
+  1 ignore
+  2 ccomp _ %l %f
+
+(((S[adj]\NP)\(S[adj]\NP))/((S[adj]\NP)\(S[adj]\NP)))/NP
+  2 ((((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}\NP{Z}){Y}){W}/((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}\NP{Z}){Y}){W}<2>){_}/NP{V}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %l
+
+N/S[qem]
+  1 (N{_}/S[qem]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+(NP\NP)/S[wq]
+  2 ((NP{Y}\NP{Y}<1>){_}/S[wq]{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+
+((NP[nb]/N)/(NP[nb]/N))/(S[asup]\NP)
+  2 (((NP[nb]{Y}/N{Y}){Z}/(NP[nb]{Y}/N{Y}){Z}<2>){_}/(S[asup]{W}<1>\NP{V}){W}){_}
+  1 xcomp _ %l %f
+  2 ncmod _ %f %l
+
+((N/N)/(N/N))/N
+  2 (((N{Y}/N{Y}){Z}/(N{Y}/N{Y}){Z}<2>){_}/N{W}<1>){_}
+  1 det %f %l
+  2 ncmod _ %f %1
+
+(S/S)/S[em]
+  2 ((S{Y}/S{Y}<1>){_}/S[em]{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp %f %l %c =S[em]/S[dcl]
+
+((S[pt]\NP)/NP)/(S[adj]\NP)
+  3 (((S[pt]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 dobj %l %f
+  3 xcomp _ %l %f
+
+((S[ng]\NP)/S[dcl])/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 dobj %l %f
+
+S/N
+  1 (S{_}/N{Y}<1>){_}
+  1 dobj %l %f # odd analsyses in CCGbank
+
+((S[dcl]\S[dcl])\NP)/(S[pt]\NP)
+  3 (((S[dcl]{_}\S[dcl]{Y}<1>){_}\NP{Z}<2>){_}/(S[pt]{W}<3>\NP{Z*}){W}){_}
+  ! (((S[dcl]{W}\S[dcl]{Y}<1>){W}\NP{Z}<2>){W}/(S[pt]{W}<3>\NP{Z*}){W}){_}
+  1 cmod _ %f %l
+  2 ncsubj %l %f _
+  3 aux %f %l
+
+((S[dcl]\NP)\NP)/NP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}\NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ignore # odd analsyses in CCGbank
+  2 ncsubj %l %f _
+  3 dobj %l %f
+
+(S[b]\NP)/S[for]
+  2 ((S[b]{_}\NP{Y}<1>){_}/S[for]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+# modified
+(((S[b]\NP)/PP)/NP)/NP
+  4 ((((S[b]{_}\NP{Y}<1>){_}/PP{_}){_}/NP{W}<2>){_}/NP{V}<3>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  3 obj2 %l %f
+  4 dobj %l %f # "give investors something for their money"
+
+((S[adj]\NP)/(S[adj]\NP))/(S[asup]\NP)
+  2 (((S[adj]{Y}\NP{Z}){Y}/(S[adj]{Y}<1>\NP{Z}){Y}){_}/(S[asup]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %2 # "were at least affordable"
+  2 xcomp _ %l %f
+
+N/PP
+  1 (N{_}/PP{Y}<1>){_}
+  1 iobj %l %f =PP/NP
+
+((NP\NP)/((S[to]\NP)/NP))/NP
+  4 (((NP{Y}\NP{Y}<1>){_}/((S[to]{Z}<2>\NP{W*}){Z}/NP{Y*}<3>){Z}){_}/NP{W}<4>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+  3 ignore
+# one too many arguments here
+
+((NP\NP)\NP)/PP
+  3 (((NP{Y}\NP{Y}<1>){_}\NP{Z}<2>){_}/PP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+  3 iobj %l %f =PP/NP
+
+((NP\NP)\(NP\NP))/N
+  2 (((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}<2>){_}/N{W}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %1
+
+(NP/N)/(NP/N)
+  1 ((NP{Y}/N{Y}){Z}/(NP{Y}/N{Y}){Z}<1>){_}
+  1 ncmod _ %f %l
+
+(((N/N)/(N/N))\((N/N)/(N/N)))/((N/N)/(N/N))
+  2 ((((N{Y}/N{Y}){Z}/(N{Y}/N{Y}){Z}){_}\((N{Y}/N{Y}){Z}/(N{Y}/N{Y}){Z}){W}<1>){_}/((N{Y}/N{Y}){Z}/(N{Y}/N{Y}){Z}){V}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l # another ".. to .." type case; go for default option
+
+# modified
+S[wq]/S[poss]
+  1 (S[wq]{Y}/S[poss]{Y}<1>){_}
+  1 ccomp _ %f %l
+
+((S/S)/(S/S))/((S/S)/(S/S))
+  1 (((S[X]{Y}/S[X]{Y}){Z}/(S[X]{Y}/S[X]{Y}){Z}){W}/((S[X]{Y}/S[X]{Y}){Z}/(S[X]{Y}/S[X]{Y}){Z}){W}<1>){_}
+  1 ncmod _ %f %l
+
+((S\S)\(S\S))/NP
+  2 (((S[X]{Y}\S[X]{Y}){Z}\(S[X]{Y}\S[X]{Y}){Z}<2>){_}/NP{W}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %l
+
+(S/S)/(S[b]\NP)
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/(S[b]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+# modified
+(S[q]/(S[pt]\NP))/NP
+  2 ((S[q]{Y}/(S[pt]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}){_}
+  ! ((S[q]{Y}/(S[pt]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}<2>){_}
+  1 aux %f %l
+  2 ignore
+
+# modified
+(S[q]/(S[dcl]\NP))/NP
+  2 ((S[q]{Y}/(S[dcl]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}){_}
+  ! ((S[q]{Y}/(S[dcl]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}<2>){_}
+  1 aux %f %l
+  2 ignore
+
+S[q]/NP
+  1 (S[q]{_}/NP{Y}<1>){_}
+  1 ncsubj %l %f inv
+
+((S[qem]/S[dcl])\((NP\NP)/NP))/N
+  3 (((S[qem]{_}/S[dcl]{Y}<1>){_}\((NP{Z}\NP{Z}){W}/NP{V}){U}<3>){_}/N{T}<2>){_}
+  1 ccomp _ %l %f
+  2 dobj %l %f
+  3 ncmod _ %l %f # "detailing on what points member states ..."
+
+((S[pt]\NP)/(S[to]\NP))/(S[adj]\NP)
+  3 (((S[pt]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/(S[adj]{V}<3>\NP{U}){V}){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 xcomp _ %l %f
+
+((S[pt]\NP)/(S[pss]\NP))/NP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/(S[pss]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+(((S\NP)\(S\NP))\((S\NP)\(S\NP)))/(S[dcl]\NP)
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}\((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<2>){_}/(S[dcl]{V}<1>\NP{U}){V}){_}
+  1 xcomp _ %l %f
+  2 ncmod _ %f %l
+
+(((S\NP)\(S\NP))/((S\NP)\(S\NP)))/N
+  2 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}/((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){W}<2>){_}/N{V}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %1 # "a lot less"
+
+((S\NP)\(S\NP))/(S[asup]\NP)
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/(S[asup]{W}<2>\NP{V}){W}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+(((S\NP)\(S\NP))\NP)/PP
+  3 ((((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}\NP{W}<2>){_}/PP{V}<3>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %l %f # "30 miles Northeast of New York"
+  3 iobj %l %f =PP/NP
+
+((S[ng]\NP)/S[qem])/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/S[qem]{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 dobj %l %f
+
+((S[ng]\NP)/(S[pt]\NP))/NP
+  3 (((S[ng]{_}\NP{Y}<1>){_}/(S[pt]{Z}<2>\NP{W*}){Z}){_}/NP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f
+  3 dobj %l %f
+
+(((S[ng]\NP)/S[for])/(S[adj]\NP))/NP[expl]
+  4 ((((S[ng]{_}\NP{Y}<1>){_}/S[for]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}/NP[expl]{U}<4>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %3 %f # consistent with (((S[b]\NP)/S[for])/(S[adj]\NP))/NP[expl]
+  3 xcomp _ %l %f
+  4 dobj %l %f
+
+S[frg]/(S[adj]\NP)
+  1 (S[frg]{_}/(S[adj]{Y}<1>\NP{Z}){Y}){_}
+  1 xcomp _ %l %f
+
+S[em]/(S[dcl]\NP)
+  1 (S[em]{_}/(S[dcl]{Y}<1>\NP{Z}){Y}){_}
+  1 xcomp _ %l %f
+
+(S[dcl]\S[qem])/PP
+  2 ((S[dcl]{_}\S[qem]{Y}<1>){_}/PP{Z}<2>){_}
+  1 csubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+
+(S[dcl]\S[qem])/NP
+  2 ((S[dcl]{_}\S[qem]{Y}<1>){_}/NP{Z}<2>){_}
+  1 csubj %l %f _ # not sure about this "how many times we're going to feel good is another question"
+  2 dobj %l %f
+
+((S[dcl]\S[dcl])\NP)/PP
+  3 (((S[dcl]{_}\S[dcl]{Y}<1>){_}\NP{Z}<2>){_}/PP{W}<3>){_}
+  1 cmod _ %l %f
+  2 ncsubj %l %f _
+  3 iobj %l %f =PP/NP
+
+(S[dcl]\(S[dcl]\NP))/NP
+  2 ((S[dcl]{_}\(S[dcl]{Y}<1>\NP{Z}){Y}){_}/NP{W}<2>){_}
+  1 xsubj %l %f _
+  2 dobj %l %f
+
+(((S[dcl]\NP)/S[for])/(S[adj]\NP))/NP[expl]
+  4 ((((S[dcl]{_}\NP{Y}<1>){_}/S[for]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}/NP[expl]{U}<4>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %3 %f # consistent with (((S[b]\NP)/S[for])/(S[adj]\NP))/NP[expl]
+  3 xcomp _ %l %f
+  4 dobj %l %f
+
+((S[dcl]\NP)/S[em])/(S[adj]\NP)
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %3 %c =S[em]/S[dcl]  # "make clear that ..."
+  3 xcomp _ %l %f
+
+((S[dcl]\NP)/S[dcl])/PP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/S[dcl]{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+  3 iobj %l %f =PP/NP
+
+(S[dcl]\NP)/S[b]
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/S[b]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+(S[dcl]\NP)\NP
+  2 ((S[dcl]{_}\NP{Y}<1>){_}\NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ncsubj %l %f _
+
+(S[dcl]\NP[expl])/(S[to]\NP)
+  2 ((S[dcl]{_}\NP[expl]{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+
+(S[b]\NP)/S[wq]
+  2 ((S[b]{_}\NP{Y}<1>){_}/S[wq]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp _ %l %f
+
+((S[b]\NP)/S[em])/PP
+  3 (((S[b]{_}\NP{Y}<1>){_}/S[em]{Z}<2>){_}/PP{W}<3>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[em]/S[dcl]
+  3 iobj %l %f =PP/NP
+
+(((S[b]\NP)/PP)/(S[adj]\NP))/NP
+  4 ((((S[b]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/(S[adj]{W}<3>\NP{V}){W}){_}/NP{U}<4>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  3 xcomp _ %l %f
+  4 dobj %l %f
+
+((S[b]\NP)\NP)/(S[b]\NP)
+  3 (((S[b]{_}\NP{Y}<1>){_}\NP{Z}<2>){_}/(S[b]{V}<3>\NP{U}){V}){_}
+  ! (((S[b]{V}\NP{Y}<1>){V}\NP{Z}<2>){V}/(S[b]{V}<3>\NP{U}){V}){_}
+  1 ignore
+  2 ignore # odd analysis
+  3 aux %f %l
+
+((S[b]\NP)\NP)/NP
+  3 (((S[b]{_}\NP{Y}<1>){_}\NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ignore # odd analysis
+  2 ncsubj %l %f _
+  3 dobj %l %f
+
+S[as]/S[poss]
+  1 (S[as]{_}/S[poss]{Y}<1>){_}
+  1 ccomp _ %l %f
+
+((S[adj]\NP)/((S[to]\NP)/NP))/(S[adj]\NP)
+  2 (((S[adj]{Y}\NP{Z}){_}/((S[to]{W}<1>\NP{V}){W}/NP{U}){W}){_}/(S[adj]{Y}<2>\NP{Z}){Y}){_}
+  1 xcomp %f %2 %k =(S[to]\NP)/(S[b]\NP) # "too small to maintain"
+  2 ncmod _ %f %l # "too small" as ncmod rather than xcomp
+
+((S[adj]\NP)\(S[adj]\NP))/S[inv]
+  2 (((S[adj]{Y}\NP{Z}){Y}\(S[adj]{Y}<1>\NP{Z}){Y}){_}/S[inv]{W}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+
+(NP\NP)/S[b]
+  2 ((NP{Y}\NP{Y}<1>){_}/S[b]{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+
+((((NP\NP)\(NP\NP))/((NP\NP)\(NP\NP)))\(((NP\NP)\(NP\NP))/((NP\NP)\(NP\NP))))/(((NP\NP)\(NP\NP))/((NP\NP)\(NP\NP)))
+  2 (((((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}/((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}){_}\(((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}/((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}){V}<1>){_}/(((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}/((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}){U}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l # default option
+
+((NP\NP)\(NP\NP))\((NP\NP)\(NP\NP))
+  1 (((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}\((NP{Y}\NP{Y}){Z}\(NP{Y}\NP{Y}){Z}){W}<1>){_}
+  1 ncmod _ %f %l
+
+((NP\NP)/N)\NP
+  3 (((NP{Y}\NP{Y}<1>){_}/N{Z}<2>){_}\NP{W}<3>){_}
+  1 ncmod _ %f %3
+  2 poss %f %3
+
+((N\N)\(N\N))/NP
+  2 (((N{Y}\N{Y}){Z}\(N{Y}\N{Y}){Z}<2>){_}/NP{W}<1>){_}
+  1 dobj %l %f
+  2 ncmod _ %f %l
+
+N/N[num]
+  1 (N{_}/N[num]{Y}<1>){_}
+  1 ncmod num %l %f # $ is head
+
+(N/N)/N[num]
+  2 ((N{Y}/N{Y}<1>){_}/N[num]{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod num %l %f
+
+S[bem]/S[b]
+  1 (S[bem]{_}/S[b]{Y}<1>){_}
+  1 ignore
+
+(S[dcl]\NP[thr])/(S[b]\NP)
+  2 ((S[dcl]{_}\NP[thr]{Y}<1>){_}/(S[b]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[dcl]{Z}\NP[thr]{Y}<1>){Z}/(S[b]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+(S[dcl]\NP[thr])/(S[pt]\NP)
+  2 ((S[dcl]{_}\NP[thr]{Y}<1>){_}/(S[pt]{Z}<2>\NP{Y*}){Z}){_}
+  ! ((S[dcl]{Z}\NP[thr]{Y}<1>){Z}/(S[pt]{Z}<2>\NP{Y*}){Z}){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+
+(S[dcl]\NP)/S[bem]
+  2 ((S[dcl]{_}\NP{Y}<1>){_}/S[bem]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[bem]/S[b]
+
+NP/(NP\NP)
+  1 (NP{_}/(NP{Y}\NP{Y}){Z}<1>){_}
+  1 ignore
+# is this in 2-21?
+
+((S\NP)\(S\NP))/N[num]
+  2 (((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}<1>\NP{Z}){Y}){_}/N[num]{W}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod num %l %f # "Dec. 1" Dec. is the head
+
+(S[ng]\NP)/S[bem]
+  2 ((S[ng]{_}\NP{Y}<1>){_}/S[bem]{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 ccomp %f %l %c =S[bem]/S[b]
+
+(S/S)/S[inv]
+  2 ((S[X]{Y}/S[X]{Y}<1>){_}/S[inv]{Z}<2>){_}
+  1 cmod _ %f %l
+  2 ccomp _ %l %f
+
+(S[dcl]\NP[thr])/NP
+  2 ((S[dcl]{_}\NP[thr]{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncsubj %l %f _
+  2 xcomp _ %l %f =be
+  2 dobj %l %f
+
+(S[adj]\NP)/N[num]
+  2 ((S[adj]{_}\NP{Y}<1>){_}/N[num]{Z}<2>){_}
+  1 ignore
+  2 ncmod num %l %f
+
+(NP\NP)/N[num]
+  2 ((NP{Y}\NP{Y}<1>){_}/N[num]{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod num %l %f
+
+# extra categories for questions
+# modified
+((S[wq]/(S[q]/NP))/N)\(S[wq]/(S[q]/NP))
+  3 (((S[wq]{Z}/(S[q]{Z}<1>/NP{W}){Z}){Z}/N{V}<2>){Z}\(S[wq]{Z}<3>/(S[q]{Z*}/NP{W}){Z}){Z}){_}
+  1 ignore
+  2 ignore
+  3 ignore
+# I can't see how to get sensible GRs for this 's case; come back to this
+
+# modified
+((S[wq]/(S[dcl]\NP))/N)\(S[wq]/(S[dcl]\NP))
+  3 (((S[wq]{Z}/(S[dcl]{Z}\NP{W}){Z}){Z}/N{V}<2>){Z}\(S[wq]{Z}/(S[dcl]{Z*}\NP{W}){Z}){Z}){_}
+  1 ignore
+  2 ignore
+  3 ignore
+# I can't see how to get sensible GRs for this 's case; come back to this
+
+# modified
+(S[wq]/(S[q]/NP))/NP
+  2 ((S[wq]{Y}/(S[q]{Y}<1>/NP{Z*}){Y}){Y}/NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+# modified
+((S[wq]/(S[dcl]\NP))/N)/(NP/N)
+  3 (((S[wq]{Y}/(S[dcl]{Y}<1>\NP{Z*}){Y}){Y}/N{Z}<2>){_}/(NP{W}/N{W}){V}<3>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+  3 ncmod _ %2 %f
+# based on "How many abbots can the abbey afford ?" from the RASP grammar development files
+
+((S[wq]/S[q])\(S[wq]/S[q]))/NP
+  2 (((S[wq]{Y}/S[q]{Y}){Z}\(S[wq]{Y}/S[q]{Y}){Z}<1>){_}/NP{W}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+(S[wq]\S[wq])/NP
+  2 ((S[wq]{Y}\S[wq]{Y}<1>){_}/NP{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+# modified - to check if this correct
+(S[wq]\(S[dcl]/NP))/N
+  2 ((S[wq]{Y}\(S[dcl]{Y}<1>/NP{Z*}){Y}){Y}/N{Z}<2>){_}
+  1 ncmod _ %f %l # not sure about this one
+  2 dobj %l %f
+
+# modified
+(S[wq]/(S[dcl]\NP))/NP
+  2 ((S[wq]{Y}/(S[dcl]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+((NP\NP)/(S[pss]\NP))/NP
+  3 (((NP{Y}\NP{Y}<1>){_}/(S[pss]{Z}<2>\NP{W}){Z}){_}/NP{V}<3>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+  3 xcomp _ %l %f
+
+# modified
+((S[pss]\NP)/PP)/NP
+  3 (((S[pss]{_}\NP{Y}<2>){_}/PP{Z}<3>){_}/NP{W}<4>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  3 dobj %l %f
+
+# modified
+(((S[q]/NP)/PP)/(((S[b]\NP)/PP)/NP))/NP
+  4 ((((S[q]{W}/NP{Y}<1>){W}/PP{W}<2>){W}/(((S[b]{W}<3>\NP{V*}){W}/PP{W}){W}/NP{Y*}){W}){W}/NP{V}<4>){_}
+  1 ignore
+  2 ignore
+  3 ignore
+  4 ignore
+# there is only one example of this category in the question data, and it looks wrong
+
+((S[q]/PP)/NP)/NP
+  3 (((S[q]{_}/PP{Y}<1>){_}/NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncsubj _ %l %f
+  2 xcomp _ %l %f
+  3 iobj %l %f
+
+((S[q]/PP)/PP)/NP
+  3 (((S[q]{_}/PP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  1 ncmod _ %f %l # don't have two iobj's
+  2 iobj %l %f =PP/NP
+  3 ncsubj _ %l %f
+
+# modified 
+(((S[wq]/NP)/((S[q]/NP)/NP))/N)/(NP/N)
+  4 ((((S[wq]{Z}/NP{Y}<1>){Z}/((S[q]{Z}<2>/NP{Y*}){Z}/NP{W*}){Z}){Z}/N{W}<3>){_}/(NP{V}/N{V}){U}<4>){_}
+  1 ignore
+  2 ignore
+  3 ignore
+  4 ignore
+# there is only one example of this category in the question data, and it looks like it has too many NPs
+
+# modified 
+(((S[wq]/PP)/((S[q]/PP)/NP))/N)/(NP/N)
+  4 ((((S[wq]{Z}/PP{Y}<1>){Z}/((S[q]{Z}<2>/PP{Y*}){Z}/NP{W*}){Z}){Z}/N{W}<3>){_}/(NP{V}/N{V}){U}<4>){_}
+  1 ignore
+  2 ignore
+  3 ignore
+  4 ignore
+# this looks like it has too many NPs also
+
+# modified 
+((S[wq]/PP)/((S[q]/PP)/(S[adj]\NP)))/(S[adj]\NP)
+  3 (((S[wq]{Z}/PP{Y}<1>){Z}/((S[q]{Z}<2>/PP{Y*}){Z}/(S[adj]{W*}\NP{V}){W*}){Z}){Z}/(S[adj]{W}<3>\NP{V}){W}){_}
+  1 iobj %2 %f
+  2 ncmod _ %f %l
+  3 xcomp _ %l %f
+
+(S[wq]\(S[dcl]/PP))/(S[wq]\(S[dcl]/NP))
+  2 ((S[wq]{Y}\(S[dcl]{Z}<1>/PP{W}){Z}){Y}/(S[wq]{Y}<2>\(S[dcl]{V}/NP{U}){V}){Y}){_}
+  1 iobj %f %l
+  2 ignore
+# see "In_II which_DDQ abbey_NN1 did_VDD he_PPHS1 see_VV0 her_PPHO1 ?_?" in the grammar dev files
+# to get the same deps we'd need to relate "in" and "abbey"
+# look into this at some point
+
+# modified
+(((S[wq]/(S[pss]\NP))/((S[q]/(S[pss]\NP))/NP))/N)/(NP/N)
+  4 ((((S[wq]{_}/(S[pss]{Y}<1>\NP{Z}){Y}){_}/((S[q]{Y}/(S[pss]{Y*}\NP{Z}){Y}){Y}/NP{V*}){W}){_}/N{V}<3>){_}/(NP{U}/N{U}){T}<4>){_}
+  1 ignore
+  2 ignore
+  3 ignore
+  4 ignore
+# only one example of this in the question data; looks like there are too many NPs
+
+# modified 
+(S[wq]/(S[q]/NP))/(S[wq]/(S[q]/NP))
+  1 ((S[wq]{Z}/(S[q]{Z}/NP{W}){Z}){Z}/(S[wq]{Z}<1>/(S[q]{Z}/NP{W}){Z}){W}){_}
+  1 ignore
+# only one example of this in the question data; and difficult to get looking like B+C
+
+# modified 
+(S[wq]/(S[q]/PP))/N
+  2 ((S[wq]{Y}/(S[q]{Y}<1>/PP{Z}){Y}){Y}/N{W}<2>){_}
+  1 ignore
+  2 det %f %l
+
+# modified 
+((S[wq]/(S[q]/PP))/N)/(NP/N)
+  3 (((S[wq]{Y}/(S[q]{Y}<1>/PP{Z}){Y}){Y}/N{W}<2>){Y}/(NP{V}/N{V}){U}<3>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+  3 ncmod _ %2 %f
+# based on "How many abbots can the abbey afford ?" from the RASP grammar development files
+
+S[wq]\S[wq]
+  1 (S[wq]{Y}\S[wq]{Y}<1>){_}
+  1 ncmod _ %f %l
+
+(S[wq]\S[wq])/(S[dcl]\NP)
+  2 ((S[wq]{Y}\S[wq]{Y}<1>){_}/(S[dcl]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 xcomp _ %l %f
+
+# modified 
+S[wq]/(S[q]/PP)
+  1 (S[wq]{Y}/(S[q]{Y}<1>/PP{Z}){Y}){_}
+  1 ignore
+
+(S[wq]/(S[q]/PP))/(S[wq]/(S[q]/(S[adj]\NP)))
+  2 ((S[wq]{_}/(S[q]{Y}/PP{Z}){Y}<1>){_}/(S[wq]{W}/(S[q]{V}/(S[adj]{U}\NP{T}){U}){V}){W}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+# not sure about this one
+
+# modified
+((S[q]/PP)/(S[adj]\NP))/NP
+  3 (((S[q]{Z}/PP{Y}<1>){Z}/(S[adj]{Z}<2>\NP{W}){Z}){Z}/NP{V}){_}
+  1 iobj %l %f
+  2 xcomp _ %l %f
+  3 ncsubj _ %l %f
+
+(S[wq]/(S[q]/(S[adj]\NP)))/(S[adj]\NP)
+  2 ((S[wq]{_}/(S[q]{Y}<1>/(S[adj]{Z}\NP{W}){Z}){V}){_}/(S[adj]{Z}<2>\NP{W}){Z}){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+# modified 
+S[wq]\(S[dcl]/NP)
+  1 (S[wq]{Y}\(S[dcl]{Y}<1>/NP{Z}){Y}){_}
+  ! (S[wq]{_}\(S[dcl]{Y}<1>/NP{_}){Y}){_}
+  1 ignore
+
+# modified 
+(S[wq]\(S[dcl]/PP))/N
+  2 ((S[wq]{Y}\(S[dcl]{Y}<1>/PP{Z}){Y}){_}/N{W}<2>){_}
+  1 ignore
+  2 ignore
+# is this category in the question data?
+
+(S[wq]\S[wq])/S[dcl]
+  2 ((S[wq]{Y}\S[wq]{Y}<1>){_}/S[dcl]{Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ccomp _ %l %f
+
+# modified
+(((S[q]/PP)/PP)/(S[adj]\NP))/NP
+  4 ((((S[q]{W}/PP{Y}<1>){W}/PP{Z}<2>){W}/(S[adj]{W}<3>\NP{V}){W}){W}/NP{U}){_}
+  1 ignore
+  2 ignore
+  3 ignore
+  4 ignore
+# is this category in the question data?
+
+# modified
+((S[pss]\NP)/NP)/PP
+  3 (((S[pss]{_}\NP{Y}<2>){_}/NP{Z}<3>){_}/PP{W}<4>){_}
+  1 ncsubj %l %f _
+  2 dobj %l %f
+  3 iobj %l %f =PP/NP
+
+NP/N
+  1 (NP{Y}/N{Y}<1>){_}
+  1 dobj %l %f
+
+# modified 
+(S[wq]/(S[q]/PP))/(S[wq]/(S[q]/NP))
+  1 ((S[wq]{Y}/(S[q]{Y}<1>/PP{Z}){Y}){_}/(S[wq]{V}/(S[q]{V}/NP{U}){V}){V}<1>){_}
+  1 ncmod _ %f %l
+
+# modified 
+((S[wq]/(S[q]/PP))\(S[wq]/(S[q]/PP)))/NP
+  2 (((S[wq]{Z}/(S[q]{Z}/PP{W}){Y}){Z}\(S[wq]{Z}<1>/(S[q]{Z}/PP{W}){Z}){Y}){Z}/NP{V}<2>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+
+# modified
+((S[wq]/(S[q]/NP))/N)/(NP/N)
+  3 (((S[wq]{Y}/(S[q]{Y}<1>/NP{Z*}){Y}){Y}/N{Z}<2>){_}/(NP{W}/N{W}){V}<3>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+  3 ncmod _ %2 %f
+
+((S[wq]/PP)/N)/(NP/N)
+  3 (((S[wq]{_}/PP{Y}<1>){_}/N{Z}<2>){_}/(NP{W}/N{W}){V}<3>){_}
+  1 ncmod _ %f %l
+  2 dobj %l %f
+  3 ncmod _ %2 %f
+
+(S[wq]\(S[dcl]/PP))/(S[wq]\(S[dcl]/PP))
+  1 ((S[wq]{Y}\(S[dcl]{Z}/PP{W}){Z}){Y}/(S[wq]{Y}<1>\(S[dcl]{Z}/PP{W}){Z}){Y}){_}
+  1 ncmod _ %f %l
+# is this category in the question data?
+
+LQU
+  1 LQU{_}
+
+RQU
+  1 RQU{_}
+
+(((S[b]\NP)/NP)/PP)/NP
+  4 ((((S[b]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/PP{W}<3>){_}/NP{V}<4>){_}
+  1 ncsubj _ %l %f
+  2 obj2 %l %f
+  3 iobj %l %f
+  4 dobj %l %f
+# is this category in the question data?
+
+# modified
+((S[pss]\NP)/NP)/NP
+  3 (((S[pss]{_}\NP{Y}<2>){_}/NP{Z}<3>){_}/NP{W}<4>){_}
+  1 ncsubj %l %f _
+  2 obj2 %l %f
+  3 dobj %l %f
+# is this category in the question data?
+
+(N/N)\N
+  2 ((N{Y}/N{Y}<1>){_}\N{Z}<2>){_}
+  1 ignore
+  2 ignore
+# is this category in the question data?
+
+# modified
+(S[q]/(S[pss]\NP))/NP
+  2 ((S[q]{Y}/(S[pss]{Y}<1>\NP{Z*}){Y}){Y}/NP{Z}){_}
+  1 aux %f %l
+  2 ncsubj %l %f _
+
+(S[q]/PP)/NP
+  2 ((S[q]{_}/PP{Y}<1>){_}/NP{Z}<2>){_}
+  1 iobj %l %f
+  2 ncsubj %l %f _
+
+# modified
+(S[wq]/(S[dcl]\NP))/N
+  2 ((S[wq]{Y}/(S[dcl]{Y}<1>\NP{Z*}){Y}){Y}/N{Z}){_}
+  1 ignore
+  2 det %f %l
+
+NP/PP
+  1 (NP{_}/PP{Y}<1>){_}
+  1 iobj %l %f
+
+((S[q]/NP)/NP)/NP
+  3 (((S[q]{_}/NP{Y}<1>){_}/NP{Z}<2>){_}/NP{W}<3>){_}
+  1 ignore
+  2 ignore
+  3 ignore
+# is this category in the question data?
+
+# extra categories added to the end for Matt's CCG-PropBank work
+(((S[dcl]\NP)/PP)/PP)/PP
+  4 ((((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}/PP{V}<4>){_}
+  1 ncmod _ %f %l
+  2 iobj _ %l %f
+  3 iobj _ %l %f
+  4 iobj _ %l %f
+
+PP/N[num]
+  1 (PP{_}/N[num]{Y}<1>){_}
+  1 dobj _ %l %f
+
+PP/N
+  1 (PP{_}/N{Y}<1>){_}
+  1 dobj _ %l %f
+
+((S[pt]\NP)/PP)/PP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 iobj _ %l %f
+  3 iobj _ %l %f
+
+((PP/PP)/(PP/PP))\(S[adj]\NP)
+  2 (((PP{_}/PP{_}){_}/(PP{_}/PP{_}){_}<1>)\(S[adj]{Y}\NP{Z}){Y}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+
+((S[pt]\NP)/NP)/PP
+  3 (((S[pt]{_}\NP{Y}<1>){_}/NP{Z}<2>){_}/PP{W}<3>){_}
+  1 ncmod _ %f %l
+  2 dobj _ %l %f
+  3 iobj _ %l %f
+
+(((S[pt]\NP)/PP)/PP)/PP
+  4 ((((S[pt]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}/PP{V}<4>){_}
+  1 ncmod _ %f %l
+  2 iobj _ %l %f
+  3 iobj _ %l %f
+  4 iobj _ %l %f
+
+PP/(S[dcl]\NP)
+  1 (PP{_}/(S[dcl]{Y}\NP{Z}){Y}<1>){_}
+  1 cmod _ %l %f
+
+(PP\PP)/((S\NP)\(S\NP))
+  1 ((PP{Y}\PP{Y}<1>){Y}/((S{Z}\NP{V}){Z}\(S{Z}\NP{V}){Z}){Z}<2>){_}
+  1 ncmod _ %f %l
+  2 ncmod _ %f %l
+
+(((S[pt]\NP)/PP)/PP)/NP
+  4 ((((S[pt]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/PP{W}<3>){_}/NP{V}<4>){_}
+  1 ncmod _ %f %l
+  2 iobj _ %l %f
+  3 iobj _ %l %f
+  4 dobj _ %l %f
+
+(((S[dcl]\NP)/PP)/NP)/PP
+  4 ((((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}/PP{V}<4>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  3 dobj %l %f
+  4 iobj %l %f =PP/NP
+
+((S[dcl]\NP)/(S[ng]\NP))/PP
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{Y*}){Z}){_}/PP{V}<3>){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+  3 iobj %l %f
+
+# modified
+(((S[b]\NP)/PP)/NP)/PP
+  4 ((((S[b]{_}\NP{Y}<1>){_}/PP{_}){_}/NP{W}<2>){_}/PP{V}<3>){_}
+  1 ncsubj %l %f
+  2 iobj %l %f
+  3 dobj %l %f
+  4 iobj %l %f
+
+(((S[dcl]\NP)/(S[to]\NP))/PP)/PP
+  4 ((((S[dcl]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/PP{V}<3>){_}/PP{U}<4>){_}
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 iobj %l %f =PP/NP
+  4 iobj %l %f =PP/NP
+
+(((S[ng]\NP)/PP)/NP)/PP
+  4 ((((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}/PP{V}<4>){_}
+  1 ncsubj %l %f _
+  2 iobj %l %f =PP/NP
+  2 xcomp _ %l %f =PP/(S[ng]\NP)
+  2 xcomp _ %l %f =PP/(S[adj]\NP)
+  3 dobj %l %f
+  4 iobj %l %f
+
+((S[b]\NP)/(S[ng]\NP))/PP
+  3 (((S[b]{_}\NP{Y}<1>){_}/(S[ng]{Z}<2>\NP{W*}){Z}){_}/PP{V}<3>){_}
+  1 ignore =aux
+  1 ncsubj %l %f _
+  2 aux %f %l =aux
+  2 xcomp _ %l %f
+  3 iobj %l %f
+
+NP/N[num]
+  1 (NP{_}/N[num]{Y}<1>){_}
+  1 ncmod num %l %f # $ is head
+
+(((S[dcl]\NP)/(S[to]\NP))/PP)/NP
+  4 ((((S[dcl]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{W}){Z}){_}/PP{V}<3>){_}/NP{U}<4>){_} 
+  1 ncsubj %l %f _
+  2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
+  3 iobj %l %f =PP/NP
+  4 dobj %l %f

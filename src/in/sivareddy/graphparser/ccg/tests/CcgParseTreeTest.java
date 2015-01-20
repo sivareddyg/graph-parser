@@ -23,9 +23,9 @@ public class CcgParseTreeTest {
     // CcgAutoLexicon lexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
     // "./data/unary_rules.txt", "./data/binary_rules.txt",
     // "./data/lexicon_specialCases.txt");
-    CcgAutoLexicon lexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
-        "./data/unary_rules.txt", "./data/binary_rules.txt",
-        "./data/lexicon_specialCases_questions.txt");
+    CcgAutoLexicon lexicon = new CcgAutoLexicon("./lib_data/candc_markedup.modified",
+        "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
+        "./lib_data/lexicon_specialCases_questions.txt");
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] argumentLexicalIdenfiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
@@ -45,34 +45,6 @@ public class CcgParseTreeTest {
     ccgParseTrees =
         ccgParser.parseFromString(
             "(<T S[dcl] rp 0 2> (<T S[dcl] ba 1 2> (<T NP lex 0 1> (<L N Obama Obama NNP I-LOC I-NP N>)) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP ba 0 2> (<T NP[nb] fa 1 2> (<L NP[nb]/N the the DT O I-NP NP[nb]/N>) (<L N president president NN O I-NP N>)) (<T NP\\NP fa 0 2> (<L (NP\\NP)/NP of of IN O I-PP (NP\\NP)/NP>) (<T NP lex 0 1> (<L N US US NNP I-ORG I-NP N>)))))) (<L . . . . O O .>))");
-    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
-    System.out.println(sent);
-    System.out.println(relations);
-    System.out.println();
-
-
-    sent = "Miyagi is played by Pat_Morita .";
-    ccgParseTrees =
-        ccgParser.parseFromString(
-            "(<T S[dcl] ba 1 2> (<L NP I i NN PER O NP>) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/(S[b]\\NP) will will VB 0 O (S[dcl]\\NP)/(S[b]\\NP)>) (<T S[b]\\NP ba 0 2> (<T S[b]\\NP fa 0 2> (<L (S[b]\\NP)/NP eat eat VB 0 O (S[b]\\NP)/NP>) (<T NP lex 0 1> (<L N chips chip NN 0 O N>) ) ) (<L (S\\NP)\\(S\\NP) tomorrow tomorrow NN TIME O (S\\NP)\\(S\\NP)>) ) ) )");
-    System.out.println(ccgParseTrees);
-    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
-    System.out.println(sent);
-    System.out.println(relations);
-    System.out.println();
-
-    ccgParseTrees =
-        ccgParser.parseFromString(
-            "(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP fc 0 2> (<T S[q]/(S[b]\\NP) fa 0 2> (<L (S[q]/(S[b]\\NP))/NP did do VBD O O (S[q]/(S[b]\\NP))/NP>) (<T NP lex 0 1> (<L N James_k_polk James-k-polk NNP O O N>) ) ) (<T (S[b]\\NP)/NP bx 0 2> (<L (S[b]\\NP)/NP do do VB O O (S[b]\\NP)/NP>) (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/S[dcl] before before IN O O ((S\\NP)\\(S\\NP))/S[dcl]>) (<T S[dcl] fa 1 2> (<T S[X]/(S[X]\\NP) tr 0 1> (<L NP he he PRP O O NP>) ) (<T S[dcl]\\NP ba 0 2> (<L (S[dcl]\\NP)/NP was be VBD O O (S[dcl]\\NP)/NP>) (<T (S[X]\\NP)\\((S[X]\\NP)/NP) rp 0 2> (<T (S[X]\\NP)\\((S[X]\\NP)/NP) tr 0 1> (<T NP lex 0 1> (<L N president president NN O O N>) ) ) (<L . ? ? . O O .>) ) ) ) ) ) ) )");
-    System.out.println(ccgParseTrees);
-    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
-    System.out.println(sent);
-    System.out.println(relations);
-    System.out.println();
-
-    ccgParseTrees =
-        ccgParser.parseFromString(
-            "(<T S[wq] rp 0 2> (<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What what WP O I-NP S[wq]/(S[q]/NP)>) (<T S[q]/NP fc 0 2> (<T S[q]/(S[b]\\NP) fa 0 2> (<L (S[q]/(S[b]\\NP))/NP did do VBD O O (S[q]/(S[b]\\NP))/NP>) (<T NP lex 0 1> (<L N James_k_polk James_k_polk NNP O I-NP N>))) (<T (S[b]\\NP)/NP bx 0 2> (<L (S[b]\\NP)/NP do do VB O I-VP (S[b]\\NP)/NP>) (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/S[dcl] before before IN O I-SBAR ((S[X]\\NP)\\(S[X]\\NP))/S[dcl]>) (<T S[dcl] fa 1 2> (<T S/(S\\NP) tr 0 1> (<L NP he he PRP O I-NP NP>)) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP was be VBD O I-VP (S[dcl]\\NP)/NP>) (<T NP lex 0 1> (<L N president president NN O I-NP N>)))))))) (<L . ? ? . O O .>))");
     relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);
@@ -643,8 +615,8 @@ sent = "Obama 's place of birth is Kenya .";
     sent =
         "Heinz is a brand that has deep roots not just in the United_States but worldwide , Johnson said .";
     ccgParseTrees =
-        ccgParser.parseFromString(
-            "(<T S[dcl] rp 0 2> (<T S[dcl] ba 1 2> (<T S[dcl] ba 1 2> (<T NP lex 0 1> (<L N Heinz Heinz NNP I-PER I-NP N>)) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP ba 0 2> (<T NP ba 0 2> (<T NP[nb] fa 1 2> (<L NP[nb]/N a a DT O I-NP NP[nb]/N>) (<L N brand brand NN O I-NP N>)) (<T NP\\NP fa 0 2> (<L (NP\\NP)/(S[dcl]\\NP) that that WDT O B-NP (NP\\NP)/(S[dcl]\\NP)>) (<T S[dcl]\\NP ba 0 2> (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP has have VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N deep deep JJ O I-NP N/N>) (<L N roots root NNS O I-NP N>)))) (<T (S\\NP)\\(S\\NP) fa 1 2> (<T ((S\\NP)\\(S\\NP))/((S\\NP)\\(S\\NP)) fa 1 2> (<L (((S\\NP)\\(S\\NP))/((S\\NP)\\(S\\NP)))/(((S\\NP)\\(S\\NP))/((S\\NP)\\(S\\NP))) not not RB O I-CONJP (((S[X]\\NP)\\(S[X]\\NP))/((S[X]\\NP)\\(S[X]\\NP)))/(((S[X]\\NP)\\(S[X]\\NP))/((S[X]\\NP)\\(S[X]\\NP)))>) (<L ((S\\NP)\\(S\\NP))/((S\\NP)\\(S\\NP)) just just RB O I-CONJP ((S[X]\\NP)\\(S[X]\\NP))/((S[X]\\NP)\\(S[X]\\NP))>)) (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/NP in in IN O I-PP ((S[X]\\NP)\\(S[X]\\NP))/NP>) (<T NP[nb] fa 1 2> (<L NP[nb]/N the the DT O I-NP NP[nb]/N>) (<L N United_States United_States NNS O I-NP N>))))))) (<T NP[conj] conj 0 2> (<L conj but but CC O I-NP conj>) (<T NP lex 0 1> (<L N worldwide worldwide NN O I-NP N>)))))) (<T S[dcl]\\S[dcl] lp 1 2> (<L , , , , O O ,>) (<T S[dcl]\\S[dcl] ba 1 2> (<T NP lex 0 1> (<L N Johnson Johnson NNP I-PER I-NP N>)) (<L (S[dcl]\\S[dcl])\\NP said say VBD O I-VP (S[dcl]\\S[dcl])\\NP>)))) (<L . . . . O O .>))");
+        ccgParser
+            .parseFromString("(<T S[dcl] rp 0 2> (<T S[dcl] ba 1 2> (<T S[dcl] ba 1 2> (<T NP lex 0 1> (<L N Heinz Heinz NNP I-PER I-NP N>)) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP ba 0 2> (<T NP ba 0 2> (<T NP[nb] fa 1 2> (<L NP[nb]/N a a DT O I-NP NP[nb]/N>) (<L N brand brand NN O I-NP N>)) (<T NP\\NP fa 0 2> (<L (NP\\NP)/(S[dcl]\\NP) that that WDT O B-NP (NP\\NP)/(S[dcl]\\NP)>) (<T S[dcl]\\NP ba 0 2> (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP has have VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N deep deep JJ O I-NP N/N>) (<L N roots root NNS O I-NP N>)))) (<T (S\\NP)\\(S\\NP) fa 1 2> (<T ((S\\NP)\\(S\\NP))/((S\\NP)\\(S\\NP)) fa 1 2> (<L (((S\\NP)\\(S\\NP))/((S\\NP)\\(S\\NP)))/(((S\\NP)\\(S\\NP))/((S\\NP)\\(S\\NP))) not not RB O I-CONJP (((S[X]\\NP)\\(S[X]\\NP))/((S[X]\\NP)\\(S[X]\\NP)))/(((S[X]\\NP)\\(S[X]\\NP))/((S[X]\\NP)\\(S[X]\\NP)))>) (<L ((S\\NP)\\(S\\NP))/((S\\NP)\\(S\\NP)) just just RB O I-CONJP ((S[X]\\NP)\\(S[X]\\NP))/((S[X]\\NP)\\(S[X]\\NP))>)) (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/NP in in IN O I-PP ((S[X]\\NP)\\(S[X]\\NP))/NP>) (<T NP[nb] fa 1 2> (<L NP[nb]/N the the DT O I-NP NP[nb]/N>) (<L N United_States United_States NNS O I-NP N>))))))) (<T NP[conj] conj 0 2> (<L conj but but CC O I-NP conj>) (<T NP lex 0 1> (<L N worldwide worldwide NN O I-NP N>)))))) (<T S[dcl]\\S[dcl] lp 1 2> (<L , , , , O O ,>) (<T S[dcl]\\S[dcl] ba 1 2> (<T NP lex 0 1> (<L N Johnson Johnson NNP I-PER I-NP N>)) (<L (S[dcl]\\S[dcl])\\NP said say VBD O I-VP (S[dcl]\\S[dcl])\\NP>)))) (<L . . . . O O .>))");
     relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);

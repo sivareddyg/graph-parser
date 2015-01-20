@@ -1,0 +1,40 @@
+# Handling special cases where Autolexicon fails/does not produce informative parse.
+
+#lemma	pos	syncat	indexsyncat	semcat/semcattype
+
+# copula
+be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X	(lambda $f1 $f2 $_ (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+# have	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X	(lambda $f1 $f2 $_ (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+
+# non-copula
+# be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X,_ 2 Y	EVENT
+# have	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X,_ 2 Y	EVENT
+
+# quantifiers
+no	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
+not	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
+the	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	UNIQUE
+
+*	IN	N	N{X}	TYPE
+
+# adjectives which act like verbal nouns - e.g. his work was unknown
+*	*	(S[adj]\NP)/PP	((S[adj]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
+
+# passive case
+by	*	((S\NP)\(S\NP))/NP	(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){_}/NP{W}){_};_ 1 Y,_ 2 W	(lambda $f1 $f2 $f3 $Y (exists $W $Z $_ (and (EVENT $Y $Y 1 $W) ($f1 $W) (($f2 $Z) $Y) ($f3 $Z))))
+
+# Make cardinal number as the head
+*	CD	N/N	(N{Y}/N{Y}){_};_ 1 Y	(lambda $f1 $_ (exists $Y (and (COPULA $Y $_) ($f1 $Y))))
+
+# sometimes that appears as preposition
+that	*	S[em]/S[dcl]	(S[em]{Y}/S[dcl]{Y}){_};_ 1 Y	CLOSED
+
+# Gerunds which modify nouns
+*	VBG	N/N	(N{Y}/N{Y}){_};_ 1 Y	TYPEMOD
+
+# Natural possessive
+'s	POS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+
+# Artificial possessive - Over generation of ungrounded graphs - Comment it for public usage
+'s	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))
+'s	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT

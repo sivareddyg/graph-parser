@@ -1292,7 +1292,7 @@ public class CcgParseTree {
               // return "";
 
               StringBuilder sb = new StringBuilder();
-              if (!lexicalPosTags.contains(headNode.pos) && headNode != childNode) {
+              if (!lexicalPosTags.contains(headNode.pos) && headNode != lexicalNode) {
                 sb.append(headNode.lexicaliseRelationName());
                 sb.append(".");
               }

@@ -38,18 +38,18 @@ public class CcgParseToUngroundedGraphs {
     Gson gson = new Gson();
 
     int nbestParses = 1;
-    String ccgModelDir = "data/easyccg_model/";
+    String ccgModelDir = "lib_data/easyccg_model/ -r S[dcl] S[pss] S[b]";
     EasyCCG ccgParser = new EasyCCG(ccgModelDir, nbestParses);
 
     StanfordCoreNlpDemo nlpPipeline = new StanfordCoreNlpDemo();
 
     CcgAutoLexicon questionCcgAutoLexicon =
-        new CcgAutoLexicon("./data/candc_markedup.modified", "./data/unary_rules.txt",
-            "./data/binary_rules.txt", "./data/lexicon_specialCases_questions.txt");
+        new CcgAutoLexicon("./lib_data/candc_markedup.modified", "./lib_data/unary_rules.txt",
+            "./lib_data/binary_rules.txt", "./lib_data/lexicon_specialCases_questions.txt");
 
     CcgAutoLexicon normalCcgAutoLexicon =
-        new CcgAutoLexicon("./data/candc_markedup.modified", "./data/unary_rules.txt",
-            "./data/binary_rules.txt", "./data/lexicon_specialCases.txt");
+        new CcgAutoLexicon("./lib_data/candc_markedup.modified", "./lib_data/unary_rules.txt",
+            "./lib_data/binary_rules.txt", "./lib_data/lexicon_specialCases.txt");
 
     String[] relationLexicalIdentifiers = {"word"};
     String[] relationTypingIdentifiers = {};

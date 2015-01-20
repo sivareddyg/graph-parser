@@ -186,7 +186,7 @@ public class EasyCCG {
 	public static void main(String[] args) throws IOException,
 			ArgumentValidationException, InterruptedException {
 
-		EasyCCG easyccg = new EasyCCG("data/easyccg_model -r S[dcl] S[pss] S[b]", 2);
+		EasyCCG easyccg = new EasyCCG("lib_data/easyccg_model -r S[dcl] S[pss] S[b]", 2);
 		System.out.println(easyccg.parse("He|PRP|O won|VB|O"));
 
 		/*-CommandLineArguments commandLineOptions = CliFactory.parseArguments(

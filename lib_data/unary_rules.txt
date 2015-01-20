@@ -1,0 +1,68 @@
+# Format:
+
+# OldCategory	NewCategory	OptionalLambdaTransformation
+
+# You just have to specify the common variables in the old and new category.
+# Lambda transformation describe the way semantics change from old to new
+
+# If lambda transformation is not specified, we perform a default transformation using the connecting variables.
+# 		First a semantic category for new category is generated using CLOSED construction.  
+# 		Relation tuples from the old semantic category are appended to the new semantic category.
+
+# (in) (new computer lab)
+# (<T NP 0 1> (<T N 1 2> (<L N/N IN IN a N_204/N_204>) (<T N 1 2> (<L N/N JJ JJ new N_197/N_197>) (<T N 1 2> (<L N/N NN NN computer N_190/N_190>) (<L N NN NN lab N>) ) ) ) ) 
+N{X}	NP{X}
+	
+# (An excellent environmental actor) (he is )
+NP{X}	S/(S/NP{X})
+
+# (the interest) (on) 
+NP{X}	NP{X}/(NP{X}\NP{X})
+
+# (debate) (set for Tuesday)
+S[dcl]\NP{X}	(NP{X}\NP{X}){X}
+
+# (state) (bordered by Texas)
+S[pss]\NP{X}	(NP{X}\NP{X}){X}
+
+# (state) (bordering California)
+S[ng]\NP{X}	(NP{X}\NP{X}){X}
+
+# (bond) (due August)
+S[adj]\NP{X}	(NP{X}\NP{X}){X}
+
+# (contest) (to promote children)
+S[to]\NP{X}	(NP{X}\NP{X}){X}
+
+# (something) (to hang the carrier on) on-> PP/NP. We should discard the NP that this PP is looking for, but we still keep it which remains lonely forever.
+(S[to]\NP{X})/NP	(NP{X}\NP{X}){X}
+
+# (needs) (student have)
+S[dcl]/NP{X}	(NP{X}\NP{X}){X}
+
+# (the time) (the issue was printed) - complicated case. time is the invisible argument of printed  
+S[dcl]{X}	NP{Z}\NP{Z}	(lambda $f1 $f2 $Z (exists $X (and (EVENT $X $X rel $Z) ($f1 $X) (($f2 $Z) $Z))))
+
+# mail (comes) (wrapped around the edges) - Though wrapped should modify comes, this is not useful information. wrapped will have the same subject as comes 
+S[pss]\NP{X}	(S{Y}\NP{X})\(S{Y}\NP{X})
+# Obama (comes) (running)
+S[ng]\NP{X}	(S{Y}\NP{X})\(S{Y}\NP{X})
+S[adj]\NP{X}	(S{Y}\NP{X})\(S{Y}\NP{X})
+S[to]\NP{X}	(S{Y}\NP{X})\(S{Y}\NP{X})
+S[ng]\NP{X}	(S{Y}\NP{X})/(S{Y}\NP{X})
+
+# (Started three years back), (Tata is the leading company) - head of sentence 2 becomes the argument of sentence 1.
+S[pss]{Y}\NP{X}	S{Y}/S{X}
+S[ng]{Y}\NP{X}	S{Y}/S{X}
+S[adj]{Y}\NP{X}	S{Y}/S{X}
+S[to]{Y}\NP{X}	S{Y}/S{X}
+
+# Two independent sentences connected by coma
+S[ng]\NP	S{X}\S{X}
+S[dcl]	S{X}\S{X}
+
+# (make) (rejoining extremely likely) - verb becomes the argument of make 
+S[ng]{X}\NP	NP{X}
+
+# I gave him a coin to buy food - C&C treats the subject of buy to be coin which is bad  
+S[to]\NP{X}	N{X}\N{X}
