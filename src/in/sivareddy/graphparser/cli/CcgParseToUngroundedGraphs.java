@@ -41,7 +41,7 @@ public class CcgParseToUngroundedGraphs {
     String ccgModelDir = "lib_data/easyccg_model/ -r S[dcl] S[pss] S[b]";
     EasyCCG ccgParser = new EasyCCG(ccgModelDir, nbestParses);
 
-    StanfordCoreNlpDemo nlpPipeline = new StanfordCoreNlpDemo();
+    StanfordCoreNlpDemo nlpPipeline = new StanfordCoreNlpDemo("en");
 
     CcgAutoLexicon questionCcgAutoLexicon =
         new CcgAutoLexicon("./lib_data/candc_markedup.modified", "./lib_data/unary_rules.txt",
