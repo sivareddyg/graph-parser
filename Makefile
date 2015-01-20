@@ -2,6 +2,7 @@
 # If the tokenization is disabled in the workflow, you will be able to use all
 # the examples, or else some of the examples cannot be used.
 create_deplambda_supervised_input_data:
+# zcat data/freebase/sentences_filtered/film_sentences.txt.gz | python scripts/dump_sentences.py | sed -e 's/_/ /g' | sed -e 's/\ ,/,/g' | sed -e 's/\ \././g' | sed -e "s/\ 's/'s/g" | sed -e "s/ n't/n't/g" | sed -e "s/ \!/\!/g" | grep -v "\?" | sed -e "s/ -/-/g" | sed -e "s/- /-/g" | sed -e "s/ '/'/g" | gzip > google_graphparser_data/film_sentences.txt.gz
 	cat data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/dump_sentences.py > data/deplambda/webquestions.train.txt
 	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/dump_sentences.py > data/deplambda/webquestions.test.txt
 	cat data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/dependency_semantic_parser/create_entity_lexicon.py > data/deplambda/entity_lexicon.txt
