@@ -1,7 +1,0 @@
-_T=2013-09-04_18:18:11_23891	 mkdir tools
-_T=2013-09-04_18:40:37_23891	 python
-_T=2013-09-09_11:57:39_24070	 ../tools/candc_svn/bin/candc --models ./tools/candc_svn/models/rebank/ --candc-parser-noisy_rules=false --candc-parser-extra_rules=false --candc-printer=ccgbank --candc-trans_brackets=true --candc-skip_quotes
-_T=2013-09-20_11:04:00_7423	 cp cleaning/tokenise.py cai-yates-preprocessing/
-_T=2014-04-29_10:34:05_29178	 mkdir working
-_T=2014-04-29_10:34:21_29178	 rm working/
-_T=2014-04-29_10:34:25_29178	 rm -r working/
