@@ -19,7 +19,6 @@ public class StructuredPercepton {
   private Map<Feature, Double> weightVector;
   private Map<Feature, Double> cumulativeWeightVector;
   private Map<Feature, Integer> updateFrequency;
-  private int updateCount = 1;
 
   public StructuredPercepton() {
     weightVector = Maps.newHashMap();
@@ -61,7 +60,7 @@ public class StructuredPercepton {
   // simple perceptron update with feature-wise averaging
   public synchronized void updateWeightVector(Set<Feature> goldFeatVec,
       Set<Feature> predFeatVec) {
-    updateCount += 1;
+    
     Set<Feature> features = Sets.newHashSet();
     Map<Feature, Double> goldFeatVecMap = Maps.newHashMap();
     for (Feature feature : goldFeatVec) {
@@ -104,13 +103,6 @@ public class StructuredPercepton {
       Integer newFreqCount = oldFreqCount + 1;
       updateFrequency.put(feature, newFreqCount);
     }
-
-    /*-if (updateCount % 100 == 0) {
-    	for (Feature feature : weightVector.keySet()) {
-    		Double updatedWeight = cumulativeWeightVector.get(feature) / updateFrequency.get(feature);
-    		weightVector.put(feature, new Double(updatedWeight));
-    	}
-    }*/
   }
 
   public synchronized void printFeatureWeights(Set<Feature> featVec,

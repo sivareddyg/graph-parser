@@ -262,6 +262,7 @@ public class GraphToQueryTraining {
     Set<LexicalItem> uniqueNodes = Sets.newHashSet();
     Property uniqPropery = new Property("UNIQUE");
 
+    @SuppressWarnings("unused")
     boolean hasDecimal = false;
     boolean hasYear = false;
     Set<LexicalItem> years = Sets.newHashSet();

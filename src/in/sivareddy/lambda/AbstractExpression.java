@@ -239,7 +239,7 @@ public abstract class AbstractExpression implements Expression {
     // Code to remove extra brackets
 
     String stringWithoutQuantifiers = new String(expressionString);
-    Stack<String> stack = new Stack<String>();
+    Stack<String> stack = new Stack<>();
     for (int i = 0; i < stringWithoutQuantifiers.length(); i++) {
       String c = stringWithoutQuantifiers.substring(i, i + 1);
       if (c.equals("(")) {
@@ -251,7 +251,7 @@ public abstract class AbstractExpression implements Expression {
         if (stack.peek().equals("(")) {
           stack.pop();
         } else {
-          Stack<String> tempStack = new Stack<String>();
+          Stack<String> tempStack = new Stack<>();
           while (!stack.peek().equals("(")) {
             tempStack.add(stack.pop());
           }

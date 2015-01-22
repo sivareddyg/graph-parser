@@ -25,7 +25,7 @@ public class StringUtils {
   public static String removeExtraBrackets(String inputString) {
     char r[] = inputString.toCharArray();
     // char s[] = inputString.toCharArray();
-    Stack<Integer> st = new Stack<Integer>();
+    Stack<Integer> st = new Stack<>();
     Set<Integer> invalidChars = Sets.newHashSet();
 
     int prev_start = -10;

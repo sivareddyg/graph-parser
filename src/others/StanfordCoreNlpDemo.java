@@ -1,17 +1,20 @@
 package others;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
-import edu.stanford.nlp.ling.*;
-import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
-import edu.stanford.nlp.pipeline.*;
-
-import edu.stanford.nlp.util.*;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.util.ArrayCoreMap;
+import edu.stanford.nlp.util.CoreMap;
 
 public class StanfordCoreNlpDemo {
   private StanfordCoreNLP pipeline;
@@ -48,27 +51,22 @@ public class StanfordCoreNlpDemo {
         ArrayCoreMap sentence = (ArrayCoreMap) sentenceIter;
         String prev_pos = "";
         String prev_word = "";
-        String prev_lemma = "";
         String prev_ner = "";
         StringBuilder sb = new StringBuilder();
         for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
           // this is the text of the token
           String word = token.get(TextAnnotation.class);
+
           // this is the POS tag of the token
           String pos = token.get(PartOfSpeechAnnotation.class);
-
-          // this is the lemma of the token
-          String lemma = token.get(LemmaAnnotation.class);
 
           // this is the NER label of the token
           String ne = token.get(NamedEntityTagAnnotation.class);
 
           if (pos.startsWith("NNP") && prev_pos.startsWith("NNP")) {
             prev_word += "_" + word;
-            prev_lemma += "_" + lemma;
           } else if (!ne.equals("O") && ne.equals(prev_ner)) {
             prev_word += "_" + word;
-            prev_lemma += "_" + lemma;
           } else {
             if (!prev_word.equals(""))
               sb.append(String.format("%s|%s|%s ", prev_word, prev_pos,
@@ -77,7 +75,6 @@ public class StanfordCoreNlpDemo {
                 && (pos.equals("NN") || pos.equals("NNS")))
               sb.append("'s|IPOS|O ");
             prev_word = word;
-            prev_lemma = lemma;
           }
           prev_ner = ne;
           prev_pos = pos;

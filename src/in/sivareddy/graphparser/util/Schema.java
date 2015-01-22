@@ -139,6 +139,7 @@ public class Schema {
         line = bf.readLine();
       }
     }
+    bf.close();
 
     this.types = ImmutableSet.copyOf(types);
     this.mainTypes = ImmutableSet.copyOf(mainTypes);

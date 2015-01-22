@@ -46,7 +46,7 @@ public abstract class AbstractCli {
   };
 
   public AbstractCli(CommonOptions... opts) {
-    this.opts = new HashSet<CommonOptions>();
+    this.opts = new HashSet<>();
     for (CommonOptions opt : opts)
       this.opts.add(opt);
   }

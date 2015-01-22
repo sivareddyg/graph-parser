@@ -281,7 +281,7 @@ public class Graph<T> implements Comparable<Graph<T>> {
     }
 
     public Edge<T> inverse() {
-      return new Edge<T>(node2, node1, mediator, relation.inverse());
+      return new Edge<>(node2, node1, mediator, relation.inverse());
     }
 
     public T getLeft() {
@@ -436,7 +436,7 @@ public class Graph<T> implements Comparable<Graph<T>> {
   }
 
   public void addEdge(T node1, T node2, T mediator, Relation relation) {
-    Edge<T> edge = new Edge<T>(node1, node2, mediator, relation);
+    Edge<T> edge = new Edge<>(node1, node2, mediator, relation);
     // System.out.println(edge.hashCode());
 
     if (edges.contains(edge)) {

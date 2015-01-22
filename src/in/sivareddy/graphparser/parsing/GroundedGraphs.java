@@ -1006,7 +1006,7 @@ public class GroundedGraphs {
             Type<LexicalItem> nodeType = nodeTypes.get(0);
             List<Type<LexicalItem>> additionalNodeTypes =
                 nodeTypes.size() > 1 ? nodeTypes.subList(1, nodeTypes.size())
-                    : new ArrayList<Type<LexicalItem>>();
+                    : new ArrayList<>();
 
             groundedGraphs =
                 groundTheType(groundedGraphs, graph, nodeType,
@@ -1031,7 +1031,7 @@ public class GroundedGraphs {
             Type<LexicalItem> nodeType = nodeTypes.get(0);
             List<Type<LexicalItem>> additionalNodeTypes =
                 nodeTypes.size() > 1 ? nodeTypes.subList(1, nodeTypes.size())
-                    : new ArrayList<Type<LexicalItem>>();
+                    : new ArrayList<>();
             groundedGraphs =
                 groundTheType(groundedGraphs, graph, nodeType,
                     additionalNodeTypes, restrictedNodes, nbestEdges,

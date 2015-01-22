@@ -41,7 +41,7 @@ public class ExpressionParser {
   }
 
   public static List<Expression> parse(List<String> tokenizedExpressionString) {
-    Stack<Expression> stack = new Stack<Expression>();
+    Stack<Expression> stack = new Stack<>();
 
     for (String token : tokenizedExpressionString) {
       stack.push(new ConstantExpression(token));
@@ -59,7 +59,7 @@ public class ExpressionParser {
     stack.pop();
 
     // Pop all arguments.
-    Stack<Expression> arguments = new Stack<Expression>();
+    Stack<Expression> arguments = new Stack<>();
     while (!stack.peek().equals(OPEN_PAREN)) {
       arguments.push(stack.pop());
     }
