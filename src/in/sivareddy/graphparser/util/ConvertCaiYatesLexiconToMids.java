@@ -13,7 +13,8 @@ public class ConvertCaiYatesLexiconToMids {
   String namespace = "http://rdf.freebase.com/ns/";
   private RdfGraphTools rdfGraphTools;
 
-  public ConvertCaiYatesLexiconToMids(String url, String username, String password) {
+  public ConvertCaiYatesLexiconToMids(String url, String username,
+      String password) {
     rdfGraphTools = new RdfGraphTools(url, username, password);
   }
 
@@ -29,9 +30,11 @@ public class ConvertCaiYatesLexiconToMids {
     }
 
     entityKey = entityKey.split(":")[0];
-    String query = String.format("PREFIX ns: <http://rdf.freebase.com/ns/> PREFIX "
-        + "rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-        + "SELECT ?x FROM <%s> WHERE { ?x ns:type.object.key \"%s\" . }", domain, entityKey);
+    String query =
+        String.format("PREFIX ns: <http://rdf.freebase.com/ns/> PREFIX "
+            + "rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+            + "SELECT ?x FROM <%s> WHERE { ?x ns:type.object.key \"%s\" . }",
+            domain, entityKey);
     System.err.println("Query = " + query);
     ResultSet results = rdfGraphTools.runQueryJdbcResultSet(query);
     List<String> resultStrings = Lists.newArrayList();
@@ -42,7 +45,8 @@ public class ConvertCaiYatesLexiconToMids {
       resultStrings.add(x);
     }
     if (resultStrings.size() > 1) {
-      System.err.println("warning: key matched more than one entity. Manually correct it");
+      System.err
+          .println("warning: key matched more than one entity. Manually correct it");
     }
     // Preconditions.checkArgument(resultStrings.size() < 2,
     // "entity key matched none or more than one entity");
@@ -58,10 +62,12 @@ public class ConvertCaiYatesLexiconToMids {
     // String endpoint = "jdbc:virtuoso://darkstar:1111";
     String domainUrl = args[1];
     // String domainUrl = "http://film.freebase.com";
-    ConvertCaiYatesLexiconToMids db = new ConvertCaiYatesLexiconToMids(endpoint, "dba", "dba");
+    ConvertCaiYatesLexiconToMids db =
+        new ConvertCaiYatesLexiconToMids(endpoint, "dba", "dba");
 
     BufferedReader br =
-        new BufferedReader(new FileReader("data/cai-yates-2013/fixed-np-manually.txt"));
+        new BufferedReader(new FileReader(
+            "data/cai-yates-2013/fixed-np-manually.txt"));
     try {
       String line = br.readLine();
       while (line != null) {

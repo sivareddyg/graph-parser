@@ -55,85 +55,126 @@ public class RunPrintDomainLexicon extends AbstractCli {
   public void initializeOptions(OptionParser parser) {
     parser.acceptsAll(Arrays.asList("help", "h"), "Print this help message.");
 
-    relationLexicalIdentifiers = parser.accepts("relationLexicalIdentifiers",
-        "lexicalalise a relation using the fields specified e.g. word or lemma:pos or any combination of word, lemma and pos").withRequiredArg().ofType(String.class).required();
+    relationLexicalIdentifiers =
+        parser
+            .accepts(
+                "relationLexicalIdentifiers",
+                "lexicalalise a relation using the fields specified e.g. word or lemma:pos or any combination of word, lemma and pos")
+            .withRequiredArg().ofType(String.class).required();
 
-    argumentLexicalIdentifiers = parser.accepts("argumentLexicalIdentifiers",
-        "lexicalalise the argumunets using the fields specified e.g. word or lemma:pos or any combination of word, lemma, mid, neType and pos").withRequiredArg().ofType(String.class).required();
+    argumentLexicalIdentifiers =
+        parser
+            .accepts(
+                "argumentLexicalIdentifiers",
+                "lexicalalise the argumunets using the fields specified e.g. word or lemma:pos or any combination of word, lemma, mid, neType and pos")
+            .withRequiredArg().ofType(String.class).required();
 
-    relationTypingIdentifiers = parser.accepts("relationTypingIdentifiers",
-        "type the relation using argument fields specified e.g. neType or empty string")
-        .withRequiredArg().ofType(String.class).defaultsTo("");
+    relationTypingIdentifiers =
+        parser
+            .accepts("relationTypingIdentifiers",
+                "type the relation using argument fields specified e.g. neType or empty string")
+            .withRequiredArg().ofType(String.class).defaultsTo("");
 
-    candcIndexFile = parser
-        .accepts("candcIndexFile", "candc markedup file e.g. data/candc_markedup.modified")
-        .withRequiredArg().ofType(String.class).required();
+    candcIndexFile =
+        parser
+            .accepts("candcIndexFile",
+                "candc markedup file e.g. data/candc_markedup.modified")
+            .withRequiredArg().ofType(String.class).required();
 
-    unaryRulesFile = parser
-        .accepts("unaryRulesFile", "candc parser unary rules file e.g. data/unary_rules.txt")
-        .withRequiredArg().ofType(String.class).required();
+    unaryRulesFile =
+        parser
+            .accepts("unaryRulesFile",
+                "candc parser unary rules file e.g. data/unary_rules.txt")
+            .withRequiredArg().ofType(String.class).required();
 
-    binaryRulesFile = parser
-        .accepts("binaryRulesFile", "candc binary rules file e.g. data/binary_rules.txt")
-        .withRequiredArg().ofType(String.class).required();
+    binaryRulesFile =
+        parser
+            .accepts("binaryRulesFile",
+                "candc binary rules file e.g. data/binary_rules.txt")
+            .withRequiredArg().ofType(String.class).required();
 
-    specialCasesFile = parser.accepts("specialCasesFile",
-        "file containing candc special rules e.g. data/lexicon_specialCases.txt").withRequiredArg()
-        .ofType(String.class).required();
+    specialCasesFile =
+        parser
+            .accepts("specialCasesFile",
+                "file containing candc special rules e.g. data/lexicon_specialCases.txt")
+            .withRequiredArg().ofType(String.class).required();
 
-    relationTypesFile = parser.accepts("relationTypesFile",
-        "File containing relations that may be potential types e.g. data/freebase/stats/business_relation_types.txt").withRequiredArg().ofType(String.class).required();
+    relationTypesFile =
+        parser
+            .accepts(
+                "relationTypesFile",
+                "File containing relations that may be potential types e.g. data/freebase/stats/business_relation_types.txt")
+            .withRequiredArg().ofType(String.class).required();
 
-    kbZipFile = parser.accepts("kbZipFile",
-        "knowledge base of the domain e.g. data/freebase/domain_facts/business_facts.txt.gz")
-        .withRequiredArg().ofType(String.class).required();
+    kbZipFile =
+        parser
+            .accepts(
+                "kbZipFile",
+                "knowledge base of the domain e.g. data/freebase/domain_facts/business_facts.txt.gz")
+            .withRequiredArg().ofType(String.class).required();
 
-    outputLexiconFile = parser
-        .accepts("outputLexiconFile", "Output file where the lexicon will be written")
-        .withRequiredArg().ofType(String.class).required();
+    outputLexiconFile =
+        parser
+            .accepts("outputLexiconFile",
+                "Output file where the lexicon will be written")
+            .withRequiredArg().ofType(String.class).required();
 
-    inputFile = parser
-        .accepts("inputFile", "Input file which contains ccgParses and entity annotations")
-        .withRequiredArg().ofType(String.class).defaultsTo("stdin");
+    inputFile =
+        parser
+            .accepts("inputFile",
+                "Input file which contains ccgParses and entity annotations")
+            .withRequiredArg().ofType(String.class).defaultsTo("stdin");
 
-    semanticParseKey = parser
-        .accepts("semanticParseKey", "key from which the semantic parses are read from")
-        .withRequiredArg().ofType(String.class).defaultsTo("synPars");
+    semanticParseKey =
+        parser
+            .accepts("semanticParseKey",
+                "key from which the semantic parses are read from")
+            .withRequiredArg().ofType(String.class).defaultsTo("synPars");
 
   }
 
   @Override
   public void run(OptionSet options) {
 
-    ArrayList<String> lexicalFieldsList = Lists.newArrayList(Splitter.on(":").trimResults()
-        .omitEmptyStrings().split(options.valueOf(relationLexicalIdentifiers)));
+    ArrayList<String> lexicalFieldsList =
+        Lists.newArrayList(Splitter.on(":").trimResults().omitEmptyStrings()
+            .split(options.valueOf(relationLexicalIdentifiers)));
 
-    String[] lexicalFields = lexicalFieldsList.toArray(new String[lexicalFieldsList.size()]);
+    String[] lexicalFields =
+        lexicalFieldsList.toArray(new String[lexicalFieldsList.size()]);
 
-    ArrayList<String> argIdentifierFieldsList = Lists.newArrayList(Splitter.on(":").trimResults()
-        .omitEmptyStrings().split(options.valueOf(argumentLexicalIdentifiers)));
+    ArrayList<String> argIdentifierFieldsList =
+        Lists.newArrayList(Splitter.on(":").trimResults().omitEmptyStrings()
+            .split(options.valueOf(argumentLexicalIdentifiers)));
 
     String[] argIdentifierFields =
-        argIdentifierFieldsList.toArray(new String[argIdentifierFieldsList.size()]);
+        argIdentifierFieldsList.toArray(new String[argIdentifierFieldsList
+            .size()]);
 
-    ArrayList<String> relationTypingFeildsList = Lists.newArrayList(Splitter.on(":").trimResults()
-        .omitEmptyStrings().split(options.valueOf(relationTypingIdentifiers)));
+    ArrayList<String> relationTypingFeildsList =
+        Lists.newArrayList(Splitter.on(":").trimResults().omitEmptyStrings()
+            .split(options.valueOf(relationTypingIdentifiers)));
 
     String[] relationTypingFeilds =
-        relationTypingFeildsList.toArray(new String[relationTypingFeildsList.size()]);
+        relationTypingFeildsList.toArray(new String[relationTypingFeildsList
+            .size()]);
 
 
     try {
       String relationTypesFileName = options.valueOf(relationTypesFile);
-      KnowledgeBase kb = new KnowledgeBase(options.valueOf(kbZipFile), relationTypesFileName);
+      KnowledgeBase kb =
+          new KnowledgeBase(options.valueOf(kbZipFile), relationTypesFileName);
 
-      CcgAutoLexicon ccgAutoLexicon = new CcgAutoLexicon(options.valueOf(candcIndexFile),
-          options.valueOf(unaryRulesFile), options.valueOf(binaryRulesFile),
-          options.valueOf(specialCasesFile));
+      CcgAutoLexicon ccgAutoLexicon =
+          new CcgAutoLexicon(options.valueOf(candcIndexFile),
+              options.valueOf(unaryRulesFile),
+              options.valueOf(binaryRulesFile),
+              options.valueOf(specialCasesFile));
 
       boolean ignorePronouns = true;
-      CreateGroundedLexicon creator = new CreateGroundedLexicon(kb, ccgAutoLexicon, lexicalFields,
-          argIdentifierFields, relationTypingFeilds, ignorePronouns);
+      CreateGroundedLexicon creator =
+          new CreateGroundedLexicon(kb, ccgAutoLexicon, lexicalFields,
+              argIdentifierFields, relationTypingFeilds, ignorePronouns);
 
       String input = options.valueOf(inputFile);
       BufferedReader br;
@@ -167,12 +208,14 @@ public class RunPrintDomainLexicon extends AbstractCli {
           String semanticParseKeyString = options.valueOf(semanticParseKey);
           List<Set<String>> semanticParses;
           if (semanticParseKeyString == "synPars") {
-            semanticParses = creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
+            semanticParses =
+                creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
           } else {
             if (!jsonSentence.has(semanticParseKeyString))
               continue;
             semanticParses = new ArrayList<>();
-            JsonArray semPars = jsonSentence.get(semanticParseKeyString).getAsJsonArray();
+            JsonArray semPars =
+                jsonSentence.get(semanticParseKeyString).getAsJsonArray();
             Set<String> semanticParse = new HashSet<>();
             for (JsonElement semPar : semPars) {
               JsonArray predicates = semPar.getAsJsonArray();
@@ -190,7 +233,8 @@ public class RunPrintDomainLexicon extends AbstractCli {
           boolean isUsefulSentence = false;
           for (Set<String> semanticParse : semanticParses) {
             boolean isUsefulParse =
-                creator.updateLexicon(semanticParse, jsonSentence, 1.0 / semanticParses.size());
+                creator.updateLexicon(semanticParse, jsonSentence,
+                    1.0 / semanticParses.size());
             isUsefulSentence = isUsefulSentence || isUsefulParse;
           }
           if (isUsefulSentence) {
@@ -201,7 +245,8 @@ public class RunPrintDomainLexicon extends AbstractCli {
         br.close();
       }
 
-      BufferedWriter bw = new BufferedWriter(new FileWriter(options.valueOf(outputLexiconFile)));
+      BufferedWriter bw =
+          new BufferedWriter(new FileWriter(options.valueOf(outputLexiconFile)));
       creator.printLexicon(bw);
       bw.close();
 

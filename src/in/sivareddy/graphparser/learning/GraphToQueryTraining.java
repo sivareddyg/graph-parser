@@ -74,21 +74,26 @@ public class GraphToQueryTraining {
   List<String> kbGraphUri = null;
   double MARGIN = 30;
 
-  public GraphToQueryTraining(Schema schema, KnowledgeBase kb, GroundedLexicon groundedLexicon,
-      CcgAutoLexicon normalCcgAutoLexicon, CcgAutoLexicon questionCcgAutoLexicon,
-      String semanticParseKey, int nbestTrainSyntacticParses, int nbestTestSyntacticParses,
+  public GraphToQueryTraining(Schema schema, KnowledgeBase kb,
+      GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
+      CcgAutoLexicon questionCcgAutoLexicon, String semanticParseKey,
+      int nbestTrainSyntacticParses, int nbestTestSyntacticParses,
       int nbestEdges, int nbestGraphs, boolean useSchema, boolean useKB,
       boolean groundFreeVariables, boolean useEmtpyTypes, boolean ignoreTypes,
-      StructuredPercepton learningModel, boolean urelGrelFlag, boolean urelPartGrelPartFlag,
-      boolean utypeGtypeFlag, boolean gtypeGrelFlag, boolean grelGrelFlag, boolean wordGrelPartFlag,
+      StructuredPercepton learningModel, boolean urelGrelFlag,
+      boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
+      boolean gtypeGrelFlag, boolean grelGrelFlag, boolean wordGrelPartFlag,
       boolean wordGrelFlag, boolean argGrelPartFlag, boolean argGrelFlag,
       boolean wordBigramGrelPartFlag, boolean stemMatchingFlag,
-      boolean mediatorStemGrelPartMatchingFlag, boolean argumentStemMatchingFlag,
+      boolean mediatorStemGrelPartMatchingFlag,
+      boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean graphIsConnectedFlag,
-      boolean graphHasEdgeFlag, boolean countNodesFlag, boolean edgeNodeCountFlag,
-      boolean useLexiconWeightsRel, boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
-      boolean validQueryFlag, double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double stemFeaturesWeight, RdfGraphTools rdfGraphTools,
+      boolean graphHasEdgeFlag, boolean countNodesFlag,
+      boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
+      boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
+      boolean validQueryFlag, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double stemFeaturesWeight, RdfGraphTools rdfGraphTools,
       List<String> kbGraphUri) throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
@@ -115,22 +120,27 @@ public class GraphToQueryTraining {
     this.rdfGraphTools = rdfGraphTools;
     this.kbGraphUri = kbGraphUri;
 
-    this.graphCreator = new GroundedGraphs(this.schema, this.kb, this.groundedLexicon,
-        normalCcgAutoLexicon, questionCcgAutoLexicon, relationLexicalIdentifiers,
-        relationTypingIdentifiers, this.learningModel, urelGrelFlag, urelPartGrelPartFlag,
-        utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, wordGrelPartFlag, wordGrelFlag,
-        argGrelPartFlag, argGrelFlag, wordBigramGrelPartFlag, stemMatchingFlag,
-        mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-        argumentStemGrelPartMatchingFlag, graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
-        edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-        initialEdgeWeight, initialTypeWeight, initialWordWeight, stemFeaturesWeight);
+    this.graphCreator =
+        new GroundedGraphs(this.schema, this.kb, this.groundedLexicon,
+            normalCcgAutoLexicon, questionCcgAutoLexicon,
+            relationLexicalIdentifiers, relationTypingIdentifiers,
+            this.learningModel, urelGrelFlag, urelPartGrelPartFlag,
+            utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, wordGrelPartFlag,
+            wordGrelFlag, argGrelPartFlag, argGrelFlag, wordBigramGrelPartFlag,
+            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
+            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
+            graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
+            edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
+            duplicateEdgesFlag, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
 
   }
 
   JsonParser jsonParser = new JsonParser();
 
-  public void trainFromSentences(List<String> trainingSample, int nthreads, String logFile,
-      boolean debugEnabled) throws IOException, InterruptedException {
+  public void trainFromSentences(List<String> trainingSample, int nthreads,
+      String logFile, boolean debugEnabled) throws IOException,
+      InterruptedException {
     Logger logger = Logger.getLogger(logFile);
     PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
     logger.setAdditivity(false);
@@ -168,7 +178,8 @@ public class GraphToQueryTraining {
       threadLogger.setAdditivity(true);
       if (debugEnabled) {
         threadLogger.setLevel(Level.DEBUG);
-        RollingFileAppender appender = new RollingFileAppender(layout, logFile + ".thread" + i);
+        RollingFileAppender appender =
+            new RollingFileAppender(layout, logFile + ".thread" + i);
         appender.setMaxFileSize("100MB");
         threadLogger.addAppender(appender);
         threadLogger.info("######## Training Starts");
@@ -178,9 +189,11 @@ public class GraphToQueryTraining {
 
     int sentCount = 0;
     for (String jsonSentenceString : trainingSample) {
-      JsonObject jsonSentence = jsonParser.parse(jsonSentenceString).getAsJsonObject();
-      Runnable worker = new trainFromSentenceRunnable(this, jsonSentence, sentCount, debugEnabled,
-          deadThredsLogs);
+      JsonObject jsonSentence =
+          jsonParser.parse(jsonSentenceString).getAsJsonObject();
+      Runnable worker =
+          new trainFromSentenceRunnable(this, jsonSentence, sentCount,
+              debugEnabled, deadThredsLogs);
       threadPool.execute(worker);
       sentCount += 1;
     }
@@ -199,8 +212,9 @@ public class GraphToQueryTraining {
     int sentCount;
     Queue<Logger> logs;
 
-    public trainFromSentenceRunnable(GraphToQueryTraining graphToQuery, JsonObject jsonSentence,
-        int sentCount, boolean debugEnabled, Queue<Logger> logs) {
+    public trainFromSentenceRunnable(GraphToQueryTraining graphToQuery,
+        JsonObject jsonSentence, int sentCount, boolean debugEnabled,
+        Queue<Logger> logs) {
       this.jsonSentence = jsonSentence;
       this.debugEnabled = debugEnabled;
 
@@ -211,11 +225,14 @@ public class GraphToQueryTraining {
 
     @Override
     public void run() {
-      Preconditions.checkArgument(logs.size() > 0,
-          "Insufficient number of loggers. Loggers should be at the size of blocking queue");
+      Preconditions
+          .checkArgument(
+              logs.size() > 0,
+              "Insufficient number of loggers. Loggers should be at the size of blocking queue");
       Logger log = logs.poll();
       log.info("##### Sentence count: " + sentCount);
-      boolean hasGoldQuery = jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue");
+      boolean hasGoldQuery =
+          jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue");
       if (hasGoldQuery) {
         // supervised training can make use of more number of syntactic
         // parses
@@ -227,13 +244,15 @@ public class GraphToQueryTraining {
     }
   }
 
-  private void trainingByQuestioning(JsonObject jsonSentence, Logger logger, boolean debugEnabled) {
+  private void trainingByQuestioning(JsonObject jsonSentence, Logger logger,
+      boolean debugEnabled) {
     int nbestParses = nbestTrainSyntacticParses;
     String sentence = jsonSentence.get("sentence").getAsString();
     logger.debug("######### Sentence: " + sentence);
     // Get ungrounded graphs
     List<LexicalGraph> uGraphs =
-        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey, nbestParses, logger);
+        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
+            nbestParses, logger);
     if (uGraphs.size() < 1) {
       logger.debug("No uGraphs");
       return;
@@ -284,7 +303,8 @@ public class GraphToQueryTraining {
           lexicalisedNodes.add(node);
 
           // checking if the example has decimals in it
-          if (node.getMid().equals("type.float") || node.getMid().equals("type.int")) {
+          if (node.getMid().equals("type.float")
+              || node.getMid().equals("type.int")) {
             hasDecimal = true;
             logger.debug("Example contains decimal");
             decimals.add(node);
@@ -361,7 +381,8 @@ public class GraphToQueryTraining {
         hasUnique = true;
       }
     } else {
-      logger.debug("No lexicalised entities found. Cannot use the sentence for training");
+      logger
+          .debug("No lexicalised entities found. Cannot use the sentence for training");
       return;
     }
 
@@ -371,7 +392,8 @@ public class GraphToQueryTraining {
 
     // target variable in the sparql query and its answer
     String targetVar =
-        GraphToSparqlConverter.getNodeVariable(targetNode, targetNode).replace("?", "");
+        GraphToSparqlConverter.getNodeVariable(targetNode, targetNode).replace(
+            "?", "");
     String answer = targetNode.getMid();
     Long integerAnswer = -1L;
     boolean answerIsDate = false;
@@ -393,7 +415,8 @@ public class GraphToQueryTraining {
       logger.debug("answer type is decimal");
       integerAnswer = convertToInteger(targetNode.getWord());
       if (integerAnswer == null) {
-        logger.debug("unknown decimal type: cannot use as target type" + integerAnswer);
+        logger.debug("unknown decimal type: cannot use as target type"
+            + integerAnswer);
         return;
       }
       answerIsDecimal = true;
@@ -407,13 +430,15 @@ public class GraphToQueryTraining {
         continue;
       }
       // wild graphs do not use the entity type of target variable
-      List<LexicalGraph> wildGraphs = graphCreator.createGroundedGraph(uGraph,
-          Sets.newHashSet(targetNode), nbestEdges, nbestGraphs, useEntityTypes, useKB,
-          groundFreeVariables, useEmtpyTypes, ignoreTypes, false);
+      List<LexicalGraph> wildGraphs =
+          graphCreator.createGroundedGraph(uGraph, Sets.newHashSet(targetNode),
+              nbestEdges, nbestGraphs, useEntityTypes, useKB,
+              groundFreeVariables, useEmtpyTypes, ignoreTypes, false);
       predGgraphsWild.addAll(wildGraphs);
       Collections.sort(predGgraphsWild);
-      predGgraphsWild = predGgraphsWild.size() < nbestGraphs ? predGgraphsWild
-          : predGgraphsWild.subList(0, nbestGraphs);
+      predGgraphsWild =
+          predGgraphsWild.size() < nbestGraphs ? predGgraphsWild
+              : predGgraphsWild.subList(0, nbestGraphs);
     }
 
     if (predGgraphsWild.size() == 0) {
@@ -424,21 +449,26 @@ public class GraphToQueryTraining {
     if (validQueryFlag) {
       // Predicted graph reranking using ValidQuery Feature
       int nbestPredictedGraphs =
-          predGgraphsWild.size() < nbestGraphs / 4 ? predGgraphsWild.size() : nbestGraphs / 4;
+          predGgraphsWild.size() < nbestGraphs / 4 ? predGgraphsWild.size()
+              : nbestGraphs / 4;
       logger.debug("Reranking the top " + nbestPredictedGraphs + " parses");
-      for (LexicalGraph pGraph : predGgraphsWild.subList(0, nbestPredictedGraphs)) {
+      for (LexicalGraph pGraph : predGgraphsWild.subList(0,
+          nbestPredictedGraphs)) {
         String query =
-            GraphToSparqlConverter.convertGroundedGraph(pGraph, targetNode, schema, kbGraphUri);
+            GraphToSparqlConverter.convertGroundedGraph(pGraph, targetNode,
+                schema, kbGraphUri);
         logger.debug("Predicted graph query: " + query);
         // ResultSet resultSet = rdfGraphTools.runQueryJdbc(query);
-        Map<String, LinkedHashSet<String>> resultsMap = rdfGraphTools.runQueryHttp(query);
+        Map<String, LinkedHashSet<String>> resultsMap =
+            rdfGraphTools.runQueryHttp(query);
         logger.debug("Predicted Results: " + resultsMap);
         LinkedHashSet<String> results =
-            resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap.get(targetVar)
-                : null;
+            resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
+                .get(targetVar) : null;
 
         if ((results == null || results.size() == 0)
-            || (results.size() == 1 && results.iterator().next().startsWith("0^^"))) {
+            || (results.size() == 1 && results.iterator().next()
+                .startsWith("0^^"))) {
           ValidQueryFeature feat = new ValidQueryFeature(false);
           pGraph.addFeature(feat);
         } else {
@@ -455,18 +485,22 @@ public class GraphToQueryTraining {
     // if the first predicted graph results in answer, there is nothing to
     // learn
     LexicalGraph firstPredictedGraph = predGgraphsWild.get(0);
-    String query = GraphToSparqlConverter.convertGroundedGraph(firstPredictedGraph, targetNode,
-        schema, kbGraphUri);
+    String query =
+        GraphToSparqlConverter.convertGroundedGraph(firstPredictedGraph,
+            targetNode, schema, kbGraphUri);
     logger.debug("First predicted graph query: " + query);
     // ResultSet resultSet = rdfGraphTools.runQueryJdbc(query);
-    Map<String, LinkedHashSet<String>> resultsMap = rdfGraphTools.runQueryHttp(query);
+    Map<String, LinkedHashSet<String>> resultsMap =
+        rdfGraphTools.runQueryHttp(query);
     logger.debug("First Predicted Results: " + resultsMap);
     LinkedHashSet<String> results =
-        resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap.get(targetVar) : null;
+        resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
+            .get(targetVar) : null;
     if (answerIsDecimal) {
       logger.debug("Answer is decimal: " + integerAnswer + " : " + results);
       if (setContainsDecimal(results, integerAnswer)) {
-        logger.debug("Decimal answer found: First best graph predicts the answer");
+        logger
+            .debug("Decimal answer found: First best graph predicts the answer");
         return;
       }
     } else {
@@ -494,13 +528,15 @@ public class GraphToQueryTraining {
         continue;
       }
       // constrained graphs are created using entity types
-      List<LexicalGraph> constrainedGraphs = graphCreator.createGroundedGraph(uGraph, nbestEdges,
-          nbestGraphs, useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes, ignoreTypes,
-          false);
+      List<LexicalGraph> constrainedGraphs =
+          graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
+              useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes,
+              ignoreTypes, false);
       predGgraphsConstrained.addAll(constrainedGraphs);
       Collections.sort(predGgraphsConstrained);
-      predGgraphsConstrained = predGgraphsConstrained.size() < nbestGraphs ? predGgraphsConstrained
-          : predGgraphsConstrained.subList(0, nbestGraphs);
+      predGgraphsConstrained =
+          predGgraphsConstrained.size() < nbestGraphs ? predGgraphsConstrained
+              : predGgraphsConstrained.subList(0, nbestGraphs);
     }
 
     if (predGgraphsConstrained.size() == 0) {
@@ -509,21 +545,26 @@ public class GraphToQueryTraining {
     }
 
     // Add the feature if the graph results is a valid query
-    List<Pair<LexicalGraph, LinkedHashSet<String>>> gGraphsAndResults = Lists.newArrayList();
+    List<Pair<LexicalGraph, LinkedHashSet<String>>> gGraphsAndResults =
+        Lists.newArrayList();
     for (LexicalGraph gGraph : predGgraphsConstrained) {
-      query = GraphToSparqlConverter.convertGroundedGraph(gGraph, targetNode, schema, kbGraphUri);
+      query =
+          GraphToSparqlConverter.convertGroundedGraph(gGraph, targetNode,
+              schema, kbGraphUri);
       logger.debug("Pred constrained query: " + query);
       // resultSet = rdfGraphTools.runQueryJdbc(query);
       resultsMap = rdfGraphTools.runQueryHttp(query);
       logger.debug("Pred results: " + resultsMap);
-      results = resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap.get(targetVar)
-          : null;
+      results =
+          resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
+              .get(targetVar) : null;
 
       gGraphsAndResults.add(Pair.of(gGraph, results));
 
       if (validQueryFlag) {
         if ((results == null || results.size() == 0)
-            || (results.size() == 1 && results.iterator().next().startsWith("0^^"))) {
+            || (results.size() == 1 && results.iterator().next()
+                .startsWith("0^^"))) {
           ValidQueryFeature feat = new ValidQueryFeature(false);
           gGraph.addFeature(feat);
         } else {
@@ -597,12 +638,15 @@ public class GraphToQueryTraining {
     // second filtering - the graph should have all entities
 
     if (hasYear && !answerIsDate) {
-      List<Pair<Integer, LexicalGraph>> filteredGoldGraphs = Lists.newArrayList();
+      List<Pair<Integer, LexicalGraph>> filteredGoldGraphs =
+          Lists.newArrayList();
       for (Pair<Integer, LexicalGraph> goldGraphPair : goldGraphs) {
         LexicalGraph goldGraph = goldGraphPair.getRight();
         // using year as target node
         targetNode = years.iterator().next();
-        targetVar = GraphToSparqlConverter.getNodeVariable(targetNode, targetNode).replace("?", "");
+        targetVar =
+            GraphToSparqlConverter.getNodeVariable(targetNode, targetNode)
+                .replace("?", "");
         logger.debug("Example has an year: " + targetNode);
         String year = targetNode.getWord();
         Pattern yearPattern = Pattern.compile("([0-9]{3,4})");
@@ -611,17 +655,19 @@ public class GraphToQueryTraining {
           year = matcher.group(1);
         }
         query =
-            GraphToSparqlConverter.convertGroundedGraph(goldGraph, targetNode, schema, kbGraphUri);
+            GraphToSparqlConverter.convertGroundedGraph(goldGraph, targetNode,
+                schema, kbGraphUri);
         logger.debug("Year query: " + query);
         // resultSet = rdfGraphTools.runQueryJdbc(query);
         resultsMap = rdfGraphTools.runQueryHttp(query);
         logger.debug("Year pred results: " + resultsMap);
         results =
-            resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap.get(targetVar)
-                : null;
+            resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
+                .get(targetVar) : null;
         results = RdfGraphTools.convertDatesToYears(results);
         if (results == null || !results.contains(year)) {
-          logger.debug("The gold graph does not predict the year. Cannot use this example");
+          logger
+              .debug("The gold graph does not predict the year. Cannot use this example");
           return;
         } else {
           filteredGoldGraphs.add(goldGraphPair);
@@ -643,7 +689,8 @@ public class GraphToQueryTraining {
     }
 
     LexicalGraph firstGoldGraph = goldGraphs.get(0).getRight();
-    double marginDifference = Math.abs(firstGoldGraph.getScore() - firstPredictedGraph.getScore());
+    double marginDifference =
+        Math.abs(firstGoldGraph.getScore() - firstPredictedGraph.getScore());
     if (marginDifference > MARGIN) {
       logger.debug("Difference is greater than margin. " + marginDifference);
       return;
@@ -696,10 +743,12 @@ public class GraphToQueryTraining {
       return false;
     }
     for (String resultString : results) {
-      if (!resultString.contains("integer") && !resultString.contains("decimal")) {
+      if (!resultString.contains("integer")
+          && !resultString.contains("decimal")) {
         return false;
       }
-      String integerString = Splitter.on("^^").split(resultString).iterator().next();
+      String integerString =
+          Splitter.on("^^").split(resultString).iterator().next();
       Long predictedInteger = convertToInteger(integerString);
       // Integer value need not be exact but close enough
       if (predictedInteger / (integerAnswer + 0.0) >= 6 / 7.0
@@ -710,9 +759,10 @@ public class GraphToQueryTraining {
     return false;
   }
 
-  private static Map<String, Long> numbers = ImmutableMap.<String, Long> builder().put("one", 1L)
-      .put("two", 2L).put("three", 3L).put("four", 4L).put("five", 5L).put("six", 6L)
-      .put("seven", 7L).put("eight", 8L).put("nine", 9L).build();
+  private static Map<String, Long> numbers = ImmutableMap
+      .<String, Long>builder().put("one", 1L).put("two", 2L).put("three", 3L)
+      .put("four", 4L).put("five", 5L).put("six", 6L).put("seven", 7L)
+      .put("eight", 8L).put("nine", 9L).build();
 
   private static Long convertToInteger(String number) {
     try {
@@ -743,11 +793,13 @@ public class GraphToQueryTraining {
     }
   }
 
-  private void supervisedTraining(JsonObject jsonSentence, Logger logger, boolean debugEnabled) {
+  private void supervisedTraining(JsonObject jsonSentence, Logger logger,
+      boolean debugEnabled) {
     int nbestParses = nbestTrainSyntacticParses;
     String sentence = jsonSentence.get("sentence").getAsString();
     logger.debug("Sentence: " + sentence);
-    boolean hasGoldQuery = jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue");
+    boolean hasGoldQuery =
+        jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue");
     logger.debug("Supervised Example");
     if (!hasGoldQuery) {
       return;
@@ -761,7 +813,8 @@ public class GraphToQueryTraining {
       goldResults = rdfGraphTools.runQueryHttp(goldQuery);
     } else if (jsonSentence.has("targetValue")) {
       String goldAnswersString = jsonSentence.get("targetValue").getAsString();
-      Pattern goldAnswerPattern = Pattern.compile("\\(description \"?([^\\)\"]+)\"?\\)");
+      Pattern goldAnswerPattern =
+          Pattern.compile("\\(description \"?([^\\)\"]+)\"?\\)");
       Matcher matcher = goldAnswerPattern.matcher(goldAnswersString);
       LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
       while (matcher.find()) {
@@ -774,7 +827,8 @@ public class GraphToQueryTraining {
 
     // Get ungrounded graphs
     List<LexicalGraph> uGraphs =
-        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey, nbestParses, logger);
+        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
+            nbestParses, logger);
     if (uGraphs.size() < 1) {
       logger.debug("No uGraphs");
       return;
@@ -790,14 +844,18 @@ public class GraphToQueryTraining {
         logger.debug("Graph has NO edges. Discard ");
         continue;
       }
-      List<LexicalGraph> currentGroundedGraphs = graphCreator.createGroundedGraph(uGraph,
-          nbestEdges, nbestGraphs, useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes,
-          ignoreTypes, false);
+      List<LexicalGraph> currentGroundedGraphs =
+          graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
+              useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes,
+              ignoreTypes, false);
 
       if (validQueryFlag) {
         for (LexicalGraph gGraph : currentGroundedGraphs) {
-          String query = GraphToSparqlConverter.convertGroundedGraph(gGraph, schema, kbGraphUri);
-          Map<String, LinkedHashSet<String>> predResults = rdfGraphTools.runQueryHttp(query);
+          String query =
+              GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
+                  kbGraphUri);
+          Map<String, LinkedHashSet<String>> predResults =
+              rdfGraphTools.runQueryHttp(query);
 
           String targetVar = null;
           if (predResults != null) {
@@ -812,16 +870,17 @@ public class GraphToQueryTraining {
 
           // adding the feature if the query produces any answer
           if (validQueryFlag) {
-            if ((predResults == null || predResults.get(targetVar).size() == 0) || (
-                predResults.size() == 1
-                && predResults.get(targetVar).iterator().next().startsWith("0^^"))) {
+            if ((predResults == null || predResults.get(targetVar).size() == 0)
+                || (predResults.size() == 1 && predResults.get(targetVar)
+                    .iterator().next().startsWith("0^^"))) {
               ValidQueryFeature feat = new ValidQueryFeature(false);
               gGraph.addFeature(feat);
             } else {
               // if the query produces answer, update its score
               ValidQueryFeature feat = new ValidQueryFeature(true);
               gGraph.addFeature(feat);
-              gGraph.setScore(learningModel.getScoreTesting(gGraph.getFeatures()));
+              gGraph.setScore(learningModel.getScoreTesting(gGraph
+                  .getFeatures()));
             }
           }
         }
@@ -829,7 +888,9 @@ public class GraphToQueryTraining {
 
       gGraphs.addAll(currentGroundedGraphs);
       Collections.sort(gGraphs);
-      gGraphs = gGraphs.size() < nbestGraphs ? gGraphs : gGraphs.subList(0, nbestGraphs);
+      gGraphs =
+          gGraphs.size() < nbestGraphs ? gGraphs : gGraphs.subList(0,
+              nbestGraphs);
     }
 
     logger.info("Total number of grounded graphs: " + gGraphs.size());
@@ -853,10 +914,13 @@ public class GraphToQueryTraining {
         predGraphFeatures = gGraph.getFeatures();
       }
 
-      String query = GraphToSparqlConverter.convertGroundedGraph(gGraph, schema, kbGraphUri);
+      String query =
+          GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
+              kbGraphUri);
       logger.debug("Predicted query: " + query);
       logger.debug("Gold query: " + goldQuery);
-      Map<String, LinkedHashSet<String>> predResults = rdfGraphTools.runQueryHttp(query);
+      Map<String, LinkedHashSet<String>> predResults =
+          rdfGraphTools.runQueryHttp(query);
       logger.debug("Predicted Results: " + predResults);
       logger.debug("Gold Results: " + goldResults);
       boolean areEqual = RdfGraphTools.equalResults(goldResults, predResults);
@@ -881,8 +945,9 @@ public class GraphToQueryTraining {
     }
   }
 
-  public void testCurrentModel(List<String> testSentences, Logger logger, String logFile,
-      boolean debugEnabled, List<Integer> testingNbestParsesRange, int nthreads) throws IOException,
+  public void testCurrentModel(List<String> testSentences, Logger logger,
+      String logFile, boolean debugEnabled,
+      List<Integer> testingNbestParsesRange, int nthreads) throws IOException,
       InterruptedException {
     PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
     logger.debug("Testing: =======================================");
@@ -913,7 +978,8 @@ public class GraphToQueryTraining {
       threadLogger.setAdditivity(false);
       if (debugEnabled) {
         threadLogger.setLevel(Level.DEBUG);
-        RollingFileAppender appender = new RollingFileAppender(layout, logFile + ".thread" + i);
+        RollingFileAppender appender =
+            new RollingFileAppender(layout, logFile + ".thread" + i);
         appender.setMaxFileSize("100MB");
         threadLogger.addAppender(appender);
         threadLogger.info("#### Testing starts");
@@ -928,9 +994,12 @@ public class GraphToQueryTraining {
     Map<Integer, Integer> firstBestPredictionsMap = Maps.newConcurrentMap();
 
     for (String testSentence : testSentences) {
-      JsonObject jsonSentence = jsonParser.parse(testSentence).getAsJsonObject();
-      Runnable worker = new testCurrentModelSentenceRunnable(this, jsonSentence, sentCount,
-          deadThredsLogs, positives, negatives, firstBestPredictionsMap, testingNbestParsesRange);
+      JsonObject jsonSentence =
+          jsonParser.parse(testSentence).getAsJsonObject();
+      Runnable worker =
+          new testCurrentModelSentenceRunnable(this, jsonSentence, sentCount,
+              deadThredsLogs, positives, negatives, firstBestPredictionsMap,
+              testingNbestParsesRange);
       threadPool.execute(worker);
       sentCount += 1;
     }
@@ -945,12 +1014,16 @@ public class GraphToQueryTraining {
         Integer positive_hits = positives.get(key);
         Integer negative_hits = negatives.get(key);
         int total_hits = sentCount;
-        Double precision = (positive_hits + 0.0) / (positive_hits + negative_hits) * 100;
+        Double precision =
+            (positive_hits + 0.0) / (positive_hits + negative_hits) * 100;
         Double recall = (positive_hits + 0.0) / (total_hits) * 100;
         Double fmeas = 2 * precision * recall / (precision + recall);
-        logger.info(String.format(
-            "Nbest:%d Positives:%d Negatives:%d Total:%d Prec:%.1f Rec:%.1f Fmeas:%.1f", key,
-            positive_hits, negative_hits, total_hits, precision, recall, fmeas));
+        logger
+            .info(String
+                .format(
+                    "Nbest:%d Positives:%d Negatives:%d Total:%d Prec:%.1f Rec:%.1f Fmeas:%.1f",
+                    key, positive_hits, negative_hits, total_hits, precision,
+                    recall, fmeas));
       }
     }
 
@@ -976,8 +1049,9 @@ public class GraphToQueryTraining {
     List<Integer> testingNbestParsesRange;
 
     public testCurrentModelSentenceRunnable(GraphToQueryTraining graphToQuery,
-        JsonObject jsonSentence, int sentCount, Queue<Logger> logs, Map<Integer, Integer> positives,
-        Map<Integer, Integer> negatives, Map<Integer, Integer> firstBestMap,
+        JsonObject jsonSentence, int sentCount, Queue<Logger> logs,
+        Map<Integer, Integer> positives, Map<Integer, Integer> negatives,
+        Map<Integer, Integer> firstBestMap,
         List<Integer> testingNbestParsesRange) {
       this.jsonSentence = jsonSentence;
       this.graphToQuery = graphToQuery;
@@ -992,21 +1066,25 @@ public class GraphToQueryTraining {
 
     @Override
     public void run() {
-      Preconditions.checkArgument(logs.size() > 0,
-          "Insufficient number of loggers. Loggers should be at the size of blocking queue");
+      Preconditions
+          .checkArgument(
+              logs.size() > 0,
+              "Insufficient number of loggers. Loggers should be at the size of blocking queue");
       Logger logger = logs.poll();
-      graphToQuery.testCurrentModelSentence(jsonSentence, logger, sentCount, positives, negatives,
-          firstBestMap, testingNbestParsesRange);
+      graphToQuery.testCurrentModelSentence(jsonSentence, logger, sentCount,
+          positives, negatives, firstBestMap, testingNbestParsesRange);
       logs.add(logger);
     }
   }
 
-  private void testCurrentModelSentence(JsonObject jsonSentence, Logger logger, int sentCount,
-      Map<Integer, Integer> positives, Map<Integer, Integer> negatives,
-      Map<Integer, Integer> firstBestMap, List<Integer> testingNbestParsesRange) {
+  private void testCurrentModelSentence(JsonObject jsonSentence, Logger logger,
+      int sentCount, Map<Integer, Integer> positives,
+      Map<Integer, Integer> negatives, Map<Integer, Integer> firstBestMap,
+      List<Integer> testingNbestParsesRange) {
     boolean debugEnabled = logger.isDebugEnabled();
     boolean foundAnswer = false;
-    Preconditions.checkArgument(jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue"),
+    Preconditions.checkArgument(
+        jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue"),
         "Test sentence should either have a gold query or targetValue");
     String sentence = jsonSentence.get("sentence").getAsString();
 
@@ -1020,7 +1098,8 @@ public class GraphToQueryTraining {
       logger.info("Gold Results : " + goldResults);
     } else if (jsonSentence.has("targetValue")) {
       String goldAnswersString = jsonSentence.get("targetValue").getAsString();
-      Pattern goldAnswerPattern = Pattern.compile("\\(description \"?([^\\)\"]+)\"?\\)");
+      Pattern goldAnswerPattern =
+          Pattern.compile("\\(description \"?([^\\)\"]+)\"?\\)");
       Matcher matcher = goldAnswerPattern.matcher(goldAnswersString);
       LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
       while (matcher.find()) {
@@ -1031,8 +1110,9 @@ public class GraphToQueryTraining {
     }
 
     // Get ungrounded graphs
-    List<LexicalGraph> uGraphs = graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
-        nbestTestSyntacticParses, logger);
+    List<LexicalGraph> uGraphs =
+        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
+            nbestTestSyntacticParses, logger);
     if (uGraphs.size() < 1) {
       logger.debug("No uGraphs");
       // Syntactic Parser mistakes
@@ -1051,12 +1131,15 @@ public class GraphToQueryTraining {
         logger.debug("Graph has NO edges. Discard ");
         continue;
       }
-      List<LexicalGraph> currentGroundedGraphs = graphCreator.createGroundedGraph(uGraph,
-          nbestEdges, nbestGraphs, useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes,
-          ignoreTypes, true);
+      List<LexicalGraph> currentGroundedGraphs =
+          graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
+              useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes,
+              ignoreTypes, true);
       gGraphs.addAll(currentGroundedGraphs);
       Collections.sort(gGraphs);
-      gGraphs = gGraphs.size() < nbestGraphs ? gGraphs : gGraphs.subList(0, nbestGraphs);
+      gGraphs =
+          gGraphs.size() < nbestGraphs ? gGraphs : gGraphs.subList(0,
+              nbestGraphs);
     }
 
     logger.info("Total number of grounded graphs: " + gGraphs.size());
@@ -1065,8 +1148,10 @@ public class GraphToQueryTraining {
         Lists.newArrayList();
     for (LexicalGraph gGraph : gGraphs) {
       String query =
-          GraphToSparqlConverter.convertGroundedGraph(gGraph, schema, kbGraphUri, ignoreTypes);
-      Map<String, LinkedHashSet<String>> predResults = rdfGraphTools.runQueryHttp(query);
+          GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
+              kbGraphUri, ignoreTypes);
+      Map<String, LinkedHashSet<String>> predResults =
+          rdfGraphTools.runQueryHttp(query);
       gGraphsAndResults.add(Pair.of(gGraph, predResults));
 
       String targetVar = null;
@@ -1082,9 +1167,9 @@ public class GraphToQueryTraining {
 
       // adding the feature if the query produces any answer
       if (validQueryFlag) {
-        if ((predResults == null || predResults.get(targetVar).size() == 0) || (
-            predResults.size() == 1
-            && predResults.get(targetVar).iterator().next().startsWith("0^^"))) {
+        if ((predResults == null || predResults.get(targetVar).size() == 0)
+            || (predResults.size() == 1 && predResults.get(targetVar)
+                .iterator().next().startsWith("0^^"))) {
           ValidQueryFeature feat = new ValidQueryFeature(false);
           gGraph.addFeature(feat);
         } else {
@@ -1096,15 +1181,18 @@ public class GraphToQueryTraining {
       }
     }
 
-    Collections.sort(gGraphsAndResults,
-        new Comparator<Pair<LexicalGraph, Map<String, LinkedHashSet<String>>>>() {
+    Collections
+        .sort(
+            gGraphsAndResults,
+            new Comparator<Pair<LexicalGraph, Map<String, LinkedHashSet<String>>>>() {
 
-          @Override
-          public int compare(Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> o1,
-              Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> o2) {
-            return o1.getLeft().compareTo(o2.getLeft());
-          }
-        });
+              @Override
+              public int compare(
+                  Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> o1,
+                  Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> o2) {
+                return o1.getLeft().compareTo(o2.getLeft());
+              }
+            });
 
     int count = 0;
     for (Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> gGraphPair : gGraphsAndResults) {
@@ -1116,13 +1204,14 @@ public class GraphToQueryTraining {
       	break;
       }*/
 
-if (debugEnabled) {
+      if (debugEnabled) {
         logger.debug(gGraph);
         // log.debug("Connected: " + gGraph.isConnected() + "\n");
       }
 
       String predQuery =
-          GraphToSparqlConverter.convertGroundedGraph(gGraph, schema, kbGraphUri, ignoreTypes);
+          GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
+              kbGraphUri, ignoreTypes);
       logger.info("Predicted Query: " + predQuery);
       logger.info("Gold Query: " + goldQuery);
 
@@ -1152,10 +1241,12 @@ if (debugEnabled) {
 
     for (Integer nthBest : testingNbestParsesRange) {
       if (foundAnswer && count <= nthBest) {
-        Integer value = positives.containsKey(nthBest) ? positives.get(nthBest) : 0;
+        Integer value =
+            positives.containsKey(nthBest) ? positives.get(nthBest) : 0;
         positives.put(nthBest, value + 1);
       } else if (gGraphs.size() > 0) {
-        Integer value = negatives.containsKey(nthBest) ? negatives.get(nthBest) : 0;
+        Integer value =
+            negatives.containsKey(nthBest) ? negatives.get(nthBest) : 0;
         negatives.put(nthBest, value + 1);
       }
     }

@@ -41,7 +41,8 @@ public class GraphToQueryTrainingMain {
   PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
   private String logFile = "/dev/null";
   private boolean debugEnabled = false;
-  private List<Integer> testingNbestParsesRange = Lists.newArrayList(1, 5, 10, 20, 50, 100);
+  private List<Integer> testingNbestParsesRange = Lists.newArrayList(1, 5, 10,
+      20, 50, 100);
   private int nBestTestSyntacticParses;
   private int nBestTrainSyntacticParses;
   private String semanticParseKey;
@@ -50,23 +51,29 @@ public class GraphToQueryTrainingMain {
   // useful in training, we ignore them during testing as we work with
   // CaiYates.
 
-  public GraphToQueryTrainingMain(Schema schema, KnowledgeBase kb, GroundedLexicon groundedLexicon,
-      CcgAutoLexicon normalCcgAutoLexicon, CcgAutoLexicon questionCcgAutoLexicon,
-      RdfGraphTools rdfGraphTools, List<String> kbGraphUri, String testingFile, String devFile,
-      String supervisedTrainingFile, String unsupervisedTrainingFile, String sematicParseKey,
-      boolean debugEnabled, int trainingSampleSize, String logFile, int nBestTrainSyntacticParses,
-      int nBestTestSyntacticParses, int nbestBestEdges, int nbestGraphs, boolean useSchema,
-      boolean useKB, boolean groundFreeVariables, boolean useEmtpyTypes, boolean ignoreTypes,
-      boolean urelGrelFlag, boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
+  public GraphToQueryTrainingMain(Schema schema, KnowledgeBase kb,
+      GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
+      CcgAutoLexicon questionCcgAutoLexicon, RdfGraphTools rdfGraphTools,
+      List<String> kbGraphUri, String testingFile, String devFile,
+      String supervisedTrainingFile, String unsupervisedTrainingFile,
+      String sematicParseKey, boolean debugEnabled, int trainingSampleSize,
+      String logFile, int nBestTrainSyntacticParses,
+      int nBestTestSyntacticParses, int nbestBestEdges, int nbestGraphs,
+      boolean useSchema, boolean useKB, boolean groundFreeVariables,
+      boolean useEmtpyTypes, boolean ignoreTypes, boolean urelGrelFlag,
+      boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
       boolean gtypeGrelFlag, boolean wordGrelPartFlag, boolean wordGrelFlag,
-      boolean wordBigramGrelPartFlag, boolean argGrelPartFlag, boolean argGrelFlag,
-      boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
-      boolean argumentStemMatchingFlag, boolean argumentStemGrelPartMatchingFlag,
-      boolean graphIsConnectedFlag, boolean graphHasEdgeFlag, boolean countNodesFlag,
-      boolean edgeNodeCountFlag, boolean duplicateEdgesFlag, boolean grelGrelFlag,
-      boolean useLexiconWeightsRel, boolean useLexiconWeightsType, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight, double stemFeaturesWeight,
-      boolean validQueryFlag) throws IOException {
+      boolean wordBigramGrelPartFlag, boolean argGrelPartFlag,
+      boolean argGrelFlag, boolean stemMatchingFlag,
+      boolean mediatorStemGrelPartMatchingFlag,
+      boolean argumentStemMatchingFlag,
+      boolean argumentStemGrelPartMatchingFlag, boolean graphIsConnectedFlag,
+      boolean graphHasEdgeFlag, boolean countNodesFlag,
+      boolean edgeNodeCountFlag, boolean duplicateEdgesFlag,
+      boolean grelGrelFlag, boolean useLexiconWeightsRel,
+      boolean useLexiconWeightsType, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double stemFeaturesWeight, boolean validQueryFlag) throws IOException {
 
     this.semanticParseKey = sematicParseKey;
     this.nBestTestSyntacticParses = nBestTestSyntacticParses;
@@ -94,20 +101,25 @@ public class GraphToQueryTrainingMain {
 
     StructuredPercepton learningModel = new StructuredPercepton();
 
-    graphToQuery = new GraphToQueryTraining(schema, kb, groundedLexicon, normalCcgAutoLexicon,
-        questionCcgAutoLexicon, semanticParseKey, this.nBestTrainSyntacticParses,
-        this.nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, useSchema, useKB,
-        groundFreeVariables, useEmtpyTypes, ignoreTypes, learningModel, urelGrelFlag,
-        urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, wordGrelPartFlag,
-        wordGrelFlag, argGrelPartFlag, argGrelFlag, wordBigramGrelPartFlag, stemMatchingFlag,
-        mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-        argumentStemGrelPartMatchingFlag, graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
-        edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-        validQueryFlag, initialEdgeWeight, initialTypeWeight, initialWordWeight, stemFeaturesWeight,
-        rdfGraphTools, kbGraphUri);
+    graphToQuery =
+        new GraphToQueryTraining(schema, kb, groundedLexicon,
+            normalCcgAutoLexicon, questionCcgAutoLexicon, semanticParseKey,
+            this.nBestTrainSyntacticParses, this.nBestTestSyntacticParses,
+            nbestBestEdges, nbestGraphs, useSchema, useKB, groundFreeVariables,
+            useEmtpyTypes, ignoreTypes, learningModel, urelGrelFlag,
+            urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
+            wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
+            wordBigramGrelPartFlag, stemMatchingFlag,
+            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
+            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
+            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
+            useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
+            validQueryFlag, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight, rdfGraphTools, kbGraphUri);
 
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
-      supervisedTrainingExamples = loadExamples(new FileReader(supervisedTrainingFile));
+      supervisedTrainingExamples =
+          loadExamples(new FileReader(supervisedTrainingFile));
     }
 
     if (testingFile != null && !testingFile.equals("")) {
@@ -120,14 +132,16 @@ public class GraphToQueryTrainingMain {
 
     // Loading training files from all domains
     trainingExamples = Lists.newArrayList();
-    if (unsupervisedTrainingFile != null && !unsupervisedTrainingFile.equals("")) {
+    if (unsupervisedTrainingFile != null
+        && !unsupervisedTrainingFile.equals("")) {
       List<String> unsupervisedTrainingFiles =
           Lists.newArrayList(Splitter.on(";").split(unsupervisedTrainingFile));
       for (String fileName : unsupervisedTrainingFiles) {
         List<String> trainingExamplesPart = Lists.newArrayList();
         if (fileName != null && fileName.endsWith(".gz")) {
-          trainingExamplesPart = loadExamples(
-              new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)), "UTF-8"));
+          trainingExamplesPart =
+              loadExamples(new InputStreamReader(new GZIPInputStream(
+                  new FileInputStream(fileName)), "UTF-8"));
         } else if (fileName != null) {
           trainingExamplesPart = loadExamples(new FileReader(fileName));
         }
@@ -136,7 +150,8 @@ public class GraphToQueryTrainingMain {
     }
   }
 
-  public static List<String> selectRandomExamples(List<String> totalExamples, int sampleSize) {
+  public static List<String> selectRandomExamples(List<String> totalExamples,
+      int sampleSize) {
     if (totalExamples == null) {
       return Lists.newArrayList();
     }
@@ -153,15 +168,17 @@ public class GraphToQueryTrainingMain {
     return examples;
   }
 
-  public void train(int iterations, int nthreads) throws IOException, InterruptedException {
+  public void train(int iterations, int nthreads) throws IOException,
+      InterruptedException {
     // int nthreads = Runtime.getRuntime().availableProcessors();
 
     for (int i = 0; i < iterations; i++) {
       List<String> trainingSample = getTrainingSample(trainingSampleSize);
-      graphToQuery.trainFromSentences(trainingSample, nthreads, logFile + ".train.iteration" + i,
-          debugEnabled);
+      graphToQuery.trainFromSentences(trainingSample, nthreads, logFile
+          + ".train.iteration" + i, debugEnabled);
 
-      Logger evalLogger = Logger.getLogger(GraphToQueryTraining.class + ".eval.iteration" + i);
+      Logger evalLogger =
+          Logger.getLogger(GraphToQueryTraining.class + ".eval.iteration" + i);
       if (debugEnabled) {
         evalLogger.setLevel(Level.DEBUG);
         RollingFileAppender appender =
@@ -171,11 +188,13 @@ public class GraphToQueryTrainingMain {
       }
 
       evalLogger.info("######## Development Data ###########");
-      graphToQuery.testCurrentModel(devExamples, evalLogger, logFile + ".eval.iteration" + i,
-          debugEnabled, testingNbestParsesRange, nthreads);
+      graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
+          + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
+          nthreads);
       evalLogger.info("######## Testing Data ###########");
-      graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile + ".eval.iteration" + i,
-          debugEnabled, testingNbestParsesRange, nthreads);
+      graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile
+          + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
+          nthreads);
     }
   }
 
@@ -193,9 +212,11 @@ public class GraphToQueryTrainingMain {
     // training is
     // helpful
     if (supervisedTrainingExamples != null) {
-      List<String> examplesCopy = Lists.newArrayList(supervisedTrainingExamples);
+      List<String> examplesCopy =
+          Lists.newArrayList(supervisedTrainingExamples);
       int maxIterations =
-          trainingSample.size() > 0 ? trainingSample.size() / supervisedTrainingExamples.size() : 0;
+          trainingSample.size() > 0 ? trainingSample.size()
+              / supervisedTrainingExamples.size() : 0;
       for (int i = 0; i < 2 * (maxIterations + 1); i++) {
         Collections.shuffle(examplesCopy);
         trainingSample.addAll(examplesCopy);
@@ -224,14 +245,17 @@ public class GraphToQueryTrainingMain {
     return examples;
   }
 
-  public static void main_func(Schema schema, KnowledgeBase kb, GroundedLexicon groundedLexicon,
-      RdfGraphTools rdfGraphTools, List<String> kbGraphUri) throws IOException,
-      InterruptedException {
-    CcgAutoLexicon normalCcgAutoLexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
-        "./data/unary_rules.txt", "./data/binary_rules.txt", "./data/lexicon_specialCases.txt");
-    CcgAutoLexicon questionCcgAutoLexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
-        "./data/unary_rules.txt", "./data/binary_rules.txt",
-        "./data/lexicon_specialCases_questions.txt");
+  public static void main_func(Schema schema, KnowledgeBase kb,
+      GroundedLexicon groundedLexicon, RdfGraphTools rdfGraphTools,
+      List<String> kbGraphUri) throws IOException, InterruptedException {
+    CcgAutoLexicon normalCcgAutoLexicon =
+        new CcgAutoLexicon("./data/candc_markedup.modified",
+            "./data/unary_rules.txt", "./data/binary_rules.txt",
+            "./data/lexicon_specialCases.txt");
+    CcgAutoLexicon questionCcgAutoLexicon =
+        new CcgAutoLexicon("./data/candc_markedup.modified",
+            "./data/unary_rules.txt", "./data/binary_rules.txt",
+            "./data/lexicon_specialCases_questions.txt");
 
     // String testFile =
     // "data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt";
@@ -312,44 +336,55 @@ public class GraphToQueryTrainingMain {
     // Denotation feature
     boolean validQueryFlag = true;
 
-    GraphToQueryTrainingMain graphToQueryModel = new GraphToQueryTrainingMain(schema, kb,
-        groundedLexicon, normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools, kbGraphUri,
-        testFile, devFile, supervisedTrainingFile, corupusTrainingFile, semanticParseKey,
-        debugEnabled, trainingSampleSize, logFile, nBestTrainSyntacticParses,
-        nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, useSchema, useKB,
-        groundFreeVariables, useEmtpyTypes, ignoreTypes, urelGrelFlag, urelPartGrelPartFlag,
-        utypeGtypeFlag, gtypeGrelFlag, wordGrelPartFlag, wordGrelFlag, wordBigramGrelPartFlag,
-        argGrelPartFlag, argGrelFlag, stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
-        argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
-        graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag, duplicateEdgesFlag, grelGrelFlag,
-        useLexiconWeightsRel, useLexiconWeightsType, initialEdgeWeight, initialTypeWeight,
-        initialWordWeight, stemFeaturesWeight, validQueryFlag);
+    GraphToQueryTrainingMain graphToQueryModel =
+        new GraphToQueryTrainingMain(schema, kb, groundedLexicon,
+            normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
+            kbGraphUri, testFile, devFile, supervisedTrainingFile,
+            corupusTrainingFile, semanticParseKey, debugEnabled,
+            trainingSampleSize, logFile, nBestTrainSyntacticParses,
+            nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, useSchema,
+            useKB, groundFreeVariables, useEmtpyTypes, ignoreTypes,
+            urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
+            wordGrelPartFlag, wordGrelFlag, wordBigramGrelPartFlag,
+            argGrelPartFlag, argGrelFlag, stemMatchingFlag,
+            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
+            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
+            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
+            duplicateEdgesFlag, grelGrelFlag, useLexiconWeightsRel,
+            useLexiconWeightsType, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight, validQueryFlag);
 
     int iterations = 10;
     int nthreads = 1;
     graphToQueryModel.train(iterations, nthreads);
   }
 
-  public static void main(String[] args) throws IOException, InterruptedException {
+  public static void main(String[] args) throws IOException,
+      InterruptedException {
     // Schema schema = new
     // Schema("data/freebase/schema/business_schema.txt");
-    Schema schema = new Schema("data/freebase/schema/business_film_people_schema.txt");
+    Schema schema =
+        new Schema("data/freebase/schema/business_film_people_schema.txt");
 
     // KnowledgeBase kb = new
     // KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz");
-    KnowledgeBase kb = new KnowledgeBase(
-        "data/freebase/domain_facts/business_film_people_facts.txt.gz",
-        "data/freebase/stats/business_film_people_relation_types.txt");
+    KnowledgeBase kb =
+        new KnowledgeBase(
+            "data/freebase/domain_facts/business_film_people_facts.txt.gz",
+            "data/freebase/stats/business_film_people_relation_types.txt");
 
     // GroundedLexicon groundedLexicon = new
     // GroundedLexicon("data/freebase/grounded_lexicon/business_grounded_lexicon.txt");
-    GroundedLexicon groundedLexicon = new GroundedLexicon(
-        "data/freebase/grounded_lexicon/business_film_people_grounded_lexicon.txt");
+    GroundedLexicon groundedLexicon =
+        new GroundedLexicon(
+            "data/freebase/grounded_lexicon/business_film_people_grounded_lexicon.txt");
 
-    RdfGraphTools rdfGraphTools = new RdfGraphTools("jdbc:virtuoso://bravas:1111",
-        "http://bravas:8890/sparql", "dba", "dba", 2);
-    List<String> kbGraphUri = Lists.newArrayList("http://business.freebase.com",
-        "http://film.freebase.com", "http://people.freebase.com");
+    RdfGraphTools rdfGraphTools =
+        new RdfGraphTools("jdbc:virtuoso://bravas:1111",
+            "http://bravas:8890/sparql", "dba", "dba", 2);
+    List<String> kbGraphUri =
+        Lists.newArrayList("http://business.freebase.com",
+            "http://film.freebase.com", "http://people.freebase.com");
 
     // this helps separating loading database from debugging
     main_func(schema, kb, groundedLexicon, rdfGraphTools, kbGraphUri);

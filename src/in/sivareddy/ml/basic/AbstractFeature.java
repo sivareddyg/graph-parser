@@ -58,7 +58,8 @@ public abstract class AbstractFeature implements Feature, Comparable<Feature> {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).addValue(key).addValue(value).toString();
+    return Objects.toStringHelper(this).addValue(key).addValue(value)
+        .toString();
   }
 
   @Override

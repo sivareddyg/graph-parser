@@ -22,17 +22,21 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class CcgAutoLexicon {
-  public static Set<String> typePosTags =
-      Sets.newHashSet("NN", "NNP", "NNPS", "NNS", "PRP", "PRP$", "CD");
+  public static Set<String> typePosTags = Sets.newHashSet("NN", "NNP", "NNPS",
+      "NNS", "PRP", "PRP$", "CD");
   public static Set<String> pronounPosTags = Sets.newHashSet("PRP", "PRP$");
-  public static Set<String> typeModPosTags = Sets.newHashSet("JJ", "JJR", "JJS");
+  public static Set<String> typeModPosTags = Sets
+      .newHashSet("JJ", "JJR", "JJS");
 
-  public static Set<String> eventPosTags =
-      Sets.newHashSet("VB", "VBD", "VBG", "VBN", "VBP", "VBZ", "IN", "POS", "TO");
-  private static Set<String> eventModPosTags = Sets.newHashSet("RB", "RBR", "RBS", "RP");
+  public static Set<String> eventPosTags = Sets.newHashSet("VB", "VBD", "VBG",
+      "VBN", "VBP", "VBZ", "IN", "POS", "TO");
+  private static Set<String> eventModPosTags = Sets.newHashSet("RB", "RBR",
+      "RBS", "RP");
 
-  private static Set<String> closedPosTags = Sets.newHashSet("WDT", "WP", "WP$", "WRB");
-  public static Set<String> questionPosTags = Sets.newHashSet("WP", "WP$", "WDT", "WRB");
+  private static Set<String> closedPosTags = Sets.newHashSet("WDT", "WP",
+      "WP$", "WRB");
+  public static Set<String> questionPosTags = Sets.newHashSet("WP", "WP$",
+      "WDT", "WRB");
 
   private static Set<String> modalityPosTags = Sets.newHashSet("MD");
 
@@ -48,14 +52,19 @@ public class CcgAutoLexicon {
 
   protected Map<String, String> binaryRulesMap = Maps.newHashMap();
 
-  protected Map<String, List<Pair<String, String>>> specialCases = Maps.newHashMap();
+  protected Map<String, List<Pair<String, String>>> specialCases = Maps
+      .newHashMap();
 
   // all the patterns that are used frequently
-  private static Pattern multFeaturesPattern = Pattern.compile("\\](\\[[^\\]+]\\])+");
-  private static Pattern nonBasicFeatures = Pattern.compile("\\)(\\[[^\\]+]\\])+");
-  private static Pattern depPattern = Pattern.compile("\\{([^\\}]+)\\}\\<([^\\>]+)\\>");
+  private static Pattern multFeaturesPattern = Pattern
+      .compile("\\](\\[[^\\]+]\\])+");
+  private static Pattern nonBasicFeatures = Pattern
+      .compile("\\)(\\[[^\\]+]\\])+");
+  private static Pattern depPattern = Pattern
+      .compile("\\{([^\\}]+)\\}\\<([^\\>]+)\\>");
   private static Pattern longDistanceIndex = Pattern.compile("\\*}");
-  private static Pattern indexToSimplePattern = Pattern.compile("\\{[^\\}]+\\}");
+  private static Pattern indexToSimplePattern = Pattern
+      .compile("\\{[^\\}]+\\}");
 
   public static String cleanIndexedDepString(String indexedString) {
     // replace multiple features with one feature TODO future
@@ -102,18 +111,22 @@ public class CcgAutoLexicon {
     if (ppVars.size() > 0) {
       int count = 1;
       String indexedStringStripped =
-          Pattern.compile("\\<[^\\>]+\\>").matcher(indexedString).replaceAll("");
+          Pattern.compile("\\<[^\\>]+\\>").matcher(indexedString)
+              .replaceAll("");
       SyntacticCategory indexedSyntacticCategory =
           SyntacticCategory.fromString(indexedStringStripped);
       for (String ppVar : ppVars) {
         if (ppVar.equals("_")) {
-          indexedString = indexedString.replaceAll("PP\\{_\\}", "PP\\{X" + count + "\\}");
+          indexedString =
+              indexedString.replaceAll("PP\\{_\\}", "PP\\{X" + count + "\\}");
           count++;
         } else {
           String varName =
-              indexedSyntacticCategory.getDeepParentCategory().getIndex().getVariableName();
-          indexedString = Pattern.compile("PP\\{" + ppVar + "\\}(\\<[^\\>]+\\>)?")
-              .matcher(indexedString).replaceAll("PP\\{" + varName + "\\}");
+              indexedSyntacticCategory.getDeepParentCategory().getIndex()
+                  .getVariableName();
+          indexedString =
+              Pattern.compile("PP\\{" + ppVar + "\\}(\\<[^\\>]+\\>)?")
+                  .matcher(indexedString).replaceAll("PP\\{" + varName + "\\}");
         }
       }
     }
@@ -126,7 +139,8 @@ public class CcgAutoLexicon {
    * @param fileName
    * @throws IOException
    */
-  public void mapSynCatToIndexSynCatFromFile(String fileName) throws IOException {
+  public void mapSynCatToIndexSynCatFromFile(String fileName)
+      throws IOException {
     BufferedReader br = new BufferedReader(new FileReader(fileName));
     try {
       String line = br.readLine();
@@ -135,8 +149,9 @@ public class CcgAutoLexicon {
             && line.charAt(0) != '=') {
           String synCat = line.trim();
           line = br.readLine();
-          List<String> parts = Lists.newArrayList(
-              Splitter.on(CharMatcher.WHITESPACE).trimResults().omitEmptyStrings().split(line));
+          List<String> parts =
+              Lists.newArrayList(Splitter.on(CharMatcher.WHITESPACE)
+                  .trimResults().omitEmptyStrings().split(line));
           String indexedSynCat = parts.get(1);
           indexedSynCat = cleanIndexedDepString(indexedSynCat);
           synCatToIndexSynCatMap.put(synCat, indexedSynCat);
@@ -247,7 +262,8 @@ public class CcgAutoLexicon {
 
   public String selectBinaryRule(String synCat1String, String synCat2String,
       String resultSynCatString) {
-    String key = synCat1String + '\t' + synCat2String + '\t' + resultSynCatString;
+    String key =
+        synCat1String + '\t' + synCat2String + '\t' + resultSynCatString;
     if (binaryRulesMap.containsKey(key)) {
       return binaryRulesMap.get(key);
     }
@@ -290,16 +306,19 @@ public class CcgAutoLexicon {
     if (synCatToIndexSynCatMap.containsKey(synCat)) {
       indexSynCat = synCatToIndexSynCatMap.get(synCat);
     }
-    SyntacticCategory indexedSyntacticCategory = SyntacticCategory.fromString(indexSynCat);
+    SyntacticCategory indexedSyntacticCategory =
+        SyntacticCategory.fromString(indexSynCat);
 
-    SemanticCategory semCat = generateSemanticCategory(indexedSyntacticCategory, lemma, pos);
+    SemanticCategory semCat =
+        generateSemanticCategory(indexedSyntacticCategory, lemma, pos);
     Category cat = new Category(indexedSyntacticCategory, semCat);
     cats = new ArrayList<>();
     cats.add(cat);
     return cats;
   }
 
-  private List<Category> getSpecialCasesCategory(String lemma, String pos, String synCat) {
+  private List<Category> getSpecialCasesCategory(String lemma, String pos,
+      String synCat) {
     synCat = SyntacticCategory.fromString(synCat).toSimpleString();
     String key = lemma + "\t" + pos + "\t" + synCat;
     if (specialCases.containsKey(key)) {
@@ -308,13 +327,18 @@ public class CcgAutoLexicon {
       for (Pair<String, String> value : values) {
         String synCatString = value.getLeft();
         String semCatString = value.getRight();
-        SyntacticCategory mainSynCat = SyntacticCategory.fromString(synCatString);
+        SyntacticCategory mainSynCat =
+            SyntacticCategory.fromString(synCatString);
         SemanticCategory mainSemCat = null;
         if (SemanticCategoryType.types.contains(semCatString)) {
-          SemanticCategoryType semCatType = SemanticCategoryType.valueOf(semCatString);
-          mainSemCat = SemanticCategory.generateSemanticCategory(mainSynCat, semCatType);
+          SemanticCategoryType semCatType =
+              SemanticCategoryType.valueOf(semCatString);
+          mainSemCat =
+              SemanticCategory.generateSemanticCategory(mainSynCat, semCatType);
         } else {
-          mainSemCat = SemanticCategory.generateSemanticCategory(mainSynCat, semCatString);
+          mainSemCat =
+              SemanticCategory.generateSemanticCategory(mainSynCat,
+                  semCatString);
         }
         Category result = new Category(mainSynCat, mainSemCat);
         cats.add(result);
@@ -324,62 +348,94 @@ public class CcgAutoLexicon {
     return null;
   }
 
-  public static Set<String> closedVerbs = Sets.newHashSet("be", "has", "do", "have", "to");
+  public static Set<String> closedVerbs = Sets.newHashSet("be", "has", "do",
+      "have", "to");
 
-  private SemanticCategory generateSemanticCategory(SyntacticCategory synCat, String lemma,
-      String pos) {
+  private SemanticCategory generateSemanticCategory(SyntacticCategory synCat,
+      String lemma, String pos) {
     SemanticCategory result = null;
     if (typePosTags.contains(pos) && synCat.isBasic()) {
-      result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.TYPE);
+      result =
+          SemanticCategory.generateSemanticCategory(synCat,
+              SemanticCategoryType.TYPE);
     } else if (synCat.isBasic()) {
-      result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.IDENTITY);
+      result =
+          SemanticCategory.generateSemanticCategory(synCat,
+              SemanticCategoryType.IDENTITY);
     } else if (typeModPosTags.contains(pos) || typePosTags.contains(pos)) {
       if (!synCat.getDeepParentCategory().toSuperSimpleString().equals("S")) {
         if (complementLemmas.contains(lemma)) {
           result =
-              SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.COMPLEMENT);
+              SemanticCategory.generateSemanticCategory(synCat,
+                  SemanticCategoryType.COMPLEMENT);
         } else {
-          result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.TYPEMOD);
+          result =
+              SemanticCategory.generateSemanticCategory(synCat,
+                  SemanticCategoryType.TYPEMOD);
         }
       } else {
         if (negationLemmas.contains(lemma)) {
-          result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.NEGATION);
+          result =
+              SemanticCategory.generateSemanticCategory(synCat,
+                  SemanticCategoryType.NEGATION);
         } else if (synCat.getDeepCategoryIndex().equals(synCat.getIndex())) {
           //
-          result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.TYPEMOD);
+          result =
+              SemanticCategory.generateSemanticCategory(synCat,
+                  SemanticCategoryType.TYPEMOD);
         } else {
-          result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.EVENTMOD);
+          result =
+              SemanticCategory.generateSemanticCategory(synCat,
+                  SemanticCategoryType.EVENTMOD);
         }
       }
     } else if (eventModPosTags.contains(pos)) {
       if (negationLemmas.contains(lemma)) {
-        result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.NEGATION);
+        result =
+            SemanticCategory.generateSemanticCategory(synCat,
+                SemanticCategoryType.NEGATION);
       } else {
-        result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.EVENTMOD);
+        result =
+            SemanticCategory.generateSemanticCategory(synCat,
+                SemanticCategoryType.EVENTMOD);
       }
     }
     // if the postag implies an event
     else if (eventPosTags.contains(pos) || modalityPosTags.contains(pos)) {
       if (closedVerbs.contains(lemma) && !synCat.getArgument().isBasic()) {
-        result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.CLOSED);
+        result =
+            SemanticCategory.generateSemanticCategory(synCat,
+                SemanticCategoryType.CLOSED);
       } else {
-        result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.EVENT);
+        result =
+            SemanticCategory.generateSemanticCategory(synCat,
+                SemanticCategoryType.EVENT);
       }
     } else if (closedPosTags.contains(pos)) {
       if (questionPosTags.contains(pos)
           && synCat.getDeepParentCategory().toSimpleString().equals("S[wq]")) {
-        result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.QUESTION);
+        result =
+            SemanticCategory.generateSemanticCategory(synCat,
+                SemanticCategoryType.QUESTION);
       } else {
-        result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.CLOSED);
+        result =
+            SemanticCategory.generateSemanticCategory(synCat,
+                SemanticCategoryType.CLOSED);
       }
     } else if (quantifierPosTags.contains(pos)) {
       if (complementLemmas.contains(lemma)) {
-        result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.COMPLEMENT);
+        result =
+            SemanticCategory.generateSemanticCategory(synCat,
+                SemanticCategoryType.COMPLEMENT);
       } else {
-        result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.CLOSED);
+        result =
+            SemanticCategory.generateSemanticCategory(synCat,
+                SemanticCategoryType.CLOSED);
       }
     } else {
-      result = SemanticCategory.generateSemanticCategory(synCat, SemanticCategoryType.CLOSED);
+      result =
+          SemanticCategory.generateSemanticCategory(synCat,
+              SemanticCategoryType.CLOSED);
     }
     return result;
   }

@@ -31,31 +31,39 @@ public class RunPrintFreebaseDomain extends AbstractCli {
   public void initializeOptions(OptionParser parser) {
     parser.acceptsAll(Arrays.asList("help", "h"), "Print this help message.");
 
-    endpoint = parser.accepts("endpoint", "SPARQL endpoint").withRequiredArg().ofType(String.class)
-        .required();
+    endpoint =
+        parser.accepts("endpoint", "SPARQL endpoint").withRequiredArg()
+            .ofType(String.class).required();
 
-    username = parser.accepts("username", "username generally dba").withRequiredArg()
-        .ofType(String.class).required();
+    username =
+        parser.accepts("username", "username generally dba").withRequiredArg()
+            .ofType(String.class).required();
 
-    password = parser.accepts("password", "password generally dba").withRequiredArg()
-        .ofType(String.class).required();
+    password =
+        parser.accepts("password", "password generally dba").withRequiredArg()
+            .ofType(String.class).required();
 
-    schema = parser.accepts("schema", "File containing schema of the domain").withRequiredArg()
-        .ofType(String.class).required();
+    schema =
+        parser.accepts("schema", "File containing schema of the domain")
+            .withRequiredArg().ofType(String.class).required();
 
-    domain = parser.accepts("domain",
-        "uri of the graph e.g. http://film.freebase.com. Specify multiple Uri using ;")
-        .withRequiredArg().ofType(String.class).required();
+    domain =
+        parser
+            .accepts("domain",
+                "uri of the graph e.g. http://film.freebase.com. Specify multiple Uri using ;")
+            .withRequiredArg().ofType(String.class).required();
 
   }
 
   @Override
   public void run(OptionSet options) {
     try {
-      List<String> domains = Lists.newArrayList(
-          Splitter.on(";").trimResults().omitEmptyStrings().split(options.valueOf(domain)));
-      PrintFreebaseDomain.print(options.valueOf(endpoint), options.valueOf(username),
-          options.valueOf(password), domains, options.valueOf(schema));
+      List<String> domains =
+          Lists.newArrayList(Splitter.on(";").trimResults().omitEmptyStrings()
+              .split(options.valueOf(domain)));
+      PrintFreebaseDomain.print(options.valueOf(endpoint),
+          options.valueOf(username), options.valueOf(password), domains,
+          options.valueOf(schema));
     } catch (IOException e) {
       e.printStackTrace();
     }

@@ -31,13 +31,15 @@ public class RdfGraphTools {
   private Integer timeOut = 500000;
 
   // stores query and its results
-  private static Map<String, Map<String, LinkedHashSet<String>>> queryCache = Maps.newHashMap();
+  private static Map<String, Map<String, LinkedHashSet<String>>> queryCache =
+      Maps.newHashMap();
 
   public RdfGraphTools(String jdbcEndPoint, String username, String password) {
     this(jdbcEndPoint, username, password, 0);
   }
 
-  public RdfGraphTools(String jdbcEndPoint, String username, String password, int timeOut) {
+  public RdfGraphTools(String jdbcEndPoint, String username, String password,
+      int timeOut) {
     // virtGraph = new VirtGraph(jdbcEndPoint, "dba", "dba");
     virtGraph = new VirtGraph(null, jdbcEndPoint, "dba", "dba", true);
     if (timeOut > 0) {
@@ -46,15 +48,17 @@ public class RdfGraphTools {
     }
     PrefixMapping prefixMapping = virtGraph.getPrefixMapping();
     prefixMapping.setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#");
-    prefixMapping.setNsPrefix("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+    prefixMapping.setNsPrefix("rdf",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
   }
 
-  public RdfGraphTools(String jdbcUrl, String httpUrl, String username, String password) {
+  public RdfGraphTools(String jdbcUrl, String httpUrl, String username,
+      String password) {
     this(jdbcUrl, httpUrl, username, password, 0);
   }
 
-  public RdfGraphTools(String jdbcUrl, String httpUrl, String username, String password,
-      int timeOut) {
+  public RdfGraphTools(String jdbcUrl, String httpUrl, String username,
+      String password, int timeOut) {
     // virtGraph = new VirtGraph(jdbcUrl, "dba", "dba");
     virtGraph = new VirtGraph(null, jdbcUrl, "dba", "dba", true);
     if (timeOut > 0) {
@@ -63,7 +67,8 @@ public class RdfGraphTools {
     }
     PrefixMapping prefixMapping = virtGraph.getPrefixMapping();
     prefixMapping.setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#");
-    prefixMapping.setNsPrefix("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+    prefixMapping.setNsPrefix("rdf",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
     this.httpUrl = httpUrl;
   }
 
@@ -77,7 +82,8 @@ public class RdfGraphTools {
     try {
       Query sparql = QueryFactory.create(query);
       // Run Sparql query
-      VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(sparql, virtGraph);
+      VirtuosoQueryExecution vqe =
+          VirtuosoQueryExecutionFactory.create(sparql, virtGraph);
       results = vqe.execSelect();
     } catch (QueryParseException e) {
       System.err.println("Query parse exception: Using http endpoint instead");
@@ -146,15 +152,11 @@ public class RdfGraphTools {
     s = s.trim();
     p = p.trim();
     o = o.trim();
-    String query = String
-        .format("INSERT INTO GRAPH <%s> { %s %s %s . } WHERE { FILTER NOT EXISTS {  %s %s %s . } }",
-            graphURI,
-            s,
-            p,
-            o,
-            s,
-            p,
-            o);
+    String query =
+        String
+            .format(
+                "INSERT INTO GRAPH <%s> { %s %s %s . } WHERE { FILTER NOT EXISTS {  %s %s %s . } }",
+                graphURI, s, p, o, s, p, o);
     VirtuosoUpdateRequest vur = VirtuosoUpdateFactory.create(query, virtGraph);
     vur.exec();
   }
@@ -163,20 +165,17 @@ public class RdfGraphTools {
     s = s.trim();
     p = p.trim();
     o = o.trim();
-    String query = String
-        .format("DELETE FROM GRAPH <%s> { %s %s %s . } WHERE { FILTER EXISTS {  %s %s %s . } }",
-            graphURI,
-            s,
-            p,
-            o,
-            s,
-            p,
-            o);
+    String query =
+        String
+            .format(
+                "DELETE FROM GRAPH <%s> { %s %s %s . } WHERE { FILTER EXISTS {  %s %s %s . } }",
+                graphURI, s, p, o, s, p, o);
     VirtuosoUpdateRequest vur = VirtuosoUpdateFactory.create(query, virtGraph);
     vur.exec();
   }
 
-  public static Map<String, LinkedHashSet<String>> getResults(ResultSet resultSet) {
+  public static Map<String, LinkedHashSet<String>> getResults(
+      ResultSet resultSet) {
     if (resultSet == null) {
       return null;
     }
@@ -209,15 +208,19 @@ public class RdfGraphTools {
    * @param predResults
    * @return
    */
-  public static boolean equalResults(Map<String, LinkedHashSet<String>> goldResults,
+  public static boolean equalResults(
+      Map<String, LinkedHashSet<String>> goldResults,
       Map<String, LinkedHashSet<String>> predResults) {
-    Preconditions.checkArgument(goldResults != null, "Gold results should not be null");
+    Preconditions.checkArgument(goldResults != null,
+        "Gold results should not be null");
     if (predResults == null) {
       return false;
     }
 
-    Preconditions.checkArgument(goldResults.keySet().size() <= 2, "Unknown target variable");
-    Preconditions.checkArgument(predResults.keySet().size() <= 2, "Unknown target variable");
+    Preconditions.checkArgument(goldResults.keySet().size() <= 2,
+        "Unknown target variable");
+    Preconditions.checkArgument(predResults.keySet().size() <= 2,
+        "Unknown target variable");
 
     String goldVar = null;
     String goldVarName = null;
@@ -245,14 +248,15 @@ public class RdfGraphTools {
       LinkedHashSet<String> goldAnswers = goldResults.get(goldVarName);
 
       boolean hasDate =
-          (goldAnswers.size() > 0 && goldAnswers.iterator().next().contains("XMLSchema#datetime")) ? true
-              : false;
+          (goldAnswers.size() > 0 && goldAnswers.iterator().next()
+              .contains("XMLSchema#datetime")) ? true : false;
       if (hasDate) {
         goldAnswers = convertDatesToYears(goldAnswers);
       }
 
       LinkedHashSet<String> predAnswers =
-          predVarName != null ? predResults.get(predVarName) : predResults.get(predVar);
+          predVarName != null ? predResults.get(predVarName) : predResults
+              .get(predVar);
 
       LinkedHashSet<String> predAnswersCleaned = new LinkedHashSet<>();
       for (String predAnswer : predAnswers) {

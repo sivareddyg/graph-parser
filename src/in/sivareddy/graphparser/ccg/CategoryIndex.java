@@ -21,265 +21,265 @@ import com.google.common.collect.Sets;
  * 
  */
 public class CategoryIndex {
-	private IntegerObject variableValue = null;
-	private String variableName;
-	
-	public static String varPrefix = "X";
+  private IntegerObject variableValue = null;
+  private String variableName;
 
-	// Store all the variables that are unified with the current object
-	private Set<CategoryIndex> unifiedVariables = Sets.newHashSet();
-	
-	// To count the number of Category Index variables
-	private static int keyCount = 0;
-	private static Map<Integer, CategoryIndex> varCache = Maps.newConcurrentMap();
-	private static Integer maxKeyCount = 100000;
-	
-	// useful for variables indicating coordinate categories
-	private boolean isCC = false;
-	private Set<CategoryIndex> coordinatedVars = null;
-	
-	// unique value specific to this Category.
-	private Integer key;
+  public static String varPrefix = "X";
 
-	public static synchronized int getKeyCount() {
-		keyCount++;
-		if (keyCount % maxKeyCount == 0)
-			keyCount = 0;
-		return keyCount;
-	}
-	
-	public void setKey() {
-		key = getKeyCount();
-		varCache.put(key, this);
-	}
-	
-	public static void deleteVarKey(Integer key) {
-		if (varCache.containsKey(key)) {
-			varCache.remove(key);
-		}
-	}
-	
-	public static boolean containsVarKey(Integer key) {
-		return key == null ? false : varCache.containsKey(key);
-	}
-	
-	public static CategoryIndex getCategoryIndex(String varNameKey) {
-		if (varNameKey == null || varNameKey.equals("") || varNameKey.charAt(0) != '$')
-			return null;
-		varNameKey = varNameKey.replace("$", "");
-		List<String> vars = Lists.newArrayList(Splitter.on(":").split(varNameKey));
-		if (vars.size() != 2)
-			return null;
-		String varName = vars.get(0);
-		Integer key = Integer.parseInt(vars.get(1));
-		CategoryIndex cat = null;
-		if (key != null && varCache.containsKey(key))
-			cat = varCache.get(key);
-		else
-			return null;
-		
-		if (cat.getVariableName().equals(varName))
-			return cat;
-		return null;
-	}
-	
-	public int getKey() {
-		return key;
-	}
-	
-	public String getVarNameAndKey() {
-		return "$" + variableName + ":" + key;
-	}
-	
-	public static synchronized void resetCounter() {
-		keyCount = 0;
-		varCache = Maps.newConcurrentMap();
-	}
-	
-	public CategoryIndex(String variableName, int variableValue) {
-		this.variableValue = new IntegerObject(variableValue);
-		this.variableName = variableName;
-		unifiedVariables.add(this);
-		setKey();
-	}
+  // Store all the variables that are unified with the current object
+  private Set<CategoryIndex> unifiedVariables = Sets.newHashSet();
 
-	public CategoryIndex(String variableName) {
-		this.variableName = variableName;
-		unifiedVariables.add(this);
-		setKey();
-	}
-	
-	public CategoryIndex() {
-		setKey();
-		this.variableName = varPrefix + key;
-		unifiedVariables.add(this);
-	}
-	
-	public void setIsCC() {
-		isCC = true;
-		coordinatedVars = Sets.newHashSet();
-	}
+  // To count the number of Category Index variables
+  private static int keyCount = 0;
+  private static Map<Integer, CategoryIndex> varCache = Maps.newConcurrentMap();
+  private static Integer maxKeyCount = 100000;
 
-	public boolean isCC() {
-		return isCC;
-	}
-	
-	public Set<CategoryIndex> getCCvars() {
-		return coordinatedVars;
-	}
-	
-	public static CategoryIndex ccCategoryIndex() {
-		CategoryIndex index = new CategoryIndex();
-		index.setIsCC();
-		return index;
-	}
-	
-	public IntegerObject getVariableValue() {
-		return variableValue;
-	}
+  // useful for variables indicating coordinate categories
+  private boolean isCC = false;
+  private Set<CategoryIndex> coordinatedVars = null;
 
-	public String getVariableName() {
-		return variableName;
-	}
+  // unique value specific to this Category.
+  private Integer key;
 
-	public void setVariableName(String name) {
-		variableName = name;
-	}
+  public static synchronized int getKeyCount() {
+    keyCount++;
+    if (keyCount % maxKeyCount == 0)
+      keyCount = 0;
+    return keyCount;
+  }
 
-	private void setVariableValue(IntegerObject value) {
-		for (CategoryIndex var : unifiedVariables)
-			var.variableValue = value;
-	}
+  public void setKey() {
+    key = getKeyCount();
+    varCache.put(key, this);
+  }
 
-	public void setVariableValue(int value) {
-		Preconditions.checkArgument(
-				variableValue == null || !variableValue.isInitialised(),
-				this.toString() + " already initialised");
-		if (variableValue == null) {
-			IntegerObject newValue = new IntegerObject(value);
-			setVariableValue(newValue);
-		} else if (!variableValue.isInitialised()) {
-			variableValue.setValue(value);
-		}
-	}
+  public static void deleteVarKey(Integer key) {
+    if (varCache.containsKey(key)) {
+      varCache.remove(key);
+    }
+  }
 
-	private void setUnifiedCategoryVariables(Set<CategoryIndex> variables) {
-		for (CategoryIndex variable : unifiedVariables) {
-			variables.add(variable);
-		}
-		unifiedVariables = variables;
-	}
+  public static boolean containsVarKey(Integer key) {
+    return key == null ? false : varCache.containsKey(key);
+  }
 
-	public boolean addtoCCVar(CategoryIndex foreignVar) {
-		Preconditions.checkArgument(isCC == true, this + " is not a ccVar");
-		coordinatedVars.add(foreignVar);
-		return true;
-	}
-	
-	/**
-	 * Unifies the variables. If one of the variable's content change, then the
-	 * other variable's content also changes. Once unified, they are unified
-	 * forever.
-	 * 
-	 * @param foreignVar
-	 * @return
-	 * 
-	 */
-	public boolean unify(CategoryIndex foreignVar) {
-		if (foreignVar == null)
-			return false;
+  public static CategoryIndex getCategoryIndex(String varNameKey) {
+    if (varNameKey == null || varNameKey.equals("")
+        || varNameKey.charAt(0) != '$')
+      return null;
+    varNameKey = varNameKey.replace("$", "");
+    List<String> vars = Lists.newArrayList(Splitter.on(":").split(varNameKey));
+    if (vars.size() != 2)
+      return null;
+    String varName = vars.get(0);
+    Integer key = Integer.parseInt(vars.get(1));
+    CategoryIndex cat = null;
+    if (key != null && varCache.containsKey(key))
+      cat = varCache.get(key);
+    else
+      return null;
 
-		if (unifiedVariables.contains(foreignVar)) // already unified
-			return true;
-		
-		if (isCC || foreignVar.isCC) {
-			if (!isCC)
-				setIsCC();
-			if (!foreignVar.isCC)
-				foreignVar.setIsCC();
-			unifyTwoCCVars(this, foreignVar);
-			return true;
-		}
-		
-		IntegerObject foreignValue = foreignVar.getVariableValue();
+    if (cat.getVariableName().equals(varName))
+      return cat;
+    return null;
+  }
 
-		if (variableValue == null && foreignValue == null) {
-			IntegerObject newValue = new IntegerObject();
-			setVariableValue(newValue);
-			foreignVar.setVariableValue(newValue);
-		} else if (variableValue == null) {
-			setVariableValue(foreignValue);
-		} else if (foreignValue == null) {
-			foreignVar.setVariableValue(variableValue);
-		} else {
-			if (foreignValue.isInitialised() && variableValue.isInitialised()) {
-				if (foreignValue.getValue() == variableValue.getValue())
-					foreignVar.setVariableValue(variableValue);
-				else
-					// cannot unify if the variables are already
-					// instantiated
-					return false;
-			} else if (foreignValue.isInitialised()) {
-				setVariableValue(foreignValue);
-			} else {
-				foreignVar.setVariableValue(variableValue);
-			}
-		}
+  public int getKey() {
+    return key;
+  }
 
-		// copy all the unified variables
-		foreignVar.setUnifiedCategoryVariables(unifiedVariables);
-		return true;
-	}
+  public String getVarNameAndKey() {
+    return "$" + variableName + ":" + key;
+  }
 
-	private boolean unifyTwoCCVars(CategoryIndex ccvar1,
-			CategoryIndex ccvar2) {
-		
-		if (ccvar1.unifiedVariables.contains(ccvar2)) // already unified
-			return true;
-		
-		Set<CategoryIndex> vars1 = ccvar1.coordinatedVars;
-		Set<CategoryIndex> vars2 = ccvar2.coordinatedVars;
-		vars2.addAll(vars1);
-		
-		Set<CategoryIndex> ccvars1Unified = ccvar1.unifiedVariables;
-		
-		for (CategoryIndex var : ccvars1Unified) {
-			var.coordinatedVars = vars2;
-		}
-		
-		ccvar2.setUnifiedCategoryVariables(ccvars1Unified);
-		return true;
-	}
+  public static synchronized void resetCounter() {
+    keyCount = 0;
+    varCache = Maps.newConcurrentMap();
+  }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		if (unifiedVariables.contains(obj))
-			return true;
-		return false;
-	}
+  public CategoryIndex(String variableName, int variableValue) {
+    this.variableValue = new IntegerObject(variableValue);
+    this.variableName = variableName;
+    unifiedVariables.add(this);
+    setKey();
+  }
 
-	@Override
-	public String toString() {
-		String value = "?";
-		if (variableValue != null)
-			value = variableValue.toString();
-		return Objects.toStringHelper(this).add(variableName, value).toString();
-	}
+  public CategoryIndex(String variableName) {
+    this.variableName = variableName;
+    unifiedVariables.add(this);
+    setKey();
+  }
 
-	public String toSimpleString() {
-		String value = "?";
-		if (variableValue != null)
-			value = variableValue.toString();
-		return variableName + "=" + value;
-	}
-	
-	public String toSimpleIndexString() {
-		return variableName;
-	}
+  public CategoryIndex() {
+    setKey();
+    this.variableName = varPrefix + key;
+    unifiedVariables.add(this);
+  }
+
+  public void setIsCC() {
+    isCC = true;
+    coordinatedVars = Sets.newHashSet();
+  }
+
+  public boolean isCC() {
+    return isCC;
+  }
+
+  public Set<CategoryIndex> getCCvars() {
+    return coordinatedVars;
+  }
+
+  public static CategoryIndex ccCategoryIndex() {
+    CategoryIndex index = new CategoryIndex();
+    index.setIsCC();
+    return index;
+  }
+
+  public IntegerObject getVariableValue() {
+    return variableValue;
+  }
+
+  public String getVariableName() {
+    return variableName;
+  }
+
+  public void setVariableName(String name) {
+    variableName = name;
+  }
+
+  private void setVariableValue(IntegerObject value) {
+    for (CategoryIndex var : unifiedVariables)
+      var.variableValue = value;
+  }
+
+  public void setVariableValue(int value) {
+    Preconditions.checkArgument(
+        variableValue == null || !variableValue.isInitialised(),
+        this.toString() + " already initialised");
+    if (variableValue == null) {
+      IntegerObject newValue = new IntegerObject(value);
+      setVariableValue(newValue);
+    } else if (!variableValue.isInitialised()) {
+      variableValue.setValue(value);
+    }
+  }
+
+  private void setUnifiedCategoryVariables(Set<CategoryIndex> variables) {
+    for (CategoryIndex variable : unifiedVariables) {
+      variables.add(variable);
+    }
+    unifiedVariables = variables;
+  }
+
+  public boolean addtoCCVar(CategoryIndex foreignVar) {
+    Preconditions.checkArgument(isCC == true, this + " is not a ccVar");
+    coordinatedVars.add(foreignVar);
+    return true;
+  }
+
+  /**
+   * Unifies the variables. If one of the variable's content change, then the
+   * other variable's content also changes. Once unified, they are unified
+   * forever.
+   * 
+   * @param foreignVar
+   * @return
+   * 
+   */
+  public boolean unify(CategoryIndex foreignVar) {
+    if (foreignVar == null)
+      return false;
+
+    if (unifiedVariables.contains(foreignVar)) // already unified
+      return true;
+
+    if (isCC || foreignVar.isCC) {
+      if (!isCC)
+        setIsCC();
+      if (!foreignVar.isCC)
+        foreignVar.setIsCC();
+      unifyTwoCCVars(this, foreignVar);
+      return true;
+    }
+
+    IntegerObject foreignValue = foreignVar.getVariableValue();
+
+    if (variableValue == null && foreignValue == null) {
+      IntegerObject newValue = new IntegerObject();
+      setVariableValue(newValue);
+      foreignVar.setVariableValue(newValue);
+    } else if (variableValue == null) {
+      setVariableValue(foreignValue);
+    } else if (foreignValue == null) {
+      foreignVar.setVariableValue(variableValue);
+    } else {
+      if (foreignValue.isInitialised() && variableValue.isInitialised()) {
+        if (foreignValue.getValue() == variableValue.getValue())
+          foreignVar.setVariableValue(variableValue);
+        else
+          // cannot unify if the variables are already
+          // instantiated
+          return false;
+      } else if (foreignValue.isInitialised()) {
+        setVariableValue(foreignValue);
+      } else {
+        foreignVar.setVariableValue(variableValue);
+      }
+    }
+
+    // copy all the unified variables
+    foreignVar.setUnifiedCategoryVariables(unifiedVariables);
+    return true;
+  }
+
+  private boolean unifyTwoCCVars(CategoryIndex ccvar1, CategoryIndex ccvar2) {
+
+    if (ccvar1.unifiedVariables.contains(ccvar2)) // already unified
+      return true;
+
+    Set<CategoryIndex> vars1 = ccvar1.coordinatedVars;
+    Set<CategoryIndex> vars2 = ccvar2.coordinatedVars;
+    vars2.addAll(vars1);
+
+    Set<CategoryIndex> ccvars1Unified = ccvar1.unifiedVariables;
+
+    for (CategoryIndex var : ccvars1Unified) {
+      var.coordinatedVars = vars2;
+    }
+
+    ccvar2.setUnifiedCategoryVariables(ccvars1Unified);
+    return true;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    if (unifiedVariables.contains(obj))
+      return true;
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    String value = "?";
+    if (variableValue != null)
+      value = variableValue.toString();
+    return Objects.toStringHelper(this).add(variableName, value).toString();
+  }
+
+  public String toSimpleString() {
+    String value = "?";
+    if (variableValue != null)
+      value = variableValue.toString();
+    return variableName + "=" + value;
+  }
+
+  public String toSimpleIndexString() {
+    return variableName;
+  }
 }

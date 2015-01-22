@@ -26,8 +26,8 @@ public class Schema {
   private Map<String, String> relation2Inverse;
   private Map<String, Boolean> relationIsMaster;
   private Map<String, ImmutableList<String>> relationArguments;
-  public static Set<String> acceptableCommonTypes =
-      Sets.newHashSet("type.datetime", "type.float", "type.int");
+  public static Set<String> acceptableCommonTypes = Sets.newHashSet(
+      "type.datetime", "type.float", "type.int");
 
   public Schema(String fileName) throws IOException {
     type2Relations = Maps.newHashMap();
@@ -45,8 +45,8 @@ public class Schema {
   public static enum EntityTypes {
     MAIN, FOREIGN, MEDIATOR, FOREIGN_MEDIATOR, MAIN_EXTENDED;
 
-    public final static ImmutableSet<String> types =
-        ImmutableSet.of("MAIN", "FOREIGN", "MEDIATOR", "FOREIGN_MEDIATOR", "MAIN_EXTENDED");
+    public final static ImmutableSet<String> types = ImmutableSet.of("MAIN",
+        "FOREIGN", "MEDIATOR", "FOREIGN_MEDIATOR", "MAIN_EXTENDED");
 
     public static EntityTypes toType(String typeString) {
       if (typeString.equals("main")) {
@@ -69,7 +69,8 @@ public class Schema {
     BufferedReader bf = new BufferedReader(new FileReader(fileName));
 
     Set<String> types = Sets.newHashSet();
-    Set<String> mainTypes = Sets.newHashSet("type.datetime", "type.int", "type.float");
+    Set<String> mainTypes =
+        Sets.newHashSet("type.datetime", "type.int", "type.float");
     Set<String> relations = Sets.newHashSet();
 
     String line = bf.readLine();
@@ -79,7 +80,8 @@ public class Schema {
       } else if (line.charAt(0) != '\t' && line.charAt(0) != '#') {
         line = line.replace(namespace, "");
         List<String> parts =
-            Lists.newArrayList(Splitter.on('\t').trimResults().omitEmptyStrings().split(line));
+            Lists.newArrayList(Splitter.on('\t').trimResults()
+                .omitEmptyStrings().split(line));
 
         String type = parts.get(0);
 
@@ -101,7 +103,8 @@ public class Schema {
         while (line != null && line.charAt(0) == '\t') {
           line = line.replace(namespace, "");
           parts =
-              Lists.newArrayList(Splitter.on('\t').trimResults().omitEmptyStrings().split(line));
+              Lists.newArrayList(Splitter.on('\t').trimResults()
+                  .omitEmptyStrings().split(line));
           String relation = parts.get(0);
           String childType = parts.get(1);
           String relationType = parts.get(2);
@@ -119,9 +122,11 @@ public class Schema {
             relation2Inverse.put(relation, relationInverse);
           }
 
-          ImmutableList<String> relationArgs = ImmutableList.of(type, childType);
+          ImmutableList<String> relationArgs =
+              ImmutableList.of(type, childType);
           relationArguments.put(relation, relationArgs);
-          ImmutableList<String> relationArgsInverse = ImmutableList.of(childType, type);
+          ImmutableList<String> relationArgsInverse =
+              ImmutableList.of(childType, type);
           relationArguments.put(relationInverse, relationArgsInverse);
           line = bf.readLine();
           while (line != null && line.length() == 0)
@@ -151,8 +156,8 @@ public class Schema {
   }
 
   /**
-   * Return the main types of the domain along with standard types i.e. type.datetime, type.int,
-   * type.float
+   * Return the main types of the domain along with standard types i.e.
+   * type.datetime, type.int, type.float
    *
    * @return
    */
@@ -232,7 +237,8 @@ public class Schema {
   }
 
   /**
-   * Checks if the relation is a master relation. True if master, false if inverse
+   * Checks if the relation is a master relation. True if master, false if
+   * inverse
    *
    * @param key
    * @return
@@ -259,8 +265,8 @@ public class Schema {
   }
 
   /**
-   * check if the parent of the relation is mediator and returns the mediator relation. If the
-   * parent is not mediator, returns null
+   * check if the parent of the relation is mediator and returns the mediator
+   * relation. If the parent is not mediator, returns null
    *
    * @param relation
    * @return
@@ -298,7 +304,7 @@ public class Schema {
     schema = new Schema("data/freebase/schema/people_schema.txt");
     System.out.println(schema.getType2Relations("people.marriage"));*/
 
-Schema schema =
+    Schema schema =
         new Schema("data/freebase/schema/business_extended_schema.txt");
     System.out.println(schema.getType2Relations("business.employment_tenure"));
 

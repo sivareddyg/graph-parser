@@ -17,7 +17,8 @@ public class ApplicationExpression extends AbstractExpression {
     this.subexpressions = ImmutableList.copyOf(subexpressions);
   }
 
-  public ApplicationExpression(Expression function, List<? extends Expression> arguments) {
+  public ApplicationExpression(Expression function,
+      List<? extends Expression> arguments) {
     this.subexpressions = Lists.newArrayList(function);
     this.subexpressions.addAll(arguments);
   }
@@ -38,7 +39,8 @@ public class ApplicationExpression extends AbstractExpression {
   }
 
   @Override
-  public Expression substitute(ConstantExpression constant, Expression replacement) {
+  public Expression substitute(ConstantExpression constant,
+      Expression replacement) {
     List<Expression> substituted = Lists.newArrayList();
     for (Expression subexpression : subexpressions) {
       substituted.add(subexpression.substitute(constant, replacement));
@@ -85,7 +87,9 @@ public class ApplicationExpression extends AbstractExpression {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((subexpressions == null) ? 0 : subexpressions.hashCode());
+    result =
+        prime * result
+            + ((subexpressions == null) ? 0 : subexpressions.hashCode());
     return result;
   }
 

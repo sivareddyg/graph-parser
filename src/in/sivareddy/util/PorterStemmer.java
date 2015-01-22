@@ -1,32 +1,35 @@
 package in.sivareddy.util;
 
 /*
- *
- *Porter stemmer in Java. The original paper is in
- *
- * Porter, 1980, An algorithm for suffix stripping, Program, Vol. 14, no. 3, pp 130-137,
- *
+ * 
+ * Porter stemmer in Java. The original paper is in
+ * 
+ * Porter, 1980, An algorithm for suffix stripping, Program, Vol. 14, no. 3, pp
+ * 130-137,
+ * 
  * See also http://www.tartarus.org/~martin/PorterStemmer
- *
+ * 
  * History:
- *
+ * 
  * Release 1
- *
- * Bug 1 (reported by Gonzalo Parra 16/10/99) fixed as marked below. The words 'aed', 'eed', 'oed'
- * leave k at 'a' for step 3, and b[k-1] is then out outside the bounds of b.
- *
+ * 
+ * Bug 1 (reported by Gonzalo Parra 16/10/99) fixed as marked below. The words
+ * 'aed', 'eed', 'oed' leave k at 'a' for step 3, and b[k-1] is then out outside
+ * the bounds of b.
+ * 
  * Release 2
- *
+ * 
  * Similarly,
- *
- * Bug 2 (reported by Steve Dyrdahl 22/2/00) fixed as marked below. 'ion' by itself leaves j = -1 in
- * the test for 'ion' in step 5, and b[j] is then outside the bounds of b.
- *
+ * 
+ * Bug 2 (reported by Steve Dyrdahl 22/2/00) fixed as marked below. 'ion' by
+ * itself leaves j = -1 in the test for 'ion' in step 5, and b[j] is then
+ * outside the bounds of b.
+ * 
  * Release 3
- *
- * Considerably revised 4/9/00 in the light of many helpful suggestions from Brian Goetz of Quiotix
- * Corporation (brian@quiotix.com).
- *
+ * 
+ * Considerably revised 4/9/00 in the light of many helpful suggestions from
+ * Brian Goetz of Quiotix Corporation (brian@quiotix.com).
+ * 
  * Release 4
  */
 
@@ -35,9 +38,9 @@ package in.sivareddy.util;
 /**
  * Stemmer, implementing the Porter Stemming Algorithm
  *
- *  The Stemmer class transforms a word into its root form. The input word can be provided a
- * character at time (by calling add()), or at once by calling one of the various stem(something)
- * methods.
+ * The Stemmer class transforms a word into its root form. The input word can be
+ * provided a character at time (by calling add()), or at once by calling one of
+ * the various stem(something) methods.
  */
 
 public class PorterStemmer {
@@ -61,9 +64,9 @@ public class PorterStemmer {
   }
 
   /**
-   * After a word has been stemmed, it can be retrieved by toString(), or a reference to the
-   * internal buffer can be retrieved by getResultBuffer and getResultLength (which is generally
-   * more efficient.)
+   * After a word has been stemmed, it can be retrieved by toString(), or a
+   * reference to the internal buffer can be retrieved by getResultBuffer and
+   * getResultLength (which is generally more efficient.)
    */
   @Override
   public String toString() {
@@ -78,8 +81,9 @@ public class PorterStemmer {
   }
 
   /**
-   * Returns a reference to a character buffer containing the results of the stemming process. You
-   * also need to consult getResultLength() to determine the length of the result.
+   * Returns a reference to a character buffer containing the results of the
+   * stemming process. You also need to consult getResultLength() to determine
+   * the length of the result.
    */
   public char[] getResultBuffer() {
     return b;
@@ -103,10 +107,12 @@ public class PorterStemmer {
   }
 
   /*
-   * m() measures the number of consonant sequences between 0 and j. if c is a consonant sequence
-   * and v a vowel sequence, and <..> indicates arbitrary presence,
-   *
-   * <c><v> gives 0 <c>vc<v> gives 1 <c>vcvc<v> gives 2 <c>vcvcvc<v> gives 3 ....
+   * m() measures the number of consonant sequences between 0 and j. if c is a
+   * consonant sequence and v a vowel sequence, and <..> indicates arbitrary
+   * presence,
+   * 
+   * <c><v> gives 0 <c>vc<v> gives 1 <c>vcvc<v> gives 2 <c>vcvcvc<v> gives 3
+   * ....
    */
 
   private final int m() {
@@ -171,9 +177,10 @@ public class PorterStemmer {
   }
 
   /*
-   * cvc(i) is true <=> i-2,i-1,i has the form consonant - vowel - consonant and also if the second
-   * c is not w,x or y. this is used when trying to restore an e at the end of a short word. e.g.
-   *
+   * cvc(i) is true <=> i-2,i-1,i has the form consonant - vowel - consonant and
+   * also if the second c is not w,x or y. this is used when trying to restore
+   * an e at the end of a short word. e.g.
+   * 
    * cav(e), lov(e), hop(e), crim(e), but snow, box, tray.
    */
 
@@ -226,13 +233,14 @@ public class PorterStemmer {
 
   /*
    * step1() gets rid of plurals and -ed or -ing. e.g.
-   *
+   * 
    * caresses -> caress ponies -> poni ties -> ti caress -> caress cats -> cat
-   *
+   * 
    * feed -> feed agreed -> agree disabled -> disable
-   *
-   * matting -> mat mating -> mate meeting -> meet milling -> mill messing -> mess
-   *
+   * 
+   * matting -> mat mating -> mate meeting -> meet milling -> mill messing ->
+   * mess
+   * 
    * meetings -> meet
    */
 
@@ -281,8 +289,9 @@ public class PorterStemmer {
   }
 
   /*
-   * step3() maps double suffices to single ones. so -ization ( = -ize plus -ation) maps to -ize
-   * etc. note that the string before the suffix must give m() > 0.
+   * step3() maps double suffices to single ones. so -ization ( = -ize plus
+   * -ation) maps to -ize etc. note that the string before the suffix must give
+   * m() > 0.
    */
 
   private final void step3() {
@@ -500,7 +509,7 @@ public class PorterStemmer {
           break;
         }
         return;
-    /* takes care of -ous */
+        /* takes care of -ous */
       case 's':
         if (ends("ism")) {
           break;
@@ -553,9 +562,10 @@ public class PorterStemmer {
   }
 
   /**
-   * Stem the word placed into the Stemmer buffer through calls to add(). Returns true if the
-   * stemming process resulted in a word different from the input. You can retrieve the result with
-   * getResultLength()/getResultBuffer() or toString().
+   * Stem the word placed into the Stemmer buffer through calls to add().
+   * Returns true if the stemming process resulted in a word different from the
+   * input. You can retrieve the result with getResultLength()/getResultBuffer()
+   * or toString().
    */
   public void stem() {
     k = i - 1;
@@ -572,10 +582,10 @@ public class PorterStemmer {
   }
 
   /**
-   * Test program for demonstrating the Stemmer. It reads text from a a list of files, stems each
-   * word, and writes the result to standard output. Note that the word stemmed is expected to be in
-   * lower case: forcing lower case must be done outside the Stemmer class. Usage: Stemmer file-name
-   * file-name ...
+   * Test program for demonstrating the Stemmer. It reads text from a a list of
+   * files, stems each word, and writes the result to standard output. Note that
+   * the word stemmed is expected to be in lower case: forcing lower case must
+   * be done outside the Stemmer class. Usage: Stemmer file-name file-name ...
    */
   public static void main(String[] args) {
     System.out.println(getStem("investor"));

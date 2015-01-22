@@ -6,8 +6,8 @@ import java.io.IOException;
 
 public class InsertTriplesIntoGraph {
 
-  private static void insert(String jdbcEndPoint, String domainGraphUri, String triplesFileName)
-      throws IOException {
+  private static void insert(String jdbcEndPoint, String domainGraphUri,
+      String triplesFileName) throws IOException {
     RdfGraphTools rdfGraph = new RdfGraphTools(jdbcEndPoint, "dba", "dba");
 
     BufferedReader br = new BufferedReader(new FileReader(triplesFileName));
@@ -19,8 +19,10 @@ public class InsertTriplesIntoGraph {
           continue;
         }
         String[] triple = line.split("\t", 3);
-        rdfGraph.insertIntoGraph(domainGraphUri, triple[0], triple[1], triple[2]);
-        // rdfGraph.deleteFromGraph(domainGraphUri, triple[0], triple[1], triple[2]);
+        rdfGraph.insertIntoGraph(domainGraphUri, triple[0], triple[1],
+            triple[2]);
+        // rdfGraph.deleteFromGraph(domainGraphUri, triple[0], triple[1],
+        // triple[2]);
         line = br.readLine();
       }
     } finally {

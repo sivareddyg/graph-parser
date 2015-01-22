@@ -35,15 +35,16 @@ public class CcgParseTree {
    */
 
   /**
-   * Class which provides all the functions to create ccg parse trees and create semantic parses
+   * Class which provides all the functions to create ccg parse trees and create
+   * semantic parses
    * 
    * @author Siva Reddy
    * 
    */
   public static class CcgParser extends CcgParseTree {
-    public CcgParser(CcgAutoLexicon lexicon, String[] relationLexicalIdentifiers,
-        String[] argumentLexicalIdenfiers, String[] relationTypingIdentifiers,
-        boolean ignorePronouns) {
+    public CcgParser(CcgAutoLexicon lexicon,
+        String[] relationLexicalIdentifiers, String[] argumentLexicalIdenfiers,
+        String[] relationTypingIdentifiers, boolean ignorePronouns) {
       autoLexicon = lexicon;
       RELATION_IDENTIFIERS = relationLexicalIdentifiers;
       ARGUMENT_IDENTIFIERS = argumentLexicalIdenfiers;
@@ -84,15 +85,18 @@ public class CcgParseTree {
         return other;
     }
 
-    public final static ImmutableSet<String> types = ImmutableSet.of("conj", "tr", "lex", "fa",
-        "ba", "gfc", "gbc", "gbx", "fc", "bc", "bx", "lp", "rp", "ltc", "rtc", "other");
+    public final static ImmutableSet<String> types = ImmutableSet.of("conj",
+        "tr", "lex", "fa", "ba", "gfc", "gbc", "gbx", "fc", "bc", "bx", "lp",
+        "rp", "ltc", "rtc", "other");
   }
 
   protected CcgAutoLexicon autoLexicon = null;
-  private static Map<Integer, LexicalItem> nodesIndexMap = new ConcurrentHashMap<>();
+  private static Map<Integer, LexicalItem> nodesIndexMap =
+      new ConcurrentHashMap<>();
   private static int nodeCount = 1;
   private static int maxNodeCount = 50000;
-  public static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "CD", "NNPS", "PRP");
+  public static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "CD",
+      "NNPS", "PRP");
   private static Set<String> cardinalPosTags = Sets.newHashSet("CD");
   private static Set<String> dateNerTags = Sets.newHashSet("I-DAT");
 
@@ -104,8 +108,9 @@ public class CcgParseTree {
   public boolean IGNOREPRONOUNS = true;
 
   /**
-   * candc parser uses weird combinators when standard combinators, binary and unary rules fail.
-   * Semantics gets messed up when these combinators are used. I recommend to ignore those parses.
+   * candc parser uses weird combinators when standard combinators, binary and
+   * unary rules fail. Semantics gets messed up when these combinators are used.
+   * I recommend to ignore those parses.
    * 
    */
   public static class FunnyCombinatorException extends Exception {
@@ -143,14 +148,15 @@ public class CcgParseTree {
    */
   public List<LexicalItem> buildLexicalItems(String lexicalItemString) {
     ArrayList<String> items =
-        Lists.newArrayList(Splitter.on(CharMatcher.anyOf("<> ")).trimResults().omitEmptyStrings()
-            .split(lexicalItemString));
+        Lists.newArrayList(Splitter.on(CharMatcher.anyOf("<> ")).trimResults()
+            .omitEmptyStrings().split(lexicalItemString));
     String synCat = items.get(1);
     String word = items.get(2);
     String lemma = items.get(3);
     String pos = items.get(4);
     String neType = items.get(5);
-    List<Category> currentCategories = autoLexicon.getCategory(lemma, pos, synCat);
+    List<Category> currentCategories =
+        autoLexicon.getCategory(lemma, pos, synCat);
     List<LexicalItem> lexItems = new ArrayList<>();
     for (Category cat : currentCategories) {
       LexicalItem lex = new LexicalItem(synCat, word, lemma, pos, neType, cat);
@@ -159,7 +165,8 @@ public class CcgParseTree {
     return lexItems;
   }
 
-  public static class LexicalItem extends CcgParseTree implements Comparable<LexicalItem> {
+  public static class LexicalItem extends CcgParseTree implements
+      Comparable<LexicalItem> {
     private int wordPosition = -1;
     private String synCat;
     private String word;
@@ -181,8 +188,8 @@ public class CcgParseTree {
     private int key = -1;
     private LexicalItem copula;
 
-    public LexicalItem(String synCat, String word, String lemma, String pos, String neType,
-        Category cat) {
+    public LexicalItem(String synCat, String word, String lemma, String pos,
+        String neType, Category cat) {
       // (<L N Titanic Titanic NNP O I-NP N>)
       super();
       this.synCat = synCat;
@@ -199,14 +206,15 @@ public class CcgParseTree {
     }
 
     /**
-     * Copy lexical item without unifying the new index variables with the original index variables
-     * in syntactic and semantic category.
+     * Copy lexical item without unifying the new index variables with the
+     * original index variables in syntactic and semantic category.
      * 
      * @return
      */
     public LexicalItem shallowCopy() {
       Category copyCat = currentCategory.shallowCopy();
-      LexicalItem item = new LexicalItem(synCat, word, lemma, pos, neType, copyCat);
+      LexicalItem item =
+          new LexicalItem(synCat, word, lemma, pos, neType, copyCat);
       return item;
     };
 
@@ -298,8 +306,8 @@ public class CcgParseTree {
 
     @Override
     public String toString() {
-      return Objects.toStringHelper(this).addValue(word).addValue(pos).addValue(currentCategory)
-          .toString();
+      return Objects.toStringHelper(this).addValue(word).addValue(pos)
+          .addValue(currentCategory).toString();
     }
 
     public String lexicaliseRelationName() {
@@ -309,10 +317,13 @@ public class CcgParseTree {
         result = this.getClass().getDeclaredField(lexName).get(this).toString();
         for (int i = 1; i < RELATION_IDENTIFIERS.length; i++) {
           lexName = RELATION_IDENTIFIERS[i];
-          result += ":" + this.getClass().getDeclaredField(lexName).get(this).toString();
+          result +=
+              ":"
+                  + this.getClass().getDeclaredField(lexName).get(this)
+                      .toString();
         }
-      } catch (NoSuchFieldException | SecurityException | IllegalArgumentException
-          | IllegalAccessException e) {
+      } catch (NoSuchFieldException | SecurityException
+          | IllegalArgumentException | IllegalAccessException e) {
         e.printStackTrace();
       }
       return result;
@@ -326,10 +337,13 @@ public class CcgParseTree {
 
         for (int i = 0; i < ARGUMENT_IDENTIFIERS.length; i++) {
           lexName = ARGUMENT_IDENTIFIERS[i];
-          result += ":" + this.getClass().getDeclaredField(lexName).get(this).toString();
+          result +=
+              ":"
+                  + this.getClass().getDeclaredField(lexName).get(this)
+                      .toString();
         }
-      } catch (NoSuchFieldException | SecurityException | IllegalArgumentException
-          | IllegalAccessException e) {
+      } catch (NoSuchFieldException | SecurityException
+          | IllegalArgumentException | IllegalAccessException e) {
         e.printStackTrace();
       }
       return result;
@@ -343,10 +357,13 @@ public class CcgParseTree {
 
         for (int i = 1; i < RELATION_TYPING_IDENTIFIERS.length; i++) {
           lexName = RELATION_TYPING_IDENTIFIERS[i];
-          result += ":" + this.getClass().getDeclaredField(lexName).get(this).toString();
+          result +=
+              ":"
+                  + this.getClass().getDeclaredField(lexName).get(this)
+                      .toString();
         }
-      } catch (NoSuchFieldException | SecurityException | IllegalArgumentException
-          | IllegalAccessException e) {
+      } catch (NoSuchFieldException | SecurityException
+          | IllegalArgumentException | IllegalAccessException e) {
         e.printStackTrace();
       }
       return result;
@@ -354,7 +371,8 @@ public class CcgParseTree {
 
     @Override
     public int compareTo(LexicalItem o) {
-      return (new Integer(this.wordPosition)).compareTo(new Integer(o.wordPosition));
+      return (new Integer(this.wordPosition)).compareTo(new Integer(
+          o.wordPosition));
     }
   }
 
@@ -394,8 +412,8 @@ public class CcgParseTree {
     return currentCategory;
   }
 
-  public List<CcgParseTree> parseFromString(String treeString) throws FunnyCombinatorException,
-      BadParseException {
+  public List<CcgParseTree> parseFromString(String treeString)
+      throws FunnyCombinatorException, BadParseException {
     // System.err.println(treeString);
     List<CcgParseTree> nodes = parseFromStringHidden(treeString);
     for (CcgParseTree node : nodes) {
@@ -425,8 +443,8 @@ public class CcgParseTree {
     int leafCount = 0;
     for (int i = 0; i < len; i++) {
       // leaf start
-      if (i + 1 < len && i + 2 < len && cArray[i] == '<' && cArray[i + 1] == 'L'
-          && cArray[i + 2] == ' ') {
+      if (i + 1 < len && i + 2 < len && cArray[i] == '<'
+          && cArray[i + 1] == 'L' && cArray[i + 2] == ' ') {
         StringBuilder leafString = new StringBuilder();
         while (cArray[i] != '>') {
           leafString.append(cArray[i]);
@@ -483,8 +501,8 @@ public class CcgParseTree {
             // (<T NP lex 0 1> (<L N Titanic Titanic NNP O I-NP
             // N>))))
             ArrayList<String> items =
-                Lists.newArrayList(Splitter.on(CharMatcher.anyOf("<> ")).trimResults()
-                    .omitEmptyStrings().split(nodeString));
+                Lists.newArrayList(Splitter.on(CharMatcher.anyOf("<> "))
+                    .trimResults().omitEmptyStrings().split(nodeString));
             CcgParseTree node = new CcgParseTree();
             int childrenSize = Integer.parseInt(items.get(4));
             node.children = Lists.newArrayList();
@@ -496,7 +514,8 @@ public class CcgParseTree {
             node.combinator = CcgCombinator.getCombinator(items.get(2));
             String resultantCategoryString = items.get(1);
             node.currentCategory =
-                applyCombinator(node.combinator, node.children, resultantCategoryString);
+                applyCombinator(node.combinator, node.children,
+                    resultantCategoryString);
             nodes.add(node);
           }
         } else {
@@ -519,21 +538,24 @@ public class CcgParseTree {
    * @throws FunnyCombinatorException
    * @throws BadParseException
    */
-  private Category applyCombinator(CcgCombinator combinator, List<CcgParseTree> children,
-      String resultantSynCatString) throws FunnyCombinatorException, BadParseException {
+  private Category applyCombinator(CcgCombinator combinator,
+      List<CcgParseTree> children, String resultantSynCatString)
+      throws FunnyCombinatorException, BadParseException {
     Category result = null;
     Category cat1;
     Category cat2;
 
     switch (combinator) {
       case fa:
-        Preconditions.checkArgument(children.size() == 2, "Cannot apply forward application");
+        Preconditions.checkArgument(children.size() == 2,
+            "Cannot apply forward application");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.forwardApplication(cat1, cat2);
         break;
       case ba:
-        Preconditions.checkArgument(children.size() == 2, "Cannot apply backward application");
+        Preconditions.checkArgument(children.size() == 2,
+            "Cannot apply backward application");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
 
@@ -543,7 +565,8 @@ public class CcgParseTree {
         // Cameron , the director of Titanic .....
         // We aim to treat it as modifier construction
         CategoryIndex cat2Index = cat2.getSyntacticCategory().getIndex();
-        String cat2SimpleString = cat2.getSyntacticCategory().toSuperSimpleString();
+        String cat2SimpleString =
+            cat2.getSyntacticCategory().toSuperSimpleString();
         if (cat2SimpleString.equals("(NP|NP)") && cat2Index.isCC()
             && cat2Index.getCCvars().size() == 2) {
           Iterator<CategoryIndex> ccVars = cat2Index.getCCvars().iterator();
@@ -565,17 +588,21 @@ public class CcgParseTree {
           if (node1Index.getVariableValue() != null)
             node1Key = node1Index.getVariableValue().getValue();
 
-          if (node2Key != null && node1Key != null && nodesIndexMap.containsKey(node2Key)
+          if (node2Key != null && node1Key != null
+              && nodesIndexMap.containsKey(node2Key)
               && nodesIndexMap.containsKey(node1Key)) {
             LexicalItem node2 = nodesIndexMap.get(node2Key);
             LexicalItem node1 = nodesIndexMap.get(node1Key);
-            if (lexicalPosTags.contains(node1.pos) && !lexicalPosTags.contains(node2.pos)) {
+            if (lexicalPosTags.contains(node1.pos)
+                && !lexicalPosTags.contains(node2.pos)) {
               // phrase is a complement rather than conjunction
-              List<String> bodyExpressions = cat2.getSemanticCategory().getContentRelations();
+              List<String> bodyExpressions =
+                  cat2.getSemanticCategory().getContentRelations();
               SyntacticCategory synCat2Old = cat2.getSyntacticCategory();
               SyntacticCategory syncat2New =
-                  new SyntacticCategory(synCat2Old.getArgument(), synCat2Old.getArgument(),
-                      new CategoryIndex(), Direction.LEFT);
+                  new SyntacticCategory(synCat2Old.getArgument(),
+                      synCat2Old.getArgument(), new CategoryIndex(),
+                      Direction.LEFT);
               List<String> lambdas = Lists.newArrayList();
               Set<String> exists = Sets.newHashSet();
 
@@ -587,15 +614,19 @@ public class CcgParseTree {
                   exists.add(matcher.group());
               }
 
-              bodyExpressions.add(String.format("(COPULA %s %s)", node1Index.getVarNameAndKey(),
-                  node2Index.getVarNameAndKey()));
-              bodyExpressions.add(String.format("($f %s)", node1Index.getVarNameAndKey()));
+              bodyExpressions
+                  .add(String.format("(COPULA %s %s)",
+                      node1Index.getVarNameAndKey(),
+                      node2Index.getVarNameAndKey()));
+              bodyExpressions.add(String.format("($f %s)",
+                  node1Index.getVarNameAndKey()));
               lambdas.add("$f");
               lambdas.add(node1Index.getVarNameAndKey());
               exists.removeAll(lambdas);
 
               SemanticCategory semcat2New =
-                  SemanticCategory.generateSemanticCategory(lambdas, exists, bodyExpressions);
+                  SemanticCategory.generateSemanticCategory(lambdas, exists,
+                      bodyExpressions);
               cat2 = new Category(syncat2New, semcat2New);
             }
           }
@@ -604,41 +635,48 @@ public class CcgParseTree {
         result = Category.backwardApplication(cat1, cat2);
         break;
       case fc:
-        Preconditions.checkArgument(children.size() == 2, "Cannot apply composition");
+        Preconditions.checkArgument(children.size() == 2,
+            "Cannot apply composition");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.forwardComposition(cat1, cat2);
         break;
       case bc:
       case bx:
-        Preconditions.checkArgument(children.size() == 2, "Cannot apply composition");
+        Preconditions.checkArgument(children.size() == 2,
+            "Cannot apply composition");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.backwardComposition(cat1, cat2);
         break;
       case gfc:
-        Preconditions.checkArgument(children.size() == 2, "Cannot apply generalised composition");
+        Preconditions.checkArgument(children.size() == 2,
+            "Cannot apply generalised composition");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.generalisedForwardComposition(cat1, cat2);
         break;
       case gbc:
       case gbx:
-        Preconditions.checkArgument(children.size() == 2, "Cannot apply generalised composition");
+        Preconditions.checkArgument(children.size() == 2,
+            "Cannot apply generalised composition");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.generalisedBackwardComposition(cat1, cat2);
         break;
       case tr:
-        Preconditions.checkArgument(children.size() == 1, "Cannot apply typeraising");
+        Preconditions.checkArgument(children.size() == 1,
+            "Cannot apply typeraising");
         cat1 = children.get(0).currentCategory;
         result = Category.typeRaising(cat1);
         SyntacticCategory resultSyncat = result.getSyntacticCategory();
-        SyntacticCategory resultSynCatActual = SyntacticCategory.fromString(resultantSynCatString);
+        SyntacticCategory resultSynCatActual =
+            SyntacticCategory.fromString(resultantSynCatString);
         resultSyncat.unify(resultSynCatActual);
         break;
       case conj:
-        Preconditions.checkArgument(children.size() == 2, "Cannot apply conjunction");
+        Preconditions.checkArgument(children.size() == 2,
+            "Cannot apply conjunction");
         cat2 = children.get(1).currentCategory;
         CcgCombinator comb2 = children.get(1).combinator;
         // word2 = children.get(1).getFirstLeafNode().word;
@@ -656,66 +694,85 @@ public class CcgParseTree {
           result = Category.coordinationApplication(cat2);
         break;
       case lp:
-        Preconditions.checkArgument(children.size() == 2, "Cannot apply left punctuation rules");
+        Preconditions.checkArgument(children.size() == 2,
+            "Cannot apply left punctuation rules");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.applyLeftIdentity(cat1, cat2);
         break;
       case rp:
-        Preconditions.checkArgument(children.size() == 2, "Cannot apply right punctuation rules");
+        Preconditions.checkArgument(children.size() == 2,
+            "Cannot apply right punctuation rules");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.applyRightIdentity(cat1, cat2);
         break;
       case lex:
-        Preconditions.checkArgument(children.size() == 1, "Cannot apply unary rules");
+        Preconditions.checkArgument(children.size() == 1,
+            "Cannot apply unary rules");
         cat1 = children.get(0).currentCategory;
         String inputSynCatString = cat1.getSyntacticCategory().toSimpleString();
         SyntacticCategory resultantantSynCatSimple =
             SyntacticCategory.fromString(resultantSynCatString);
-        String resultantSynCatStringSimple = resultantantSynCatSimple.toSimpleString();
+        String resultantSynCatStringSimple =
+            resultantantSynCatSimple.toSimpleString();
         String unaryRule =
-            autoLexicon.selectUnaryRule(inputSynCatString, resultantSynCatStringSimple);
+            autoLexicon.selectUnaryRule(inputSynCatString,
+                resultantSynCatStringSimple);
         if (unaryRule == null || unaryRule.equals("")) {
           inputSynCatString = cat1.getSyntacticCategory().toSuperSimpleString();
-          resultantSynCatStringSimple = resultantantSynCatSimple.toSuperSimpleString();
-          unaryRule = autoLexicon.selectUnaryRule(inputSynCatString, resultantSynCatStringSimple);
+          resultantSynCatStringSimple =
+              resultantantSynCatSimple.toSuperSimpleString();
+          unaryRule =
+              autoLexicon.selectUnaryRule(inputSynCatString,
+                  resultantSynCatStringSimple);
         }
         // No unary rule found
         if (unaryRule == null || unaryRule.equals("")) {
-          resultantSynCatStringSimple = resultantantSynCatSimple.toSimpleString();
-          String indexCat = autoLexicon.getIndexedSyntacticCategory(resultantSynCatStringSimple);
+          resultantSynCatStringSimple =
+              resultantantSynCatSimple.toSimpleString();
+          String indexCat =
+              autoLexicon
+                  .getIndexedSyntacticCategory(resultantSynCatStringSimple);
           if (indexCat == null) {
-            resultantSynCatStringSimple = resultantantSynCatSimple.toSuperSimpleString();
-            indexCat = autoLexicon.getIndexedSyntacticCategory(resultantSynCatStringSimple);
+            resultantSynCatStringSimple =
+                resultantantSynCatSimple.toSuperSimpleString();
+            indexCat =
+                autoLexicon
+                    .getIndexedSyntacticCategory(resultantSynCatStringSimple);
           }
           if (indexCat == null) {
             indexCat = resultantantSynCatSimple.toSimpleString();
           }
           unaryRule = inputSynCatString + "\t" + indexCat;
         }
-        Preconditions.checkArgument(unaryRule != null && !unaryRule.equals(""), "Bad unary rule");
+        Preconditions.checkArgument(unaryRule != null && !unaryRule.equals(""),
+            "Bad unary rule");
         result = Category.applyUnaryRule(cat1, unaryRule);
         break;
       case ltc:
       case rtc:
       case other:
         if (children.size() != 2)
-          throw new FunnyCombinatorException("candc funny combinators. Do not use this parse");
+          throw new FunnyCombinatorException(
+              "candc funny combinators. Do not use this parse");
         // Preconditions.checkArgument(children.size() == 2,
         // "Cannot apply binary rules");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         String synCat1String = cat1.getSyntacticCategory().toSimpleString();
         String synCat2String = cat2.getSyntacticCategory().toSimpleString();
-        resultantantSynCatSimple = SyntacticCategory.fromString(resultantSynCatString);
+        resultantantSynCatSimple =
+            SyntacticCategory.fromString(resultantSynCatString);
         resultantSynCatStringSimple = resultantantSynCatSimple.toSimpleString();
         String binaryRule =
-            autoLexicon.selectBinaryRule(synCat1String, synCat2String, resultantSynCatStringSimple);
+            autoLexicon.selectBinaryRule(synCat1String, synCat2String,
+                resultantSynCatStringSimple);
         if (binaryRule == null || binaryRule.equals("")) {
           synCat1String = cat1.getSyntacticCategory().toSuperSimpleString();
           synCat2String = cat2.getSyntacticCategory().toSuperSimpleString();
-          resultantSynCatStringSimple = resultantantSynCatSimple.toSuperSimpleString();
+          resultantSynCatStringSimple =
+              resultantantSynCatSimple.toSuperSimpleString();
           binaryRule =
               autoLexicon.selectBinaryRule(synCat1String, synCat2String,
                   resultantSynCatStringSimple);
@@ -723,11 +780,17 @@ public class CcgParseTree {
 
         // No binary rule found
         if (binaryRule == null || binaryRule.equals("")) {
-          resultantSynCatStringSimple = resultantantSynCatSimple.toSimpleString();
-          String indexCat = autoLexicon.getIndexedSyntacticCategory(resultantSynCatStringSimple);
+          resultantSynCatStringSimple =
+              resultantantSynCatSimple.toSimpleString();
+          String indexCat =
+              autoLexicon
+                  .getIndexedSyntacticCategory(resultantSynCatStringSimple);
           if (indexCat == null) {
-            resultantSynCatStringSimple = resultantantSynCatSimple.toSuperSimpleString();
-            indexCat = autoLexicon.getIndexedSyntacticCategory(resultantSynCatStringSimple);
+            resultantSynCatStringSimple =
+                resultantantSynCatSimple.toSuperSimpleString();
+            indexCat =
+                autoLexicon
+                    .getIndexedSyntacticCategory(resultantSynCatStringSimple);
           }
           if (indexCat == null) {
             indexCat = resultantantSynCatSimple.toSimpleString();
@@ -736,20 +799,22 @@ public class CcgParseTree {
         }
 
         if (binaryRule == null || binaryRule.equals(""))
-          throw new FunnyCombinatorException("candc funny combinators. Do not use this parse");
+          throw new FunnyCombinatorException(
+              "candc funny combinators. Do not use this parse");
         // Preconditions.checkArgument(binaryRule != null &&
         // !binaryRule.equals(""), "Bad binary rule");
         result = Category.applyBinaryRule(cat1, cat2, binaryRule);
         break;
       default:
-        throw new FunnyCombinatorException("candc funny combinators. Do not use this parse");
+        throw new FunnyCombinatorException(
+            "candc funny combinators. Do not use this parse");
     }
     return result;
   }
 
   /**
-   * Returns semantic parses of a the current ccg parse. For sentences with integers, multiple
-   * parses may be given containing the predicate COUNT
+   * Returns semantic parses of a the current ccg parse. For sentences with
+   * integers, multiple parses may be given containing the predicate COUNT
    * 
    * @return
    */
@@ -760,8 +825,8 @@ public class CcgParseTree {
   /**
    * Returns semantic parses of a the current ccg parse
    * 
-   * @param handleNumbers if set true, for sentences containing integers, multiple parses may be
-   *        given containing the predicate COUNT
+   * @param handleNumbers if set true, for sentences containing integers,
+   *        multiple parses may be given containing the predicate COUNT
    * @return
    */
   public Set<Set<String>> getLexicalisedSemanticPredicates(boolean handleNumbers) {
@@ -788,11 +853,13 @@ public class CcgParseTree {
     for (LexicalItem leaf : leaves) {
       LexicalItem lexicalNode = leaf.copula;
       if (lexicalNode.wordPosition != leaf.wordPosition
-          && cardinalPosTags.contains(lexicalNode.pos) && !dateNerTags.contains(lexicalNode.neType)
+          && cardinalPosTags.contains(lexicalNode.pos)
+          && !dateNerTags.contains(lexicalNode.neType)
           && integerPattern.matcher(lexicalNode.lemma).matches()) {
         // the leaf is a number
         if (!nodeToIntegerNode.containsKey(leaf.wordPosition)
-            && !nodeToIntegerNode.inverse().containsKey(lexicalNode.wordPosition))
+            && !nodeToIntegerNode.inverse().containsKey(
+                lexicalNode.wordPosition))
           nodeToIntegerNode.put(leaf.wordPosition, lexicalNode.wordPosition);
       }
     }
@@ -800,13 +867,15 @@ public class CcgParseTree {
     Set<Integer> integerIndexes = nodeToIntegerNode.inverse().keySet();
     Set<Set<String>> currentSemanticParses = Sets.newHashSet(parses);
 
-    Pattern relationPattern = Pattern.compile("(.*)\\((.*\\:e) , ([0-9]+)\\:.*\\)");
+    Pattern relationPattern =
+        Pattern.compile("(.*)\\((.*\\:e) , ([0-9]+)\\:.*\\)");
     Pattern typePattern = Pattern.compile("(.*)\\((.*\\:s) , ([0-9]+)\\:.*\\)");
 
     while (currentSemanticParses.size() > 0) {
       Set<Set<String>> newParses = Sets.newHashSet(currentSemanticParses);
       for (Integer integerIndex : integerIndexes) {
-        LexicalItem node = leaves.get(nodeToIntegerNode.inverse().get(integerIndex));
+        LexicalItem node =
+            leaves.get(nodeToIntegerNode.inverse().get(integerIndex));
         LexicalItem integerNode = leaves.get(integerIndex);
 
         for (Set<String> currentSemanticParsePredicates : currentSemanticParses) {
@@ -818,8 +887,8 @@ public class CcgParseTree {
             if (matcher.find() && !matcher.group(1).equals("COUNT")
                 && Integer.valueOf(matcher.group(3)).equals(integerIndex)) {
               newPredicate =
-                  String.format("%s(%s , %d:x)", matcher.group(1), matcher.group(2),
-                      node.wordPosition);
+                  String.format("%s(%s , %d:x)", matcher.group(1),
+                      matcher.group(2), node.wordPosition);
             } else {
               matcher = typePattern.matcher(predicate);
               if (matcher.find() && !matcher.group(1).equals("COUNT")
@@ -828,16 +897,16 @@ public class CcgParseTree {
                   isValidTransormation = true;
                 }
                 newPredicate =
-                    String.format("%s(%s , %d:x)", matcher.group(1), matcher.group(2),
-                        node.wordPosition);
+                    String.format("%s(%s , %d:x)", matcher.group(1),
+                        matcher.group(2), node.wordPosition);
               }
             }
             newPredicates.add(newPredicate);
           }
           if (isValidTransormation) {
             String relation =
-                String.format("COUNT(%d:x , %d:%s)", node.getWordPosition(), integerIndex,
-                    integerNode.getMid());
+                String.format("COUNT(%d:x , %d:%s)", node.getWordPosition(),
+                    integerIndex, integerNode.getMid());
             newPredicates.add(relation);
             newParses.add(newPredicates);
             parses.add(newPredicates);
@@ -855,12 +924,13 @@ public class CcgParseTree {
   private void processCopulaRelations(List<String> contentRelations) {
     for (String relation : contentRelations) {
       List<String> relationParts =
-          Lists.newArrayList(Splitter.on(CharMatcher.anyOf(")( ")).trimResults().omitEmptyStrings()
-              .split(relation));
+          Lists.newArrayList(Splitter.on(CharMatcher.anyOf(")( "))
+              .trimResults().omitEmptyStrings().split(relation));
       if (relationParts.size() < 2)
         continue;
       String semanticTypeString = relationParts.get(0);
-      SemanticCategoryType semanticType = SemanticCategoryType.valueOf(semanticTypeString);
+      SemanticCategoryType semanticType =
+          SemanticCategoryType.valueOf(semanticTypeString);
       if (semanticType == SemanticCategoryType.COPULA) {
 
         String headVar = relationParts.get(1);
@@ -874,24 +944,30 @@ public class CcgParseTree {
 
         if (headIndex.isCC()) {
           for (CategoryIndex headIndexCC : headIndex.getCCvars()) {
-            if (headIndexCC.getVariableValue() == null || lexicalIndex.getVariableValue() == null)
+            if (headIndexCC.getVariableValue() == null
+                || lexicalIndex.getVariableValue() == null)
               continue;
             if (!headIndexCC.getVariableValue().isInitialised()
                 || !lexicalIndex.getVariableValue().isInitialised())
               continue;
-            LexicalItem headNode = nodesIndexMap.get(headIndexCC.getVariableValue().getValue());
-            LexicalItem lexicalNode = nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
+            LexicalItem headNode =
+                nodesIndexMap.get(headIndexCC.getVariableValue().getValue());
+            LexicalItem lexicalNode =
+                nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
             headNode.copula = lexicalNode;
           }
 
         } else {
-          if (headIndex.getVariableValue() == null || lexicalIndex.getVariableValue() == null)
+          if (headIndex.getVariableValue() == null
+              || lexicalIndex.getVariableValue() == null)
             continue;
           if (!headIndex.getVariableValue().isInitialised()
               || !lexicalIndex.getVariableValue().isInitialised())
             continue;
-          LexicalItem headNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
-          LexicalItem lexicalNode = nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
+          LexicalItem headNode =
+              nodesIndexMap.get(headIndex.getVariableValue().getValue());
+          LexicalItem lexicalNode =
+              nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
           // System.out.println(lexicalNode);
           if (lexicalPosTags.contains(lexicalNode.pos))
             headNode.copula = lexicalNode;
@@ -904,14 +980,15 @@ public class CcgParseTree {
 
   private List<String> lexicaliseRelation(String relation) {
     List<String> relationParts =
-        Lists.newArrayList(Splitter.on(CharMatcher.anyOf(")( ")).trimResults().omitEmptyStrings()
-            .split(relation));
+        Lists.newArrayList(Splitter.on(CharMatcher.anyOf(")( ")).trimResults()
+            .omitEmptyStrings().split(relation));
 
     List<String> lexicalisedRelation = Lists.newArrayList();
     if (relationParts.size() < 2)
       return lexicalisedRelation;
     String semanticTypeString = relationParts.get(0);
-    SemanticCategoryType semanticType = SemanticCategoryType.valueOf(semanticTypeString);
+    SemanticCategoryType semanticType =
+        SemanticCategoryType.valueOf(semanticTypeString);
 
     switch (semanticType) {
       case EVENT:
@@ -921,10 +998,12 @@ public class CcgParseTree {
         String childVar = relationParts.get(4);
 
         CategoryIndex headIndexMain = CategoryIndex.getCategoryIndex(headVar);
-        CategoryIndex lexicalIndexMain = CategoryIndex.getCategoryIndex(lexicalVar);
+        CategoryIndex lexicalIndexMain =
+            CategoryIndex.getCategoryIndex(lexicalVar);
         CategoryIndex childIndexMain = CategoryIndex.getCategoryIndex(childVar);
 
-        if (headIndexMain == null || lexicalIndexMain == null || childIndexMain == null)
+        if (headIndexMain == null || lexicalIndexMain == null
+            || childIndexMain == null)
           return lexicalisedRelation;
 
         Set<CategoryIndex> headVars = Sets.newHashSet(headIndexMain);
@@ -946,17 +1025,20 @@ public class CcgParseTree {
         for (CategoryIndex headIndex : headVars) {
           for (CategoryIndex lexicalIndex : lexicalVars) {
             for (CategoryIndex childIndex : childVars) {
-              if (headIndex.getVariableValue() == null || lexicalIndex.getVariableValue() == null
+              if (headIndex.getVariableValue() == null
+                  || lexicalIndex.getVariableValue() == null
                   || childIndex.getVariableValue() == null)
                 continue;
               if (!headIndex.getVariableValue().isInitialised()
                   || !lexicalIndex.getVariableValue().isInitialised()
                   || !childIndex.getVariableValue().isInitialised())
                 continue;
-              LexicalItem headNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+              LexicalItem headNode =
+                  nodesIndexMap.get(headIndex.getVariableValue().getValue());
               LexicalItem lexicalNode =
                   nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
-              LexicalItem childNode = nodesIndexMap.get(childIndex.getVariableValue().getValue());
+              LexicalItem childNode =
+                  nodesIndexMap.get(childIndex.getVariableValue().getValue());
               childNode = childNode.copula;
 
               if (!CcgAutoLexicon.complementLemmas.contains(childNode.word)
@@ -973,7 +1055,8 @@ public class CcgParseTree {
                 continue;
 
               StringBuilder sb = new StringBuilder();
-              if (!lexicalPosTags.contains(headNode.pos) && headNode != lexicalNode) {
+              if (!lexicalPosTags.contains(headNode.pos)
+                  && headNode != lexicalNode) {
                 sb.append(headNode.lexicaliseRelationName());
                 sb.append(".");
               } else if (lexicalNode.pos.equals("POS")) {
@@ -984,7 +1067,8 @@ public class CcgParseTree {
                 // List<LexicalItem> leaves = getLeafNodes();
                 if (leaves.size() > currentIndex + 1) {
                   LexicalItem neighbouringNode = leaves.get(currentIndex + 1);
-                  if (neighbouringNode.pos.equals("NN") || neighbouringNode.pos.equals("NNS")) {
+                  if (neighbouringNode.pos.equals("NN")
+                      || neighbouringNode.pos.equals("NNS")) {
                     sb.append(neighbouringNode.lexicaliseRelationName());
                     sb.append(".");
                   }
@@ -1040,15 +1124,18 @@ public class CcgParseTree {
 
         for (CategoryIndex headIndex : headVars) {
           for (CategoryIndex lexicalIndex : lexicalVars) {
-            if (headIndex.getVariableValue() == null || lexicalIndex.getVariableValue() == null)
+            if (headIndex.getVariableValue() == null
+                || lexicalIndex.getVariableValue() == null)
               continue;
 
             if (!headIndex.getVariableValue().isInitialised()
                 || !lexicalIndex.getVariableValue().isInitialised())
               continue;
 
-            LexicalItem headNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
-            LexicalItem lexicalNode = nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
+            LexicalItem headNode =
+                nodesIndexMap.get(headIndex.getVariableValue().getValue());
+            LexicalItem lexicalNode =
+                nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
 
             if (IGNOREPRONOUNS
                 && (CcgAutoLexicon.pronounPosTags.contains(headNode.pos) || CcgAutoLexicon.pronounPosTags
@@ -1060,23 +1147,28 @@ public class CcgParseTree {
 
             // special case for copula sentences
             if (headNode.lemma.equals("be")
-                && headNode.getCategory().getSyntacticCategory().toSuperSimpleString()
-                    .equals("((S\\NP)/NP)")) {
-              headIndex = headNode.getCategory().getSyntacticCategory().getArgument().getIndex();
+                && headNode.getCategory().getSyntacticCategory()
+                    .toSuperSimpleString().equals("((S\\NP)/NP)")) {
+              headIndex =
+                  headNode.getCategory().getSyntacticCategory().getArgument()
+                      .getIndex();
               LexicalItem copulaHeadNode = null;
               if (headIndex.getVariableValue() != null
                   && headIndex.getVariableValue().isInitialised()) {
-                copulaHeadNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+                copulaHeadNode =
+                    nodesIndexMap.get(headIndex.getVariableValue().getValue());
 
                 // senentece is in the form of
                 // "The founder of X is Y"
                 if (lexicalPosTags.contains(copulaHeadNode.pos)) {
                   headIndex =
-                      headNode.getCategory().getSyntacticCategory().getParent().getArgument()
-                          .getIndex();
+                      headNode.getCategory().getSyntacticCategory().getParent()
+                          .getArgument().getIndex();
                   if (headIndex.getVariableValue() != null
                       && headIndex.getVariableValue().isInitialised())
-                    copulaHeadNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+                    copulaHeadNode =
+                        nodesIndexMap.get(headIndex.getVariableValue()
+                            .getValue());
                 }
                 if (!lexicalPosTags.contains(copulaHeadNode.pos))
                   headNode = copulaHeadNode;
@@ -1084,7 +1176,8 @@ public class CcgParseTree {
             }
 
             StringBuilder sb = new StringBuilder();
-            if (!lexicalPosTags.contains(headNode.pos) && headNode != lexicalNode) {
+            if (!lexicalPosTags.contains(headNode.pos)
+                && headNode != lexicalNode) {
               sb.append(headNode.lexicaliseRelationName());
               sb.append(".");
             }
@@ -1121,7 +1214,8 @@ public class CcgParseTree {
 
           if (!headIndex.getVariableValue().isInitialised())
             continue;
-          LexicalItem headNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+          LexicalItem headNode =
+              nodesIndexMap.get(headIndex.getVariableValue().getValue());
 
           // if (IGNOREPRONOUNS &&
           // (CcgAutoLexicon.pronounPosTags.contains(headNode.pos)))
@@ -1133,22 +1227,27 @@ public class CcgParseTree {
 
           // special case for copula sentences
           if (headNode.lemma.equals("be")
-              && headNode.getCategory().getSyntacticCategory().toSuperSimpleString()
-                  .equals("((S\\NP)/NP)")) {
-            headIndex = headNode.getCategory().getSyntacticCategory().getArgument().getIndex();
+              && headNode.getCategory().getSyntacticCategory()
+                  .toSuperSimpleString().equals("((S\\NP)/NP)")) {
+            headIndex =
+                headNode.getCategory().getSyntacticCategory().getArgument()
+                    .getIndex();
             LexicalItem copulaHeadNode = null;
             if (headIndex.getVariableValue() != null
                 && headIndex.getVariableValue().isInitialised()) {
-              copulaHeadNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+              copulaHeadNode =
+                  nodesIndexMap.get(headIndex.getVariableValue().getValue());
 
               // senentece is in the form of "The founder of X is Y"
               if (lexicalPosTags.contains(copulaHeadNode.pos)) {
                 headIndex =
-                    headNode.getCategory().getSyntacticCategory().getParent().getArgument()
-                        .getIndex();
+                    headNode.getCategory().getSyntacticCategory().getParent()
+                        .getArgument().getIndex();
                 if (headIndex.getVariableValue() != null
                     && headIndex.getVariableValue().isInitialised())
-                  copulaHeadNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+                  copulaHeadNode =
+                      nodesIndexMap
+                          .get(headIndex.getVariableValue().getValue());
               }
               if (!lexicalPosTags.contains(copulaHeadNode.pos))
                 headNode = copulaHeadNode;
@@ -1193,19 +1292,23 @@ public class CcgParseTree {
 
         for (CategoryIndex headIndex : headVars) {
           for (CategoryIndex childIndex : childVars) {
-            if (headIndex.getVariableValue() == null || childIndex.getVariableValue() == null)
+            if (headIndex.getVariableValue() == null
+                || childIndex.getVariableValue() == null)
               continue;
 
             if (!headIndex.getVariableValue().isInitialised()
                 || !childIndex.getVariableValue().isInitialised())
               continue;
-            LexicalItem headNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
-            LexicalItem childNode = nodesIndexMap.get(childIndex.getVariableValue().getValue());
+            LexicalItem headNode =
+                nodesIndexMap.get(headIndex.getVariableValue().getValue());
+            LexicalItem childNode =
+                nodesIndexMap.get(childIndex.getVariableValue().getValue());
             childNode = childNode.copula;
 
 
 
-            if (IGNOREPRONOUNS && (CcgAutoLexicon.pronounPosTags.contains(headNode.pos)))
+            if (IGNOREPRONOUNS
+                && (CcgAutoLexicon.pronounPosTags.contains(headNode.pos)))
               continue;
 
             StringBuilder sb = new StringBuilder();
@@ -1247,7 +1350,8 @@ public class CcgParseTree {
         lexicalIndexMain = CategoryIndex.getCategoryIndex(lexicalVar);
         childIndexMain = CategoryIndex.getCategoryIndex(childVar);
 
-        if (headIndexMain == null || lexicalIndexMain == null || childIndexMain == null)
+        if (headIndexMain == null || lexicalIndexMain == null
+            || childIndexMain == null)
           return lexicalisedRelation;
 
         headVars = Sets.newHashSet(headIndexMain);
@@ -1269,7 +1373,8 @@ public class CcgParseTree {
         for (CategoryIndex headIndex : headVars) {
           for (CategoryIndex lexicalIndex : lexicalVars) {
             for (CategoryIndex childIndex : childVars) {
-              if (headIndex.getVariableValue() == null || lexicalIndex.getVariableValue() == null
+              if (headIndex.getVariableValue() == null
+                  || lexicalIndex.getVariableValue() == null
                   || childIndex.getVariableValue() == null)
                 continue;
 
@@ -1277,10 +1382,12 @@ public class CcgParseTree {
                   || !lexicalIndex.getVariableValue().isInitialised()
                   || !childIndex.getVariableValue().isInitialised())
                 continue;
-              LexicalItem headNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+              LexicalItem headNode =
+                  nodesIndexMap.get(headIndex.getVariableValue().getValue());
               LexicalItem lexicalNode =
                   nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
-              LexicalItem childNode = nodesIndexMap.get(childIndex.getVariableValue().getValue());
+              LexicalItem childNode =
+                  nodesIndexMap.get(childIndex.getVariableValue().getValue());
               childNode = childNode.copula;
 
               if (IGNOREPRONOUNS
@@ -1292,7 +1399,8 @@ public class CcgParseTree {
               // return "";
 
               StringBuilder sb = new StringBuilder();
-              if (!lexicalPosTags.contains(headNode.pos) && headNode != lexicalNode) {
+              if (!lexicalPosTags.contains(headNode.pos)
+                  && headNode != lexicalNode) {
                 sb.append(headNode.lexicaliseRelationName());
                 sb.append(".");
               }
@@ -1358,7 +1466,8 @@ public class CcgParseTree {
           // !lexicalIndex.getVariableValue().isInitialised())
           if (!headIndex.getVariableValue().isInitialised())
             continue;
-          LexicalItem headNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+          LexicalItem headNode =
+              nodesIndexMap.get(headIndex.getVariableValue().getValue());
           // LexicalItem lexicalNode =
           // nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
 
@@ -1400,7 +1509,8 @@ public class CcgParseTree {
             continue;
           if (!headIndex.getVariableValue().isInitialised())
             continue;
-          LexicalItem headNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+          LexicalItem headNode =
+              nodesIndexMap.get(headIndex.getVariableValue().getValue());
           headNode = headNode.copula;
 
           // if (IGNOREPRONOUNS &&
@@ -1441,7 +1551,8 @@ public class CcgParseTree {
             continue;
           if (!headIndex.getVariableValue().isInitialised())
             continue;
-          LexicalItem headNode = nodesIndexMap.get(headIndex.getVariableValue().getValue());
+          LexicalItem headNode =
+              nodesIndexMap.get(headIndex.getVariableValue().getValue());
           headNode = headNode.copula;
 
           // if (IGNOREPRONOUNS &&

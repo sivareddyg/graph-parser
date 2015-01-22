@@ -23,23 +23,30 @@ import java.util.concurrent.TimeUnit;
 public class CreateGroundedLexiconTest {
 
   @Test
-  public void testCreateGroundedLexicon() throws IOException, InterruptedException {
+  public void testCreateGroundedLexicon() throws IOException,
+      InterruptedException {
     String[] lexicalFields = {"lemma"};
     // dynamicField has to be set - e.g. set it to freebase mid
     String[] childIdentifierFields = {"mid"};
     // String[] relationTypingFeilds = { "neType" };
     String[] relationTypingFeilds = {};
 
-    KnowledgeBase kb = new KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz",
-        "data/freebase/stats/business_relation_types.txt");
+    KnowledgeBase kb =
+        new KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz",
+            "data/freebase/stats/business_relation_types.txt");
     // KnowledgeBase kb = null;
-    CcgAutoLexicon ccgAutoLexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
-        "./data/unary_rules.txt", "./data/binary_rules.txt", "./data/lexicon_specialCases.txt");
+    CcgAutoLexicon ccgAutoLexicon =
+        new CcgAutoLexicon("./data/candc_markedup.modified",
+            "./data/unary_rules.txt", "./data/binary_rules.txt",
+            "./data/lexicon_specialCases.txt");
     boolean ignorePronouns = true;
-    CreateGroundedLexicon creator = new CreateGroundedLexicon(kb, ccgAutoLexicon, lexicalFields,
-        childIdentifierFields, relationTypingFeilds, ignorePronouns);
+    CreateGroundedLexicon creator =
+        new CreateGroundedLexicon(kb, ccgAutoLexicon, lexicalFields,
+            childIdentifierFields, relationTypingFeilds, ignorePronouns);
 
-    BufferedReader br = new BufferedReader(new FileReader("data/tests/deplambda.graphparser.txt"));
+    BufferedReader br =
+        new BufferedReader(new FileReader(
+            "data/tests/deplambda.graphparser.txt"));
     // BufferedReader br = new BufferedReader(new FileReader("working/1.txt"));
 
     long startTime = System.currentTimeMillis();
@@ -48,9 +55,11 @@ public class CreateGroundedLexiconTest {
     // if (nThreads > 10)
     // nThreads = 10;
 
-    final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nThreads * 2);
+    final BlockingQueue<Runnable> queue =
+        new ArrayBlockingQueue<>(nThreads * 2);
     ThreadPoolExecutor threadPool =
-        new ThreadPoolExecutor(nThreads, nThreads, 30 * 60, TimeUnit.SECONDS, queue);
+        new ThreadPoolExecutor(nThreads, nThreads, 30 * 60, TimeUnit.SECONDS,
+            queue);
     threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override
       public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
@@ -71,14 +80,16 @@ public class CreateGroundedLexiconTest {
         lines.add(line);
         if (count % 1000 == 0) {
           Runnable worker =
-              new CreateGroundedLexiconRunnable(lines, creator, "dependency_lambda", false);
+              new CreateGroundedLexiconRunnable(lines, creator,
+                  "dependency_lambda", false);
           threadPool.execute(worker);
           lines = Lists.newArrayList();
         }
         line = br.readLine();
       }
       Runnable worker =
-          new CreateGroundedLexiconRunnable(lines, creator, "dependency_lambda", false);
+          new CreateGroundedLexiconRunnable(lines, creator,
+              "dependency_lambda", false);
       threadPool.execute(worker);
       // finish all existing threads in the queue
       threadPool.shutdown();
@@ -92,7 +103,8 @@ public class CreateGroundedLexiconTest {
     }
 
 
-    BufferedWriter bw = new BufferedWriter(new FileWriter("working/lexicon.txt"));
+    BufferedWriter bw =
+        new BufferedWriter(new FileWriter("working/lexicon.txt"));
     creator.printLexicon(bw);
     bw.close();
 

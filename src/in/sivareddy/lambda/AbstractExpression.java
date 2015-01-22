@@ -103,8 +103,8 @@ public abstract class AbstractExpression implements Expression {
     List<String> newTokenizedExpression = Lists.newArrayList();
     for (String token : tokenizedExpression) {
       if (variables.contains(token)) {
-        newTokenizedExpression.add(
-            String.format("%s_%s", token, Integer.toString(countAlphaReductions)));
+        newTokenizedExpression.add(String.format("%s_%s", token,
+            Integer.toString(countAlphaReductions)));
       } else {
         newTokenizedExpression.add(token);
       }
@@ -114,7 +114,8 @@ public abstract class AbstractExpression implements Expression {
 
   @Override
   public Set<GeneralisedRelation> simplifyAndGetRelations(Set<String> entities) {
-    Expression simplifiedExpression = this.simplify().removeDuplicateVariables();
+    Expression simplifiedExpression =
+        this.simplify().removeDuplicateVariables();
     if (simplifiedExpression == null) {
       return null;
     }
@@ -122,9 +123,10 @@ public abstract class AbstractExpression implements Expression {
   }
 
   @Override
-  public Set<GeneralisedRelation> getRelationsWithoutSimplification(Set<String> entities,
-      Integer relationArity) {
-    Set<GeneralisedRelation> relations = this.getRelationsWithoutSimplification(entities);
+  public Set<GeneralisedRelation> getRelationsWithoutSimplification(
+      Set<String> entities, Integer relationArity) {
+    Set<GeneralisedRelation> relations =
+        this.getRelationsWithoutSimplification(entities);
     if (relations == null) {
       return null;
     }
@@ -138,10 +140,12 @@ public abstract class AbstractExpression implements Expression {
   }
 
   @Override
-  public Set<GeneralisedRelation> getRelationsWithoutSimplification(Set<String> entities) {
+  public Set<GeneralisedRelation> getRelationsWithoutSimplification(
+      Set<String> entities) {
     String expressionString = this.toString();
     Pattern relationPattern =
-        Pattern.compile("\\(([^\\(\\)\\s]+) (([^\\(\\)\\s]+ )?)([^\\(\\)\\s]+)\\)");
+        Pattern
+            .compile("\\(([^\\(\\)\\s]+) (([^\\(\\)\\s]+ )?)([^\\(\\)\\s]+)\\)");
     Matcher relationMatcher;
     Set<String> entitiesSet;
     if (entities == null) {
@@ -159,14 +163,17 @@ public abstract class AbstractExpression implements Expression {
       }
       String arg1 = relationMatcher.group(2).trim();
       String arg2 = relationMatcher.group(4).trim();
-      if (!arg1.equals("") && entitiesSet != null && !entitiesSet.contains(arg1)) {
+      if (!arg1.equals("") && entitiesSet != null
+          && !entitiesSet.contains(arg1)) {
         continue;
       }
-      if (!arg2.equals("") && entitiesSet != null && !entitiesSet.contains(arg2)) {
+      if (!arg2.equals("") && entitiesSet != null
+          && !entitiesSet.contains(arg2)) {
         continue;
       }
-      GeneralisedRelation relation = arg1.equals("") ? new GeneralisedRelation(relationName, arg2)
-          : new GeneralisedRelation(relationName, arg1, arg2);
+      GeneralisedRelation relation =
+          arg1.equals("") ? new GeneralisedRelation(relationName, arg2)
+              : new GeneralisedRelation(relationName, arg1, arg2);
       relations.add(relation);
     }
     return relations;
@@ -174,7 +181,8 @@ public abstract class AbstractExpression implements Expression {
 
   @Override
   public boolean isContentTypeSemanticCategory() {
-    Set<GeneralisedRelation> relations = this.getRelationsWithoutSimplification(null);
+    Set<GeneralisedRelation> relations =
+        this.getRelationsWithoutSimplification(null);
 
     boolean check = false;
     for (GeneralisedRelation relation : relations) {
@@ -212,8 +220,8 @@ public abstract class AbstractExpression implements Expression {
     List<String> newTokenizedExpression = Lists.newArrayList();
     for (String token : tokenizedExpression) {
       if (variables.contains(token)) {
-        newTokenizedExpression.add(
-            String.format("%s_%s", token, Integer.toString(countAlphaReductions)));
+        newTokenizedExpression.add(String.format("%s_%s", token,
+            Integer.toString(countAlphaReductions)));
       } else {
         newTokenizedExpression.add(token);
       }
@@ -264,7 +272,8 @@ public abstract class AbstractExpression implements Expression {
       }
     }
 
-    Preconditions.checkArgument(stack.size() == 1, "Error in remove Duplicates");
+    Preconditions
+        .checkArgument(stack.size() == 1, "Error in remove Duplicates");
     stringWithoutQuantifiers = stack.pop();
     return stringWithoutQuantifiers;
   }
@@ -298,13 +307,13 @@ public abstract class AbstractExpression implements Expression {
     Matcher lambdaMatcher = lambdaPattern.matcher(expressionString);
     Matcher existsMatcher = existsPattern.matcher(expressionString);
     while (lambdaMatcher.find()) {
-      vars.addAll(
-          Lists.newArrayList(Splitter.on(' ').omitEmptyStrings().split(lambdaMatcher.group(1))));
+      vars.addAll(Lists.newArrayList(Splitter.on(' ').omitEmptyStrings()
+          .split(lambdaMatcher.group(1))));
     }
 
     while (existsMatcher.find()) {
-      vars.addAll(
-          Lists.newArrayList(Splitter.on(' ').omitEmptyStrings().split(existsMatcher.group(1))));
+      vars.addAll(Lists.newArrayList(Splitter.on(' ').omitEmptyStrings()
+          .split(existsMatcher.group(1))));
     }
 
     return vars;
@@ -327,13 +336,13 @@ public abstract class AbstractExpression implements Expression {
     Matcher lambdaMatcher = lambdaPattern.matcher(expressionString);
     Matcher existsMatcher = existsPattern.matcher(expressionString);
     while (lambdaMatcher.find()) {
-      lambdas.addAll(
-          Lists.newArrayList(Splitter.on(' ').omitEmptyStrings().split(lambdaMatcher.group(1))));
+      lambdas.addAll(Lists.newArrayList(Splitter.on(' ').omitEmptyStrings()
+          .split(lambdaMatcher.group(1))));
     }
 
     while (existsMatcher.find()) {
-      exists.addAll(
-          Lists.newArrayList(Splitter.on(' ').omitEmptyStrings().split(existsMatcher.group(1))));
+      exists.addAll(Lists.newArrayList(Splitter.on(' ').omitEmptyStrings()
+          .split(existsMatcher.group(1))));
     }
 
     String stringWithoutQuantifiers = expressionString;
@@ -342,34 +351,46 @@ public abstract class AbstractExpression implements Expression {
     existsMatcher = existsPattern.matcher(stringWithoutQuantifiers);
     stringWithoutQuantifiers = existsMatcher.replaceAll("");
 
-    Pattern duplicatePattern = Pattern.compile("\\(([^\\(\\)\\s]+) ([^\\(\\)\\s]+)\\)");
-    Matcher duplicateMatches = duplicatePattern.matcher(stringWithoutQuantifiers);
+    Pattern duplicatePattern =
+        Pattern.compile("\\(([^\\(\\)\\s]+) ([^\\(\\)\\s]+)\\)");
+    Matcher duplicateMatches =
+        duplicatePattern.matcher(stringWithoutQuantifiers);
 
     while (duplicateMatches.find()) {
       String var1 = duplicateMatches.group(1);
       String var2 = duplicateMatches.group(2);
       if (exists.contains(var1) && exists.contains(var2)) {
         stringWithoutQuantifiers =
-            stringWithoutQuantifiers.replace(String.format("(%s %s)", var1, var2), "");
+            stringWithoutQuantifiers.replace(
+                String.format("(%s %s)", var1, var2), "");
         exists.remove(var2);
         Pattern varPattern =
-            Pattern.compile(String.format("([\\s\\(])(%s)([\\s\\)])", var2.replace("$", "\\$")));
+            Pattern.compile(String.format("([\\s\\(])(%s)([\\s\\)])",
+                var2.replace("$", "\\$")));
         Matcher varMatcher = varPattern.matcher(stringWithoutQuantifiers);
         stringWithoutQuantifiers =
-            varMatcher.replaceAll(String.format("$1%s$3", var1.replace("$", "\\$")));
-      } else if (!var1.startsWith("$") && !SemanticCategoryType.types.contains(var1)
+            varMatcher.replaceAll(String.format("$1%s$3",
+                var1.replace("$", "\\$")));
+      } else if (!var1.startsWith("$")
+          && !SemanticCategoryType.types.contains(var1)
           && exists.contains(var2)) {
-        stringWithoutQuantifiers = stringWithoutQuantifiers.replace(
-            String.format("(%s %s)", var1, var2), String.format("(equal %s %s)", var2, var1));
-      } else if (!var2.startsWith("$") && !SemanticCategoryType.types.contains(var2)
+        stringWithoutQuantifiers =
+            stringWithoutQuantifiers.replace(
+                String.format("(%s %s)", var1, var2),
+                String.format("(equal %s %s)", var2, var1));
+      } else if (!var2.startsWith("$")
+          && !SemanticCategoryType.types.contains(var2)
           && exists.contains(var1)) {
-        stringWithoutQuantifiers = stringWithoutQuantifiers.replace(
-            String.format("(%s %s)", var1, var2), String.format("(equal %s %s)", var1, var2));
+        stringWithoutQuantifiers =
+            stringWithoutQuantifiers.replace(
+                String.format("(%s %s)", var1, var2),
+                String.format("(equal %s %s)", var1, var2));
       }
     }
 
     // code for removing equalities
-    Pattern varInstPattern = Pattern.compile("\\(equal ([^\\(\\)\\s]+) ([^\\(\\)\\s]+)\\)");
+    Pattern varInstPattern =
+        Pattern.compile("\\(equal ([^\\(\\)\\s]+) ([^\\(\\)\\s]+)\\)");
     Matcher varInstMatcher;
 
     varInstMatcher = varInstPattern.matcher(stringWithoutQuantifiers);
@@ -392,7 +413,8 @@ public abstract class AbstractExpression implements Expression {
     }
 
     ArrayList<String> relationsConcat = Lists.newArrayList();
-    Pattern relationPattern = Pattern.compile("\\(([^\\(\\)\\s]+)\\s([^\\(\\)\\s]+)\\)");
+    Pattern relationPattern =
+        Pattern.compile("\\(([^\\(\\)\\s]+)\\s([^\\(\\)\\s]+)\\)");
     Matcher relationMatcher = relationPattern.matcher(stringWithoutQuantifiers);
     while (relationMatcher.find()) {
       String relationName = relationMatcher.group(1);
@@ -401,14 +423,17 @@ public abstract class AbstractExpression implements Expression {
       if (varToEntity.containsKey(arg1)) {
         String arg1New = varToEntity.get(arg1);
         String newRelation = String.format("(%s %s)", relationName, arg1New);
-        stringWithoutQuantifiers = stringWithoutQuantifiers.replace(curRelation, newRelation);
+        stringWithoutQuantifiers =
+            stringWithoutQuantifiers.replace(curRelation, newRelation);
         relationsConcat.add(newRelation);
       } else {
         relationsConcat.add(curRelation);
       }
     }
 
-    relationPattern = Pattern.compile("\\(([^\\(\\)\\s]+)\\s([^\\(\\)\\s]+)\\s([^\\(\\)\\s]+)\\)");
+    relationPattern =
+        Pattern
+            .compile("\\(([^\\(\\)\\s]+)\\s([^\\(\\)\\s]+)\\s([^\\(\\)\\s]+)\\)");
     relationMatcher = relationPattern.matcher(stringWithoutQuantifiers);
     while (relationMatcher.find()) {
       String relationName = relationMatcher.group(1);
@@ -417,7 +442,8 @@ public abstract class AbstractExpression implements Expression {
       String curRelation = relationMatcher.group();
       if (relationName.equals("equal")) {
         if (exists.contains(arg1)) {
-          stringWithoutQuantifiers = stringWithoutQuantifiers.replace(curRelation, "");
+          stringWithoutQuantifiers =
+              stringWithoutQuantifiers.replace(curRelation, "");
           exists.remove(arg1);
         } else {
           relationsConcat.add(curRelation);
@@ -425,10 +451,14 @@ public abstract class AbstractExpression implements Expression {
 
       } else {
         if (varToEntity.containsKey(arg1) || varToEntity.containsKey(arg2)) {
-          String arg1New = varToEntity.containsKey(arg1) ? varToEntity.get(arg1) : arg1;
-          String arg2New = varToEntity.containsKey(arg2) ? varToEntity.get(arg2) : arg2;
-          String newRelation = String.format("(%s %s %s)", relationName, arg1New, arg2New);
-          stringWithoutQuantifiers = stringWithoutQuantifiers.replace(curRelation, newRelation);
+          String arg1New =
+              varToEntity.containsKey(arg1) ? varToEntity.get(arg1) : arg1;
+          String arg2New =
+              varToEntity.containsKey(arg2) ? varToEntity.get(arg2) : arg2;
+          String newRelation =
+              String.format("(%s %s %s)", relationName, arg1New, arg2New);
+          stringWithoutQuantifiers =
+              stringWithoutQuantifiers.replace(curRelation, newRelation);
           relationsConcat.add(newRelation);
         } else {
           relationsConcat.add(curRelation);
@@ -438,7 +468,8 @@ public abstract class AbstractExpression implements Expression {
 
     // System.out.println(stringWithoutQuantifiers);
     while (true) {
-      String neWstringWithoutQuantifiers = stringWithoutQuantifiers.replaceAll("\\(\\s*\\)", "");
+      String neWstringWithoutQuantifiers =
+          stringWithoutQuantifiers.replaceAll("\\(\\s*\\)", "");
       if (neWstringWithoutQuantifiers.equals(stringWithoutQuantifiers)) {
         break;
       } else {
@@ -448,7 +479,8 @@ public abstract class AbstractExpression implements Expression {
 
     // Remove Extra Brackets
     // System.err.println(stringWithoutQuantifiers);
-    stringWithoutQuantifiers = StringUtils.removeExtraBrackets(stringWithoutQuantifiers);
+    stringWithoutQuantifiers =
+        StringUtils.removeExtraBrackets(stringWithoutQuantifiers);
     // removeExtraBrackets(stringWithoutQuantifiers);
 
     // Below code is to remove extra brackets but only works if all the
@@ -456,32 +488,39 @@ public abstract class AbstractExpression implements Expression {
     // Do not use this.
     /*
      * if (relationsConcat.size() > 1) { stringWithoutQuantifiers = "(and " +
-     * Joiner.on(" ").join(relationsConcat) + ")"; } else if (relationsConcat.size() == 1){
-     * stringWithoutQuantifiers = relationsConcat.get(0); } else { return null; }
+     * Joiner.on(" ").join(relationsConcat) + ")"; } else if
+     * (relationsConcat.size() == 1){ stringWithoutQuantifiers =
+     * relationsConcat.get(0); } else { return null; }
      */
 
-String lambdaExpression = Joiner.on(" ").join(lambdas);
+    String lambdaExpression = Joiner.on(" ").join(lambdas);
     lambdaExpression =
-        lambdaExpression.equals("") ? lambdaExpression : "lambda " + lambdaExpression;
+        lambdaExpression.equals("") ? lambdaExpression : "lambda "
+            + lambdaExpression;
     String existsExpression = Joiner.on(" ").join(exists);
     existsExpression =
-        existsExpression.equals("") ? existsExpression : "exists " + existsExpression;
+        existsExpression.equals("") ? existsExpression : "exists "
+            + existsExpression;
 
     String finalReducedExpression;
     if (lambdaExpression.equals("") && existsExpression.equals("")) {
       finalReducedExpression = stringWithoutQuantifiers;
     } else if (lambdaExpression.equals("")) {
-      finalReducedExpression = String.format("(%s %s)", existsExpression, stringWithoutQuantifiers);
+      finalReducedExpression =
+          String.format("(%s %s)", existsExpression, stringWithoutQuantifiers);
     } else if (existsExpression.equals("")) {
-      finalReducedExpression = String.format("(%s %s)", lambdaExpression, stringWithoutQuantifiers);
+      finalReducedExpression =
+          String.format("(%s %s)", lambdaExpression, stringWithoutQuantifiers);
     } else {
-      finalReducedExpression = String.format("(%s (%s %s))", lambdaExpression, existsExpression,
-          stringWithoutQuantifiers);
+      finalReducedExpression =
+          String.format("(%s (%s %s))", lambdaExpression, existsExpression,
+              stringWithoutQuantifiers);
     }
 
     // System.out.println(finalReducedExpression);
 
-    Expression finalSimplified = ExpressionParser.parseSingleExpression(finalReducedExpression);
+    Expression finalSimplified =
+        ExpressionParser.parseSingleExpression(finalReducedExpression);
     finalSimplified.appendLogicalParts(this.getLogicalParts());
     finalSimplified.appendSpannedWords(this.getSpannedWords());
     finalSimplified.setParseScore(this.getParseScore());
@@ -491,20 +530,23 @@ String lambdaExpression = Joiner.on(" ").join(lambdas);
   @Override
   public String replaceEntitiesWithTypes() {
     String expressionString = this.toString();
-    Pattern relationPattern = Pattern.compile("[\\(\\s]([^\\(\\s]+):([^\\)\\s]+)");
+    Pattern relationPattern =
+        Pattern.compile("[\\(\\s]([^\\(\\s]+):([^\\)\\s]+)");
     Matcher Matcher = relationPattern.matcher(expressionString);
     while (Matcher.find()) {
       String entityName = Matcher.group(1);
       String entityType = Matcher.group(2);
       if (!entityType.equals("t")) {
         expressionString =
-            expressionString.replace(entityName + ":" + entityType, "TYPE:" + entityType);
+            expressionString.replace(entityName + ":" + entityType, "TYPE:"
+                + entityType);
       }
     }
     return expressionString;
   }
 
-  public static List<ApplicationExpression> getApplicationExpressions(Expression expression) {
+  public static List<ApplicationExpression> getApplicationExpressions(
+      Expression expression) {
     List<ApplicationExpression> result = Lists.newArrayList();
 
     if (expression.getClass().equals(CommutativeOperator.class)) {
@@ -527,7 +569,8 @@ String lambdaExpression = Joiner.on(" ").join(lambdas);
     } else if (expression.getClass().equals(ApplicationExpression.class)) {
       ApplicationExpression exp = (ApplicationExpression) expression;
       List<Expression> subexps = exp.subexpressions;
-      if (subexps.size() > 0 && subexps.get(0).getClass().equals(ConstantExpression.class)) {
+      if (subexps.size() > 0
+          && subexps.get(0).getClass().equals(ConstantExpression.class)) {
         result.add(exp);
       } else {
         for (Expression subexp : subexps) {
@@ -550,8 +593,10 @@ String lambdaExpression = Joiner.on(" ").join(lambdas);
     int x = thisParseScore.compareTo(curParseScore);
     if (x == 0) {
       // Expression having fewer relations are preferred
-      x = ((Integer) this.getRelationsWithoutSimplification(null).size()).compareTo(
-          expression.getRelationsWithoutSimplification(null).size());
+      x =
+          ((Integer) this.getRelationsWithoutSimplification(null).size())
+              .compareTo(expression.getRelationsWithoutSimplification(null)
+                  .size());
       x = x * -1;
     }
     if (x == 0) {

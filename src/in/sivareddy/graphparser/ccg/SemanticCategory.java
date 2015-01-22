@@ -83,7 +83,8 @@ import in.sivareddy.graphparser.ccg.SyntacticCategory.IndexedDependency;
  */
 public class SemanticCategory extends LambdaExpression {
 
-  private SemanticCategory(List<ConstantExpression> argumentVariables, Expression body) {
+  private SemanticCategory(List<ConstantExpression> argumentVariables,
+      Expression body) {
     super(argumentVariables, body);
   }
 
@@ -93,39 +94,18 @@ public class SemanticCategory extends LambdaExpression {
 
   private SemanticCategory(Expression exp) {
     // LambdaExpression lexp = ((LambdaExpression) exp);
-    super(((LambdaExpression) exp).getArguments(), ((LambdaExpression) exp).getBody());
+    super(((LambdaExpression) exp).getArguments(), ((LambdaExpression) exp)
+        .getBody());
   }
 
   private static final long serialVersionUID = 1L;
 
   public enum SemanticCategoryType {
-    TYPE,
-    TYPEMOD,
-    COMPLEMENT,
-    EVENT,
-    EVENTMOD,
-    NEGATION,
-    CLOSED,
-    EMPTY,
-    IDENTITY,
-    COPULA,
-    UNIQUE,
-    COUNT,
-    QUESTION;
+    TYPE, TYPEMOD, COMPLEMENT, EVENT, EVENTMOD, NEGATION, CLOSED, EMPTY, IDENTITY, COPULA, UNIQUE, COUNT, QUESTION;
 
     public final static ImmutableSet<String> types = ImmutableSet.of("TYPE",
-        "TYPEMOD",
-        "COMPLEMENT",
-        "EVENT",
-        "EVENTMOD",
-        "NEGATION",
-        "CLOSED",
-        "EMPTY",
-        "IDENTITY",
-        "COPULA",
-        "UNIQUE",
-        "COUNT",
-        "QUESTION");
+        "TYPEMOD", "COMPLEMENT", "EVENT", "EVENTMOD", "NEGATION", "CLOSED",
+        "EMPTY", "IDENTITY", "COPULA", "UNIQUE", "COUNT", "QUESTION");
   }
 
   private static Integer functionCount = 0;
@@ -150,15 +130,16 @@ public class SemanticCategory extends LambdaExpression {
   }
 
   /**
-   * Given a syntactic category, this generates a lambda expression without any semantic types.
+   * Given a syntactic category, this generates a lambda expression without any
+   * semantic types.
    *
    * @param synCat
    * @param lambdas
    * @param exists
    * @param bodyExpression
    */
-  public static void getDeepExpression(SyntacticCategory synCat, List<String> lambdas,
-      Set<String> exists, StringObject bodyExpression) {
+  public static void getDeepExpression(SyntacticCategory synCat,
+      List<String> lambdas, Set<String> exists, StringObject bodyExpression) {
 
     // converting ((S[X]{Y}\\NP{Z}){Y}\\(S[X]{Y}\\NP{Z}){Y}){W}
     // to lambda $f0 ((($f0 EMPTY) $Z:3) $Y:2)
@@ -175,7 +156,8 @@ public class SemanticCategory extends LambdaExpression {
       CategoryIndex var = variables.iterator().next();
       String varName = var.getVarNameAndKey();
       exists.add(varName);
-      bodyExpression.setString("(" + bodyExpression.getString() + ' ' + varName + ')');
+      bodyExpression.setString("(" + bodyExpression.getString() + ' ' + varName
+          + ')');
     } else {
       SyntacticCategory parent = synCat.getParent();
       SyntacticCategory arg = synCat.getArgument();
@@ -183,33 +165,34 @@ public class SemanticCategory extends LambdaExpression {
       if (arg.isBasic() || arg.isVar()) {
         getDeepExpression(arg, lambdas, exists, bodyExpression);
       } else {
-        bodyExpression.setString(
-            "(" + bodyExpression.getString() + ' ' + SemanticCategoryType.EMPTY + ')');
+        bodyExpression.setString("(" + bodyExpression.getString() + ' '
+            + SemanticCategoryType.EMPTY + ')');
       }
       getDeepExpression(parent, lambdas, exists, bodyExpression);
     }
   }
 
   /**
-   * Generates a semantic category based on the syntactic category and the semantic type. Probably
-   * the most useful function in this Object.
+   * Generates a semantic category based on the syntactic category and the
+   * semantic type. Probably the most useful function in this Object.
    *
    * @param synCat
    * @param categoryType
    * @return
    */
-  public static SemanticCategory generateSemanticCategory(SyntacticCategory synCat,
-      SemanticCategoryType categoryType) {
+  public static SemanticCategory generateSemanticCategory(
+      SyntacticCategory synCat, SemanticCategoryType categoryType) {
     List<String> lambdas = Lists.newArrayList();
     Set<String> exists = Sets.newHashSet();
     List<String> bodyExpressions = Lists.newArrayList();
-    generateSemanticCategory(synCat, categoryType, lambdas, exists, bodyExpressions);
+    generateSemanticCategory(synCat, categoryType, lambdas, exists,
+        bodyExpressions);
     return generateSemanticCategory(lambdas, exists, bodyExpressions);
   }
 
   private static void generateSemanticCategory(SyntacticCategory synCat,
-      SemanticCategoryType categoryType, List<String> lambdas, Set<String> exists,
-      List<String> bodyExpressions) {
+      SemanticCategoryType categoryType, List<String> lambdas,
+      Set<String> exists, List<String> bodyExpressions) {
 
     if (categoryType == SemanticCategoryType.IDENTITY) {
       String func = createFunction();
@@ -241,7 +224,8 @@ public class SemanticCategory extends LambdaExpression {
       CategoryIndex cur = synCat.getIndex();
       String headName = head.getVarNameAndKey();
       String curName = cur.getVarNameAndKey();
-      List<IndexedDependency> deps = Lists.newArrayList(synCat.getDependencies(cur));
+      List<IndexedDependency> deps =
+          Lists.newArrayList(synCat.getDependencies(cur));
       lambdas.add(headName);
       Collections.sort(deps);
 
@@ -337,7 +321,7 @@ public class SemanticCategory extends LambdaExpression {
            * e corresponds to the event of the head's variable, here president
            */
 
-for (IndexedDependency dep : deps) {
+          for (IndexedDependency dep : deps) {
             sb = new StringBuilder();
             String childName = dep.getChild().getVarNameAndKey();
             sb.append(categoryType);
@@ -412,8 +396,8 @@ for (IndexedDependency dep : deps) {
    * @param bodyExpressions
    * @return
    */
-  public static SemanticCategory generateSemanticCategory(List<String> lambdas, Set<String> exists,
-      List<String> bodyExpressions) {
+  public static SemanticCategory generateSemanticCategory(List<String> lambdas,
+      Set<String> exists, List<String> bodyExpressions) {
 
     Preconditions.checkArgument(bodyExpressions.size() > 0,
         "Cannot generate expression: No body expressions");
@@ -426,20 +410,26 @@ for (IndexedDependency dep : deps) {
     Expression exp;
     if (bodyExpressions.size() == 1) {
       if (existsString.equals("")) {
-        exp = ExpressionParser.parseSingleExpression(
-            String.format("(lambda %s %s)", lambdaString, bodyExpression));
+        exp =
+            ExpressionParser.parseSingleExpression(String.format(
+                "(lambda %s %s)", lambdaString, bodyExpression));
       } else {
-        exp = ExpressionParser.parseSingleExpression(String.format("(lambda %s (exists %s %s))",
-            lambdaString, existsString, bodyExpression));
+        exp =
+            ExpressionParser.parseSingleExpression(String.format(
+                "(lambda %s (exists %s %s))", lambdaString, existsString,
+                bodyExpression));
       }
 
     } else {
       if (existsString.equals("")) {
-        exp = ExpressionParser.parseSingleExpression(
-            String.format("(lambda %s (and %s))", lambdaString, bodyExpression));
+        exp =
+            ExpressionParser.parseSingleExpression(String.format(
+                "(lambda %s (and %s))", lambdaString, bodyExpression));
       } else {
-        exp = ExpressionParser.parseSingleExpression(String.format(
-            "(lambda %s (exists %s (and %s)))", lambdaString, existsString, bodyExpression));
+        exp =
+            ExpressionParser.parseSingleExpression(String.format(
+                "(lambda %s (exists %s (and %s)))", lambdaString, existsString,
+                bodyExpression));
       }
     }
 
@@ -459,8 +449,9 @@ for (IndexedDependency dep : deps) {
    * @param bodyExpression
    * @param categoryType
    */
-  private static void generateTypeOrEmpty(SyntacticCategory synCat, List<String> lambdas,
-      Set<String> exists, StringObject bodyExpression, SemanticCategoryType categoryType) {
+  private static void generateTypeOrEmpty(SyntacticCategory synCat,
+      List<String> lambdas, Set<String> exists, StringObject bodyExpression,
+      SemanticCategoryType categoryType) {
 
     /*-
      * 
@@ -469,10 +460,10 @@ for (IndexedDependency dep : deps) {
      * 
      */
 
-Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
+    Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
 
-    Preconditions.checkArgument(
-        categoryType == SemanticCategoryType.TYPE || categoryType == SemanticCategoryType.EMPTY,
+    Preconditions.checkArgument(categoryType == SemanticCategoryType.TYPE
+        || categoryType == SemanticCategoryType.EMPTY,
         "Basic category should either be EMPTY or TYPE types");
 
     Set<CategoryIndex> variables = synCat.getAllVariables();
@@ -488,17 +479,19 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
   }
 
   /**
-   * Reduces the current semantic category with the given argument category. Note: we do not perform
-   * alpha reduction since no two variables (unless they indicate the same variable) in each of the
-   * semantic category have the same names. Perform alpha reduction in case if you are using your
-   * own semantic categories which require alpha reduction.
+   * Reduces the current semantic category with the given argument category.
+   * Note: we do not perform alpha reduction since no two variables (unless they
+   * indicate the same variable) in each of the semantic category have the same
+   * names. Perform alpha reduction in case if you are using your own semantic
+   * categories which require alpha reduction.
    *
    * @param semCat
    * @return
    */
   public SemanticCategory reduce(SemanticCategory semCat) {
     List<ConstantExpression> arguments = this.getArguments();
-    Preconditions.checkArgument(arguments.size() > 0, "Cannot reduce " + this + " with " + semCat);
+    Preconditions.checkArgument(arguments.size() > 0, "Cannot reduce " + this
+        + " with " + semCat);
     ConstantExpression var = arguments.get(0);
     Expression exp = reduceArgument(var, semCat);
     exp = exp.removeDuplicateVariables();
@@ -526,9 +519,11 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
    * @param compositionDepth
    * @return
    */
-  public SemanticCategory generalisedComposition(SemanticCategory semCat2, int compositionDepth) {
+  public SemanticCategory generalisedComposition(SemanticCategory semCat2,
+      int compositionDepth) {
 
-    Preconditions.checkArgument(compositionDepth > 0, "Cannot peform composition");
+    Preconditions.checkArgument(compositionDepth > 0,
+        "Cannot peform composition");
 
     List<ConstantExpression> args2 = Lists.newArrayList(semCat2.getArguments());
     List<ConstantExpression> args1 = Lists.newArrayList();
@@ -538,7 +533,8 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
       compositionDepth--;
     }
 
-    SemanticCategory reducedSemCat2 = new SemanticCategory(args2, semCat2.getBody());
+    SemanticCategory reducedSemCat2 =
+        new SemanticCategory(args2, semCat2.getBody());
 
     // alpha reduction - renaming variables when they are shared
     String reducedSemCat2String = reducedSemCat2.toString();
@@ -547,19 +543,23 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
       String arg1String = arg1.toString();
 
       List<String> arg1Parts =
-          Lists.newArrayList(Splitter.on(":").trimResults().omitEmptyStrings().split(arg1String));
+          Lists.newArrayList(Splitter.on(":").trimResults().omitEmptyStrings()
+              .split(arg1String));
       if (arg1Parts.size() > 1) {
         arg1Parts.add(1, ":");
       }
       arg1Parts.add(1, "x");
       String arg1NewString = Joiner.on("").join(arg1Parts);
-      reducedSemCat2String = reducedSemCat2String.replace(arg1String + " ", arg1NewString + " ");
-      reducedSemCat2String = reducedSemCat2String.replace(arg1String + ")", arg1NewString + ")");
+      reducedSemCat2String =
+          reducedSemCat2String.replace(arg1String + " ", arg1NewString + " ");
+      reducedSemCat2String =
+          reducedSemCat2String.replace(arg1String + ")", arg1NewString + ")");
       ConstantExpression arg1New = new ConstantExpression(arg1NewString);
       args1New.add(arg1New);
     }
     reducedSemCat2 =
-        new SemanticCategory(ExpressionParser.parseSingleExpression(reducedSemCat2String));
+        new SemanticCategory(
+            ExpressionParser.parseSingleExpression(reducedSemCat2String));
 
     SemanticCategory resultSemCat = this.reduce(reducedSemCat2);
 
@@ -576,12 +576,14 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
    * @param semCat
    * @return
    */
-  public static SemanticCategory typeRaising(SyntacticCategory syntacticCategory,
-      SemanticCategory semCat) {
+  public static SemanticCategory typeRaising(
+      SyntacticCategory syntacticCategory, SemanticCategory semCat) {
     SyntacticCategory parent = syntacticCategory.getParent();
 
-    Preconditions.checkArgument(parent.isVar(),
-        "The category is either not a type raised category or already instantiated category");
+    Preconditions
+        .checkArgument(
+            parent.isVar(),
+            "The category is either not a type raised category or already instantiated category");
 
     CategoryIndex var = parent.getIndex();
     String varName = var.getVarNameAndKey();
@@ -592,7 +594,8 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
 
     // SemanticCategory newSemCat = generateExpression(syntacticCategory,
     // SemanticCategoryType.CLOSED);
-    getDeepExpression(syntacticCategory.getArgument(), lambdas, exists, bodyExpression);
+    getDeepExpression(syntacticCategory.getArgument(), lambdas, exists,
+        bodyExpression);
     lambdas.add(varName);
     exists.removeAll(lambdas);
 
@@ -604,7 +607,8 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
     for (Expression part : parts)
       bodyExpressions.add(part.toString());
 
-    SemanticCategory newCat = generateSemanticCategory(lambdas, exists, bodyExpressions);
+    SemanticCategory newCat =
+        generateSemanticCategory(lambdas, exists, bodyExpressions);
     return newCat;
   }
 
@@ -615,22 +619,24 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
    * @param lambdaExpression
    * @return
    */
-  private static SemanticCategory unifyVarsAndCreateSemanticCategory(Set<CategoryIndex> vars,
-      String lambdaExpression) {
+  private static SemanticCategory unifyVarsAndCreateSemanticCategory(
+      Set<CategoryIndex> vars, String lambdaExpression) {
     Pattern lambdaPattern = Pattern.compile("lambda ([^\\(]+)");
     Matcher matcher = lambdaPattern.matcher(lambdaExpression);
     Set<String> stringVars = Sets.newHashSet();
     while (matcher.find()) {
-      Set<String> tmpVars = Sets.newHashSet(Splitter.on(CharMatcher.WHITESPACE).trimResults()
-          .omitEmptyStrings().split(matcher.group(1)));
+      Set<String> tmpVars =
+          Sets.newHashSet(Splitter.on(CharMatcher.WHITESPACE).trimResults()
+              .omitEmptyStrings().split(matcher.group(1)));
       stringVars.addAll(tmpVars);
     }
 
     Pattern existsPattern = Pattern.compile("exists ([^\\(]+)");
     matcher = existsPattern.matcher(lambdaExpression);
     while (matcher.find()) {
-      Set<String> tmpVars = Sets.newHashSet(Splitter.on(CharMatcher.WHITESPACE).trimResults()
-          .omitEmptyStrings().split(matcher.group(1)));
+      Set<String> tmpVars =
+          Sets.newHashSet(Splitter.on(CharMatcher.WHITESPACE).trimResults()
+              .omitEmptyStrings().split(matcher.group(1)));
       stringVars.addAll(tmpVars);
     }
 
@@ -644,27 +650,32 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
         // maximal replacement
         while (!oldLambdaExpression.equals(newLambdaExpression)) {
           oldLambdaExpression = newLambdaExpression;
-          newLambdaExpression = newLambdaExpression.replaceAll(
-              String.format("([\\s\\(\\)]+)(%s)([\\s\\(\\)]+)", Pattern.quote(varName)),
-              String.format("%s%s%s", "$1", newVarName.replace("$", "\\$"), "$3"));
+          newLambdaExpression =
+              newLambdaExpression.replaceAll(String.format(
+                  "([\\s\\(\\)]+)(%s)([\\s\\(\\)]+)", Pattern.quote(varName)),
+                  String.format("%s%s%s", "$1", newVarName.replace("$", "\\$"),
+                      "$3"));
         }
       }
     }
-    Expression exp = ExpressionParser.parseSingleExpression(newLambdaExpression);
+    Expression exp =
+        ExpressionParser.parseSingleExpression(newLambdaExpression);
     return new SemanticCategory(exp);
   }
 
   /**
-   * Create semantic category given a syntactic category and its corresponding lambda rule
+   * Create semantic category given a syntactic category and its corresponding
+   * lambda rule
    *
    * @param synCat
    * @param lambdaRule
    * @return
    */
-  public static SemanticCategory generateSemanticCategory(SyntacticCategory synCat,
-      String lambdaRule) {
+  public static SemanticCategory generateSemanticCategory(
+      SyntacticCategory synCat, String lambdaRule) {
     Set<CategoryIndex> vars = synCat.getAllVariables();
-    SemanticCategory newCat = unifyVarsAndCreateSemanticCategory(vars, lambdaRule);
+    SemanticCategory newCat =
+        unifyVarsAndCreateSemanticCategory(vars, lambdaRule);
     return newCat;
   }
 
@@ -677,9 +688,10 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
    * @param lambdaConversionRule
    * @return
    */
-  public static SemanticCategory applyUnaryRule(SyntacticCategory leftSyntacticCategory,
-      SyntacticCategory newSyntacticCategory, SemanticCategory leftSemanticCategoryOld,
-      String lambdaConversionRule) {
+  public static SemanticCategory applyUnaryRule(
+      SyntacticCategory leftSyntacticCategory,
+      SyntacticCategory newSyntacticCategory,
+      SemanticCategory leftSemanticCategoryOld, String lambdaConversionRule) {
 
     SemanticCategory newCat;
     if (lambdaConversionRule != null && !lambdaConversionRule.equals("")) {
@@ -698,16 +710,19 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
       if (newSyntacticCategory.isBasic()) {
         lambdas.add(newSyntacticCategory.getIndex().getVarNameAndKey());
       } else {
-        generateSemanticCategory(newSyntacticCategory, SemanticCategoryType.CLOSED, lambdas, exists,
-            bodyExpressions);
+        generateSemanticCategory(newSyntacticCategory,
+            SemanticCategoryType.CLOSED, lambdas, exists, bodyExpressions);
       }
 
-      List<ApplicationExpression> parts = leftSemanticCategoryOld.getContentExpressions();
+      List<ApplicationExpression> parts =
+          leftSemanticCategoryOld.getContentExpressions();
       for (Expression part : parts)
         bodyExpressions.add(part.toString());
 
       if (bodyExpressions.size() == 0 && newSyntacticCategory.isBasic()) {
-        newCat = generateSemanticCategory(newSyntacticCategory, SemanticCategoryType.IDENTITY);
+        newCat =
+            generateSemanticCategory(newSyntacticCategory,
+                SemanticCategoryType.IDENTITY);
       } else {
         newCat = generateSemanticCategory(lambdas, exists, bodyExpressions);
       }
@@ -727,12 +742,12 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
    * @param lambdaConversionRule
    * @return
    */
-  public static SemanticCategory applyBinaryRule(SyntacticCategory leftSyntacticCategory,
+  public static SemanticCategory applyBinaryRule(
+      SyntacticCategory leftSyntacticCategory,
       SyntacticCategory rightSyntacticCategory,
       SyntacticCategory newSyntacticCategory,
       SemanticCategory leftSemanticCategoryOld,
-      SemanticCategory rightSemanticCategoryOld,
-      String lambdaConversionRule) {
+      SemanticCategory rightSemanticCategoryOld, String lambdaConversionRule) {
 
     SemanticCategory newCat;
     if (lambdaConversionRule != null && !lambdaConversionRule.equals("")) {
@@ -750,10 +765,11 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
       List<String> lambdas = Lists.newArrayList();
       Set<String> exists = Sets.newHashSet();
       List<String> bodyExpressions = Lists.newArrayList();
-      generateSemanticCategory(newSyntacticCategory, SemanticCategoryType.CLOSED, lambdas, exists,
-          bodyExpressions);
+      generateSemanticCategory(newSyntacticCategory,
+          SemanticCategoryType.CLOSED, lambdas, exists, bodyExpressions);
 
-      List<ApplicationExpression> parts = leftSemanticCategoryOld.getContentExpressions();
+      List<ApplicationExpression> parts =
+          leftSemanticCategoryOld.getContentExpressions();
       for (Expression part : parts)
         bodyExpressions.add(part.toString());
 
@@ -797,7 +813,8 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
    * @return
    */
   private List<ApplicationExpression> getContentExpressions() {
-    LambdaExpression lambda = new LambdaExpression(this.getArguments(), this.getBody());
+    LambdaExpression lambda =
+        new LambdaExpression(this.getArguments(), this.getBody());
 
     List<ApplicationExpression> parts = getApplicationExpressions(lambda);
     List<ApplicationExpression> validParts = Lists.newArrayList();
@@ -815,7 +832,8 @@ Preconditions.checkArgument(synCat.isBasic(), "Category should be basic");
    * @return
    */
   public List<String> getContentRelations() {
-    LambdaExpression lambda = new LambdaExpression(this.getArguments(), this.getBody());
+    LambdaExpression lambda =
+        new LambdaExpression(this.getArguments(), this.getBody());
 
     List<ApplicationExpression> parts = getApplicationExpressions(lambda);
     List<String> validParts = Lists.newArrayList();

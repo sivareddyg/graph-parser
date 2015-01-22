@@ -9,8 +9,10 @@ import com.google.common.collect.Lists;
 
 public class ExpressionParser {
 
-  private static final ConstantExpression OPEN_PAREN = new ConstantExpression("(");
-  private static final ConstantExpression CLOSE_PAREN = new ConstantExpression(")");
+  private static final ConstantExpression OPEN_PAREN = new ConstantExpression(
+      "(");
+  private static final ConstantExpression CLOSE_PAREN = new ConstantExpression(
+      ")");
 
   public ExpressionParser() {}
 
@@ -30,10 +32,11 @@ public class ExpressionParser {
     return parse(tokenize(expressions));
   }
 
-  public static Expression parseSingleExpression(List<String> tokenizedExpressionString) {
+  public static Expression parseSingleExpression(
+      List<String> tokenizedExpressionString) {
     List<Expression> expressions = parse(tokenizedExpressionString);
-    Preconditions.checkState(expressions.size() == 1,
-        "Illegal input string: " + tokenizedExpressionString);
+    Preconditions.checkState(expressions.size() == 1, "Illegal input string: "
+        + tokenizedExpressionString);
     return expressions.get(0);
   }
 
@@ -70,7 +73,8 @@ public class ExpressionParser {
       subexpressions.add(argument);
     }
 
-    if (subexpressions.size() > 0 && subexpressions.get(0) instanceof ConstantExpression) {
+    if (subexpressions.size() > 0
+        && subexpressions.get(0) instanceof ConstantExpression) {
       ConstantExpression constant = (ConstantExpression) subexpressions.get(0);
       String constantName = constant.getName();
       if (constantName.equals("lambda")) {
@@ -81,7 +85,8 @@ public class ExpressionParser {
         Expression body = subexpressions.get(subexpressions.size() - 1);
         return new LambdaExpression(variables, body);
       } else if (constantName.equals("and")) {
-        return new CommutativeOperator(constant, subexpressions.subList(1, subexpressions.size()));
+        return new CommutativeOperator(constant, subexpressions.subList(1,
+            subexpressions.size()));
       } else if (constantName.equals("exists")) {
         List<ConstantExpression> variables = Lists.newArrayList();
         for (int i = 1; i < subexpressions.size() - 1; i++) {

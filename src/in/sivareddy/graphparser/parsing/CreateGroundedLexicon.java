@@ -45,10 +45,11 @@ public class CreateGroundedLexicon {
   private ConcurrentMap<String, ConcurrentMap<String, Double>> langTypeToGroundedTypeMap;
   private ConcurrentMap<String, Double> typeCounts;
 
-  public static Map<String, String> cardinalTypes = ImmutableMap.<String, String> builder()
-      .put("I-DAT", "type.datetime").put("DATE", "type.datetime").put("PERCENT", "type.float")
-      .put("TIME", "type.datetime").put("MONEY", "type.float").put("CD.int", "type.int")
-      .put("CD.float", "type.float").build();
+  public static Map<String, String> cardinalTypes = ImmutableMap
+      .<String, String>builder().put("I-DAT", "type.datetime")
+      .put("DATE", "type.datetime").put("PERCENT", "type.float")
+      .put("TIME", "type.datetime").put("MONEY", "type.float")
+      .put("CD.int", "type.int").put("CD.float", "type.float").build();
 
   Pattern floatPattern = Pattern.compile(".*[\\.][0-9].*");
 
@@ -56,10 +57,11 @@ public class CreateGroundedLexicon {
   private CcgParser ccgParser;
 
   public CreateGroundedLexicon(KnowledgeBase kb, CcgAutoLexicon ccgAutoLexicon,
-      String[] lexicalFields, String[] argIdentifierFields, String[] relationTypingFeilds,
-      boolean ignorePronouns) {
-    ccgParser = new CcgParser(ccgAutoLexicon, lexicalFields, argIdentifierFields,
-        relationTypingFeilds, ignorePronouns);
+      String[] lexicalFields, String[] argIdentifierFields,
+      String[] relationTypingFeilds, boolean ignorePronouns) {
+    ccgParser =
+        new CcgParser(ccgAutoLexicon, lexicalFields, argIdentifierFields,
+            relationTypingFeilds, ignorePronouns);
     predicateToGroundedRelationMap = new ConcurrentHashMap<>();
     langTypeToGroundedTypeMap = new ConcurrentHashMap<>();
     predicateCounts = new ConcurrentHashMap<>();
@@ -75,8 +77,9 @@ public class CreateGroundedLexicon {
     boolean printSentences;
     String semanticParseKey;
 
-    public CreateGroundedLexiconRunnable(List<String> jsonSentences, CreateGroundedLexicon creator,
-        String semanticParseKey, boolean printSentences) {
+    public CreateGroundedLexiconRunnable(List<String> jsonSentences,
+        CreateGroundedLexicon creator, String semanticParseKey,
+        boolean printSentences) {
       Preconditions.checkArgument(jsonSentences != null);
       this.jsonSentences = jsonSentences;
       this.creator = creator;
@@ -95,13 +98,15 @@ public class CreateGroundedLexicon {
         JsonObject jsonSentence = parser.parse(line).getAsJsonObject();
         List<Set<String>> semanticParses;
         if (semanticParseKey == "synPars") {
-          semanticParses = creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
+          semanticParses =
+              creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
         } else {
           semanticParses = new ArrayList<>();
           semanticParses = new ArrayList<>();
           if (!jsonSentence.has(semanticParseKey))
             continue;
-          JsonArray semPars = jsonSentence.get(semanticParseKey).getAsJsonArray();
+          JsonArray semPars =
+              jsonSentence.get(semanticParseKey).getAsJsonArray();
           Set<String> semanticParse = new HashSet<>();
           for (JsonElement semPar : semPars) {
             JsonArray predicates = semPar.getAsJsonArray();
@@ -120,7 +125,8 @@ public class CreateGroundedLexicon {
         boolean isUseful = false;
         for (Set<String> semanticParse : semanticParses) {
           boolean isUsefulParse =
-              creator.updateLexicon(semanticParse, jsonSentence, 1.0 / semanticParses.size());
+              creator.updateLexicon(semanticParse, jsonSentence,
+                  1.0 / semanticParses.size());
           if (isUsefulParse) {
             isUseful = true;
           }
@@ -153,8 +159,8 @@ public class CreateGroundedLexicon {
    *
    * @return
    */
-  public List<Set<String>> lexicaliseArgumentsToDomainEntities(JsonObject jsonSentence,
-      int nparses) {
+  public List<Set<String>> lexicaliseArgumentsToDomainEntities(
+      JsonObject jsonSentence, int nparses) {
     List<Set<String>> allParses = Lists.newArrayList();
 
     // JsonParser parser = new JsonParser();
@@ -202,10 +208,13 @@ public class CreateGroundedLexicon {
                 posTag = "CD.int";
               }
             }
-            String mid = cardinalTypes.containsKey(candcNer) ? cardinalTypes.get(candcNer)
-                : (cardinalTypes.containsKey(stanfordNer) ? cardinalTypes.get(stanfordNer)
-                    : (cardinalTypes.containsKey(posTag) ? cardinalTypes.get(posTag)
-                        : leaf.getMid()));
+            String mid =
+                cardinalTypes.containsKey(candcNer) ? cardinalTypes
+                    .get(candcNer)
+                    : (cardinalTypes.containsKey(stanfordNer) ? cardinalTypes
+                        .get(stanfordNer)
+                        : (cardinalTypes.containsKey(posTag) ? cardinalTypes
+                            .get(posTag) : leaf.getMid()));
             leaf.setMid(mid);
           }
 
@@ -221,7 +230,8 @@ public class CreateGroundedLexicon {
           // do not handle the numbers specially for lexicon
           // generation -
           // i.e. do not produce the predicate COUNT
-          Set<Set<String>> predicates = tree.getLexicalisedSemanticPredicates(false);
+          Set<Set<String>> predicates =
+              tree.getLexicalisedSemanticPredicates(false);
           // System.err.println(predicates);
           allParses.add(Lists.newArrayList(predicates).get(0));
         }
@@ -258,7 +268,7 @@ public class CreateGroundedLexicon {
      * [fly.fly.1.I-ORG(e1 , m.0q0b4), fly.from.2.I-LOC(e1 , m.02_286), fly.to.2.I-LOC(e1 , m.0g284)], fly.directly.1(e1), 
      */
 
-Map<String, Set<String>> varsToEvents = Maps.newHashMap();
+    Map<String, Set<String>> varsToEvents = Maps.newHashMap();
     Map<String, Set<String>> entityArgsToEvents = Maps.newHashMap();
     Set<String> nonDomainEntities = Sets.newHashSet();
 
@@ -308,7 +318,8 @@ Map<String, Set<String>> varsToEvents = Maps.newHashMap();
           events.put(eventName, new HashSet<Pair<String, String>>());
         }
         // note: lowercasing relation names
-        Pair<String, String> edge = Pair.of(relationName.toLowerCase(), entityName);
+        Pair<String, String> edge =
+            Pair.of(relationName.toLowerCase(), entityName);
         events.get(eventName).add(edge);
       }
 
@@ -368,7 +379,8 @@ Map<String, Set<String>> varsToEvents = Maps.newHashMap();
     Set<String> importantEvents = Sets.newHashSet();
     // Check the knowledge base to create grounded lexicon
     for (String event : events.keySet()) {
-      List<Pair<String, String>> relationEdges = Lists.newArrayList(events.get(event));
+      List<Pair<String, String>> relationEdges =
+          Lists.newArrayList(events.get(event));
       for (int i = 0; i < relationEdges.size(); i++) {
         for (int j = i + 1; j < relationEdges.size(); j++) {
           Pair<String, String> relationEdge1 = relationEdges.get(i);
@@ -401,10 +413,12 @@ Map<String, Set<String>> varsToEvents = Maps.newHashMap();
           ConcurrentHashMap<Relation, Double> groundedRelationsScore;
           predicateToGroundedRelationMap.putIfAbsent(languagePredicate,
               new ConcurrentHashMap<Relation, Double>());
-          groundedRelationsScore = (ConcurrentHashMap<Relation,
-              Double>) predicateToGroundedRelationMap.get(languagePredicate);
+          groundedRelationsScore =
+              (ConcurrentHashMap<Relation, Double>) predicateToGroundedRelationMap
+                  .get(languagePredicate);
 
-          Double increment = 1.0 / groundedRelations.size() * normalisingConstant;
+          Double increment =
+              1.0 / groundedRelations.size() * normalisingConstant;
           for (Relation groundedRelation : groundedRelations) {
             groundedRelationsScore.putIfAbsent(groundedRelation, 0.0);
             Double count = groundedRelationsScore.get(groundedRelation);
@@ -539,7 +553,8 @@ Map<String, Set<String>> varsToEvents = Maps.newHashMap();
 
   public void printLexicon(BufferedWriter bw) throws IOException {
     // Types
-    ArrayList<Entry<String, Double>> langTypes = Lists.newArrayList(typeCounts.entrySet());
+    ArrayList<Entry<String, Double>> langTypes =
+        Lists.newArrayList(typeCounts.entrySet());
     Comparator<Entry<String, Double>> comparator2 =
         Collections.reverseOrder(new EntryComparator<String>());
     Collections.sort(langTypes, comparator2);
@@ -551,7 +566,8 @@ Map<String, Set<String>> varsToEvents = Maps.newHashMap();
       bw.write(String.format("%s\t%f\n", langType, langTypeFreq));
 
       ArrayList<Entry<String, Double>> groundedTypes =
-          Lists.newArrayList(langTypeToGroundedTypeMap.get(langType).entrySet());
+          Lists
+              .newArrayList(langTypeToGroundedTypeMap.get(langType).entrySet());
       Collections.sort(groundedTypes, comparator2);
 
       for (Entry<String, Double> groundedTypeEntry : groundedTypes) {
@@ -562,7 +578,8 @@ Map<String, Set<String>> varsToEvents = Maps.newHashMap();
     }
 
     // Predicates
-    ArrayList<Entry<Relation, Double>> predicates = Lists.newArrayList(predicateCounts.entrySet());
+    ArrayList<Entry<Relation, Double>> predicates =
+        Lists.newArrayList(predicateCounts.entrySet());
     Comparator<Entry<Relation, Double>> comparator1 =
         Collections.reverseOrder(new EntryComparator<Relation>());
     Collections.sort(predicates, comparator1);
@@ -572,11 +589,12 @@ Map<String, Set<String>> varsToEvents = Maps.newHashMap();
 
       Relation predicate = predicateEntry.getKey();
       Double predicateFreq = predicateEntry.getValue();
-      bw.write(
-          String.format("%s %s\t%f\n", predicate.getLeft(), predicate.getRight(), predicateFreq));
+      bw.write(String.format("%s %s\t%f\n", predicate.getLeft(),
+          predicate.getRight(), predicateFreq));
 
       ArrayList<Entry<Relation, Double>> groundedRealtions =
-          Lists.newArrayList(predicateToGroundedRelationMap.get(predicate).entrySet());
+          Lists.newArrayList(predicateToGroundedRelationMap.get(predicate)
+              .entrySet());
       Collections.sort(groundedRealtions, comparator1);
 
       for (Entry<Relation, Double> groundedRealtionEntry : groundedRealtions) {

@@ -21,40 +21,46 @@ import com.google.common.collect.Sets;
 
 /**
  *
- * Represents syntactic category as an object. Unlike traditional syntactic categories, we use
- * indexed syntactic categories as our basic categories since indexes are highly important in
- * semantics. They are also crucial in finding dependencies between words. Our notation is powerful
- * than existing known indexing schemes for candc.
+ * Represents syntactic category as an object. Unlike traditional syntactic
+ * categories, we use indexed syntactic categories as our basic categories since
+ * indexes are highly important in semantics. They are also crucial in finding
+ * dependencies between words. Our notation is powerful than existing known
+ * indexing schemes for candc.
  *
- *  e.g. An indexed category: syntactic category ((S[dcl]{_}\NP{X}){_}/NP{Y}){_}
+ * e.g. An indexed category: syntactic category ((S[dcl]{_}\NP{X}){_}/NP{Y}){_}
  *
- *  _ represents the current word. X represents left noun phrase, Y represents right noun phrase.
+ * _ represents the current word. X represents left noun phrase, Y represents
+ * right noun phrase.
  *
- *  Dependencies can be specified as follows. ((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ subj X,_ obj Y,X rel
- * Y
+ * Dependencies can be specified as follows. ((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_
+ * subj X,_ obj Y,X rel Y
  *
- *  Existing software for CCG does not allow to specify the relation between X and Y, but we support
- * it. This is useful in the case of coupla e.g. "Obama is the president", here a relation between
- * "Obama" and "president" can be specified unlike exisiting tools.
+ * Existing software for CCG does not allow to specify the relation between X
+ * and Y, but we support it. This is useful in the case of coupla e.g.
+ * "Obama is the president", here a relation between "Obama" and "president" can
+ * be specified unlike exisiting tools.
  *
- *  You can work with plain categories easily by assuming you do not have anything to do with
- * indices. If you pass a plain ccg category, we convert it into an indexed category automatically.
- * But you can ignore those indices without any harm.
+ * You can work with plain categories easily by assuming you do not have
+ * anything to do with indices. If you pass a plain ccg category, we convert it
+ * into an indexed category automatically. But you can ignore those indices
+ * without any harm.
  *
- *  Simple form of ((S[dcl]{1}\NP{2}){_}/NP{3}){_} is (S[dcl]\NP)/NP which is formed by removing all
- * the indices
+ * Simple form of ((S[dcl]{1}\NP{2}){_}/NP{3}){_} is (S[dcl]\NP)/NP which is
+ * formed by removing all the indices
  *
  * @author Siva Reddy
  */
 
 public class SyntacticCategory {
 
-  public static class IndexedDependency implements Comparable<IndexedDependency> {
+  public static class IndexedDependency implements
+      Comparable<IndexedDependency> {
     private CategoryIndex parent;
     private CategoryIndex child;
     private String relation;
 
-    public IndexedDependency(CategoryIndex parent, String relation, CategoryIndex child) {
+    public IndexedDependency(CategoryIndex parent, String relation,
+        CategoryIndex child) {
       this.parent = parent;
       this.child = child;
       this.relation = relation;
@@ -84,12 +90,8 @@ public class SyntacticCategory {
 
     @Override
     public String toString() {
-      return Objects
-          .toStringHelper(this)
-          .add("head", parent)
-          .add("rel", relation)
-          .add("child", child)
-          .toString();
+      return Objects.toStringHelper(this).add("head", parent)
+          .add("rel", relation).add("child", child).toString();
     }
 
     @Override
@@ -135,19 +137,22 @@ public class SyntacticCategory {
 
   };
 
-  private static String restrictedPunctuation =
-      String.format("\\(\\)\\[\\]\\{\\}\\<\\>%s", Direction.allDirections);
-  private static String indexPatternString = String.format("\\{([^%s]+)\\}", restrictedPunctuation);
-
-  private static String basicCategoryPatternString = String.format(
-      "([^%s]+)(\\[[^%s]+\\])?(\\{[^%s]+\\})?", restrictedPunctuation, restrictedPunctuation,
+  private static String restrictedPunctuation = String.format(
+      "\\(\\)\\[\\]\\{\\}\\<\\>%s", Direction.allDirections);
+  private static String indexPatternString = String.format("\\{([^%s]+)\\}",
       restrictedPunctuation);
 
-  private static Pattern basicCategoryPattern =
-      Pattern.compile(String.format("^%s$", basicCategoryPatternString));
+  private static String basicCategoryPatternString = String.format(
+      "([^%s]+)(\\[[^%s]+\\])?(\\{[^%s]+\\})?", restrictedPunctuation,
+      restrictedPunctuation, restrictedPunctuation);
 
-  private static String dependencyPatternString = "([\\S]+)[\\s]+([\\S]+)[\\s]+([\\S]+)";
-  private static Pattern dependencyPattern = Pattern.compile(dependencyPatternString);
+  private static Pattern basicCategoryPattern = Pattern.compile(String.format(
+      "^%s$", basicCategoryPatternString));
+
+  private static String dependencyPatternString =
+      "([\\S]+)[\\s]+([\\S]+)[\\s]+([\\S]+)";
+  private static Pattern dependencyPattern = Pattern
+      .compile(dependencyPatternString);
 
   private SyntacticCategory parent;
   private SyntacticCategory argument;
@@ -180,7 +185,8 @@ public class SyntacticCategory {
    * @param feature
    * @param index
    */
-  private SyntacticCategory(String basicCategory, StringObject feature, CategoryIndex index) {
+  private SyntacticCategory(String basicCategory, StringObject feature,
+      CategoryIndex index) {
     isBasic = true;
     isVar = false;
     this.basicCategory = basicCategory;
@@ -199,8 +205,9 @@ public class SyntacticCategory {
    * @param variableIndex
    * @param argumentDirection
    */
-  public SyntacticCategory(SyntacticCategory parentCategory, SyntacticCategory argumentCategory,
-      CategoryIndex variableIndex, Direction argumentDirection) {
+  public SyntacticCategory(SyntacticCategory parentCategory,
+      SyntacticCategory argumentCategory, CategoryIndex variableIndex,
+      Direction argumentDirection) {
     this.parent = parentCategory;
     this.argument = argumentCategory;
     this.index = variableIndex;
@@ -217,8 +224,8 @@ public class SyntacticCategory {
   }
 
   /**
-   * Constructor for variable category which will be instantiated only when combined with other
-   * categories. Useful for type raising
+   * Constructor for variable category which will be instantiated only when
+   * combined with other categories. Useful for type raising
    */
   public SyntacticCategory() {
     isVar = true;
@@ -232,8 +239,9 @@ public class SyntacticCategory {
    * @param synCat
    */
   private void copyCategory(SyntacticCategory synCat) {
-    Preconditions.checkArgument(synCat.isVar == false,
-        "Cannot copy variable category. Variable should be instantiated before copying");
+    Preconditions
+        .checkArgument(synCat.isVar == false,
+            "Cannot copy variable category. Variable should be instantiated before copying");
     this.index.unify(synCat.index);
     if (synCat.isBasic()) {
       isBasic = synCat.isBasic;
@@ -249,8 +257,8 @@ public class SyntacticCategory {
   }
 
   /*
-   * copy the syntactic category without unifying the variables with original syntactic category
-   * variables
+   * copy the syntactic category without unifying the variables with original
+   * syntactic category variables
    */
   public SyntacticCategory shallowCopy() {
     String synCatCopyString = this.toSimpleIndexString();
@@ -340,7 +348,8 @@ public class SyntacticCategory {
    * @return
    */
   public SyntacticCategory getParent() {
-    Preconditions.checkArgument(!isBasic, "Cannot be used with basic categories");
+    Preconditions.checkArgument(!isBasic,
+        "Cannot be used with basic categories");
     return parent;
   }
 
@@ -350,14 +359,15 @@ public class SyntacticCategory {
    * @return
    */
   public SyntacticCategory getArgument() {
-    Preconditions.checkArgument(!isBasic, "Cannot be used with basic categories");
+    Preconditions.checkArgument(!isBasic,
+        "Cannot be used with basic categories");
     return argument;
   }
 
   /**
-   * Converts any syntactic category to indexed category. If the indexes are already present, it
-   * uses the indexes, or else new indexes are created. Automatic indexes are not linguistically
-   * motivated.
+   * Converts any syntactic category to indexed category. If the indexes are
+   * already present, it uses the indexes, or else new indexes are created.
+   * Automatic indexes are not linguistically motivated.
    *
    * e.g. (S\N)/PP -> ((S{$X1}\N{$X2}){$X1}/PP{$X3}){$X4}
    *
@@ -369,45 +379,54 @@ public class SyntacticCategory {
   public static SyntacticCategory fromString(String categoryString) {
 
     List<String> parts =
-        Lists.newArrayList(Splitter.on(";").omitEmptyStrings().trimResults().split(categoryString));
-    Preconditions.checkArgument(parts.size() > 0, "Malformed category: " + categoryString);
+        Lists.newArrayList(Splitter.on(";").omitEmptyStrings().trimResults()
+            .split(categoryString));
+    Preconditions.checkArgument(parts.size() > 0, "Malformed category: "
+        + categoryString);
 
     Map<String, CategoryIndex> varCache = Maps.newHashMap();
     Map<String, StringObject> featureCache = Maps.newHashMap();
-    SyntacticCategory category = fromStringHidden(parts.get(0), varCache, featureCache);
+    SyntacticCategory category =
+        fromStringHidden(parts.get(0), varCache, featureCache);
     /*-if (category.index.getVariableName()
     		.startsWith(CategoryIndex.varPrefix))
     	category.index.setVariableName("_");*/
 
-if (parts.size() > 1) {
+    if (parts.size() > 1) {
       category.processDependencies(parts.get(1), varCache);
     }
 
     return category;
   }
 
-  private void processDependencies(String depString, Map<String, CategoryIndex> varCache) {
+  private void processDependencies(String depString,
+      Map<String, CategoryIndex> varCache) {
     List<String> depStrings =
-        Lists.newArrayList(Splitter.on(",").omitEmptyStrings().trimResults().split(depString));
+        Lists.newArrayList(Splitter.on(",").omitEmptyStrings().trimResults()
+            .split(depString));
     if (dependencies == null) {
       dependencies = Sets.newHashSet();
     }
     for (String dep : depStrings) {
       Matcher matcher = dependencyPattern.matcher(dep);
-      Preconditions.checkArgument(matcher.find(), "Malformed dependencies specified:" + dep);
+      Preconditions.checkArgument(matcher.find(),
+          "Malformed dependencies specified:" + dep);
       String head = matcher.group(1);
       String relation = matcher.group(2);
       String child = matcher.group(3);
-      Preconditions.checkArgument(varCache.containsKey(head) && varCache.containsKey(child),
+      Preconditions.checkArgument(
+          varCache.containsKey(head) && varCache.containsKey(child),
           "Unknown variables used in dependency: " + dep);
       IndexedDependency dependency =
-          new IndexedDependency(varCache.get(head), relation, varCache.get(child));
+          new IndexedDependency(varCache.get(head), relation,
+              varCache.get(child));
       dependencies.add(dependency);
     }
   }
 
   private static SyntacticCategory fromStringHidden(String categoryString,
-      Map<String, CategoryIndex> varCache, Map<String, StringObject> featureCache) {
+      Map<String, CategoryIndex> varCache,
+      Map<String, StringObject> featureCache) {
     Matcher basicCategoryMatcher = basicCategoryPattern.matcher(categoryString);
     SyntacticCategory category = null;
 
@@ -421,9 +440,15 @@ if (parts.size() > 1) {
       }
       CategoryIndex variableIndex;
       if (indexName != null) {
-        indexName = CharMatcher.anyOf("\\{\\}\\*").removeFrom(indexName); // * indicates long
-                                                                          // distance relation.
-                                                                          // Could be useful in
+        indexName = CharMatcher.anyOf("\\{\\}\\*").removeFrom(indexName); // *
+                                                                          // indicates
+                                                                          // long
+                                                                          // distance
+                                                                          // relation.
+                                                                          // Could
+                                                                          // be
+                                                                          // useful
+                                                                          // in
                                                                           // future
         if (!varCache.containsKey(indexName)) {
           variableIndex = new CategoryIndex(indexName);
@@ -447,7 +472,8 @@ if (parts.size() > 1) {
         featureCache.put(feature, featureObject);
       }
 
-      category = new SyntacticCategory(basicCategory, featureObject, variableIndex);
+      category =
+          new SyntacticCategory(basicCategory, featureObject, variableIndex);
     } else {
       // Complex category
       char[] cArray = categoryString.toCharArray();
@@ -473,7 +499,8 @@ if (parts.size() > 1) {
         }
 
         // the category is surrounded by brackets
-        if (!CharMatcher.anyOf(Direction.allDirections).matchesAnyOf(categoryString.substring(i))) {
+        if (!CharMatcher.anyOf(Direction.allDirections).matchesAnyOf(
+            categoryString.substring(i))) {
           surroundedByBrackets = true;
         }
       }
@@ -534,17 +561,22 @@ if (parts.size() > 1) {
 
       Direction direction = Direction.getDirection(cArray[splitPosition]);
 
-      SyntacticCategory parenCategory = fromStringHidden(parentString, varCache, featureCache);
-      SyntacticCategory childCategory = fromStringHidden(childString, varCache, featureCache);
+      SyntacticCategory parenCategory =
+          fromStringHidden(parentString, varCache, featureCache);
+      SyntacticCategory childCategory =
+          fromStringHidden(childString, varCache, featureCache);
 
-      category = new SyntacticCategory(parenCategory, childCategory, variableIndex, direction);
+      category =
+          new SyntacticCategory(parenCategory, childCategory, variableIndex,
+              direction);
 
     }
     return category;
   }
 
   /**
-   * An exception to indicate a bad parse e.g. two conjunctions in a conjunction relation
+   * An exception to indicate a bad parse e.g. two conjunctions in a conjunction
+   * relation
    *
    */
   public static class BadParseException extends Exception {
@@ -569,8 +601,9 @@ if (parts.size() > 1) {
 
   /**
    *
-   * Unify two syntactic categories by unifying indexes, features, directions. If the syntactic
-   * category contains variables, those are assigned to relevant categories
+   * Unify two syntactic categories by unifying indexes, features, directions.
+   * If the syntactic category contains variables, those are assigned to
+   * relevant categories
    *
    * @param synCat
    * @throws BadParseException
@@ -621,7 +654,8 @@ if (parts.size() > 1) {
         if (feat2.getString() != null && feat2.getString().matches("^[^A-Z].*")) {
           feat1.setString(feat2.getString());
         }
-      } else if (feat2.getString() != null && feat2.getString().matches("^[A-Z]")) {
+      } else if (feat2.getString() != null
+          && feat2.getString().matches("^[A-Z]")) {
         if (feat1.getString() != null && feat1.getString().matches("^[^A-Z]")) {
           feat2.setString(feat1.getString());
         }
@@ -687,7 +721,8 @@ if (parts.size() > 1) {
     return filteredDeps;
   }
 
-  private SyntacticCategory application(SyntacticCategory synCat) throws BadParseException {
+  private SyntacticCategory application(SyntacticCategory synCat)
+      throws BadParseException {
     SyntacticCategory synCat1 = this;
     SyntacticCategory synCat2 = synCat;
 
@@ -710,9 +745,8 @@ if (parts.size() > 1) {
    */
   public static SyntacticCategory forwardApplication(SyntacticCategory synCat1,
       SyntacticCategory synCat2) throws BadParseException {
-    Preconditions.checkArgument(
-        synCat1.getDirection() == Direction.RIGHT || synCat1.getDirection() == Direction.ANY,
-        "Wrong directionality");
+    Preconditions.checkArgument(synCat1.getDirection() == Direction.RIGHT
+        || synCat1.getDirection() == Direction.ANY, "Wrong directionality");
     SyntacticCategory synCat = synCat1.application(synCat2);
     synCat1.direction = Direction.RIGHT;
     return synCat;
@@ -726,23 +760,25 @@ if (parts.size() > 1) {
    * @return
    * @throws BadParseException
    */
-  public static SyntacticCategory backwardApplication(SyntacticCategory synCat1,
-      SyntacticCategory synCat2) throws BadParseException {
-    Preconditions.checkArgument(
-        synCat2.getDirection() == Direction.LEFT || synCat2.getDirection() == Direction.ANY,
-        "Wrong directionality");
+  public static SyntacticCategory backwardApplication(
+      SyntacticCategory synCat1, SyntacticCategory synCat2)
+      throws BadParseException {
+    Preconditions.checkArgument(synCat2.getDirection() == Direction.LEFT
+        || synCat2.getDirection() == Direction.ANY, "Wrong directionality");
 
     SyntacticCategory synCat = synCat2.application(synCat1);
     synCat2.direction = Direction.LEFT;
     return synCat;
   }
 
-  private SyntacticCategory composition(SyntacticCategory synCat) throws BadParseException {
+  private SyntacticCategory composition(SyntacticCategory synCat)
+      throws BadParseException {
     SyntacticCategory synCat1 = this;
     SyntacticCategory synCat2 = synCat;
 
     Preconditions.checkArgument(!synCat1.isBasic() && !synCat2.isBasic(),
-        "One or more categories are basic. Cannot perform composition " + synCat1 + " " + synCat2);
+        "One or more categories are basic. Cannot perform composition "
+            + synCat1 + " " + synCat2);
 
     SyntacticCategory parent1 = synCat1.getParent();
     SyntacticCategory arg1 = synCat1.getArgument();
@@ -755,7 +791,8 @@ if (parts.size() > 1) {
     // TODO not clear which will be the index of new category. Can use the
     // head information
     SyntacticCategory resultSyncat =
-        new SyntacticCategory(parent1, arg2, new CategoryIndex(), synCat2.getDirection());
+        new SyntacticCategory(parent1, arg2, new CategoryIndex(),
+            synCat2.getDirection());
     // SyntacticCategory resultSyncat = new SyntacticCategory(parent1, arg2,
     // synCat2.getIndex(), synCat2.getDirection());
 
@@ -773,10 +810,11 @@ if (parts.size() > 1) {
   public static SyntacticCategory forwardComposition(SyntacticCategory synCat1,
       SyntacticCategory synCat2) throws BadParseException {
     Preconditions.checkArgument(!synCat1.isBasic() && !synCat2.isBasic(),
-        "One or more categories are basic. Cannot perform composition " + synCat1 + " " + synCat2);
+        "One or more categories are basic. Cannot perform composition "
+            + synCat1 + " " + synCat2);
 
-    Preconditions.checkArgument(
-        synCat1.getDirection() == Direction.RIGHT || synCat1.getDirection() == Direction.ANY,
+    Preconditions.checkArgument(synCat1.getDirection() == Direction.RIGHT
+        || synCat1.getDirection() == Direction.ANY,
         "Wrong direction. Cannot perform composition");
     SyntacticCategory resultSynCat = synCat1.composition(synCat2);
     synCat1.direction = Direction.RIGHT;
@@ -791,13 +829,15 @@ if (parts.size() > 1) {
    * @return
    * @throws BadParseException
    */
-  public static SyntacticCategory backwardComposition(SyntacticCategory synCat1,
-      SyntacticCategory synCat2) throws BadParseException {
+  public static SyntacticCategory backwardComposition(
+      SyntacticCategory synCat1, SyntacticCategory synCat2)
+      throws BadParseException {
     Preconditions.checkArgument(!synCat1.isBasic() && !synCat1.isBasic(),
-        "One or more categories are basic. Cannot perform composition " + synCat1 + " " + synCat2);
+        "One or more categories are basic. Cannot perform composition "
+            + synCat1 + " " + synCat2);
 
-    Preconditions.checkArgument(
-        synCat2.getDirection() == Direction.LEFT || synCat2.getDirection() == Direction.ANY,
+    Preconditions.checkArgument(synCat2.getDirection() == Direction.LEFT
+        || synCat2.getDirection() == Direction.ANY,
         "Wrong direction. Cannot perform composition");
 
     SyntacticCategory resultSynCat = synCat2.composition(synCat1);
@@ -808,35 +848,39 @@ if (parts.size() > 1) {
 
   /**
    *
-   * Returns the category formed by generalised forward composition along with the depth of the
-   * argument category at which the composition is performed.
+   * Returns the category formed by generalised forward composition along with
+   * the depth of the argument category at which the composition is performed.
    *
-   *  Example: for S/(X/X) and ((X/X)/X)/X, the depth is 2. S/X and ((X/X)/X)/X the depth is 3
+   * Example: for S/(X/X) and ((X/X)/X)/X, the depth is 2. S/X and ((X/X)/X)/X
+   * the depth is 3
    *
    * @param synCat
    * @return
    * @throws BadParseException
    */
   public static Pair<SyntacticCategory, Integer> generalisedForwardComposition(
-      SyntacticCategory synCat1, SyntacticCategory synCat2) throws BadParseException {
+      SyntacticCategory synCat1, SyntacticCategory synCat2)
+      throws BadParseException {
     // P1/P2;f ((P2/P3)/P4);g -> ((P1/P3)/P4); (lambda z w (f ((g z) w))
 
     Preconditions.checkArgument(!synCat1.isBasic() && !synCat2.isBasic(),
-        "One or more categories are basic. Cannot perform composition " + synCat1 + " " + synCat2);
+        "One or more categories are basic. Cannot perform composition "
+            + synCat1 + " " + synCat2);
 
-    Preconditions.checkArgument(
-        synCat1.getDirection() == Direction.RIGHT || synCat1.getDirection() == Direction.ANY,
+    Preconditions.checkArgument(synCat1.getDirection() == Direction.RIGHT
+        || synCat1.getDirection() == Direction.ANY,
         "Wrong direction. Cannot perform composition");
 
-    Pair<SyntacticCategory, Integer> resultSynCatPair = synCat1.generalisedComposition(synCat2);
+    Pair<SyntacticCategory, Integer> resultSynCatPair =
+        synCat1.generalisedComposition(synCat2);
     synCat1.direction = Direction.RIGHT;
     return resultSynCatPair;
   }
 
   /**
    *
-   * Returns the category formed by generalised backward composition along with the depth of the
-   * argument category at which the composition is performed.
+   * Returns the category formed by generalised backward composition along with
+   * the depth of the argument category at which the composition is performed.
    *
    * @param synCat1
    * @param synCat2
@@ -844,17 +888,20 @@ if (parts.size() > 1) {
    * @throws BadParseException
    */
   public static Pair<SyntacticCategory, Integer> generalisedBackwardComposition(
-      SyntacticCategory synCat1, SyntacticCategory synCat2) throws BadParseException {
+      SyntacticCategory synCat1, SyntacticCategory synCat2)
+      throws BadParseException {
     // ((P2/P3)/P4);g P1\P2;f -> ((P1/P3)/P4); (lambda z w (f ((g z) w))
 
     Preconditions.checkArgument(!synCat1.isBasic() && !synCat2.isBasic(),
-        "One or more categories are basic. Cannot perform composition " + synCat1 + " " + synCat2);
+        "One or more categories are basic. Cannot perform composition "
+            + synCat1 + " " + synCat2);
 
-    Preconditions.checkArgument(
-        synCat2.getDirection() == Direction.LEFT || synCat2.getDirection() == Direction.ANY,
+    Preconditions.checkArgument(synCat2.getDirection() == Direction.LEFT
+        || synCat2.getDirection() == Direction.ANY,
         "Wrong direction. Cannot perform composition");
 
-    Pair<SyntacticCategory, Integer> resultSynCatPair = synCat2.generalisedComposition(synCat1);
+    Pair<SyntacticCategory, Integer> resultSynCatPair =
+        synCat2.generalisedComposition(synCat1);
     synCat2.direction = Direction.LEFT;
     return resultSynCatPair;
   }
@@ -862,23 +909,25 @@ if (parts.size() > 1) {
   /**
    * Perform the generalised composition.
    *
-   *  Returns the depth of the argument category at which the composition is performed.
+   * Returns the depth of the argument category at which the composition is
+   * performed.
    *
-   *  Example: for S/(X/X) and ((X/X)/X)/X, the depth is 2. S/X and ((X/X)/X)/X the depth is 3
+   * Example: for S/(X/X) and ((X/X)/X)/X, the depth is 2. S/X and ((X/X)/X)/X
+   * the depth is 3
    *
    * @param synCat
    * @return
    * @throws BadParseException
    */
-  private Pair<SyntacticCategory, Integer> generalisedComposition(SyntacticCategory synCat)
-      throws BadParseException {
+  private Pair<SyntacticCategory, Integer> generalisedComposition(
+      SyntacticCategory synCat) throws BadParseException {
     // X/Y (Y/W)/Z -> (X/W)/Z
 
     SyntacticCategory synCat1 = this;
     SyntacticCategory synCat2 = synCat;
 
-    Preconditions.checkArgument(!synCat2.isBasic(),
-        this + " cannot compose with the basic category " + synCat2);
+    Preconditions.checkArgument(!synCat2.isBasic(), this
+        + " cannot compose with the basic category " + synCat2);
     SyntacticCategory parent1 = synCat1.getParent();
     SyntacticCategory arg1 = synCat1.getArgument();
 
@@ -916,7 +965,9 @@ if (parts.size() > 1) {
       Direction newDirection = directionStack.pop();
 
       // not clear what will be the new index. can use head information
-      newCategory = new SyntacticCategory(newCategory, arg2, new CategoryIndex(), newDirection);
+      newCategory =
+          new SyntacticCategory(newCategory, arg2, new CategoryIndex(),
+              newDirection);
       // newCategory = new SyntacticCategory(newCategory, arg2, newIndex,
       // newDirection);
     }
@@ -934,7 +985,8 @@ if (parts.size() > 1) {
     if (isBasic) {
       return "B";
     } else {
-      return "F " + argument.getDepthFirstSkelton() + " " + parent.getDepthFirstSkelton();
+      return "F " + argument.getDepthFirstSkelton() + " "
+          + parent.getDepthFirstSkelton();
     }
   }
 
@@ -944,7 +996,8 @@ if (parts.size() > 1) {
    * @return
    */
   public CategoryIndex getDeepCategoryIndex() {
-    Preconditions.checkArgument(isVar == false, "Cannot get deep category for a variable category");
+    Preconditions.checkArgument(isVar == false,
+        "Cannot get deep category for a variable category");
     if (isBasic) {
       return index;
     } else {
@@ -963,9 +1016,11 @@ if (parts.size() > 1) {
     // A -> X|(X|A)
     SyntacticCategory var = new SyntacticCategory();
     CategoryIndex newVar = new CategoryIndex();
-    SyntacticCategory newArgument = new SyntacticCategory(var, synCat, newVar, Direction.ANY);
+    SyntacticCategory newArgument =
+        new SyntacticCategory(var, synCat, newVar, Direction.ANY);
     SyntacticCategory newCategory =
-        new SyntacticCategory(var, newArgument, synCat.getIndex(), Direction.ANY);
+        new SyntacticCategory(var, newArgument, synCat.getIndex(),
+            Direction.ANY);
     return newCategory;
   }
 
@@ -975,7 +1030,8 @@ if (parts.size() > 1) {
    * @return
    */
   public SyntacticCategory getDeepParentCategory() {
-    Preconditions.checkArgument(isVar == false, "Cannot get deep category for a variable category");
+    Preconditions.checkArgument(isVar == false,
+        "Cannot get deep category for a variable category");
     if (isBasic) {
       return this;
     } else {
@@ -989,7 +1045,8 @@ if (parts.size() > 1) {
    * @return
    */
   public SyntacticCategory getDeepChildCategory() {
-    Preconditions.checkArgument(isVar == false, "Cannot get deep category for a variable category");
+    Preconditions.checkArgument(isVar == false,
+        "Cannot get deep category for a variable category");
     if (isBasic) {
       return this;
     } else {
@@ -1004,7 +1061,8 @@ if (parts.size() > 1) {
    * @param newIndex
    * @return
    */
-  public SyntacticCategory replaceIndex(CategoryIndex oldIndex, CategoryIndex newIndex) {
+  public SyntacticCategory replaceIndex(CategoryIndex oldIndex,
+      CategoryIndex newIndex) {
     SyntacticCategory result = this;
 
     if (this.isBasic) {
@@ -1019,7 +1077,8 @@ if (parts.size() > 1) {
       if (variableIndex.equals(oldIndex)) {
         variableIndex = newIndex;
       }
-      result = new SyntacticCategory(parent, arg, variableIndex, this.direction);
+      result =
+          new SyntacticCategory(parent, arg, variableIndex, this.direction);
     }
 
     return result;
@@ -1031,7 +1090,8 @@ if (parts.size() > 1) {
    * @param synCat
    * @return
    */
-  public static SyntacticCategory generateCoordinateCategory(SyntacticCategory synCat) {
+  public static SyntacticCategory generateCoordinateCategory(
+      SyntacticCategory synCat) {
     String simpleCat = synCat.toSimpleIndexString();
     SyntacticCategory ccCat = SyntacticCategory.fromString(simpleCat);
     // SyntacticCategory deepParentCat = ccCat.getDeepParentCategory();
@@ -1058,23 +1118,27 @@ if (parts.size() > 1) {
     // SyntacticCategory cat2 = ccCat
     // .replaceDeepCategoryAndVars(deepParentCat2);
 
-    SyntacticCategory XX1 = new SyntacticCategory(ccCat, cat1, ccVar, Direction.ANY);
-    SyntacticCategory XX1X2 = new SyntacticCategory(XX1, cat2, ccVar, Direction.ANY);
+    SyntacticCategory XX1 =
+        new SyntacticCategory(ccCat, cat1, ccVar, Direction.ANY);
+    SyntacticCategory XX1X2 =
+        new SyntacticCategory(XX1, cat2, ccVar, Direction.ANY);
 
     return XX1X2;
   }
 
   /**
-   * Apply unary rule by unifying the indexes with same names in the old and new category.
+   * Apply unary rule by unifying the indexes with same names in the old and new
+   * category.
    *
    * @param leftSyntacticCategoryOld
    * @param leftSyntacticCategory
    * @param outSyntacticCategory
    * @throws BadParseException
    */
-  public static void applyUnaryRuleByUnification(SyntacticCategory leftSyntacticCategoryOld,
-      SyntacticCategory leftSyntacticCategory, SyntacticCategory outSyntacticCategory)
-      throws BadParseException {
+  public static void applyUnaryRuleByUnification(
+      SyntacticCategory leftSyntacticCategoryOld,
+      SyntacticCategory leftSyntacticCategory,
+      SyntacticCategory outSyntacticCategory) throws BadParseException {
     // S[adj]\NP{X} NP{X}\NP{X}
 
     leftSyntacticCategory.unify(leftSyntacticCategoryOld);
@@ -1093,8 +1157,8 @@ if (parts.size() > 1) {
 
   /**
    *
-   * Applies binary rule by unification of indexes with same names in the old categories and new
-   * category.
+   * Applies binary rule by unification of indexes with same names in the old
+   * categories and new category.
    *
    * @param leftSyntacticCategoryOld
    * @param rightSyntacticCategoryOld
@@ -1103,8 +1167,10 @@ if (parts.size() > 1) {
    * @param outCategory
    * @throws BadParseException
    */
-  public static void applyBinaryRuleByUnification(SyntacticCategory leftSyntacticCategoryOld,
-      SyntacticCategory rightSyntacticCategoryOld, SyntacticCategory leftSyntacticCategory,
+  public static void applyBinaryRuleByUnification(
+      SyntacticCategory leftSyntacticCategoryOld,
+      SyntacticCategory rightSyntacticCategoryOld,
+      SyntacticCategory leftSyntacticCategory,
       SyntacticCategory rightSyntacticCategory, SyntacticCategory outCategory)
       throws BadParseException {
     leftSyntacticCategory.unify(leftSyntacticCategoryOld);

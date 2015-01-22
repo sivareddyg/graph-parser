@@ -121,7 +121,8 @@ public class Graph<T> implements Comparable<Graph<T>> {
     }
   }
 
-  public void addEventEventModifiers(Map<T, TreeSet<Type<T>>> eventEventModifiers) {
+  public void addEventEventModifiers(
+      Map<T, TreeSet<Type<T>>> eventEventModifiers) {
     this.eventEventModifiers = eventEventModifiers;
     for (TreeSet<Type<T>> typeSet : eventEventModifiers.values()) {
       for (Type<T> type : typeSet) {
@@ -226,7 +227,8 @@ public class Graph<T> implements Comparable<Graph<T>> {
         return false;
       }
       Type<?> other = (Type<?>) obj;
-      if (other.parentNode.equals(parentNode) && other.modifierNode.equals(modifierNode)
+      if (other.parentNode.equals(parentNode)
+          && other.modifierNode.equals(modifierNode)
           && other.entityType.equals(entityType)) {
         return true;
       }
@@ -341,11 +343,12 @@ public class Graph<T> implements Comparable<Graph<T>> {
         return false;
       }
       Edge<?> other = (Edge<?>) obj;
-      if (other.mediator.equals(mediator) && other.node1.equals(node1) && other.node2.equals(node2)
-          && other.relation.equals(relation)) {
+      if (other.mediator.equals(mediator) && other.node1.equals(node1)
+          && other.node2.equals(node2) && other.relation.equals(relation)) {
         return true;
       }
-      if (other.mediator.equals(mediator) && other.node1.equals(node2) && other.node2.equals(node1)
+      if (other.mediator.equals(mediator) && other.node1.equals(node2)
+          && other.node2.equals(node1)
           && other.relation.equals(relation.inverse())) {
         return true;
       }
@@ -421,7 +424,8 @@ public class Graph<T> implements Comparable<Graph<T>> {
     }
 
     for (T node : nodeProperties.keySet()) {
-      newGraph.nodeProperties.put(node, new HashSet<>(nodeProperties.get(node)));
+      newGraph.nodeProperties
+          .put(node, new HashSet<>(nodeProperties.get(node)));
     }
   }
 
@@ -474,7 +478,8 @@ public class Graph<T> implements Comparable<Graph<T>> {
     eventTypes.get(parentNode).add(type);
   }
 
-  public void addEventEventModifier(T parentNode, T modifierNode, EntityType nodeType) {
+  public void addEventEventModifier(T parentNode, T modifierNode,
+      EntityType nodeType) {
     Type<T> type = new Type<>(parentNode, modifierNode, nodeType);
     addNode(parentNode);
     addNode(modifierNode);
@@ -774,7 +779,7 @@ public class Graph<T> implements Comparable<Graph<T>> {
     	}
     }*/
 
-return connectedNodes;
+    return connectedNodes;
 
   }
 

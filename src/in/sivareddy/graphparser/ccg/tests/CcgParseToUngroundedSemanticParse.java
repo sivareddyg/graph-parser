@@ -22,19 +22,23 @@ public class CcgParseToUngroundedSemanticParse {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     JsonParser jsonParser = new JsonParser();
 
-    CcgAutoLexicon lexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
-        "./data/unary_rules.txt", "./data/binary_rules.txt", "./data/lexicon_specialCases.txt");
+    CcgAutoLexicon lexicon =
+        new CcgAutoLexicon("./data/candc_markedup.modified",
+            "./data/unary_rules.txt", "./data/binary_rules.txt",
+            "./data/lexicon_specialCases.txt");
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] argumentLexicalIdenfiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
     boolean ignorePronouns = false;
 
-    CcgParser ccgParser = new CcgParser(lexicon, relationLexicalIdentifiers,
-        argumentLexicalIdenfiers, relationTypingIdentifiers, ignorePronouns);
+    CcgParser ccgParser =
+        new CcgParser(lexicon, relationLexicalIdentifiers,
+            argumentLexicalIdenfiers, relationTypingIdentifiers, ignorePronouns);
     Set<Set<String>> relations;
     Gson gson = new Gson();
 
-    // ccgParseTree = ccgParser.parseFromString("(<L N Adobe Adobe NNP I-ORG I-NP N>)");
+    // ccgParseTree =
+    // ccgParser.parseFromString("(<L N Adobe Adobe NNP I-ORG I-NP N>)");
     // assertEquals(ccgParseTree.getLeafNodes().size(), 1);
 
     try {
@@ -53,7 +57,8 @@ public class CcgParseToUngroundedSemanticParse {
           String synParse = synParseObject.get("synPar").getAsString();
           try {
             // Take only the first tree
-            CcgParseTree ccgParseTree = ccgParser.parseFromString(synParse).get(0);
+            CcgParseTree ccgParseTree =
+                ccgParser.parseFromString(synParse).get(0);
             relations = ccgParseTree.getLexicalisedSemanticPredicates(false);
             jsonSentence.add("relations", gson.toJsonTree(relations));
             System.out.println(gson.toJson(jsonSentence));

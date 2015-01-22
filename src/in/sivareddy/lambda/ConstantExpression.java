@@ -23,7 +23,8 @@ public class ConstantExpression extends AbstractExpression {
   }
 
   @Override
-  public Expression substitute(ConstantExpression constant, Expression replacement) {
+  public Expression substitute(ConstantExpression constant,
+      Expression replacement) {
     if (this.equals(constant)) {
       return replacement;
     } else {

@@ -21,8 +21,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
+import others.EasyCcgCli;
 import others.StanfordCoreNlpDemo;
-import uk.ac.ed.easyccg.main.EasyCCG;
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 
 import com.google.common.collect.Lists;
@@ -32,24 +32,26 @@ import com.google.gson.JsonParser;
 
 public class CcgParseToUngroundedGraphs {
 
-  public static void main(String[] args) throws IOException, ArgumentValidationException,
-      InterruptedException {
+  public static void main(String[] args) throws IOException,
+      ArgumentValidationException, InterruptedException {
     JsonParser jsonParser = new JsonParser();
     Gson gson = new Gson();
 
     int nbestParses = 1;
     String ccgModelDir = "lib_data/easyccg_model/ -r S[dcl] S[pss] S[b]";
-    EasyCCG ccgParser = new EasyCCG(ccgModelDir, nbestParses);
+    EasyCcgCli ccgParser = new EasyCcgCli(ccgModelDir, nbestParses);
 
     StanfordCoreNlpDemo nlpPipeline = new StanfordCoreNlpDemo("en");
 
     CcgAutoLexicon questionCcgAutoLexicon =
-        new CcgAutoLexicon("./lib_data/candc_markedup.modified", "./lib_data/unary_rules.txt",
-            "./lib_data/binary_rules.txt", "./lib_data/lexicon_specialCases_questions.txt");
+        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
+            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
+            "./lib_data/lexicon_specialCases_questions.txt");
 
     CcgAutoLexicon normalCcgAutoLexicon =
-        new CcgAutoLexicon("./lib_data/candc_markedup.modified", "./lib_data/unary_rules.txt",
-            "./lib_data/binary_rules.txt", "./lib_data/lexicon_specialCases.txt");
+        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
+            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
+            "./lib_data/lexicon_specialCases.txt");
 
     String[] relationLexicalIdentifiers = {"word"};
     String[] relationTypingIdentifiers = {};
@@ -59,9 +61,11 @@ public class CcgParseToUngroundedGraphs {
     GroundedLexicon groundedLexicon = new GroundedLexicon(null);
     GroundedGraphs graphCreator =
         new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
-            questionCcgAutoLexicon, relationLexicalIdentifiers, relationTypingIdentifiers, null,
-            false, false, false, false, false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false, false, 10.0, 1.0, 0.0, 0.0);
+            questionCcgAutoLexicon, relationLexicalIdentifiers,
+            relationTypingIdentifiers, null, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, 10.0, 1.0, 0.0,
+            0.0);
 
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
@@ -83,7 +87,8 @@ public class CcgParseToUngroundedGraphs {
 
         JsonObject jsonSentence = jsonParser.parse(line).getAsJsonObject();
         if (jsonSentence.has("sentence"))
-          logger.debug("Input Sentence: " + jsonSentence.get("sentence").getAsString());
+          logger.debug("Input Sentence: "
+              + jsonSentence.get("sentence").getAsString());
         String sentence = jsonSentence.get("sentence").getAsString();
         List<String> processedText = nlpPipeline.processText(sentence);
 
@@ -112,7 +117,8 @@ public class CcgParseToUngroundedGraphs {
           jsonSentence.add("words", jsonParser.parse(gson.toJson(words)));
 
           List<LexicalGraph> graphs =
-              graphCreator.buildUngroundedGraph(jsonSentence, "synPars", nbestParses, logger);
+              graphCreator.buildUngroundedGraph(jsonSentence, "synPars",
+                  nbestParses, logger);
 
           logger.debug("# Ungrounded Graphs");
           if (graphs.size() > 0) {

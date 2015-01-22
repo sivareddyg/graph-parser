@@ -46,20 +46,24 @@ public class SyntacticCategoryTest extends TestCase {
     cat = SyntacticCategory.fromString("(S\\NP)");
     assertEquals(cat.toString(), "(S{X6=?}\\NP{X7=?}){X5=?}");
 
-    cat = SyntacticCategory.fromString("((S\\NP)/NP[sing]{X})/((S\\NP[plu])/NP{X})");
-    assertEquals(cat.toString(),
+    cat =
+        SyntacticCategory
+            .fromString("((S\\NP)/NP[sing]{X})/((S\\NP[plu])/NP{X})");
+    assertEquals(
+        cat.toString(),
         "(((S{X11=?}\\NP{X12=?}){X10=?}/NP[sing]{X=?}){X9=?}/((S{X16=?}\\NP[plu]{X17=?}){X15=?}/NP{X=?}){X14=?}){X8=?}");
 
     assertEquals(cat.toSimpleString(), "(((S\\NP)/NP[sing])/((S\\NP[plu])/NP))");
 
-    cat = SyntacticCategory.fromString(
-        "((S[dcl]{_}\\NP{X}){_}/NP{Y}){_};_ subj X, _ obj Y,X dummy Y");
+    cat =
+        SyntacticCategory
+            .fromString("((S[dcl]{_}\\NP{X}){_}/NP{Y}){_};_ subj X, _ obj Y,X dummy Y");
     Set<IndexedDependency> deps = cat.getDependencies();
     assertEquals(deps.size(), 3);
 
     cat =
-        SyntacticCategory.fromString(
-            "((((S[X]{Y}\\NP{Z}){Y}\\(S[X]{Y}\\NP{Z}){Y}){W}\\((S[X]{Y}\\NP{Z}){Y}\\(S[X]{Y}\\NP{Z}){Y}){W}){V}/(((S[X]{Y}\\NP{Z}){Y}\\(S[X]{Y}\\NP{Z}){Y}){W}\\((S[X]{Y}\\NP{Z}){Y}\\(S[X]{Y}\\NP{Z}){Y}){W}){V}){_}");
+        SyntacticCategory
+            .fromString("((((S[X]{Y}\\NP{Z}){Y}\\(S[X]{Y}\\NP{Z}){Y}){W}\\((S[X]{Y}\\NP{Z}){Y}\\(S[X]{Y}\\NP{Z}){Y}){W}){V}/(((S[X]{Y}\\NP{Z}){Y}\\(S[X]{Y}\\NP{Z}){Y}){W}\\((S[X]{Y}\\NP{Z}){Y}\\(S[X]{Y}\\NP{Z}){Y}){W}){V}){_}");
 
   }
 

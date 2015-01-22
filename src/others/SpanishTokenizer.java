@@ -34,7 +34,8 @@ public class SpanishTokenizer {
     Annotation annotation = new Annotation(text);
     pipeline.annotate(annotation);
 
-    List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
+    List<CoreMap> sentences =
+        annotation.get(CoreAnnotations.SentencesAnnotation.class);
     if (sentences != null && sentences.size() > 0) {
       for (CoreMap sentenceIter : sentences) {
         ArrayCoreMap sentence = (ArrayCoreMap) sentenceIter;

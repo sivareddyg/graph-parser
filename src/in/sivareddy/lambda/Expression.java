@@ -33,12 +33,13 @@ public interface Expression extends Serializable, Comparable<Expression> {
 
   Set<GeneralisedRelation> simplifyAndGetRelations(Set<String> entities);
 
-  Set<GeneralisedRelation> getRelationsWithoutSimplification(Set<String> entities);
+  Set<GeneralisedRelation> getRelationsWithoutSimplification(
+      Set<String> entities);
 
   boolean isContentTypeSemanticCategory();
 
-  Set<GeneralisedRelation> getRelationsWithoutSimplification(Set<String> entities,
-      Integer relationArity);
+  Set<GeneralisedRelation> getRelationsWithoutSimplification(
+      Set<String> entities, Integer relationArity);
 
   String removeExtraBrackets();
 

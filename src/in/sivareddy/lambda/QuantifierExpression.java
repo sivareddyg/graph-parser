@@ -13,8 +13,8 @@ public class QuantifierExpression extends AbstractExpression {
   private final List<ConstantExpression> boundVariables;
   private final Expression body;
 
-  public QuantifierExpression(String quantifierName, List<ConstantExpression> boundVariables,
-      Expression body) {
+  public QuantifierExpression(String quantifierName,
+      List<ConstantExpression> boundVariables, Expression body) {
     this.quantifierName = quantifierName;
     this.boundVariables = ImmutableList.copyOf(boundVariables);
     this.body = Preconditions.checkNotNull(body);
@@ -25,8 +25,8 @@ public class QuantifierExpression extends AbstractExpression {
   }
 
   /**
-   * Returns the body of the statement, i.e., the portion of the statement over which the quantifier
-   * the quantifier has scope.
+   * Returns the body of the statement, i.e., the portion of the statement over
+   * which the quantifier the quantifier has scope.
    *
    * @return
    */
@@ -50,10 +50,12 @@ public class QuantifierExpression extends AbstractExpression {
   }
 
   @Override
-  public Expression substitute(ConstantExpression constant, Expression replacement) {
+  public Expression substitute(ConstantExpression constant,
+      Expression replacement) {
     if (!boundVariables.contains(constant)) {
       Expression substitution = body.substitute(constant, replacement);
-      return new QuantifierExpression(quantifierName, boundVariables, substitution);
+      return new QuantifierExpression(quantifierName, boundVariables,
+          substitution);
     } else {
       return this;
     }
@@ -62,7 +64,8 @@ public class QuantifierExpression extends AbstractExpression {
   @Override
   public Expression simplify() {
     Expression simplifiedBody = body.simplify();
-    return new QuantifierExpression(quantifierName, boundVariables, simplifiedBody);
+    return new QuantifierExpression(quantifierName, boundVariables,
+        simplifiedBody);
   }
 
   @Override
@@ -86,8 +89,12 @@ public class QuantifierExpression extends AbstractExpression {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((body == null) ? 0 : body.hashCode());
-    result = prime * result + ((boundVariables == null) ? 0 : boundVariables.hashCode());
-    result = prime * result + ((quantifierName == null) ? 0 : quantifierName.hashCode());
+    result =
+        prime * result
+            + ((boundVariables == null) ? 0 : boundVariables.hashCode());
+    result =
+        prime * result
+            + ((quantifierName == null) ? 0 : quantifierName.hashCode());
     return result;
   }
 

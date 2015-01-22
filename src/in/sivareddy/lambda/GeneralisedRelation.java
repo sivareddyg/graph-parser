@@ -21,7 +21,8 @@ public class GeneralisedRelation {
 
   public static GeneralisedRelation parseString(String relation) {
     String[] elements = relation.split("@");
-    return new GeneralisedRelation(elements[0], Lists.newArrayList(elements[1].split(",")));
+    return new GeneralisedRelation(elements[0], Lists.newArrayList(elements[1]
+        .split(",")));
   }
 
   @Override
@@ -56,7 +57,10 @@ public class GeneralisedRelation {
       if (firstEntity.startsWith("$")) {
         entityString += "TYPE:*";
       } else {
-        entityString += "TYPE:" + Lists.newArrayList(Splitter.on(":").split(firstEntity)).get(1);
+        entityString +=
+            "TYPE:"
+                + Lists.newArrayList(Splitter.on(":").split(firstEntity))
+                    .get(1);
       }
 
       if (entities.size() > 1) {
@@ -65,7 +69,8 @@ public class GeneralisedRelation {
             entityString += ",TYPE:*";
           } else {
             entityString +=
-                "," + "TYPE:" + Lists.newArrayList(Splitter.on(":").split(entity)).get(1);
+                "," + "TYPE:"
+                    + Lists.newArrayList(Splitter.on(":").split(entity)).get(1);
           }
         }
       }
@@ -80,8 +85,8 @@ public class GeneralisedRelation {
       return false;
     }
     GeneralisedRelation objGen = (GeneralisedRelation) obj;
-    return objGen.relationName.equals(relationName) && objGen.entities.equals(entities) ? true
-        : false;
+    return objGen.relationName.equals(relationName)
+        && objGen.entities.equals(entities) ? true : false;
   }
 
   @Override

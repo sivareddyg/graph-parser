@@ -44,7 +44,8 @@ public class StringUtils {
           invalidChars.add(prev_start);
           invalidChars.add(cur_end);
         }
-        Preconditions.checkArgument(st.size() > 0, "Invalid Bracketing " + inputString);
+        Preconditions.checkArgument(st.size() > 0, "Invalid Bracketing "
+            + inputString);
         cur_start = st.pop();
         if (st.size() > 0) {
           prev_start = st.peek();
@@ -55,7 +56,8 @@ public class StringUtils {
       }
     }
 
-    Preconditions.checkArgument(st.size() == 0, "Invalid Bracketing " + inputString);
+    Preconditions.checkArgument(st.size() == 0, "Invalid Bracketing "
+        + inputString);
 
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < r.length; i++) {

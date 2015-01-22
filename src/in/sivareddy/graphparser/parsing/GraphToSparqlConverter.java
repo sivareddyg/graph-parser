@@ -40,8 +40,8 @@ public class GraphToSparqlConverter {
   }
 
   // convert grounded graph to sparql query
-  public static String convertGroundedGraph(LexicalGraph graph, LexicalItem targetNode,
-      Schema schema, List<String> graphUris) {
+  public static String convertGroundedGraph(LexicalGraph graph,
+      LexicalItem targetNode, Schema schema, List<String> graphUris) {
     Map<String, Integer> mediatorKeys = Maps.newHashMap();
     TreeSet<Edge<LexicalItem>> edges = Sets.newTreeSet(graph.getEdges());
     int edgeCount = 0;
@@ -55,7 +55,8 @@ public class GraphToSparqlConverter {
     }
 
     // rdf:type
-    Set<String> standardTypes = Sets.newHashSet("type.datetime", "type.int", "type.float");
+    Set<String> standardTypes =
+        Sets.newHashSet("type.datetime", "type.int", "type.float");
     TreeSet<Type<LexicalItem>> nodeTypes = graph.getTypes();
     for (Type<LexicalItem> nodeType : nodeTypes) {
       String tripleName = "";
@@ -84,10 +85,12 @@ public class GraphToSparqlConverter {
         rightNode.setMid(parts[2]);
         rightNode.setWordPosition(-1);
         Relation relation = new Relation(parts[0], parts[1]);
-        Edge<LexicalItem> edge = new Edge<>(leftNode, rightNode, mediator, relation);
+        Edge<LexicalItem> edge =
+            new Edge<>(leftNode, rightNode, mediator, relation);
         edges.add(edge);
       } else {
-        tripleName = String.format("%s rdf:type fb:%s . ", parentVarName, typeName);
+        tripleName =
+            String.format("%s rdf:type fb:%s . ", parentVarName, typeName);
         queryTriples.add(tripleName);
       }
     }
@@ -107,31 +110,33 @@ public class GraphToSparqlConverter {
 
       String leftNodeVar = getNodeVariable(leftNode, targetNode);
       String rightNodeVar = getNodeVariable(rightNode, targetNode);
-      if (leftEdgeLength == rightEdgeLength && leftEdge.substring(0, leftEdgeLength - 2).equals(
-          rightEdge.substring(0, rightEdgeLength - 2))) {
+      if (leftEdgeLength == rightEdgeLength
+          && leftEdge.substring(0, leftEdgeLength - 2).equals(
+              rightEdge.substring(0, rightEdgeLength - 2))) {
         // normal
         String relationName = leftEdge.substring(0, leftEdgeLength - 2);
         if (leftEdge.charAt(leftEdgeLength - 1) == '1'
             && rightEdge.charAt(rightEdgeLength - 1) == '2') {
-          tripleName = String.format("%s fb:%s %s . ", leftNodeVar, relationName, rightNodeVar);
+          tripleName =
+              String.format("%s fb:%s %s . ", leftNodeVar, relationName,
+                  rightNodeVar);
         } else if (leftEdge.charAt(leftEdgeLength - 1) == '2'
             && rightEdge.charAt(rightEdgeLength - 1) == '1') {
-          tripleName = String.format("%s fb:%s %s . ", rightNodeVar, relationName, leftNodeVar);
+          tripleName =
+              String.format("%s fb:%s %s . ", rightNodeVar, relationName,
+                  leftNodeVar);
         } else {
-          tripleName = String.format("?e%d fb:%s %s . ?e%s fb:%s %s . FILTER(%s != %s) . ",
-              edgeCount,
-              leftEdge,
-              leftNodeVar,
-              edgeCount,
-              rightEdge,
-              rightNodeVar,
-              leftNodeVar,
-              rightNodeVar);
+          tripleName =
+              String.format(
+                  "?e%d fb:%s %s . ?e%s fb:%s %s . FILTER(%s != %s) . ",
+                  edgeCount, leftEdge, leftNodeVar, edgeCount, rightEdge,
+                  rightNodeVar, leftNodeVar, rightNodeVar);
         }
       } else {
         // mediator relation
         String mediatorType = schema.getMediatorArgument(leftEdge);
-        Preconditions.checkArgument(mediatorType != null, "Relation is not mediator");
+        Preconditions.checkArgument(mediatorType != null,
+            "Relation is not mediator");
         String mediatorKey = String.valueOf(mediator.hashCode());
         mediatorKey = mediatorKey + ":" + mediatorType;
         if (!mediatorKeys.containsKey(mediatorKey)) {
@@ -140,32 +145,43 @@ public class GraphToSparqlConverter {
         int mediatorIndex = mediatorKeys.get(mediatorKey);
 
         String leftEdgeTriple = "";
-        List<String> leftEdgeParts = Lists.newArrayList(Splitter.on(".").split(leftEdge));
+        List<String> leftEdgeParts =
+            Lists.newArrayList(Splitter.on(".").split(leftEdge));
         if (leftEdgeParts.get(leftEdgeParts.size() - 1).equals("inverse")) {
           String relationName =
-              Joiner.on(".").join(leftEdgeParts.subList(0, leftEdgeParts.size() - 1));
+              Joiner.on(".").join(
+                  leftEdgeParts.subList(0, leftEdgeParts.size() - 1));
           leftEdgeTriple =
-              String.format("%s fb:%s ?m%d . ", leftNodeVar, relationName, mediatorIndex);
+              String.format("%s fb:%s ?m%d . ", leftNodeVar, relationName,
+                  mediatorIndex);
         } else {
           String relationName = leftEdge;
           leftEdgeTriple =
-              String.format("?m%d fb:%s %s . ", mediatorIndex, relationName, leftNodeVar);
+              String.format("?m%d fb:%s %s . ", mediatorIndex, relationName,
+                  leftNodeVar);
         }
 
         String rightEdgeTriple = "";
-        List<String> rightEdgeParts = Lists.newArrayList(Splitter.on(".").split(rightEdge));
+        List<String> rightEdgeParts =
+            Lists.newArrayList(Splitter.on(".").split(rightEdge));
         if (rightEdgeParts.get(rightEdgeParts.size() - 1).equals("inverse")) {
           String relationName =
-              Joiner.on(".").join(rightEdgeParts.subList(0, rightEdgeParts.size() - 1));
+              Joiner.on(".").join(
+                  rightEdgeParts.subList(0, rightEdgeParts.size() - 1));
           rightEdgeTriple =
-              String.format("%s fb:%s ?m%d . ", rightNodeVar, relationName, mediatorIndex);
+              String.format("%s fb:%s ?m%d . ", rightNodeVar, relationName,
+                  mediatorIndex);
         } else {
           String relationName = rightEdge;
           rightEdgeTriple =
-              String.format("?m%d fb:%s %s . ", mediatorIndex, relationName, rightNodeVar);
+              String.format("?m%d fb:%s %s . ", mediatorIndex, relationName,
+                  rightNodeVar);
         }
-        tripleName = leftEdgeTriple + rightEdgeTriple
-            + String.format("FILTER(%s != %s) . ", leftNodeVar, rightNodeVar);
+        tripleName =
+            leftEdgeTriple
+                + rightEdgeTriple
+                + String.format("FILTER(%s != %s) . ", leftNodeVar,
+                    rightNodeVar);
       }
       queryTriples.add(tripleName);
     }
@@ -183,8 +199,11 @@ public class GraphToSparqlConverter {
       for (Property property : nodeProperties) {
         if (property.getPropertyName().equals("COUNT")) {
           String countNode = property.getArguments().trim().split(":")[0];
-          queryString = String.format("SELECT count(DISTINCT %s) AS ?x%s %s WHERE { %s }",
-              getNodeVariable(node, targetNode), countNode, graphString, queryString);
+          queryString =
+              String.format(
+                  "SELECT count(DISTINCT %s) AS ?x%s %s WHERE { %s }",
+                  getNodeVariable(node, targetNode), countNode, graphString,
+                  queryString);
           countVars.add(String.format("?x%s", countNode));
         } else if (property.getPropertyName().equals("QUESTION")) {
           targetVar = getNodeVariable(node, targetNode);
@@ -192,8 +211,10 @@ public class GraphToSparqlConverter {
       }
     }
 
-    Preconditions.checkArgument(targetNode == null ? true : targetVar.equals(""),
-        "Target variable and QUESTION property present. Only one of them can be present");
+    Preconditions
+        .checkArgument(
+            targetNode == null ? true : targetVar.equals(""),
+            "Target variable and QUESTION property present. Only one of them can be present");
 
     if (targetNode != null) {
       targetVar = getNodeVariable(targetNode, targetNode);
@@ -201,22 +222,31 @@ public class GraphToSparqlConverter {
 
     if (!targetVar.equals("")) {
       if (countVars.contains(targetVar)) {
-        queryString = String.format(
-            "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " + "SELECT DISTINCT %s %s WHERE { %s } LIMIT 10", targetVar, graphString, queryString);
+        queryString =
+            String
+                .format(
+                    "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                        + "SELECT DISTINCT %s %s WHERE { %s } LIMIT 10",
+                    targetVar, graphString, queryString);
       } else {
-        String nameString = String.format(
-            "OPTIONAL {FILTER(langMatches(lang(%sname), \"en\")) . FILTER(!langMatches(lang(%sname), \"en-gb\")) . %s fb:type.object.name %sname . }", targetVar, targetVar, targetVar, targetVar);
-        queryString = String.format(
-            "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " + "SELECT DISTINCT %s %sname %s WHERE { %s %s } LIMIT 10",
-            targetVar,
-            targetVar,
-            graphString,
-            queryString,
-            nameString);
+        String nameString =
+            String
+                .format(
+                    "OPTIONAL {FILTER(langMatches(lang(%sname), \"en\")) . FILTER(!langMatches(lang(%sname), \"en-gb\")) . %s fb:type.object.name %sname . }",
+                    targetVar, targetVar, targetVar, targetVar);
+        queryString =
+            String
+                .format(
+                    "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                        + "SELECT DISTINCT %s %sname %s WHERE { %s %s } LIMIT 10",
+                    targetVar, targetVar, graphString, queryString, nameString);
       }
     } else {
-      queryString = String.format(
-          "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " + "ASK %s WHERE { %s } ", graphString, queryString);
+      queryString =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                      + "ASK %s WHERE { %s } ", graphString, queryString);
     }
 
     return queryString;
@@ -226,7 +256,8 @@ public class GraphToSparqlConverter {
     return getNodeVariable(node, null);
   }
 
-  public static String getNodeVariable(LexicalItem node, LexicalItem restrictedNode) {
+  public static String getNodeVariable(LexicalItem node,
+      LexicalItem restrictedNode) {
     String mid = node.getMid();
     if (!node.equals(restrictedNode)) {
       if (node.getMid().startsWith("m.")) {
@@ -237,8 +268,10 @@ public class GraphToSparqlConverter {
         Matcher matcher = yearPattern.matcher(word);
         // default year is set to 2009 since the corpus is from
         // clueweb09
-        String year = matcher.find() ? String.format("\"%s\"^^xsd:datetime", matcher.group(1))
-            : String.format("?x%d", node.getWordPosition());
+        String year =
+            matcher.find() ? String.format("\"%s\"^^xsd:datetime",
+                matcher.group(1)) : String.format("?x%d",
+                node.getWordPosition());
         return year;
       }
     }

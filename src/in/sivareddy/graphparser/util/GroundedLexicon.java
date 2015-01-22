@@ -22,10 +22,12 @@ public class GroundedLexicon {
   private Map<EntityType, List<EntityType>> utypeToGtypeMap = Maps.newHashMap();
   private Map<Relation, List<Relation>> urelToGrelMap = Maps.newHashMap();
 
-  private Map<Pair<Relation, Relation>, Double> urelGrelFreq = Maps.newHashMap();
+  private Map<Pair<Relation, Relation>, Double> urelGrelFreq = Maps
+      .newHashMap();
   double urelGrelFreqMax = 0.0;
 
-  private Map<Pair<String, String>, Double> urelPartGrelPartFreq = Maps.newHashMap();
+  private Map<Pair<String, String>, Double> urelPartGrelPartFreq = Maps
+      .newHashMap();
   double urelPartGrelPartFreqMax = 0.0;
 
   private Map<Pair<String, String>, Double> utypeGtypeFreq = Maps.newHashMap();
@@ -79,7 +81,8 @@ public class GroundedLexicon {
             // line represents a source relation
             isRelation = true;
             String[] relationParts = parts[0].split(" ");
-            sourceRelation = new Relation(relationParts[0], relationParts[1], sourceFreq);
+            sourceRelation =
+                new Relation(relationParts[0], relationParts[1], sourceFreq);
             urelFreq.put(sourceRelation, sourceFreq);
             if (sourceFreq > urelFreqMax) {
               urelFreqMax = sourceFreq;
@@ -125,12 +128,14 @@ public class GroundedLexicon {
           if (isRelation) {
             // line represents a target relation
             String[] relationParts = parts[0].split(" ");
-            targetRelation = new Relation(relationParts[0], relationParts[1], targetFreq);
+            targetRelation =
+                new Relation(relationParts[0], relationParts[1], targetFreq);
             if (!urelToGrelMap.containsKey(sourceRelation)) {
               urelToGrelMap.put(sourceRelation, new ArrayList<Relation>());
             }
             urelToGrelMap.get(sourceRelation).add(targetRelation);
-            urelGrelFreq.put(Pair.of(sourceRelation, targetRelation), targetFreq);
+            urelGrelFreq.put(Pair.of(sourceRelation, targetRelation),
+                targetFreq);
             if (targetFreq > urelGrelFreqMax) {
               urelGrelFreqMax = targetFreq;
             }
@@ -194,7 +199,8 @@ public class GroundedLexicon {
               urelPartGrelPartFreqMax = value;
             }
 
-            Pair<String, String> urelGrelRight = Pair.of(urightEdge, grightEdge);
+            Pair<String, String> urelGrelRight =
+                Pair.of(urightEdge, grightEdge);
             if (!urelPartGrelPartFreq.containsKey(urelGrelRight)) {
               urelPartGrelPartFreq.put(urelGrelRight, 0.0);
             }
@@ -212,7 +218,9 @@ public class GroundedLexicon {
               utypeToGtypeMap.put(sourceType, new ArrayList<EntityType>());
             }
             utypeToGtypeMap.get(sourceType).add(targetType);
-            utypeGtypeFreq.put(Pair.of(sourceType.getType(), targetType.getType()), targetFreq);
+            utypeGtypeFreq
+                .put(Pair.of(sourceType.getType(), targetType.getType()),
+                    targetFreq);
             if (targetFreq > utypeGtypeFreqMax) {
               utypeGtypeFreqMax = targetFreq;
             }
@@ -240,7 +248,8 @@ public class GroundedLexicon {
     for (Relation sourceRelation : urels) {
       Double tf = sourceRelation.getWeight();
       Double idf =
-          Math.log((urels.size() + 0.0) / (urelToGrelMap.get(sourceRelation).size() + 0.0));
+          Math.log((urels.size() + 0.0)
+              / (urelToGrelMap.get(sourceRelation).size() + 0.0));
       Double weight = tf * idf;
       sourceRelation.setWeight(weight);
       tfIdfRelation.put(sourceRelation, weight);
@@ -259,7 +268,9 @@ public class GroundedLexicon {
     Set<EntityType> utypes = utypeToGtypeMap.keySet();
     for (EntityType sourceType : utypes) {
       Double tf = sourceType.getWeight();
-      Double idf = Math.log((utypes.size() + 0.0) / (utypeToGtypeMap.get(sourceType).size() + 0.0));
+      Double idf =
+          Math.log((utypes.size() + 0.0)
+              / (utypeToGtypeMap.get(sourceType).size() + 0.0));
       Double weight = tf * idf;
       sourceType.setWeight(weight);
       tfIdfType.put(sourceType, weight);
@@ -294,13 +305,15 @@ public class GroundedLexicon {
         EntityType floatType = new EntityType("type.float", score / 2.0);
         gtypes.add(floatType);
         Collections.sort(gtypes);
-        utypeGtypeFreq.put(Pair.of(sourceType.getType(), floatType.getType()), freq / 2.0);
+        utypeGtypeFreq.put(Pair.of(sourceType.getType(), floatType.getType()),
+            freq / 2.0);
       }
       if (hasFloat && !hasInt) {
         EntityType intType = new EntityType("type.int", score / 2.0);
         gtypes.add(intType);
         Collections.sort(gtypes);
-        utypeGtypeFreq.put(Pair.of(sourceType.getType(), intType.getType()), freq / 2.0);
+        utypeGtypeFreq.put(Pair.of(sourceType.getType(), intType.getType()),
+            freq / 2.0);
       }
     }
   }
@@ -402,8 +415,8 @@ public class GroundedLexicon {
   }
 
   /**
-   * Returns 1 if urel, grel pair is found in the lexicon. Returns -1 if inverse of urel, inverse of
-   * grel pair is found. Returns 0 if none.
+   * Returns 1 if urel, grel pair is found in the lexicon. Returns -1 if inverse
+   * of urel, inverse of grel pair is found. Returns 0 if none.
    * 
    * @param urel
    * @param grel

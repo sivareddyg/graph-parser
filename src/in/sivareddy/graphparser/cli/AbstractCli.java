@@ -16,8 +16,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 /**
- * This Object has functionalities for parsing arguments and also create a log of parameters used
- * which helps in replicability of the experiments.
+ * This Object has functionalities for parsing arguments and also create a log
+ * of parameters used which helps in replicability of the experiments.
  *
  *
  * @author Siva Reddy
@@ -39,8 +39,8 @@ public abstract class AbstractCli {
 
   public static enum CommonOptions {
     /**
-     * Enables options for constructing a uk.ac.ed.sempar.lexicon, e.g., by providing a training
-     * sentences, database and type hierarchy.
+     * Enables options for constructing a uk.ac.ed.sempar.lexicon, e.g., by
+     * providing a training sentences, database and type hierarchy.
      */
     LEXICON_GENERATION,
   };
@@ -52,14 +52,17 @@ public abstract class AbstractCli {
   }
 
   private void initializeCommonOptions(OptionParser parser) {
-    helpOpt = parser.acceptsAll(Arrays.asList("help", "h"), "Print this help message.");
+    helpOpt =
+        parser.acceptsAll(Arrays.asList("help", "h"),
+            "Print this help message.");
   }
 
   /**
-   * Adds subclass-specific options to {@code parser}. Subclasses must implement this method in
-   * order to accept class-specific options.
+   * Adds subclass-specific options to {@code parser}. Subclasses must implement
+   * this method in order to accept class-specific options.
    *
-   * @param parser option parser to which additional command-line options should be added.
+   * @param parser option parser to which additional command-line options should
+   *        be added.
    */
   public abstract void initializeOptions(OptionParser parser);
 
@@ -73,7 +76,8 @@ public abstract class AbstractCli {
   /**
    * Runs the program, parsing any options from {@code args}.
    *
-   * @param args arguments to the program, in the same format as provided by {@code main}.
+   * @param args arguments to the program, in the same format as provided by
+   *        {@code main}.
    */
   public void run(String[] args) {
     // Add and parse options.
@@ -119,7 +123,9 @@ public abstract class AbstractCli {
     System.out.println("# Working Directory = " + workingDir);
 
 
-    String path = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+    String path =
+        this.getClass().getProtectionDomain().getCodeSource().getLocation()
+            .getPath();
     path = path.replace(workingDir + "/", "");
 
     String decodedPath = "";
@@ -129,20 +135,22 @@ public abstract class AbstractCli {
       e.printStackTrace();
     }
 
-    System.out.println("# Command = java -cp .:" + decodedPath + " " + this.getClass().getName()
-        + " " + Joiner.on(" ").join(args));
+    System.out.println("# Command = java -cp .:" + decodedPath + " "
+        + this.getClass().getName() + " " + Joiner.on(" ").join(args));
     /*- System.out.println(" is loaded from "
     		+ getClass().getProtectionDomain().getCodeSource()
     				.getLocation());*/
 
-// Log any passed-in options.
+    // Log any passed-in options.
     System.out.println("# Command-line options:");
     for (OptionSpec<?> optionSpec : parsedOptions.specs()) {
       if (parsedOptions.hasArgument(optionSpec)) {
-        System.out.println("# --" + Iterables.getFirst(optionSpec.options(), "") + " "
+        System.out.println("# --"
+            + Iterables.getFirst(optionSpec.options(), "") + " "
             + parsedOptions.valueOf(optionSpec));
       } else {
-        System.out.println("# --" + Iterables.getFirst(optionSpec.options(), ""));
+        System.out.println("# --"
+            + Iterables.getFirst(optionSpec.options(), ""));
       }
     }
     System.out.println("");

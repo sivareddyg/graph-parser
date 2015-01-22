@@ -40,7 +40,8 @@ public class StanfordCoreNlpDemo {
     Annotation annotation = new Annotation(text);
     pipeline.annotate(annotation);
 
-    List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
+    List<CoreMap> sentences =
+        annotation.get(CoreAnnotations.SentencesAnnotation.class);
 
     if (sentences != null && sentences.size() > 0) {
       for (CoreMap sentenceIter : sentences) {
@@ -70,8 +71,10 @@ public class StanfordCoreNlpDemo {
             prev_lemma += "_" + lemma;
           } else {
             if (!prev_word.equals(""))
-              sb.append(String.format("%s|%s|%s ", prev_word, prev_pos, prev_ner));
-            if (prev_pos.startsWith("NNP") && (pos.equals("NN") || pos.equals("NNS")))
+              sb.append(String.format("%s|%s|%s ", prev_word, prev_pos,
+                  prev_ner));
+            if (prev_pos.startsWith("NNP")
+                && (pos.equals("NN") || pos.equals("NNS")))
               sb.append("'s|IPOS|O ");
             prev_word = word;
             prev_lemma = lemma;
@@ -93,7 +96,8 @@ public class StanfordCoreNlpDemo {
         .processText("James Cameron directed Titanic in 1997 for 100$."));
 
     StanfordCoreNlpDemo spanishPipeline = new StanfordCoreNlpDemo("es");
-    System.out.println(spanishPipeline
-        .processText("Steven Spielberg dirigió la película E.T. en 1982. Ganó varios Oscars."));
+    System.out
+        .println(spanishPipeline
+            .processText("Steven Spielberg dirigió la película E.T. en 1982. Ganó varios Oscars."));
   }
 }

@@ -8,8 +8,9 @@ public class KnowledgeBaseTest {
 
   @Test
   public void test() throws IOException {
-    KnowledgeBase kb = new KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz",
-        "data/freebase/stats/business_relation_types.txt");
+    KnowledgeBase kb =
+        new KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz",
+            "data/freebase/stats/business_relation_types.txt");
 
     // true
     System.out.println(kb.hasRelation("m.06rn8p", "m.031q99"));

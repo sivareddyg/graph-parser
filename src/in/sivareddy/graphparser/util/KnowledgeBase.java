@@ -37,8 +37,9 @@ public class KnowledgeBase {
   private Set<Pair<Integer, Integer>> relationsThatAreTypes;
 
   /**
-   * A relation contains two edges from a hypothetical node to entities in relation. Relation also
-   * contains a weight describing how important the relation is.
+   * A relation contains two edges from a hypothetical node to entities in
+   * relation. Relation also contains a weight describing how important the
+   * relation is.
    * 
    */
   public static class Relation implements Comparable<Relation> {
@@ -159,8 +160,8 @@ public class KnowledgeBase {
 
   /**
    * 
-   * Entity Type contains the type of the entity, and its weight describing how important the weight
-   * is
+   * Entity Type contains the type of the entity, and its weight describing how
+   * important the weight is
    * 
    * @author Siva Reddy
    * 
@@ -255,7 +256,8 @@ public class KnowledgeBase {
 
   /**
    * 
-   * {@link Property} describe properties of {@link EntityType}s or {@link Relation}s.
+   * {@link Property} describe properties of {@link EntityType}s or
+   * {@link Relation}s.
    * 
    * @author Siva Reddy
    * 
@@ -293,7 +295,8 @@ public class KnowledgeBase {
         return false;
       }
       Property other = (Property) obj;
-      if (other.propertyName.equals(propertyName) && arguments == null && other.arguments == null) {
+      if (other.propertyName.equals(propertyName) && arguments == null
+          && other.arguments == null) {
         return true;
       }
       if (other.propertyName.equals(propertyName) && arguments != null
@@ -323,7 +326,8 @@ public class KnowledgeBase {
     }
   }
 
-  public KnowledgeBase(String kbCompressedFile, String relationTypesFile) throws IOException {
+  public KnowledgeBase(String kbCompressedFile, String relationTypesFile)
+      throws IOException {
     entity2Types = Maps.newHashMap();
     entityPair2Relations = Maps.newHashMap();
     entity2Relations = Maps.newHashMap();
@@ -357,12 +361,13 @@ public class KnowledgeBase {
 
     if (relationTypesFile != null)
       loadRelationsThatAreTypes(relationTypesFile);
-    
+
     if (kbCompressedFile != null)
       loadKB(kbCompressedFile);
   }
 
-  private void loadRelationsThatAreTypes(String relationTypesFile) throws IOException {
+  private void loadRelationsThatAreTypes(String relationTypesFile)
+      throws IOException {
     JsonParser parser = new JsonParser();
     BufferedReader br = new BufferedReader(new FileReader(relationTypesFile));
     try {
@@ -395,7 +400,8 @@ public class KnowledgeBase {
         }
 
         if (argNumber.equals("right_arg")) {
-          Pair<Integer, Integer> edge = Pair.of(relationIDs.get(edge1), relationIDs.get(edge2));
+          Pair<Integer, Integer> edge =
+              Pair.of(relationIDs.get(edge1), relationIDs.get(edge2));
           relationsThatAreTypes.add(edge);
         } else if (argNumber.equals("left_arg")) {
           Pair<Integer, Integer> edge_inverse =
@@ -495,7 +501,8 @@ public class KnowledgeBase {
               relationIDs.put(edge2, relationCount);
               relationCount++;
             }
-            Pair<Integer, Integer> edge = Pair.of(relationIDs.get(edge1), relationIDs.get(edge2));
+            Pair<Integer, Integer> edge =
+                Pair.of(relationIDs.get(edge1), relationIDs.get(edge2));
             Pair<Integer, Integer> edge_inverse =
                 Pair.of(relationIDs.get(edge2), relationIDs.get(edge1));
             relationsSet.add(edge);
@@ -503,7 +510,8 @@ public class KnowledgeBase {
 
             // Adding relations that are potential types
             if (relationsThatAreTypes.contains(edge)) {
-              String entityTypeString = String.format("%s#%s#%s", edge1, edge2, entity2);
+              String entityTypeString =
+                  String.format("%s#%s#%s", edge1, edge2, entity2);
               if (!typeIDs.containsKey(entityTypeString)) {
                 typeIDs.put(entityTypeString, typeCount);
                 typeCount++;
@@ -515,7 +523,8 @@ public class KnowledgeBase {
             }
 
             if (relationsThatAreTypes.contains(edge_inverse)) {
-              String entityTypeString = String.format("%s#%s#%s", edge2, edge1, entity1);
+              String entityTypeString =
+                  String.format("%s#%s#%s", edge2, edge1, entity1);
               if (!typeIDs.containsKey(entityTypeString)) {
                 typeIDs.put(entityTypeString, typeCount);
                 typeCount++;
@@ -544,12 +553,14 @@ public class KnowledgeBase {
           }
 
           if (!entity2Relations.containsKey(entity1Id)) {
-            entity2Relations.put(entity1Id, new HashSet<Pair<Integer, Integer>>());
+            entity2Relations.put(entity1Id,
+                new HashSet<Pair<Integer, Integer>>());
           }
           entity2Relations.get(entity1Id).addAll(relationsSet);
 
           if (!entity2Relations.containsKey(entity2Id)) {
-            entity2Relations.put(entity2Id, new HashSet<Pair<Integer, Integer>>());
+            entity2Relations.put(entity2Id,
+                new HashSet<Pair<Integer, Integer>>());
           }
           entity2Relations.get(entity2Id).addAll(inverseRelationsSet);
 
@@ -590,9 +601,12 @@ public class KnowledgeBase {
 
     Set<Relation> rels = Sets.newHashSet();
     if (entityPair2Relations.containsKey(entityIdPair)) {
-      for (Pair<Integer, Integer> entityPairIds : entityPair2Relations.get(entityIdPair)) {
-        String relationEdge1 = relationIDs.inverse().get(entityPairIds.getLeft());
-        String relationEdge2 = relationIDs.inverse().get(entityPairIds.getRight());
+      for (Pair<Integer, Integer> entityPairIds : entityPair2Relations
+          .get(entityIdPair)) {
+        String relationEdge1 =
+            relationIDs.inverse().get(entityPairIds.getLeft());
+        String relationEdge2 =
+            relationIDs.inverse().get(entityPairIds.getRight());
         rels.add(Relation.of(relationEdge1, relationEdge2));
       }
     }
@@ -600,9 +614,12 @@ public class KnowledgeBase {
     // if inverse entity pair exists
     entityIdPair = Pair.of(entity2Id, entity1Id);
     if (entityPair2Relations.containsKey(entityIdPair)) {
-      for (Pair<Integer, Integer> entityPairIds : entityPair2Relations.get(entityIdPair)) {
-        String relationEdge2 = relationIDs.inverse().get(entityPairIds.getLeft());
-        String relationEdge1 = relationIDs.inverse().get(entityPairIds.getRight());
+      for (Pair<Integer, Integer> entityPairIds : entityPair2Relations
+          .get(entityIdPair)) {
+        String relationEdge2 =
+            relationIDs.inverse().get(entityPairIds.getLeft());
+        String relationEdge1 =
+            relationIDs.inverse().get(entityPairIds.getRight());
         rels.add(Relation.of(relationEdge1, relationEdge2));
       }
     }
@@ -618,9 +635,12 @@ public class KnowledgeBase {
 
     Set<Relation> rels = Sets.newHashSet();
     if (entity2Relations.containsKey(entity1Id)) {
-      for (Pair<Integer, Integer> entityPairIds : entity2Relations.get(entity1Id)) {
-        String relationEdge1 = relationIDs.inverse().get(entityPairIds.getLeft());
-        String relationEdge2 = relationIDs.inverse().get(entityPairIds.getRight());
+      for (Pair<Integer, Integer> entityPairIds : entity2Relations
+          .get(entity1Id)) {
+        String relationEdge1 =
+            relationIDs.inverse().get(entityPairIds.getLeft());
+        String relationEdge2 =
+            relationIDs.inverse().get(entityPairIds.getRight());
         rels.add(Relation.of(relationEdge1, relationEdge2));
       }
     }

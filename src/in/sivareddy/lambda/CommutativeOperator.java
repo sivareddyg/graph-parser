@@ -13,7 +13,8 @@ public class CommutativeOperator extends AbstractExpression {
   private final ConstantExpression operatorName;
   private final List<Expression> arguments;
 
-  public CommutativeOperator(ConstantExpression function, List<Expression> arguments) {
+  public CommutativeOperator(ConstantExpression function,
+      List<Expression> arguments) {
     this.operatorName = Preconditions.checkNotNull(function);
     this.arguments = ImmutableList.copyOf(arguments);
   }
@@ -34,7 +35,8 @@ public class CommutativeOperator extends AbstractExpression {
   }
 
   @Override
-  public Expression substitute(ConstantExpression constant, Expression replacement) {
+  public Expression substitute(ConstantExpression constant,
+      Expression replacement) {
     List<Expression> substituted = Lists.newArrayList();
     for (Expression subexpression : arguments) {
       substituted.add(subexpression.substitute(constant, replacement));
@@ -48,15 +50,16 @@ public class CommutativeOperator extends AbstractExpression {
     List<QuantifierExpression> wrappingQuantifiers = Lists.newArrayList();
     for (Expression subexpression : arguments) {
       Expression simplifiedArgument = subexpression.simplify();
-      
+
       // Push quantifiers outside of logical operators.
       if (simplifiedArgument instanceof QuantifierExpression) {
-        QuantifierExpression quantifierArgument = ((QuantifierExpression) simplifiedArgument); 
+        QuantifierExpression quantifierArgument =
+            ((QuantifierExpression) simplifiedArgument);
         wrappingQuantifiers.add(quantifierArgument);
         simplified.add(quantifierArgument.getBody());
       } else {
         simplified.add(simplifiedArgument);
-      }      
+      }
     }
 
     List<Expression> resultClauses = Lists.newArrayList();
@@ -76,7 +79,9 @@ public class CommutativeOperator extends AbstractExpression {
     Expression result = new CommutativeOperator(operatorName, resultClauses);
     // Wrap the result with the appropriate quantifiers.
     for (QuantifierExpression quantifier : wrappingQuantifiers) {
-      result = new QuantifierExpression(quantifier.getQuantifierName(), quantifier.getBoundVariables(), result);
+      result =
+          new QuantifierExpression(quantifier.getQuantifierName(),
+              quantifier.getBoundVariables(), result);
     }
 
     return result;
@@ -100,7 +105,8 @@ public class CommutativeOperator extends AbstractExpression {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((arguments == null) ? 0 : arguments.hashCode());
-    result = prime * result + ((operatorName == null) ? 0 : operatorName.hashCode());
+    result =
+        prime * result + ((operatorName == null) ? 0 : operatorName.hashCode());
     return result;
   }
 

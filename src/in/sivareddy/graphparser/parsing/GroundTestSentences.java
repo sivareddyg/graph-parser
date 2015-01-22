@@ -28,13 +28,17 @@ import java.util.regex.Pattern;
 
 public class GroundTestSentences {
 
-  public static void run(Schema schema, KnowledgeBase kb, GroundedLexicon groundedLexicon,
-      RdfGraphTools rdfGraphTools) throws IOException {
-    CcgAutoLexicon normalCcgAutoLexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
-        "./data/unary_rules.txt", "./data/binary_rules.txt", "./data/lexicon_specialCases.txt");
-    CcgAutoLexicon questionCcgAutoLexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
-        "./data/unary_rules.txt", "./data/binary_rules.txt",
-        "./data/lexicon_specialCases_questions.txt");
+  public static void run(Schema schema, KnowledgeBase kb,
+      GroundedLexicon groundedLexicon, RdfGraphTools rdfGraphTools)
+      throws IOException {
+    CcgAutoLexicon normalCcgAutoLexicon =
+        new CcgAutoLexicon("./data/candc_markedup.modified",
+            "./data/unary_rules.txt", "./data/binary_rules.txt",
+            "./data/lexicon_specialCases.txt");
+    CcgAutoLexicon questionCcgAutoLexicon =
+        new CcgAutoLexicon("./data/candc_markedup.modified",
+            "./data/unary_rules.txt", "./data/binary_rules.txt",
+            "./data/lexicon_specialCases_questions.txt");
 
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
@@ -74,15 +78,19 @@ public class GroundTestSentences {
     StructuredPercepton learningModel = new StructuredPercepton();
 
     // GroundedLexicon groundedLexicon = null;
-    GroundedGraphs graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
-        normalCcgAutoLexicon, questionCcgAutoLexicon, relationLexicalIdentifiers,
-        relationTypingIdentifiers, learningModel, urelGrelFlag, urelPartGrelPartFlag,
-        utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, wordGrelPartFlag, wordGrelFlag,
-        argGrelPartFlag, argGrelFlag, wordBigramGrelPartFlag, stemMatchingFlag,
-        mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-        argumentStemGrelPartMatchingFlag, graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
-        edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-        initialEdgeWeight, initialTypeWeight, initialWordWeight, stemFeaturesWeight);
+    GroundedGraphs graphCreator =
+        new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
+            questionCcgAutoLexicon, relationLexicalIdentifiers,
+            relationTypingIdentifiers, learningModel, urelGrelFlag,
+            urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
+            wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
+            wordBigramGrelPartFlag, stemMatchingFlag,
+            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
+            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
+            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
+            useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
+            initialEdgeWeight, initialTypeWeight, initialWordWeight,
+            stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));
@@ -90,8 +98,10 @@ public class GroundTestSentences {
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));
 
     for (int iteration = 0; iteration < 10; iteration++) {
-      BufferedReader br = new BufferedReader(new FileReader(
-          "data/webquestions/webquestions.examples.test.domains.parse.filtered.json"));
+      BufferedReader br =
+          new BufferedReader(
+              new FileReader(
+                  "data/webquestions/webquestions.examples.test.domains.parse.filtered.json"));
       ConcurrentHashMap<Integer, Integer> positives = new ConcurrentHashMap<>();
       ConcurrentHashMap<Integer, Integer> negatives = new ConcurrentHashMap<>();
       List<Integer> maxbestList =
@@ -122,7 +132,9 @@ public class GroundTestSentences {
 
           String sentence = jsonSentence.get("sentence").getAsString();
           System.out.println("Sentence: " + sentence);
-          boolean hasGoldQuery = jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue");
+          boolean hasGoldQuery =
+              jsonSentence.has("sparqlQuery")
+                  || jsonSentence.has("targetValue");
           System.out.println("Supervised Example");
           if (!hasGoldQuery) {
             return;
@@ -135,8 +147,10 @@ public class GroundTestSentences {
             System.out.println("Gold Query : " + goldQuery);
             goldResults = rdfGraphTools.runQueryHttp(goldQuery);
           } else if (jsonSentence.has("targetValue")) {
-            String goldAnswersString = jsonSentence.get("targetValue").getAsString();
-            Pattern goldAnswerPattern = Pattern.compile("\\(description \"?([^\\)\"]+)\"?\\)");
+            String goldAnswersString =
+                jsonSentence.get("targetValue").getAsString();
+            Pattern goldAnswerPattern =
+                Pattern.compile("\\(description \"?([^\\)\"]+)\"?\\)");
             Matcher matcher = goldAnswerPattern.matcher(goldAnswersString);
             LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
             while (matcher.find()) {
@@ -147,13 +161,14 @@ public class GroundTestSentences {
           }
           System.out.println("Gold Results : " + goldResults);
 
-          List<LexicalGraph> graphs = graphCreator.buildUngroundedGraph(jsonSentence, "synPars", 1);
+          List<LexicalGraph> graphs =
+              graphCreator.buildUngroundedGraph(jsonSentence, "synPars", 1);
           /*- while (results.hasNext()) {
           	QuerySolution result = results.nextSolution();
           	System.out.println(result);
           }*/
 
-System.out.println("# Ungrounded Graphs");
+          System.out.println("# Ungrounded Graphs");
 
           if (graphs.size() > 0) {
             List<LexicalGraph> groundedGraphs = Lists.newArrayList();
@@ -166,17 +181,21 @@ System.out.println("# Ungrounded Graphs");
             boolean ignoreTypes = false;
             for (LexicalGraph ungroundedGraph : graphs) {
               System.out.print(ungroundedGraph);
-              System.out.println("Connected: " + ungroundedGraph.isConnected() + "\n");
-              List<LexicalGraph> currentGroundedGraphs = graphCreator.createGroundedGraph(
-                  ungroundedGraph, nbestLexicon, nbestGraphs, useSchema, useKB, groundFreeVariables,
-                  useEmtpyTypes, ignoreTypes, false);
+              System.out.println("Connected: " + ungroundedGraph.isConnected()
+                  + "\n");
+              List<LexicalGraph> currentGroundedGraphs =
+                  graphCreator.createGroundedGraph(ungroundedGraph,
+                      nbestLexicon, nbestGraphs, useSchema, useKB,
+                      groundFreeVariables, useEmtpyTypes, ignoreTypes, false);
               groundedGraphs.addAll(currentGroundedGraphs);
             }
             Collections.sort(groundedGraphs);
-            groundedGraphs = groundedGraphs.size() < nbestGraphs ? groundedGraphs
-                : groundedGraphs.subList(0, nbestGraphs);
+            groundedGraphs =
+                groundedGraphs.size() < nbestGraphs ? groundedGraphs
+                    : groundedGraphs.subList(0, nbestGraphs);
 
-            System.out.println("# Total number of Grounded Graphs: " + groundedGraphs.size());
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
             // int connectedGraphCount = 0;
             int count = 0;
             boolean foundAnswer = false;
@@ -189,14 +208,19 @@ System.out.println("# Ungrounded Graphs");
               }*/
               System.out.println("# Grounded graph: ");
               System.out.print(groundedGraph);
-              System.out.println("Connected: " + groundedGraph.isConnected() + "\n");
-              String query = GraphToSparqlConverter.convertGroundedGraph(groundedGraph, schema);
+              System.out.println("Connected: " + groundedGraph.isConnected()
+                  + "\n");
+              String query =
+                  GraphToSparqlConverter.convertGroundedGraph(groundedGraph,
+                      schema);
               System.out.println("Sentence: " + sentence);
               System.out.println("Pred Query: " + query);
               System.out.println("Gold Query: " + goldQuery);
-              Map<String, LinkedHashSet<String>> predResults = rdfGraphTools.runQueryHttp(query);
+              Map<String, LinkedHashSet<String>> predResults =
+                  rdfGraphTools.runQueryHttp(query);
 
-              boolean areEqual = RdfGraphTools.equalResults(goldResults, predResults);
+              boolean areEqual =
+                  RdfGraphTools.equalResults(goldResults, predResults);
               System.out.println("Features: " + groundedGraph.getFeatures());
               if (count == 1) {
                 predGraphFeatures = groundedGraph.getFeatures();
@@ -209,11 +233,14 @@ System.out.println("# Ungrounded Graphs");
               	// connectedGraphCount);
               }*/
 
-if (areEqual) {
+              if (areEqual) {
                 goldGraphFeatures = groundedGraph.getFeatures();
-                System.out.println("Before Update: " + groundedGraph.getScore());
-                learningModel.updateWeightVector(goldGraphFeatures, predGraphFeatures);
-                groundedGraph.setScore(learningModel.getScoreTraining(goldGraphFeatures));
+                System.out
+                    .println("Before Update: " + groundedGraph.getScore());
+                learningModel.updateWeightVector(goldGraphFeatures,
+                    predGraphFeatures);
+                groundedGraph.setScore(learningModel
+                    .getScoreTraining(goldGraphFeatures));
                 System.out.println("After Update: " + groundedGraph.getScore());
                 System.out.println("CORRECT!!");
                 foundAnswer = true;
@@ -235,7 +262,8 @@ if (areEqual) {
               }
             }
 
-            System.out.println("# Total number of Grounded Graphs: " + groundedGraphs.size());
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
             // System.out.println("# Total number of Connected Grounded Graphs: "
             // + connectedGraphCount);
             System.out.println("\n###########################");
@@ -255,12 +283,16 @@ if (areEqual) {
           Integer positive_hits = positives.get(key);
           Integer negative_hits = negatives.get(key);
           int total_hits = sentcount;
-          Double precision = (positive_hits + 0.0) / (positive_hits + negative_hits) * 100;
+          Double precision =
+              (positive_hits + 0.0) / (positive_hits + negative_hits) * 100;
           Double recall = (positive_hits + 0.0) / (total_hits) * 100;
           Double fmeas = 2 * precision * recall / (precision + recall);
-          System.out.println(String.format(
-              "Nbest:%d Positives:%d Negatives:%d Total:%d Prec:%.1f Rec:%.1f Fmeas:%.1f", key,
-              positive_hits, negative_hits, total_hits, precision, recall, fmeas));
+          System.out
+              .println(String
+                  .format(
+                      "Nbest:%d Positives:%d Negatives:%d Total:%d Prec:%.1f Rec:%.1f Fmeas:%.1f",
+                      key, positive_hits, negative_hits, total_hits, precision,
+                      recall, fmeas));
         }
       }
       System.out.println("===============================================");
@@ -276,25 +308,29 @@ if (areEqual) {
     // Schema("data/freebase/schema/business_schema.txt");
     // Schema schema = new
     // Schema("data/freebase/schema/business_schema.txt");
-    Schema schema = new Schema("data/freebase/schema/business_film_people_schema.txt");
+    Schema schema =
+        new Schema("data/freebase/schema/business_film_people_schema.txt");
     // Schema schema = null;
     // KnowledgeBase kb = new
     // KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz");
-    KnowledgeBase kb = new KnowledgeBase(
-        "data/freebase/domain_facts/business_film_people_facts.txt.gz",
-        "data/freebase/stats/business_film_people_relation_types.txt");
+    KnowledgeBase kb =
+        new KnowledgeBase(
+            "data/freebase/domain_facts/business_film_people_facts.txt.gz",
+            "data/freebase/stats/business_film_people_relation_types.txt");
     // GroundedLexicon groundedLexicon = new
     // GroundedLexicon("data/freebase/grounded_lexicon/business_grounded_lexicon.txt");
-    GroundedLexicon groundedLexicon = new GroundedLexicon(
-        "data/freebase/grounded_lexicon/business_film_people_grounded_lexicon.txt");
+    GroundedLexicon groundedLexicon =
+        new GroundedLexicon(
+            "data/freebase/grounded_lexicon/business_film_people_grounded_lexicon.txt");
     // KnowledgeBase kb = null;
 
     // CcgParser CcgParser = new CcgParser(ccgAutoLexicon,
     // relationLexicalIdentifiers, argumentLexicalIdenfiers,
     // relationTypingIdentifiers, true);
 
-    RdfGraphTools rdfGraphTools = new RdfGraphTools("jdbc:virtuoso://oscart.hot:1111",
-        "http://oscart.hot:8890/sparql", "dba", "dba", 2);
+    RdfGraphTools rdfGraphTools =
+        new RdfGraphTools("jdbc:virtuoso://oscart.hot:1111",
+            "http://oscart.hot:8890/sparql", "dba", "dba", 2);
     run(schema, kb, groundedLexicon, rdfGraphTools);
   }
 }

@@ -36,8 +36,8 @@ public class PrintFreebaseDomain {
    * @param schemaFileName
    * @throws IOException
    */
-  public static void print(String url, String username, String password, List<String> domainUris,
-      String schemaFileName) throws IOException {
+  public static void print(String url, String username, String password,
+      List<String> domainUris, String schemaFileName) throws IOException {
 
     Schema schema = new Schema(schemaFileName);
     String namespace = "http://rdf.freebase.com/ns/";
@@ -62,8 +62,13 @@ public class PrintFreebaseDomain {
       if (!typeIsMediator) {
 
         // Get unary relations
-        String query = String.format(
-            "PREFIX ns: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " + "SELECT ?x ?y %s " + "WHERE { " + "?x rdf:type ns:%s . }", domainUri, type);
+        String query =
+            String
+                .format(
+                    "PREFIX ns: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                        + "SELECT ?x ?y %s "
+                        + "WHERE { "
+                        + "?x rdf:type ns:%s . }", domainUri, type);
         System.err.println("Query = " + query);
 
         ResultSet results = rdfGraphTools.runQueryJdbcResultSet(query);
@@ -99,13 +104,16 @@ public class PrintFreebaseDomain {
           }
 
           // child should either be a type in the domain or an acceptable type
-          if (!types.contains(childArgType) && !Schema.acceptableCommonTypes.contains(childArgType)) {
+          if (!types.contains(childArgType)
+              && !Schema.acceptableCommonTypes.contains(childArgType)) {
             continue;
           }
 
           if (master) {
-            query = String.format("PREFIX ns: <http://rdf.freebase.com/ns/> " + "SELECT ?x ?y %s "
-                + "WHERE { " + "?x ns:%s ?y . }", domainUri, relation);
+            query =
+                String.format("PREFIX ns: <http://rdf.freebase.com/ns/> "
+                    + "SELECT ?x ?y %s " + "WHERE { " + "?x ns:%s ?y . }",
+                    domainUri, relation);
             System.err.println("Query = " + query);
 
             results = rdfGraphTools.runQueryJdbcResultSet(query);
@@ -145,23 +153,30 @@ public class PrintFreebaseDomain {
             String relation1 = typeRelations.get(i);
             String relation2 = typeRelations.get(j);
 
-            String relation1ChildType = schema.getRelationArguments(relation1).get(1);
-            String relation2ChildType = schema.getRelationArguments(relation2).get(1);
+            String relation1ChildType =
+                schema.getRelationArguments(relation1).get(1);
+            String relation2ChildType =
+                schema.getRelationArguments(relation2).get(1);
 
             // at least one of the entities should belong to the
             // domain
-            if (!types.contains(relation1ChildType) && !types.contains(relation2ChildType)) {
+            if (!types.contains(relation1ChildType)
+                && !types.contains(relation2ChildType)) {
               continue;
             }
 
-            Boolean relation1ChildTypeMediator = schema.typeIsMediator(relation1ChildType);
-            Boolean relation2ChildTypeMediator = schema.typeIsMediator(relation2ChildType);
+            Boolean relation1ChildTypeMediator =
+                schema.typeIsMediator(relation1ChildType);
+            Boolean relation2ChildTypeMediator =
+                schema.typeIsMediator(relation2ChildType);
 
-            if (relation1ChildTypeMediator != null && relation1ChildTypeMediator) {
+            if (relation1ChildTypeMediator != null
+                && relation1ChildTypeMediator) {
               continue;
             }
 
-            if (relation2ChildTypeMediator != null && relation2ChildTypeMediator) {
+            if (relation2ChildTypeMediator != null
+                && relation2ChildTypeMediator) {
               continue;
             }
 
@@ -172,23 +187,33 @@ public class PrintFreebaseDomain {
             		|| !relation2.startsWith(domain))
             	continue; */
 
-String query;
-            if (relation1.contains(".inverse") && relation2.contains(".inverse")) {
-              query = String.format("PREFIX ns: <http://rdf.freebase.com/ns/> " + "SELECT ?x ?y %s "
-                  + "WHERE { " + "?x ns:%s ?z . " + "?y ns:%s ?z . FILTER (?x != ?y) .}", domainUri,
-                  relation1.replace(".inverse", ""), relation2.replace(".inverse", ""));
+            String query;
+            if (relation1.contains(".inverse")
+                && relation2.contains(".inverse")) {
+              query =
+                  String.format("PREFIX ns: <http://rdf.freebase.com/ns/> "
+                      + "SELECT ?x ?y %s " + "WHERE { " + "?x ns:%s ?z . "
+                      + "?y ns:%s ?z . FILTER (?x != ?y) .}", domainUri,
+                      relation1.replace(".inverse", ""),
+                      relation2.replace(".inverse", ""));
             } else if (relation1.contains(".inverse")) {
-              query = String.format("PREFIX ns: <http://rdf.freebase.com/ns/> " + "SELECT ?x ?y %s "
-                  + "WHERE { " + "?x ns:%s ?z . " + "?z ns:%s ?y . FILTER (?x != ?y) .}", domainUri,
-                  relation1.replace(".inverse", ""), relation2);
+              query =
+                  String.format("PREFIX ns: <http://rdf.freebase.com/ns/> "
+                      + "SELECT ?x ?y %s " + "WHERE { " + "?x ns:%s ?z . "
+                      + "?z ns:%s ?y . FILTER (?x != ?y) .}", domainUri,
+                      relation1.replace(".inverse", ""), relation2);
             } else if (relation2.contains(".inverse")) {
-              query = String.format("PREFIX ns: <http://rdf.freebase.com/ns/> " + "SELECT ?x ?y %s "
-                  + "WHERE { " + "?z ns:%s ?x . " + "?y ns:%s ?z . FILTER (?x != ?y) .}", domainUri,
-                  relation1, relation2.replace(".inverse", ""));
+              query =
+                  String.format("PREFIX ns: <http://rdf.freebase.com/ns/> "
+                      + "SELECT ?x ?y %s " + "WHERE { " + "?z ns:%s ?x . "
+                      + "?y ns:%s ?z . FILTER (?x != ?y) .}", domainUri,
+                      relation1, relation2.replace(".inverse", ""));
             } else {
-              query = String.format("PREFIX ns: <http://rdf.freebase.com/ns/> " + "SELECT ?x ?y %s "
-                  + "WHERE { " + "?z ns:%s ?x . " + "?z ns:%s ?y . FILTER (?x != ?y) .}", domainUri,
-                  relation1, relation2);
+              query =
+                  String.format("PREFIX ns: <http://rdf.freebase.com/ns/> "
+                      + "SELECT ?x ?y %s " + "WHERE { " + "?z ns:%s ?x . "
+                      + "?z ns:%s ?y . FILTER (?x != ?y) .}", domainUri,
+                      relation1, relation2);
             }
 
             System.err.println("Query = " + query);
@@ -234,14 +259,14 @@ String query;
 
     System.out.println("# Entity Types");
     for (String key : domainTypes.keySet()) {
-      System.out.println(
-          String.format("%s\t%s", gson.toJson(key), gson.toJson(domainTypes.get(key))));
+      System.out.println(String.format("%s\t%s", gson.toJson(key),
+          gson.toJson(domainTypes.get(key))));
     }
 
     System.out.println("# Binary Relations");
     for (List<String> key : domainRelations.keySet()) {
-      System.out.println(
-          String.format("%s\t%s", gson.toJson(key), gson.toJson(domainRelations.get(key))));
+      System.out.println(String.format("%s\t%s", gson.toJson(key),
+          gson.toJson(domainRelations.get(key))));
     }
 
   }
@@ -260,10 +285,12 @@ String query;
 
     String username = "dba";
     String password = "dba";
-    List<String> domainUris = Lists.newArrayList("http://business.freebase.com");
+    List<String> domainUris =
+        Lists.newArrayList("http://business.freebase.com");
     String schemaFileName = "data/freebase/schema/business_schema.txt";
 
-    PrintFreebaseDomain.print(url, username, password, domainUris, schemaFileName);
+    PrintFreebaseDomain.print(url, username, password, domainUris,
+        schemaFileName);
   }
 
 }

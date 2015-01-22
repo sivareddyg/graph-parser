@@ -16,10 +16,12 @@ public class Category {
     this.semCat = semCat;
   }
 
-  public static Category forwardApplication(Category cat1, Category cat2) throws BadParseException {
+  public static Category forwardApplication(Category cat1, Category cat2)
+      throws BadParseException {
     SyntacticCategory synCat1 = cat1.getSyntacticCategory();
     SyntacticCategory synCat2 = cat2.getSyntacticCategory();
-    SyntacticCategory resultSynCat = SyntacticCategory.forwardApplication(synCat1, synCat2);
+    SyntacticCategory resultSynCat =
+        SyntacticCategory.forwardApplication(synCat1, synCat2);
 
     SemanticCategory semCat1 = cat1.getSemanticCategory();
     SemanticCategory semCat2 = cat2.getSemanticCategory();
@@ -33,7 +35,8 @@ public class Category {
       throws BadParseException {
     SyntacticCategory synCat1 = cat1.getSyntacticCategory();
     SyntacticCategory synCat2 = cat2.getSyntacticCategory();
-    SyntacticCategory resultSynCat = SyntacticCategory.backwardApplication(synCat1, synCat2);
+    SyntacticCategory resultSynCat =
+        SyntacticCategory.backwardApplication(synCat1, synCat2);
 
     SemanticCategory semCat1 = cat1.getSemanticCategory();
     SemanticCategory semCat2 = cat2.getSemanticCategory();
@@ -43,11 +46,13 @@ public class Category {
     return resultCategory;
   }
 
-  public static Category forwardComposition(Category cat1, Category cat2) throws BadParseException {
+  public static Category forwardComposition(Category cat1, Category cat2)
+      throws BadParseException {
     // P1/P1;f P3/P4;g -> P1/P4; (lambda z (f (g z))
     SyntacticCategory synCat1 = cat1.getSyntacticCategory();
     SyntacticCategory synCat2 = cat2.getSyntacticCategory();
-    SyntacticCategory resultSynCat = SyntacticCategory.forwardComposition(synCat1, synCat2);
+    SyntacticCategory resultSynCat =
+        SyntacticCategory.forwardComposition(synCat1, synCat2);
 
     // Semantic composition
     SemanticCategory semCat1 = cat1.getSemanticCategory();
@@ -63,7 +68,8 @@ public class Category {
     // P4/P1;g P3\P4;f -> P3/P1; (lambda z (f (g z))
     SyntacticCategory synCat1 = cat1.getSyntacticCategory();
     SyntacticCategory synCat2 = cat2.getSyntacticCategory();
-    SyntacticCategory resultSynCat = SyntacticCategory.backwardComposition(synCat1, synCat2);
+    SyntacticCategory resultSynCat =
+        SyntacticCategory.backwardComposition(synCat1, synCat2);
 
     // Semantic composition
     SemanticCategory semCat1 = cat1.getSemanticCategory();
@@ -74,8 +80,8 @@ public class Category {
     return resultCategory;
   }
 
-  public static Category generalisedForwardComposition(Category cat1, Category cat2)
-      throws BadParseException {
+  public static Category generalisedForwardComposition(Category cat1,
+      Category cat2) throws BadParseException {
     // P1/P2;f ((P2/P3)/P4);g -> ((P1/P3)/P4); (lambda z w (f ((g z) w))
 
     // Syntactic Composition
@@ -89,14 +95,15 @@ public class Category {
     // Semantic composition
     SemanticCategory semCat1 = cat1.getSemanticCategory();
     SemanticCategory semCat2 = cat2.getSemanticCategory();
-    SemanticCategory resultSemCat = semCat1.generalisedComposition(semCat2, compositionDepth);
+    SemanticCategory resultSemCat =
+        semCat1.generalisedComposition(semCat2, compositionDepth);
 
     Category cat = new Category(resultSynCat, resultSemCat);
     return cat;
   }
 
-  public static Category generalisedBackwardComposition(Category cat1, Category cat2)
-      throws BadParseException {
+  public static Category generalisedBackwardComposition(Category cat1,
+      Category cat2) throws BadParseException {
     // ((P2/P3)/P4);g P1\P2;f -> ((P1/P3)/P4); (lambda z w (f ((g z) w))
 
     // Syntactic Composition
@@ -110,7 +117,8 @@ public class Category {
     // Semantic composition
     SemanticCategory semCat1 = cat1.getSemanticCategory();
     SemanticCategory semCat2 = cat2.getSemanticCategory();
-    SemanticCategory resultSemCat = semCat2.generalisedComposition(semCat1, compositionDepth);
+    SemanticCategory resultSemCat =
+        semCat2.generalisedComposition(semCat1, compositionDepth);
 
     Category cat = new Category(resultSynCat, resultSemCat);
     return cat;
@@ -129,19 +137,23 @@ public class Category {
     return resultSemCat;
   }
 
-  public static Category coordinationApplication(Category cat) throws BadParseException {
+  public static Category coordinationApplication(Category cat)
+      throws BadParseException {
     SyntacticCategory argSynCat = cat.synCat;
 
-    SyntacticCategory ccSynCat = SyntacticCategory.generateCoordinateCategory(argSynCat);
+    SyntacticCategory ccSynCat =
+        SyntacticCategory.generateCoordinateCategory(argSynCat);
     SemanticCategory ccSemCat =
-        SemanticCategory.generateSemanticCategory(ccSynCat, SemanticCategoryType.CLOSED);
+        SemanticCategory.generateSemanticCategory(ccSynCat,
+            SemanticCategoryType.CLOSED);
 
     Category ccCat = new Category(ccSynCat, ccSemCat);
     Category returnCat = Category.forwardApplication(ccCat, cat);
     return returnCat;
   }
 
-  public static Category applyUnaryRule(Category cat, String rule) throws BadParseException {
+  public static Category applyUnaryRule(Category cat, String rule)
+      throws BadParseException {
     SyntacticCategory leftSyntacticCategoryOld = cat.synCat;
     SemanticCategory leftSemanticCategoryOld = cat.semCat;
 
@@ -152,19 +164,23 @@ public class Category {
       lambdaConversionRule = parts[2];
     }
 
-    SyntacticCategory leftSyntacticCategory = SyntacticCategory.fromString(parts[0]);
-    SyntacticCategory newSyntacticCategory = SyntacticCategory.fromString(parts[1]);
+    SyntacticCategory leftSyntacticCategory =
+        SyntacticCategory.fromString(parts[0]);
+    SyntacticCategory newSyntacticCategory =
+        SyntacticCategory.fromString(parts[1]);
 
-    SyntacticCategory.applyUnaryRuleByUnification(leftSyntacticCategoryOld, leftSyntacticCategory,
-        newSyntacticCategory);
-    SemanticCategory newSemanticCategory = SemanticCategory.applyUnaryRule(leftSyntacticCategory,
-        newSyntacticCategory, leftSemanticCategoryOld, lambdaConversionRule);
+    SyntacticCategory.applyUnaryRuleByUnification(leftSyntacticCategoryOld,
+        leftSyntacticCategory, newSyntacticCategory);
+    SemanticCategory newSemanticCategory =
+        SemanticCategory
+            .applyUnaryRule(leftSyntacticCategory, newSyntacticCategory,
+                leftSemanticCategoryOld, lambdaConversionRule);
 
     return new Category(newSyntacticCategory, newSemanticCategory);
   }
 
-  public static Category applyBinaryRule(Category cat1, Category cat2, String rule)
-      throws BadParseException {
+  public static Category applyBinaryRule(Category cat1, Category cat2,
+      String rule) throws BadParseException {
     SyntacticCategory leftSyntacticCategoryOld = cat1.synCat;
     SemanticCategory leftSemanticCategoryOld = cat1.semCat;
 
@@ -178,19 +194,21 @@ public class Category {
       lambdaConversionRule = parts[3];
     }
 
-    SyntacticCategory leftSyntacticCategory = SyntacticCategory.fromString(parts[0]);
-    SyntacticCategory rightSyntacticCategory = SyntacticCategory.fromString(parts[1]);
-    SyntacticCategory newSyntacticCategory = SyntacticCategory.fromString(parts[2]);
+    SyntacticCategory leftSyntacticCategory =
+        SyntacticCategory.fromString(parts[0]);
+    SyntacticCategory rightSyntacticCategory =
+        SyntacticCategory.fromString(parts[1]);
+    SyntacticCategory newSyntacticCategory =
+        SyntacticCategory.fromString(parts[2]);
 
     SyntacticCategory.applyBinaryRuleByUnification(leftSyntacticCategoryOld,
-        rightSyntacticCategoryOld, leftSyntacticCategory, rightSyntacticCategory,
-        newSyntacticCategory);
-    SemanticCategory newSemanticCategory = SemanticCategory.applyBinaryRule(leftSyntacticCategory,
-        rightSyntacticCategory,
-        newSyntacticCategory,
-        leftSemanticCategoryOld,
-        rightSemanticCategoryOld,
-        lambdaConversionRule);
+        rightSyntacticCategoryOld, leftSyntacticCategory,
+        rightSyntacticCategory, newSyntacticCategory);
+    SemanticCategory newSemanticCategory =
+        SemanticCategory.applyBinaryRule(leftSyntacticCategory,
+            rightSyntacticCategory, newSyntacticCategory,
+            leftSemanticCategoryOld, rightSemanticCategoryOld,
+            lambdaConversionRule);
 
     return new Category(newSyntacticCategory, newSemanticCategory);
   }
@@ -217,8 +235,8 @@ public class Category {
   }
 
   /**
-   * Copies the category without unifying the variables in new category with original category
-   * variables.
+   * Copies the category without unifying the variables in new category with
+   * original category variables.
    *
    * @return
    */

@@ -13,15 +13,16 @@ public class LambdaExpression extends AbstractExpression {
   private final List<ConstantExpression> argumentVariables;
   private final Expression body;
 
-  public LambdaExpression(List<ConstantExpression> argumentVariables, Expression body) {
+  public LambdaExpression(List<ConstantExpression> argumentVariables,
+      Expression body) {
     // this.argumentVariables = ImmutableList.copyOf(argumentVariables);
     this.argumentVariables = Lists.newArrayList(argumentVariables);
     this.body = Preconditions.checkNotNull(body);
   }
 
   /**
-   * Returns the body of the function, i.e., the code that gets executed when the function is
-   * invoked.
+   * Returns the body of the function, i.e., the code that gets executed when
+   * the function is invoked.
    *
    * @return
    */
@@ -39,19 +40,21 @@ public class LambdaExpression extends AbstractExpression {
   }
 
   public Expression reduce(List<Expression> argumentValues) {
-    Preconditions.checkArgument(argumentValues.size() <= argumentVariables.size());
+    Preconditions.checkArgument(argumentValues.size() <= argumentVariables
+        .size());
 
     Expression substitutedBody = body;
     for (int i = 0; i < argumentValues.size(); i++) {
-      substitutedBody = substitutedBody.substitute(argumentVariables.get(i), argumentValues.get(i));
+      substitutedBody =
+          substitutedBody.substitute(argumentVariables.get(i),
+              argumentValues.get(i));
     }
 
     if (argumentValues.size() == argumentVariables.size()) {
       return substitutedBody;
     } else {
-      return new LambdaExpression(
-          argumentVariables.subList(argumentValues.size(), argumentVariables.size()),
-          substitutedBody);
+      return new LambdaExpression(argumentVariables.subList(
+          argumentValues.size(), argumentVariables.size()), substitutedBody);
     }
   }
 
@@ -61,46 +64,52 @@ public class LambdaExpression extends AbstractExpression {
    * @return
    */
   /*
-   * public Expression alphaReduction(String expression) { countAlphaReductions =
-   * (countAlphaReductions + 1) % 1000; ExpressionParser expressionParser = new ExpressionParser();
-   * List<String> tokenizedExpression = expressionParser .tokenize(expression); Set<String>
-   * variables = Sets.newHashSet();
-   *
-   * int i = 0; while (i < tokenizedExpression.size()) { String token = tokenizedExpression.get(i);
-   * if (token.equals("lambda") || token.equals("exists")) { i++; while (i <
-   * tokenizedExpression.size()) { token = tokenizedExpression.get(i); if (token.equals("(")) break;
+   * public Expression alphaReduction(String expression) { countAlphaReductions
+   * = (countAlphaReductions + 1) % 1000; ExpressionParser expressionParser =
+   * new ExpressionParser(); List<String> tokenizedExpression = expressionParser
+   * .tokenize(expression); Set<String> variables = Sets.newHashSet();
+   * 
+   * int i = 0; while (i < tokenizedExpression.size()) { String token =
+   * tokenizedExpression.get(i); if (token.equals("lambda") ||
+   * token.equals("exists")) { i++; while (i < tokenizedExpression.size()) {
+   * token = tokenizedExpression.get(i); if (token.equals("(")) break;
    * variables.add(token); i++; } } i++; }
-   *
-   * List<String> newTokenizedExpression = Lists.newArrayList(); for (String token :
-   * tokenizedExpression) { if (variables.contains(token))
+   * 
+   * List<String> newTokenizedExpression = Lists.newArrayList(); for (String
+   * token : tokenizedExpression) { if (variables.contains(token))
    * newTokenizedExpression.add(String.format("%s_%s", token,
-   * Integer.toString(countAlphaReductions))); else newTokenizedExpression.add(token); } return
+   * Integer.toString(countAlphaReductions))); else
+   * newTokenizedExpression.add(token); } return
    * expressionParser.parseSingleExpression(newTokenizedExpression); }
-   *
-   * public Expression alphaReduction() { String expression = this.toString(); countAlphaReductions
-   * = (countAlphaReductions + 1) % 1000; ExpressionParser expressionParser = new
-   * ExpressionParser(); List<String> tokenizedExpression = expressionParser .tokenize(expression);
-   * Set<String> variables = Sets.newHashSet();
-   *
-   * int i = 0; while (i < tokenizedExpression.size()) { String token = tokenizedExpression.get(i);
-   * if (token.equals("lambda") || token.equals("exists")) { i++; while (i <
-   * tokenizedExpression.size()) { token = tokenizedExpression.get(i); if (token.equals("(")) break;
+   * 
+   * public Expression alphaReduction() { String expression = this.toString();
+   * countAlphaReductions = (countAlphaReductions + 1) % 1000; ExpressionParser
+   * expressionParser = new ExpressionParser(); List<String> tokenizedExpression
+   * = expressionParser .tokenize(expression); Set<String> variables =
+   * Sets.newHashSet();
+   * 
+   * int i = 0; while (i < tokenizedExpression.size()) { String token =
+   * tokenizedExpression.get(i); if (token.equals("lambda") ||
+   * token.equals("exists")) { i++; while (i < tokenizedExpression.size()) {
+   * token = tokenizedExpression.get(i); if (token.equals("(")) break;
    * variables.add(token); i++; } } i++; }
-   *
-   * List<String> newTokenizedExpression = Lists.newArrayList(); for (String token :
-   * tokenizedExpression) { if (variables.contains(token))
+   * 
+   * List<String> newTokenizedExpression = Lists.newArrayList(); for (String
+   * token : tokenizedExpression) { if (variables.contains(token))
    * newTokenizedExpression.add(String.format("%s_%s", token,
-   * Integer.toString(countAlphaReductions))); else newTokenizedExpression.add(token); } return
+   * Integer.toString(countAlphaReductions))); else
+   * newTokenizedExpression.add(token); } return
    * expressionParser.parseSingleExpression(newTokenizedExpression); }
    */
 
   /**
    * @param argumentVariable
    * @param value
-   * @return Make sure that the value is alpha reduced before passing it as argument. This method do
-   *         not perform alpha reduction.
+   * @return Make sure that the value is alpha reduced before passing it as
+   *         argument. This method do not perform alpha reduction.
    */
-  public Expression reduceArgument(ConstantExpression argumentVariable, Expression value) {
+  public Expression reduceArgument(ConstantExpression argumentVariable,
+      Expression value) {
     Preconditions.checkArgument(argumentVariables.contains(argumentVariable));
 
     // Added by Siva Reddy
@@ -110,7 +119,8 @@ public class LambdaExpression extends AbstractExpression {
     Expression substitutedBody = body;
     for (int i = 0; i < argumentVariables.size(); i++) {
       if (argumentVariables.get(i).equals(argumentVariable)) {
-        substitutedBody = substitutedBody.substitute(argumentVariables.get(i), value);
+        substitutedBody =
+            substitutedBody.substitute(argumentVariables.get(i), value);
       } else {
         remainingArguments.add(argumentVariables.get(i));
       }
@@ -130,7 +140,8 @@ public class LambdaExpression extends AbstractExpression {
   }
 
   @Override
-  public Expression substitute(ConstantExpression constant, Expression replacement) {
+  public Expression substitute(ConstantExpression constant,
+      Expression replacement) {
     if (!argumentVariables.contains(constant)) {
       Expression substitution = body.substitute(constant, replacement);
       return new LambdaExpression(argumentVariables, substitution);
@@ -164,7 +175,9 @@ public class LambdaExpression extends AbstractExpression {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((argumentVariables == null) ? 0 : argumentVariables.hashCode());
+    result =
+        prime * result
+            + ((argumentVariables == null) ? 0 : argumentVariables.hashCode());
     result = prime * result + ((body == null) ? 0 : body.hashCode());
     return result;
   }

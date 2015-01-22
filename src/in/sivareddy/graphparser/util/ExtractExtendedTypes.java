@@ -31,7 +31,8 @@ public class ExtractExtendedTypes {
       x = "ns:" + x.replace(ns, "");
       String y = answer.get("y").toString();
       y = "ns:" + y.replace(ns, "");
-      String yname = answer.get("yname") != null ? answer.get("yname").toString() : "";
+      String yname =
+          answer.get("yname") != null ? answer.get("yname").toString() : "";
       yname = yname.replaceAll("[\\s]+", "_");
       yname = yname.replaceAll("[^A-Za-z0-9_]+", "");
       yname = yname.replaceAll("en$", "");
@@ -51,7 +52,8 @@ public class ExtractExtendedTypes {
     BufferedReader br = new BufferedReader(new FileReader(fileNameWithQueries));
     ExtractExtendedTypes extractor = new ExtractExtendedTypes(jdbcEndPoint);
     System.out.println("@prefix ns: <http://rdf.freebase.com/ns/>.");
-    System.out.println("@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.");
+    System.out
+        .println("@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.");
     BufferedWriter bw = new BufferedWriter(new FileWriter(entityDictionary));
     try {
       String line = br.readLine();

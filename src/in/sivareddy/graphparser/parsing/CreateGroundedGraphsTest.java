@@ -29,11 +29,13 @@ public class CreateGroundedGraphsTest {
   private void load() throws IOException {
     if (groundedLexicon == null) {
       groundedLexicon =
-          new GroundedLexicon("data/freebase/grounded_lexicon/business_grounded_lexicon.txt");
+          new GroundedLexicon(
+              "data/freebase/grounded_lexicon/business_grounded_lexicon.txt");
     }
     if (kb == null) {
-      kb = new KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz",
-          "data/freebase/stats/business_relation_types.txt");
+      kb =
+          new KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz",
+              "data/freebase/stats/business_relation_types.txt");
     }
   }
 
@@ -42,24 +44,30 @@ public class CreateGroundedGraphsTest {
     load();
     Schema schema = new Schema("data/freebase/schema/business_schema.txt");
     // KnowledgeBase kb = null;
-    CcgAutoLexicon questionCcgAutoLexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
-        "./data/unary_rules.txt", "./data/binary_rules.txt",
-        "./data/lexicon_specialCases_questions.txt");
+    CcgAutoLexicon questionCcgAutoLexicon =
+        new CcgAutoLexicon("./data/candc_markedup.modified",
+            "./data/unary_rules.txt", "./data/binary_rules.txt",
+            "./data/lexicon_specialCases_questions.txt");
 
-    CcgAutoLexicon normalCcgAutoLexicon = new CcgAutoLexicon("./data/candc_markedup.modified",
-        "./data/unary_rules.txt", "./data/binary_rules.txt", "./data/lexicon_specialCases.txt");
+    CcgAutoLexicon normalCcgAutoLexicon =
+        new CcgAutoLexicon("./data/candc_markedup.modified",
+            "./data/unary_rules.txt", "./data/binary_rules.txt",
+            "./data/lexicon_specialCases.txt");
 
     // GroundedLexicon groundedLexicon = null;
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
-    GroundedGraphs graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
-        normalCcgAutoLexicon, questionCcgAutoLexicon, relationLexicalIdentifiers,
-        relationTypingIdentifiers, null, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false, false, false, false,
-        10.0, 1.0, 0.0, 0.0);
+    GroundedGraphs graphCreator =
+        new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
+            questionCcgAutoLexicon, relationLexicalIdentifiers,
+            relationTypingIdentifiers, null, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, 10.0, 1.0, 0.0,
+            0.0);
 
     BufferedReader br =
-        new BufferedReader(new FileReader("data/tests/sample_business_training_sentences.txt"));
+        new BufferedReader(new FileReader(
+            "data/tests/sample_business_training_sentences.txt"));
     JsonParser parser = new JsonParser();
 
     PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
@@ -89,7 +97,8 @@ public class CreateGroundedGraphsTest {
         // JsonObject jsonSentence =
         // parser.parse(line).getAsJsonObject();
         List<LexicalGraph> graphs =
-            graphCreator.buildUngroundedGraph(jsonSentence, "dependency_lambda", 1, logger);
+            graphCreator.buildUngroundedGraph(jsonSentence,
+                "dependency_lambda", 1, logger);
 
         System.out.println("# Ungrounded Graphs");
         if (graphs.size() > 0) {
@@ -97,9 +106,11 @@ public class CreateGroundedGraphsTest {
             System.out.println(ungroundedGraph);
             System.out.println("Connected: " + ungroundedGraph.isConnected());
 
-            List<LexicalGraph> groundedGraphs = graphCreator.createGroundedGraph(ungroundedGraph,
-                10, 10000, true, true, true, false, false, false);
-            System.out.println("# Total number of Grounded Graphs: " + groundedGraphs.size());
+            List<LexicalGraph> groundedGraphs =
+                graphCreator.createGroundedGraph(ungroundedGraph, 10, 10000,
+                    true, true, true, false, false, false);
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
 
             int connectedGraphCount = 0;
             for (LexicalGraph groundedGraph : groundedGraphs) {
@@ -108,13 +119,15 @@ public class CreateGroundedGraphsTest {
                 System.out.println("# Grounded graph: " + connectedGraphCount);
                 System.out.println(groundedGraph);
                 System.out.println("Graph Query: "
-                    + GraphToSparqlConverter.convertGroundedGraph(groundedGraph, schema));
+                    + GraphToSparqlConverter.convertGroundedGraph(
+                        groundedGraph, schema));
               }
             }
 
-            System.out.println("# Total number of Grounded Graphs: " + groundedGraphs.size());
-            System.out.println(
-                "# Total number of Connected Grounded Graphs: " + connectedGraphCount);
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
+            System.out.println("# Total number of Connected Grounded Graphs: "
+                + connectedGraphCount);
             System.out.println();
           }
         }

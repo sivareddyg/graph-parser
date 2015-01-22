@@ -39,7 +39,8 @@ public class StructuredPercepton {
     Double score = 0.0;
     for (Feature feature : featureVector) {
       Double value = feature.getFeatureValue();
-      Double weight = weightVector.containsKey(feature) ? weightVector.get(feature) : 0.0;
+      Double weight =
+          weightVector.containsKey(feature) ? weightVector.get(feature) : 0.0;
       score += value * weight;
     }
     return score;
@@ -49,16 +50,17 @@ public class StructuredPercepton {
     Double score = 0.0;
     for (Feature feature : featureVector) {
       Double value = feature.getFeatureValue();
-      Double weight = cumulativeWeightVector.containsKey(feature) ?
-          cumulativeWeightVector.get(feature) / updateFrequency.get(feature)
-          : 0.0;
+      Double weight =
+          cumulativeWeightVector.containsKey(feature) ? cumulativeWeightVector
+              .get(feature) / updateFrequency.get(feature) : 0.0;
       score += value * weight;
     }
     return score;
   }
 
   // simple perceptron update with feature-wise averaging
-  public synchronized void updateWeightVector(Set<Feature> goldFeatVec, Set<Feature> predFeatVec) {
+  public synchronized void updateWeightVector(Set<Feature> goldFeatVec,
+      Set<Feature> predFeatVec) {
     updateCount += 1;
     Set<Feature> features = Sets.newHashSet();
     Map<Feature, Double> goldFeatVecMap = Maps.newHashMap();
@@ -78,21 +80,27 @@ public class StructuredPercepton {
 
     for (Feature feature : features) {
       Double goldFeatValue =
-          goldFeatVecMap.containsKey(feature) ? goldFeatVecMap.get(feature) : 0.0;
+          goldFeatVecMap.containsKey(feature) ? goldFeatVecMap.get(feature)
+              : 0.0;
       Double predFeatValue =
-          predFeatVecMap.containsKey(feature) ? predFeatVecMap.get(feature) : 0.0;
+          predFeatVecMap.containsKey(feature) ? predFeatVecMap.get(feature)
+              : 0.0;
       double difference = goldFeatValue - predFeatValue;
 
-      Double oldWeight = weightVector.containsKey(feature) ? weightVector.get(feature) : 0.0;
+      Double oldWeight =
+          weightVector.containsKey(feature) ? weightVector.get(feature) : 0.0;
       Double newWeight = oldWeight + difference;
       weightVector.put(feature, newWeight);
 
       double oldCumultativeWeight =
-          cumulativeWeightVector.containsKey(feature) ? cumulativeWeightVector.get(feature) : 0.0;
+          cumulativeWeightVector.containsKey(feature) ? cumulativeWeightVector
+              .get(feature) : 0.0;
       Double newCumulativeWeight = oldCumultativeWeight + newWeight;
       cumulativeWeightVector.put(feature, newCumulativeWeight);
 
-      int oldFreqCount = updateFrequency.containsKey(feature) ? updateFrequency.get(feature) : 0;
+      int oldFreqCount =
+          updateFrequency.containsKey(feature) ? updateFrequency.get(feature)
+              : 0;
       Integer newFreqCount = oldFreqCount + 1;
       updateFrequency.put(feature, newFreqCount);
     }
@@ -105,10 +113,12 @@ public class StructuredPercepton {
     }*/
   }
 
-  public synchronized void printFeatureWeights(Set<Feature> featVec, Logger logger) {
+  public synchronized void printFeatureWeights(Set<Feature> featVec,
+      Logger logger) {
     List<Pair<Double, Feature>> feats = Lists.newArrayList();
     for (Feature feature : featVec) {
-      Double weight = weightVector.containsKey(feature) ? weightVector.get(feature) : 0.0;
+      Double weight =
+          weightVector.containsKey(feature) ? weightVector.get(feature) : 0.0;
       feats.add(Pair.of(weight, feature));
     }
     Collections.sort(feats, Collections.reverseOrder());
@@ -119,12 +129,13 @@ public class StructuredPercepton {
     logger.debug("====");
   }
 
-  public synchronized void printFeatureWeightsTesting(Set<Feature> featVec, Logger logger) {
+  public synchronized void printFeatureWeightsTesting(Set<Feature> featVec,
+      Logger logger) {
     List<Pair<Double, Feature>> feats = Lists.newArrayList();
     for (Feature feature : featVec) {
-      Double weight = cumulativeWeightVector.containsKey(feature) ?
-          cumulativeWeightVector.get(feature) / updateFrequency.get(feature)
-          : 0.0;
+      Double weight =
+          cumulativeWeightVector.containsKey(feature) ? cumulativeWeightVector
+              .get(feature) / updateFrequency.get(feature) : 0.0;
       feats.add(Pair.of(weight, feature));
     }
     Collections.sort(feats, Collections.reverseOrder());
