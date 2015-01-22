@@ -24,7 +24,7 @@ def document_to_graphparser_input(document):
     for entity in document['entity']:
       if 'mention' in entity:
         for mention in entity['mention']:
-          if mention['type'] == 0:  # mention is a named entity
+          if 'type' not in mention or mention['type'] == 0:  # mention is a named entity
             head = mention['phrase']['head']
             head_to_phrase[head] = entity['name']
             for token_index in range(mention['phrase']['start'], mention['phrase']['end'] + 1):
@@ -236,22 +236,9 @@ if __name__ == "__main__":
   
   cache = set()
   for i, line in enumerate(sys.stdin):
-    # document = simplejson.loads(line)
-    # gdoc = document_to_graphparser_input(document)
-    #print i
-  #if True:
-    try:
       document = simplejson.loads(line.strip())  
-      #try:
       gdoc = document_to_graphparser_input(document)
       sentence = " ".join([word['word'] for word in gdoc['words']])
       if sentence not in cache:
         print simplejson.dumps(gdoc)
         cache.add(sentence)
-      #except:
-      #  sys.stderr.write("Bug in document_to_graphparser\n")
-    except:
-    #  sys.stderr.write("Json cannot parse\n")
-      sys.stderr.write(line)
-    #  break
-    #print line

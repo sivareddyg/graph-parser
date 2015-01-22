@@ -634,4 +634,6 @@ tacl_unsupervised_paraphrase:
 	-logFile working/tacl_unsupervised_paraphrase/business_film_people.log.txt \
 	> working/tacl_unsupervised_paraphrase/business_film_people.txt
 
-
+# Spanish Experiments
+extract_spanish_sentences:
+	bzcat data/bravas/wiki_00.bz2 | java -cp lib/*:graph-parser.jar others.SpanishTokenizer | perl -pe 's|=LRB=.*?=RRB=||g' | grep -v =LRB= | grep -v =RRB= 

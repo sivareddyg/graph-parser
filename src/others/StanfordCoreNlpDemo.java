@@ -20,9 +20,9 @@ public class StanfordCoreNlpDemo {
     Properties props = new Properties();
     if (languageCode.equals("en")) {
       props.put("annotators", "tokenize, ssplit, pos, lemma, ner");
-    } else if (languageCode.equals("es")) {      
+    } else if (languageCode.equals("es")) {
       props.put("annotators", "tokenize, ssplit, pos, lemma, ner");
-      
+
       // Tokenize using Spanish settings
       props.setProperty("tokenize.language", "es");
       props.setProperty("pos.model",
@@ -55,10 +55,10 @@ public class StanfordCoreNlpDemo {
           String word = token.get(TextAnnotation.class);
           // this is the POS tag of the token
           String pos = token.get(PartOfSpeechAnnotation.class);
-          
+
           // this is the lemma of the token
           String lemma = token.get(LemmaAnnotation.class);
-          
+
           // this is the NER label of the token
           String ne = token.get(NamedEntityTagAnnotation.class);
 
@@ -89,13 +89,11 @@ public class StanfordCoreNlpDemo {
   public static void main(String[] args) throws IOException {
 
     StanfordCoreNlpDemo enlgishPipeline = new StanfordCoreNlpDemo("en");
-    System.out
-        .println(enlgishPipeline
-            .processText("James Cameron directed Titanic in 1997 for 100$."));
+    System.out.println(enlgishPipeline
+        .processText("James Cameron directed Titanic in 1997 for 100$."));
 
     StanfordCoreNlpDemo spanishPipeline = new StanfordCoreNlpDemo("es");
-    System.out
-        .println(spanishPipeline
-            .processText("James Cameron dirigió Titanic en 1997 con 100$."));
+    System.out.println(spanishPipeline
+        .processText("Steven Spielberg dirigió la película E.T. en 1982. Ganó varios Oscars."));
   }
 }
