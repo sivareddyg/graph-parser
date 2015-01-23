@@ -1,3 +1,4 @@
+'''x y x'''
 import sys
 import json
 
@@ -6,5 +7,5 @@ for line in sys.stdin:
         continue
     parts = json.loads(line)
     entities = parts['entities']
-    if len(parts['sentence'].split()) > 12 and len(entities) > 2 and boundedVarCount == 0 and freeVarCount == 0 and foreignEntityCount == 0:
+    if len(parts['sentence'].split()) > 12 and len(entities) > 2:
         print parts['sentence']

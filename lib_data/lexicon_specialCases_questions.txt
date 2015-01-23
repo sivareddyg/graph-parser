@@ -22,9 +22,9 @@ the	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	UNIQUE
 *	*	(S[adj]\NP)/PP	((S[adj]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
 
 # passive case
-by	*	((S\NP)\(S\NP))/NP	(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){_}/NP{W}){_};_ 1 Y,_ 2 W	(lambda $f1 $f2 $f3 $Y (exists $W $Z $_ (and (EVENT $Y $Y 1 $W) ($f1 $W) (($f2 $Z) $Y) ($f3 $Z))))
+by	*	((S\NP)\(S\NP))/NP	(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){_}/NP{W}){_};_ 1 Y,_ 2 W	(lambda $f1 $f2 $f3 $Y (exists $W $Z $_ (and (EVENT $Y $Y 1 $W ENTITY) ($f1 $W) (($f2 $Z) $Y) ($f3 $Z))))
 # in questions "who was the movie produced by"
-by	*	PP/NP	(PP{X}/NP{Y}){_};X 1 Y	(lambda $f1 $X (exists $Y (and (EVENT $X $X 1 $Y) ($f1 $Y))))
+by	*	PP/NP	(PP{X}/NP{Y}){_};X 1 Y	(lambda $f1 $X (exists $Y (and (EVENT $X $X 1 $Y ENTITY) ($f1 $Y))))
 
 
 # Make cardinal number as the head
@@ -65,4 +65,5 @@ be	*	(S[dcl]\NP)/(S[adj]\NP)	((S[dcl]{Z}\NP{Y}){_}/(S[adj]{Z}\NP{Y*}){Z}){_};_ 1
 's	*	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
 
 # Artificial possessive - Over generation of ungrounded graphs - Comment it for public usage
-# 's	*	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))
+'s	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))
+'s	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT

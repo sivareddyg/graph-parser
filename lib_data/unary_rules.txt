@@ -41,7 +41,7 @@ S[to]\NP{X}	(NP{X}\NP{X}){X}
 S[dcl]/NP{X}	(NP{X}\NP{X}){X}
 
 # (the time) (the issue was printed) - complicated case. time is the invisible argument of printed  
-S[dcl]{X}	NP{Z}\NP{Z}	(lambda $f1 $f2 $Z (exists $X (and (EVENT $X $X rel $Z) ($f1 $X) (($f2 $Z) $Z))))
+S[dcl]{X}	NP{Z}\NP{Z}	(lambda $f1 $f2 $Z (exists $X (and (EVENT $X $X rel $Z ENTITY) ($f1 $X) (($f2 $Z) $Z))))
 
 # mail (comes) (wrapped around the edges) - Though wrapped should modify comes, this is not useful information. wrapped will have the same subject as comes 
 S[pss]\NP{X}	(S{Y}\NP{X})\(S{Y}\NP{X})

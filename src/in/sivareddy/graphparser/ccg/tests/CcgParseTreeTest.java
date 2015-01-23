@@ -90,11 +90,12 @@ public class CcgParseTreeTest {
     sent = "Obama 's birthplace is Hawaii";
     ccgParseTrees =
         ccgParser
-            .parseFromString("(<T S[dcl] ba 1 2> (<T NP[nb] fa 1 2> (<T NP[nb]/N ba 1 2> (<T NP lex 0 1> (<L N Obama Obama NNP I-LOC I-NP N>)) (<L (NP[nb]/N)\\NP 's 's POS O B-NP (NP[nb]/N)\\NP>)) (<L N birthplace birthplace NN O I-NP N>)) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP lex 0 1> (<L N Hawaii Hawaii NNP I-LOC I-NP N>))))");
+            .parseFromString("(<T S[dcl] ba 1 2> (<T NP[nb] fa 1 2> (<T NP[nb]/N ba 1 2> (<T NP lex 0 1> (<L N Obama Obama NNP I-LOC I-NP N>)) (<L (NP[nb]/N)\\NP 's 's IPOS O B-NP (NP[nb]/N)\\NP>)) (<L N birthplace birthplace NN O I-NP N>)) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP lex 0 1> (<L N Hawaii Hawaii NNP I-LOC I-NP N>))))");
     relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);
     System.out.println();
+    
     relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);
@@ -111,8 +112,8 @@ public class CcgParseTreeTest {
     System.out.println();*/
 
 
-    sent = "Obama 's place of birth is Kenya .";
-    ccgParseTrees =
+    sent = "what is the highest point of the state with largest area ?";
+    ccgParseTrees = 
         ccgParser
             .parseFromString("(<T S[wq] fa 0 2> (<L S[wq]/(S[dcl]\\NP) what what WP O I-NP S[wq]/(S[dcl]\\NP)>) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP ba 0 2> (<T NP[nb] fa 1 2> (<L NP[nb]/N the the DT O I-NP NP[nb]/N>) (<T N fa 1 2> (<L N/N highest highest JJS O I-NP N/N>) (<L N point point NN O I-NP N>))) (<T NP\\NP fa 0 2> (<L (NP\\NP)/NP of of IN O I-PP (NP\\NP)/NP>) (<T NP ba 0 2> (<T NP[nb] fa 1 2> (<L NP[nb]/N the the DT O I-NP NP[nb]/N>) (<L N state state NN O I-NP N>)) (<T NP\\NP fa 0 2> (<L (NP\\NP)/NP with with IN O I-PP (NP\\NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N largest largest JJS O I-NP N/N>) (<L N area area NN O I-NP N>)))))))))");
     relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
@@ -238,10 +239,10 @@ public class CcgParseTreeTest {
     System.out.println(sent);
     System.out.println(relations);
     System.out.println();
-    relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
+    /*relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);
-    System.out.println();
+    System.out.println();*/
 
     sent =
         "The Bavarian_Illuminati , a rationalist secret society , was founded by Adam_Weishaupt";
@@ -586,7 +587,7 @@ public class CcgParseTreeTest {
     sent = "Obama 's birthplace is Hawaii";
     ccgParseTrees =
         ccgParser
-            .parseFromString("(<T S[dcl] ba 1 2> (<T NP[nb] fa 1 2> (<T NP[nb]/N ba 1 2> (<T NP lex 0 1> (<L N Obama Obama NNP I-LOC I-NP N>)) (<L (NP[nb]/N)\\NP 's 's POS O B-NP (NP[nb]/N)\\NP>)) (<L N birthplace birthplace NN O I-NP N>)) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP lex 0 1> (<L N Hawaii Hawaii NNP I-LOC I-NP N>))))");
+            .parseFromString("(<T S[dcl] ba 1 2> (<T NP[nb] fa 1 2> (<T NP[nb]/N ba 1 2> (<T NP lex 0 1> (<L N Obama Obama NNP I-LOC I-NP N>)) (<L (NP[nb]/N)\\NP 's 's IPOS O B-NP (NP[nb]/N)\\NP>)) (<L N birthplace birthplace NN O I-NP N>)) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP lex 0 1> (<L N Hawaii Hawaii NNP I-LOC I-NP N>))))");
     relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);

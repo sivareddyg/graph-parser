@@ -25,6 +25,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   // Schema File
   private OptionSpec<String> schema;
 
+  // CCG Bank co-indexed mapping, non-standard unary rules, and non-standard
+  // binary rules.
+  private OptionSpec<String> ccgIndexedMapping;
+  private OptionSpec<String> unaryRules;
+  private OptionSpec<String> binaryRules;
+
   // CCG special categories lexicon
   private OptionSpec<String> ccgLexicon;
   private OptionSpec<String> ccgLexiconQuestions;
@@ -120,16 +126,34 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
         parser.accepts("schema", "File containing schema of the domain")
             .withRequiredArg().ofType(String.class).required();
 
+    ccgIndexedMapping =
+        parser
+            .accepts("ccgIndexedMapping",
+                "Co-indexation information for categories").withRequiredArg()
+            .ofType(String.class)
+            .defaultsTo("./lib_data/candc_markedup.modified");
+
+    unaryRules =
+        parser.accepts("unaryRules", "Type-Changing Rules in CCGbank")
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("./lib_data/unary_rules.txt");
+
+    binaryRules =
+        parser.accepts("binaryRules", "Binary Type-Changing rules in CCGbank")
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("./lib_data/binary_rules.txt");
+
     ccgLexicon =
         parser.accepts("ccgLexicon", "ccg special categories lexicon")
             .withRequiredArg().ofType(String.class)
-            .defaultsTo("./data/lexicon_specialCases.txt");
+            .defaultsTo("./lib_data/lexicon_specialCases.txt");
+
     ccgLexiconQuestions =
         parser
             .accepts("ccgLexiconQuestions",
                 "ccg special categories Questions lexicon").withRequiredArg()
             .ofType(String.class)
-            .defaultsTo("./data/lexicon_specialCases_questions.txt");
+            .defaultsTo("./lib_data/lexicon_specialCases_questions.txt");
 
     relationTypesFile =
         parser
@@ -400,12 +424,13 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           Lists.newArrayList(Splitter.on(";").split(options.valueOf(domain)));
 
       CcgAutoLexicon normalCcgAutoLexicon =
-          new CcgAutoLexicon("./data/candc_markedup.modified",
-              "./data/unary_rules.txt", "./data/binary_rules.txt",
+          new CcgAutoLexicon(options.valueOf(ccgIndexedMapping),
+              options.valueOf(unaryRules), options.valueOf(binaryRules),
               options.valueOf(ccgLexicon));
+
       CcgAutoLexicon questionCcgAutoLexicon =
-          new CcgAutoLexicon("./data/candc_markedup.modified",
-              "./data/unary_rules.txt", "./data/binary_rules.txt",
+          new CcgAutoLexicon(options.valueOf(ccgIndexedMapping),
+              options.valueOf(unaryRules), options.valueOf(binaryRules),
               options.valueOf(ccgLexiconQuestions));
 
       GroundedLexicon groundedLexicon =

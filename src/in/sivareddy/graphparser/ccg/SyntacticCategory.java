@@ -2,6 +2,7 @@ package in.sivareddy.graphparser.ccg;
 
 import in.sivareddy.util.StringObject;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -148,6 +149,7 @@ public class SyntacticCategory {
 
   private static Pattern basicCategoryPattern = Pattern.compile(String.format(
       "^%s$", basicCategoryPatternString));
+  private static Pattern ccgNounPattern = Pattern.compile("^N.*");
 
   private static String dependencyPatternString =
       "([\\S]+)[\\s]+([\\S]+)[\\s]+([\\S]+)";
@@ -300,6 +302,17 @@ public class SyntacticCategory {
     return isBasic;
   }
 
+
+  /**
+   * Returns true if the CCG category is basic and is a noun phrase.
+   * 
+   * @return
+   */
+  public boolean isBasicNounPhrase() {
+    return isBasic() && !isVar()
+        && ccgNounPattern.matcher(basicCategory).matches();
+  }
+
   /**
    * Set the index of the current category
    *
@@ -440,16 +453,9 @@ public class SyntacticCategory {
       }
       CategoryIndex variableIndex;
       if (indexName != null) {
-        indexName = CharMatcher.anyOf("\\{\\}\\*").removeFrom(indexName); // *
-                                                                          // indicates
-                                                                          // long
-                                                                          // distance
-                                                                          // relation.
-                                                                          // Could
-                                                                          // be
-                                                                          // useful
-                                                                          // in
-                                                                          // future
+        // * indicates a long distance (unbounded) relation. Currently no
+        // distinction between bounded and unbounded dependencies.
+        indexName = CharMatcher.anyOf("\\{\\}\\*").removeFrom(indexName);
         if (!varCache.containsKey(indexName)) {
           variableIndex = new CategoryIndex(indexName);
           varCache.put(variableIndex.getVariableName(), variableIndex);
@@ -1354,4 +1360,42 @@ public class SyntacticCategory {
     return isVar;
   }
 
+  /**
+   * Maps category indices to corresponding basic category strings.
+   * 
+   * @param indexToCat
+   */
+  public void getIndexToBasicCategoryMapping(Map<String, Set<String>> indexToCat) {
+    if (isVar())
+      return;
+    Preconditions.checkNotNull(indexToCat);
+    if (isBasic() && !isVar()) {
+      String indexName = index.getVariableName();
+      if (!indexToCat.containsKey(indexName))
+        indexToCat.put(indexName, new HashSet<String>());
+      indexToCat.get(indexName).add(basicCategory);
+    } else {
+      parent.getIndexToBasicCategoryMapping(indexToCat);
+      argument.getIndexToBasicCategoryMapping(indexToCat);
+    }
+  }
+
+  /**
+   * Returns true if the category corresponding to the index is a noun phrase.
+   * 
+   * @param indexToCat
+   * @param indexName
+   * @return
+   */
+  public static boolean indexIsNounPhrase(Map<String, Set<String>> indexToCat,
+      String indexName) {
+    if (!indexToCat.containsKey(indexName))
+      return false;
+    Set<String> cats = indexToCat.get(indexName);
+    for (String cat : cats) {
+      if (ccgNounPattern.matcher(cat).matches())
+        return true;
+    }
+    return false;
+  }
 }

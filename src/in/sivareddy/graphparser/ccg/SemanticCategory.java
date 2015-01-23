@@ -3,7 +3,9 @@ package in.sivareddy.graphparser.ccg;
 import in.sivareddy.util.StringObject;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,7 +23,6 @@ import in.sivareddy.lambda.ConstantExpression;
 import in.sivareddy.lambda.Expression;
 import in.sivareddy.lambda.ExpressionParser;
 import in.sivareddy.lambda.LambdaExpression;
-
 import in.sivareddy.graphparser.ccg.SyntacticCategory.IndexedDependency;
 
 /*-
@@ -321,6 +322,8 @@ public class SemanticCategory extends LambdaExpression {
            * e corresponds to the event of the head's variable, here president
            */
 
+          Map<String, Set<String>> indexToCat = new HashMap<>();
+          synCat.getIndexToBasicCategoryMapping(indexToCat);
           for (IndexedDependency dep : deps) {
             sb = new StringBuilder();
             String childName = dep.getChild().getVarNameAndKey();
@@ -333,6 +336,14 @@ public class SemanticCategory extends LambdaExpression {
             sb.append(dep.getRelation());
             sb.append(" ");
             sb.append(childName);
+            String indexName = dep.getChild().getVariableName();
+            if (SyntacticCategory.indexIsNounPhrase(indexToCat, indexName)) {
+              sb.append(" ");
+              sb.append("ENTITY");
+            } else {
+              sb.append(" ");
+              sb.append("EVENT");
+            }
             bodyExpression = "(" + sb.toString() + ")";
             bodyExpressions.add(bodyExpression);
             exists.add(headName);

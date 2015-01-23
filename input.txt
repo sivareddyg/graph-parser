@@ -7,3 +7,7 @@
 {"sentence" : "John saw hundred and forty four monkeys."}
 {"sentence" : "I saw a good movie director"}
 {"sentence" : "Three interesting dates are 18 Feb 1997, the 20th of july and 4 days from today."}
+{"sentence" : "Cameron directed 30 movies."}
+{"sentence" : "Cameron, the director of Titanic, won Oscar."}
+{"sentence" : "Obama did not win the election."}
+{"sentence" : "He said Obama is not the president of US."}

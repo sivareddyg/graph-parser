@@ -559,11 +559,11 @@ public class CcgParseTree {
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
 
-        // below is a dirty implentation to cover special conjunction cases
-        // candc treats noun complements with punctuation as conjunctions
-        // rather than modifiers
+        // Below is a dirty implemetation to cover special conjunction cases.
+        // C&C treats noun complements with punctuation as conjunctions rather
+        // than modifiers.
         // Cameron , the director of Titanic .....
-        // We aim to treat it as modifier construction
+        // We aim to treat it as modifier construction.
         CategoryIndex cat2Index = cat2.getSyntacticCategory().getIndex();
         String cat2SimpleString =
             cat2.getSyntacticCategory().toSuperSimpleString();
@@ -996,6 +996,7 @@ public class CcgParseTree {
         String lexicalVar = relationParts.get(2);
         String relationName = relationParts.get(3);
         String childVar = relationParts.get(4);
+        String argType = relationParts.get(5);
 
         CategoryIndex headIndexMain = CategoryIndex.getCategoryIndex(headVar);
         CategoryIndex lexicalIndexMain =
@@ -1039,7 +1040,6 @@ public class CcgParseTree {
                   nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
               LexicalItem childNode =
                   nodesIndexMap.get(childIndex.getVariableValue().getValue());
-              childNode = childNode.copula;
 
               if (!CcgAutoLexicon.complementLemmas.contains(childNode.word)
                   && !CcgAutoLexicon.typePosTags.contains(childNode.pos)
@@ -1077,21 +1077,20 @@ public class CcgParseTree {
               sb.append(lexicalNode.lexicaliseRelationName());
               sb.append(".");
               sb.append(relationName);
-              if (RELATION_TYPING_IDENTIFIERS.length > 0) {
+              if (RELATION_TYPING_IDENTIFIERS.length > 0
+                  && argType.equals("ENTITY")) {
                 sb.append(".");
-                sb.append(childNode.getRelTypingIdentifier());
+                sb.append(childNode.copula.getRelTypingIdentifier());
               }
               sb.append("(");
               sb.append(headNode.wordPosition + ":" + "e");
               sb.append(" , ");
-              if (lexicalPosTags.contains(childNode.pos)) {
-                sb.append(childNode.lexicaliseArgument());
-              } else if (CcgAutoLexicon.typePosTags.contains(childNode.pos)
-                  || CcgAutoLexicon.questionPosTags.contains(childNode.pos)
-                  || childNode.getCategory().getSyntacticCategory().isBasic()
-                  || CcgAutoLexicon.complementLemmas.contains(childNode.word)) {
-                sb.append(childNode.wordPosition + ":" + "x");
-              } else if (CcgAutoLexicon.eventPosTags.contains(childNode.pos)) {
+              if (argType.equals("ENTITY")) {
+                if (lexicalPosTags.contains(childNode.copula.pos))
+                  sb.append(childNode.copula.lexicaliseArgument());
+                else
+                  sb.append(childNode.copula.wordPosition + ":" + "x");
+              } else if (argType.equals("EVENT")) {
                 sb.append(childNode.wordPosition + ":" + "e");
               }
               sb.append(")");
@@ -1145,36 +1144,6 @@ public class CcgParseTree {
             if (headNode.equals(lexicalNode))
               continue;
 
-            // special case for copula sentences
-            if (headNode.lemma.equals("be")
-                && headNode.getCategory().getSyntacticCategory()
-                    .toSuperSimpleString().equals("((S\\NP)/NP)")) {
-              headIndex =
-                  headNode.getCategory().getSyntacticCategory().getArgument()
-                      .getIndex();
-              LexicalItem copulaHeadNode = null;
-              if (headIndex.getVariableValue() != null
-                  && headIndex.getVariableValue().isInitialised()) {
-                copulaHeadNode =
-                    nodesIndexMap.get(headIndex.getVariableValue().getValue());
-
-                // senentece is in the form of
-                // "The founder of X is Y"
-                if (lexicalPosTags.contains(copulaHeadNode.pos)) {
-                  headIndex =
-                      headNode.getCategory().getSyntacticCategory().getParent()
-                          .getArgument().getIndex();
-                  if (headIndex.getVariableValue() != null
-                      && headIndex.getVariableValue().isInitialised())
-                    copulaHeadNode =
-                        nodesIndexMap.get(headIndex.getVariableValue()
-                            .getValue());
-                }
-                if (!lexicalPosTags.contains(copulaHeadNode.pos))
-                  headNode = copulaHeadNode;
-              }
-            }
-
             StringBuilder sb = new StringBuilder();
             if (!lexicalPosTags.contains(headNode.pos)
                 && headNode != lexicalNode) {
@@ -1217,56 +1186,17 @@ public class CcgParseTree {
           LexicalItem headNode =
               nodesIndexMap.get(headIndex.getVariableValue().getValue());
 
-          // if (IGNOREPRONOUNS &&
-          // (CcgAutoLexicon.pronounPosTags.contains(headNode.pos)))
-          // continue;
-
           StringBuilder sb = new StringBuilder();
           sb.append("NEGATION");
           sb.append("(");
+          sb.append(headNode.wordPosition + ":" + "e");
+          sb.append(")");
+          lexicalisedRelation.add(sb.toString());
 
-          // special case for copula sentences
-          if (headNode.lemma.equals("be")
-              && headNode.getCategory().getSyntacticCategory()
-                  .toSuperSimpleString().equals("((S\\NP)/NP)")) {
-            headIndex =
-                headNode.getCategory().getSyntacticCategory().getArgument()
-                    .getIndex();
-            LexicalItem copulaHeadNode = null;
-            if (headIndex.getVariableValue() != null
-                && headIndex.getVariableValue().isInitialised()) {
-              copulaHeadNode =
-                  nodesIndexMap.get(headIndex.getVariableValue().getValue());
-
-              // senentece is in the form of "The founder of X is Y"
-              if (lexicalPosTags.contains(copulaHeadNode.pos)) {
-                headIndex =
-                    headNode.getCategory().getSyntacticCategory().getParent()
-                        .getArgument().getIndex();
-                if (headIndex.getVariableValue() != null
-                    && headIndex.getVariableValue().isInitialised())
-                  copulaHeadNode =
-                      nodesIndexMap
-                          .get(headIndex.getVariableValue().getValue());
-              }
-              if (!lexicalPosTags.contains(copulaHeadNode.pos))
-                headNode = copulaHeadNode;
-            }
-            sb.append(headNode.wordPosition + ":" + "s");
-            sb.append(")");
-            lexicalisedRelation.add(sb.toString());
-            sb = new StringBuilder();
-            sb.append("NEGATION");
-            sb.append("(");
-            sb.append(headNode.wordPosition + ":" + "e");
-            sb.append(")");
-            lexicalisedRelation.add(sb.toString());
-          } else {
-            sb.append(headNode.wordPosition + ":" + "e");
-            sb.append(")");
-            lexicalisedRelation.add(sb.toString());
+          if (CcgAutoLexicon.typePosTags.contains(headNode.pos)) {
+            lexicalisedRelation.add(String.format("NEGATION(%d:s)",
+                headNode.wordPosition));
           }
-
         }
         break;
       case TYPE:
