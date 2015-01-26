@@ -414,7 +414,7 @@ N\N
   2 ccomp _ %l %f =PP/S[dcl]
 
 (S[pss]\NP)/(S[to]\NP)
-  2 ((S[pss]{_}\NP{Y}<1>){_}/(S[to]{Z}<2>\NP{Y*}){Z}){_}
+  2 ((S[pss]{_}\NP{Y}<3>){_}/(S[to]{Z}<2>\NP{Y*}){Z}){_}
   1 ncsubj %l %f obj
   2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
 

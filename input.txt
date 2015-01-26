@@ -11,3 +11,6 @@
 {"sentence" : "Cameron, the director of Titanic, won Oscar."}
 {"sentence" : "Obama did not win the election."}
 {"sentence" : "He said Obama is not the president of US."}
+{"sentence" : "James Cameron wanted to direct Titanic."}
+{"sentence" : "James Cameron was asked to produce Titanic."}
+{"sentence" : "James Cameron was asked by Sony Pictures to produce Titanic in 1997."}
