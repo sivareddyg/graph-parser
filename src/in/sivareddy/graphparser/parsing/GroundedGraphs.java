@@ -193,6 +193,7 @@ public class GroundedGraphs {
 
   public static class LexicalGraph extends Graph<LexicalItem> {
     private Set<Feature> features;
+    private String syntacticParse;
     private StemMatchingFeature stemMatchingFeature;
     private ArgStemMatchingFeature argStemMatchingFeature;
     private MediatorStemGrelPartMatchingFeature mediatorStemGrelPartMatchingFeature;
@@ -406,6 +407,7 @@ public class GroundedGraphs {
       LexicalGraph newGraph = new LexicalGraph();
       copyTo(newGraph);
       newGraph.features = Sets.newHashSet(features);
+      newGraph.syntacticParse = syntacticParse;
 
       newGraph.stemMatchingFeature.setFeatureValue(stemMatchingFeature
           .getFeatureValue());
@@ -441,10 +443,21 @@ public class GroundedGraphs {
       return newGraph;
     }
 
+    public String getSyntacticParse() {
+      return syntacticParse;
+    }
+
+    public void setSyntacticParse(String syntacticParse) {
+      this.syntacticParse = syntacticParse;
+    }
+
     @Override
     public String toString() {
       StringBuilder graphString = new StringBuilder();
       graphString.append("Score: " + this.getScore() + '\n');
+      if (syntacticParse != null)
+        graphString.append("SynParse: " + this.getSyntacticParse() + '\n');
+
       graphString.append("Words: \n");
       for (LexicalItem node : super.getNodes()) {
         graphString.append(Objects.toStringHelper(node)
@@ -572,8 +585,14 @@ public class GroundedGraphs {
               ccgParse.getLexicalisedSemanticPredicates();
           List<LexicalItem> leaves = ccgParse.getLeafNodes();
           for (Set<String> semanticParse : semanticParses) {
+            int prev_size = graphs.size();
             buildUngroundeGraphFromSemanticParse(semanticParse, leaves, score,
                 graphs);
+
+            // Traceback each graph to its original syntactic parse.
+            for (int ithGraph = prev_size; ithGraph < graphs.size(); ithGraph++) {
+              graphs.get(ithGraph).setSyntacticParse(synParse);
+            }
           }
         }
       }

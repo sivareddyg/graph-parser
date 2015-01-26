@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
 
-public class GraphToQueryTrainingMain {
+public class GraphToQueryTrainingUnsupervised {
 
   private GraphToQueryTraining graphToQuery;
   private List<List<String>> trainingExamples;
@@ -47,7 +47,7 @@ public class GraphToQueryTrainingMain {
   private int nBestTrainSyntacticParses;
   private String semanticParseKey;
 
-  public GraphToQueryTrainingMain(Schema schema, KnowledgeBase kb,
+  public GraphToQueryTrainingUnsupervised(Schema schema, KnowledgeBase kb,
       GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
       CcgAutoLexicon questionCcgAutoLexicon, RdfGraphTools rdfGraphTools,
       List<String> kbGraphUri, String testingFile, String devFile,
@@ -244,38 +244,29 @@ public class GraphToQueryTrainingMain {
       GroundedLexicon groundedLexicon, RdfGraphTools rdfGraphTools,
       List<String> kbGraphUri) throws IOException, InterruptedException {
     CcgAutoLexicon normalCcgAutoLexicon =
-        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
-            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
-            "./lib_data/lexicon_specialCases.txt");
+        new CcgAutoLexicon("./lib_data/ybisk-mapping.txt",
+            "./data/empty.txt", "./data/empty.txt",
+            "./data/empty.txt");
+
     CcgAutoLexicon questionCcgAutoLexicon =
-        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
-            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
-            "./lib_data/lexicon_specialCases_questions.txt");
+        new CcgAutoLexicon("./lib_data/ybisk-mapping.txt",
+            "./data/empty.txt", "./data/empty.txt",
+            "./data/empty.txt");
 
-    // String testFile =
-    // "data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt";
-
-    String testFile =
-        "data/tests/webquestions.examples.test.domains.easyccg.parse.filtered.100.json";
+    String testFile = null;
 
     String devFile = null;
 
-    // String supervisedTrainingFile =
-    // "data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt";
+    String supervisedTrainingFile = null;
 
-    String supervisedTrainingFile =
-        "data/tests/webquestions.examples.test.domains.easyccg.parse.filtered.471.json";
+    String corupusTrainingFile = "test_data/unsupervised_parser.json.gz";
 
-    // String corupusTrainingFile =
-    // "data/freebase/sentences_training_filtered/business_training_sentences_filtered_00000.txt.gz";
-    String corupusTrainingFile = null;
-
-    String logFile = "working/sup_easyccg.log.txt";
+    String logFile = "working/unsupervised_test.log.txt";
     boolean debugEnabled = true;
     int trainingSampleSize = 1000;
 
-    int nBestTrainSyntacticParses = 1;
-    int nBestTestSyntacticParses = 1;
+    int nBestTrainSyntacticParses = 100;
+    int nBestTestSyntacticParses = 100;
     int nbestBestEdges = 20;
     int nbestGraphs = 100;
 
@@ -331,8 +322,8 @@ public class GraphToQueryTrainingMain {
     // Denotation feature
     boolean validQueryFlag = true;
 
-    GraphToQueryTrainingMain graphToQueryModel =
-        new GraphToQueryTrainingMain(schema, kb, groundedLexicon,
+    GraphToQueryTrainingUnsupervised graphToQueryModel =
+        new GraphToQueryTrainingUnsupervised(schema, kb, groundedLexicon,
             normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
             kbGraphUri, testFile, devFile, supervisedTrainingFile,
             corupusTrainingFile, semanticParseKey, debugEnabled,
@@ -356,32 +347,22 @@ public class GraphToQueryTrainingMain {
 
   public static void main(String[] args) throws IOException,
       InterruptedException {
-    // Schema schema = new
-    // Schema("data/freebase/schema/business_schema.txt");
-    Schema schema =
-        new Schema("data/freebase/schema/business_film_people_schema.txt");
+    Schema schema = new Schema("data/freebase/schema/business_schema.txt");
 
-    // KnowledgeBase kb = new
-    // KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz");
     KnowledgeBase kb =
-        new KnowledgeBase(
-            "data/freebase/domain_facts/business_film_people_facts.txt.gz",
-            "data/freebase/stats/business_film_people_relation_types.txt");
+        new KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz",
+            "data/freebase/stats/business_relation_types.txt");
 
-    // GroundedLexicon groundedLexicon = new
-    // GroundedLexicon("data/freebase/grounded_lexicon/business_grounded_lexicon.txt");
-    GroundedLexicon groundedLexicon =
-        new GroundedLexicon(
-            "data/freebase/grounded_lexicon/business_film_people_grounded_lexicon.txt");
+    GroundedLexicon groundedLexicon = new GroundedLexicon("data/empty.txt");
 
     RdfGraphTools rdfGraphTools =
-        new RdfGraphTools("jdbc:virtuoso://bravas:1111",
-            "http://bravas:8890/sparql", "dba", "dba", 2);
-    List<String> kbGraphUri =
-        Lists.newArrayList("http://business.freebase.com",
-            "http://film.freebase.com", "http://people.freebase.com");
+        new RdfGraphTools("jdbc:virtuoso://kinloch:1111",
+            "http://kinloch:8890/sparql", "dba", "dba", 2);
 
-    // this helps separating loading database from debugging
+    List<String> kbGraphUri =
+        Lists.newArrayList("http://business.freebase.com");
+
+    // this helps separating loading database from debugging.
     main_func(schema, kb, groundedLexicon, rdfGraphTools, kbGraphUri);
   }
 }

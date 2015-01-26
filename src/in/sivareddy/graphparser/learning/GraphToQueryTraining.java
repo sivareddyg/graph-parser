@@ -7,6 +7,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -435,6 +437,14 @@ public class GraphToQueryTraining {
           graphCreator.createGroundedGraph(uGraph, Sets.newHashSet(targetNode),
               nbestEdges, nbestGraphs, useEntityTypes, useKB,
               groundFreeVariables, useEmtpyTypes, ignoreTypes, false);
+
+      // Setting syntactic parse of the wild graphs.
+      if (uGraph.getSyntacticParse() != null) {
+        for (LexicalGraph wildGraph : wildGraphs) {
+          wildGraph.setSyntacticParse(uGraph.getSyntacticParse());
+        }
+      }
+
       predGgraphsWild.addAll(wildGraphs);
       Collections.sort(predGgraphsWild);
       predGgraphsWild =
@@ -533,6 +543,14 @@ public class GraphToQueryTraining {
           graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
               useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes,
               ignoreTypes, false);
+
+      // Setting synParse of the constrained graphs.
+      if (uGraph.getSyntacticParse() != null) {
+        for (LexicalGraph constrainedGraph : constrainedGraphs) {
+          constrainedGraph.setSyntacticParse(uGraph.getSyntacticParse());
+        }
+      }
+
       predGgraphsConstrained.addAll(constrainedGraphs);
       Collections.sort(predGgraphsConstrained);
       predGgraphsConstrained =
@@ -736,6 +754,9 @@ public class GraphToQueryTraining {
       learningModel.printFeatureWeights(goldGraphFeatures, logger);
     }
 
+    // TODO(sivareddyg) Print out the gold parses of jsons strored inside gold
+    // graphs.
+    
     logger.debug("#############");
   }
 
