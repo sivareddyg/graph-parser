@@ -11,9 +11,9 @@ public class CcgAutoLexiconTest {
   @Test
   public void testMapSynCatToIndexSynCatFromFile() throws IOException {
     CcgAutoLexicon lexicon =
-        new CcgAutoLexicon("./tools/candc_nbest/models/parser/cats/markedup",
-            "./data/unary_rules.txt", "./data/binary_rules.txt",
-            "./data/lexicon_specialCases.txt");
+        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
+            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
+            "./lib_data/lexicon_specialCases.txt");
     String indexCat =
         lexicon.getIndexedSyntacticCategory("((S[adj]\\NP)/(S[to]\\NP))/PP");
     assertEquals(indexCat,

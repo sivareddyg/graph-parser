@@ -24,14 +24,14 @@ public class SemanticCategoryTest {
     SemanticCategory semCat =
         SemanticCategory.generateSemanticCategory(synCat,
             SemanticCategoryType.TYPE);
-    assertEquals(semCat.toString(), "(lambda $X:0 (TYPE $X:0 $X:0))");
+    assertEquals("(lambda $X:1 (TYPE $X:1 $X:1))", semCat.toString());
     // System.out.println(semCat);
 
     synCat = SyntacticCategory.fromString("S");
     semCat =
         SemanticCategory.generateSemanticCategory(synCat,
             SemanticCategoryType.TYPE);
-    assertEquals(semCat.toString(), "(lambda $X2:1 (TYPE $X2:1 $X2:1))");
+    assertEquals("(lambda $X2:2 (TYPE $X2:2 $X2:2))", semCat.toString());
     // System.out.println(semCat);
 
     try {
@@ -50,7 +50,7 @@ public class SemanticCategoryTest {
         SemanticCategory.generateSemanticCategory(synCat,
             SemanticCategoryType.TYPEMOD);
     assertEquals(semCat.toString(),
-        "(lambda $f0 $Y:6 (exists $_:5 (and ($f0 $Y:6) (TYPEMOD $Y:6 $_:5 1 $Y:6))))");
+        "(lambda $f0 $Y:7 (exists $_:6 (and ($f0 $Y:7) (TYPEMOD $Y:7 $_:6 1 $Y:7))))");
 
     // EVENT
     // syntactic category for told
@@ -61,8 +61,8 @@ public class SemanticCategoryTest {
         SemanticCategory.generateSemanticCategory(synCat,
             SemanticCategoryType.EVENT);
     assertEquals(
-        semCat.toString(),
-        "(lambda $f1 $f2 $f3 $_:7 (exists $Y:8 $Z:9 $W:10 (and ($f1 $W:10) (($f2 $W:10) $Z:9) ($f3 $Y:8) (EVENT $_:7 $_:7 1 $Y:8) (EVENT $_:7 $_:7 2 $Z:9) (EVENT $_:7 $_:7 3 $W:10))))");
+        "(lambda $f1 $f2 $f3 $_:8 (exists $W:11 $Y:9 $Z:10 (and ($f1 $W:11) (($f2 $W:11) $Z:10) ($f3 $Y:9) (EVENT $_:8 $_:8 1 $Y:9 ENTITY) (EVENT $_:8 $_:8 2 $Z:10 EVENT) (EVENT $_:8 $_:8 3 $W:11 ENTITY))))",
+        semCat.toString());
 
     // EVENTMOD
     // syntactic category for annually
@@ -73,8 +73,8 @@ public class SemanticCategoryTest {
         SemanticCategory.generateSemanticCategory(synCat,
             SemanticCategoryType.EVENTMOD);
     assertEquals(
-        semCat.toString(),
-        "(lambda $f4 $f5 $Y:12 (exists $_:11 $Z:13 (and (($f4 $Z:13) $Y:12) ($f5 $Z:13) (EVENTMOD $Y:12 $_:11 1))))");
+        "(lambda $f4 $f5 $Y:13 (exists $Z:14 $_:12 (and (($f4 $Z:14) $Y:13) ($f5 $Z:14) (EVENTMOD $Y:13 $_:12 1))))",
+        semCat.toString());
 
     // CLOSED class
     // syntactic category for that
@@ -84,8 +84,9 @@ public class SemanticCategoryTest {
     semCat =
         SemanticCategory.generateSemanticCategory(synCat,
             SemanticCategoryType.CLOSED);
-    assertEquals(semCat.toString(),
-        "(lambda $f6 $f7 $Y:15 (exists $Z:16 (and (($f6 $Y:15) $Z:16) ($f7 $Y:15))))");
+    assertEquals(
+        "(lambda $f6 $f7 $Y:16 (exists $Z:17 (and (($f6 $Y:16) $Z:17) ($f7 $Y:16))))",
+        semCat.toString());
 
   }
 
@@ -102,7 +103,7 @@ public class SemanticCategoryTest {
     SemanticCategory.getDeepExpression(synCat, lambdas, exists, bodyExpression);
     assertEquals(lambdas.size(), 1);
     assertEquals(exists.size(), 2);
-    assertEquals(bodyExpression.toString(), "((($f0 EMPTY) $Z:2) $Y:1)");
+    assertEquals("((($f0 EMPTY) $Z:3) $Y:2)", bodyExpression.toString());
   }
 
 }

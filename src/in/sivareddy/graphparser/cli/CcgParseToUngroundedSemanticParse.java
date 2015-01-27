@@ -1,6 +1,10 @@
-package in.sivareddy.graphparser.ccg;
+package in.sivareddy.graphparser.cli;
 
 import com.google.gson.*;
+
+import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.ccg.CcgParseTree;
+import in.sivareddy.graphparser.ccg.CcgParser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,9 +19,9 @@ public class CcgParseToUngroundedSemanticParse {
     JsonParser jsonParser = new JsonParser();
 
     CcgAutoLexicon lexicon =
-        new CcgAutoLexicon("./data/candc_markedup.modified",
-            "./data/unary_rules.txt", "./data/binary_rules.txt",
-            "./data/lexicon_specialCases.txt");
+        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
+            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
+            "./lib_data/lexicon_specialCases.txt");
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] argumentLexicalIdenfiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
@@ -28,10 +32,6 @@ public class CcgParseToUngroundedSemanticParse {
             argumentLexicalIdenfiers, relationTypingIdentifiers, ignorePronouns);
     Set<Set<String>> relations;
     Gson gson = new Gson();
-
-    // ccgParseTree =
-    // ccgParser.parseFromString("(<L N Adobe Adobe NNP I-ORG I-NP N>)");
-    // assertEquals(ccgParseTree.getLeafNodes().size(), 1);
 
     try {
       String line = br.readLine();
