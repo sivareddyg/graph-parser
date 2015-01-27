@@ -5,8 +5,8 @@ import in.sivareddy.graphparser.util.knowledgebase.EntityType;
 import java.util.Comparator;
 
 /**
-* Created by bisk1 on 1/26/15.
-*/
+ * Created by bisk1 on 1/26/15.
+ */
 public class Type<T> implements Comparable<Type<T>> {
   private EntityType entityType;
   T parentNode;

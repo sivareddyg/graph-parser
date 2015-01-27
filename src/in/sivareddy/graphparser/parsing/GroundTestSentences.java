@@ -1,24 +1,29 @@
 package in.sivareddy.graphparser.parsing;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.ml.basic.Feature;
 import in.sivareddy.ml.learning.StructuredPercepton;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class GroundTestSentences {
 

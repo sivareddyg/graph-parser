@@ -1,17 +1,27 @@
 package in.sivareddy.graphparser.ccg;
 
+import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
+import in.sivareddy.graphparser.ccg.SyntacticCategory.Direction;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.*;
-import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
-import in.sivareddy.graphparser.ccg.SyntacticCategory.Direction;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class CcgParseTree {
   /*- (<T S[dcl] ba 1 2> 
@@ -22,8 +32,7 @@ public class CcgParseTree {
    */
 
   protected CcgAutoLexicon autoLexicon = null;
-  static Map<Integer, LexicalItem> nodesIndexMap =
-      new ConcurrentHashMap<>();
+  static Map<Integer, LexicalItem> nodesIndexMap = new ConcurrentHashMap<>();
   private static int nodeCount = 1;
   private static int maxNodeCount = 50000;
   public static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "CD",

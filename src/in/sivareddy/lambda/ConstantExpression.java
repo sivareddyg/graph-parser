@@ -1,8 +1,8 @@
 package in.sivareddy.lambda;
 
-import com.google.common.base.Preconditions;
-
 import java.util.Set;
+
+import com.google.common.base.Preconditions;
 
 public class ConstantExpression extends AbstractExpression {
   public static final long serialVersionUID = 1L;

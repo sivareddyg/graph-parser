@@ -1,16 +1,18 @@
 package in.sivareddy.ml.learning;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import in.sivareddy.ml.basic.Feature;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Logger;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.Logger;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class StructuredPercepton {
 
@@ -58,7 +60,7 @@ public class StructuredPercepton {
   // simple perceptron update with feature-wise averaging
   public synchronized void updateWeightVector(Set<Feature> goldFeatVec,
       Set<Feature> predFeatVec) {
-    
+
     Set<Feature> features = Sets.newHashSet();
     Map<Feature, Double> goldFeatVecMap = Maps.newHashMap();
     for (Feature feature : goldFeatVec) {

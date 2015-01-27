@@ -8,9 +8,9 @@ package in.sivareddy.graphparser.ccg;
  *
  */
 public class CcgParser extends CcgParseTree {
-  public CcgParser(CcgAutoLexicon lexicon,
-                   String[] relationLexicalIdentifiers, String[] argumentLexicalIdenfiers,
-                   String[] relationTypingIdentifiers, boolean ignorePronouns) {
+  public CcgParser(CcgAutoLexicon lexicon, String[] relationLexicalIdentifiers,
+      String[] argumentLexicalIdenfiers, String[] relationTypingIdentifiers,
+      boolean ignorePronouns) {
     super();
     autoLexicon = lexicon;
     RELATION_IDENTIFIERS = relationLexicalIdentifiers;

@@ -1,19 +1,33 @@
 package in.sivareddy.graphparser.cli;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.gson.*;
-
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.parsing.CreateGroundedLexicon;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import java.io.*;
-import java.util.*;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class RunPrintDomainLexicon extends AbstractCli {
 

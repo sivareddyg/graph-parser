@@ -1,9 +1,5 @@
 package in.sivareddy.graphparser.parsing;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
 import in.sivareddy.graphparser.ccg.LexicalItem;
 import in.sivareddy.graphparser.util.graph.Edge;
 import in.sivareddy.graphparser.util.graph.Graph;
@@ -17,9 +13,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
 /**
-* Created by bisk1 on 1/26/15.
-*/
+ * Created by bisk1 on 1/26/15.
+ */
 public class LexicalGraph extends Graph<LexicalItem> {
   private Set<Feature> features;
   private String syntacticParse;
@@ -32,10 +32,8 @@ public class LexicalGraph extends Graph<LexicalItem> {
   Set<LexicalItem> argumentsStemsMatched = Sets.newHashSet();
   Set<LexicalItem> mediatorsStemsMatched = Sets.newHashSet();
 
-  Set<LexicalItem> argumentStemGrelPartMatchedNodes = Sets
-      .newHashSet();
-  Set<LexicalItem> mediatorStemGrelPartMatchedNodes = Sets
-      .newHashSet();
+  Set<LexicalItem> argumentStemGrelPartMatchedNodes = Sets.newHashSet();
+  Set<LexicalItem> mediatorStemGrelPartMatchedNodes = Sets.newHashSet();
 
   public LexicalGraph() {
     super();
@@ -173,8 +171,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class DuplicateEdgeFeature extends AbstractFeature {
-    private static List<String> key = Lists
-        .newArrayList("DuplicateEdgeCount");
+    private static List<String> key = Lists.newArrayList("DuplicateEdgeCount");
 
     public DuplicateEdgeFeature(Double value) {
       super(key, value);
@@ -220,9 +217,9 @@ public class LexicalGraph extends Graph<LexicalItem> {
       .newHashSet(StemMatchingFeature.class, ValidQueryFeature.class,
           ArgStemMatchingFeature.class,
           MediatorStemGrelPartMatchingFeature.class,
-          ArgStemGrelPartMatchingFeature.class,
-          GraphIsConnectedFeature.class, GraphNodeCountFeature.class,
-          EdgeNodeCountFeature.class, DuplicateEdgeFeature.class);
+          ArgStemGrelPartMatchingFeature.class, GraphIsConnectedFeature.class,
+          GraphNodeCountFeature.class, EdgeNodeCountFeature.class,
+          DuplicateEdgeFeature.class);
 
   public void addFeature(Feature feature) {
     if (globalFeatures.contains(feature.getClass())) {
@@ -249,8 +246,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
     newGraph.argumentsStemsMatched = Sets.newHashSet(argumentsStemsMatched);
 
     newGraph.mediatorStemGrelPartMatchingFeature
-        .setFeatureValue(mediatorStemGrelPartMatchingFeature
-            .getFeatureValue());
+        .setFeatureValue(mediatorStemGrelPartMatchingFeature.getFeatureValue());
     newGraph.addFeature(newGraph.mediatorStemGrelPartMatchingFeature);
     newGraph.mediatorStemGrelPartMatchedNodes =
         Sets.newHashSet(mediatorStemGrelPartMatchedNodes);
@@ -300,8 +296,8 @@ public class LexicalGraph extends Graph<LexicalItem> {
     for (Edge<LexicalItem> edge : super.getEdges()) {
       graphString.append("(" + edge.getMediator().getWordPosition() + ","
           + edge.getLeft().getWordPosition() + ","
-          + edge.getRight().getWordPosition() + ")" + "\t"
-          + edge.getRelation() + '\n');
+          + edge.getRight().getWordPosition() + ")" + "\t" + edge.getRelation()
+          + '\n');
     }
 
     graphString.append("Types: \n");

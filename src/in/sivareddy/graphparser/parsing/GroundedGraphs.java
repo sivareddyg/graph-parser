@@ -1,5 +1,58 @@
 package in.sivareddy.graphparser.parsing;
 
+import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.ccg.CcgParseTree;
+import in.sivareddy.graphparser.ccg.CcgParser;
+import in.sivareddy.graphparser.ccg.FunnyCombinatorException;
+import in.sivareddy.graphparser.ccg.LexicalItem;
+import in.sivareddy.graphparser.ccg.SemanticCategoryType;
+import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
+import in.sivareddy.graphparser.parsing.LexicalGraph.ArgGrelFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.ArgGrelPartFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.ArgStemGrelPartMatchingFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.ArgStemMatchingFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.DuplicateEdgeFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.EdgeNodeCountFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.GraphHasEdgeFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.GraphIsConnectedFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.GraphNodeCountFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.GrelGrelFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.GtypeGrelPartFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.MediatorStemGrelPartMatchingFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.StemMatchingFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.UrelGrelFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.UrelPartGrelPartFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.UtypeGtypeFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.WordBigramGrelPartFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.WordGrelFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.WordGrelPartFeature;
+import in.sivareddy.graphparser.util.GroundedLexicon;
+import in.sivareddy.graphparser.util.Schema;
+import in.sivareddy.graphparser.util.graph.Edge;
+import in.sivareddy.graphparser.util.graph.Type;
+import in.sivareddy.graphparser.util.knowledgebase.EntityType;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.Property;
+import in.sivareddy.graphparser.util.knowledgebase.Relation;
+import in.sivareddy.ml.learning.StructuredPercepton;
+import in.sivareddy.util.PorterStemmer;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.Logger;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -11,28 +64,6 @@ import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import in.sivareddy.graphparser.ccg.*;
-import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
-import in.sivareddy.graphparser.parsing.LexicalGraph.*;
-import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.graph.Edge;
-import in.sivareddy.graphparser.util.graph.Type;
-import in.sivareddy.graphparser.util.knowledgebase.EntityType;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
-import in.sivareddy.graphparser.util.knowledgebase.Property;
-import in.sivareddy.graphparser.util.knowledgebase.Relation;
-import in.sivareddy.graphparser.util.Schema;
-import in.sivareddy.ml.learning.StructuredPercepton;
-import in.sivareddy.util.PorterStemmer;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Logger;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class GroundedGraphs {
   private Schema schema;

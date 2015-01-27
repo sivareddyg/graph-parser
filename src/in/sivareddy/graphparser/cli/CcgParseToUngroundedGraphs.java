@@ -1,22 +1,11 @@
 package in.sivareddy.graphparser.cli;
 
-import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.parsing.GroundedGraphs;
 import in.sivareddy.graphparser.parsing.LexicalGraph;
 import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.graphparser.util.Schema;
-
-import org.apache.log4j.*;
-
-import others.EasyCcgCli;
-import others.StanfordCoreNlpDemo;
-import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,6 +14,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Appender;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+
+import others.EasyCcgCli;
+import others.StanfordCoreNlpDemo;
+import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
+
+import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class CcgParseToUngroundedGraphs {
 

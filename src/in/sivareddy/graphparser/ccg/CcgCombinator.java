@@ -1,14 +1,14 @@
 package in.sivareddy.graphparser.ccg;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-
 import java.util.Collections;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+
 /**
-* Created by bisk1 on 1/26/15.
-*/
+ * Created by bisk1 on 1/26/15.
+ */
 public enum CcgCombinator {
   conj, tr, lex, fa, ba, gfc, gbc, gbx, fc, bc, bx, lp, rp, ltc, rtc, other;
 

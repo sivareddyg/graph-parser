@@ -1,19 +1,12 @@
 package in.sivareddy.graphparser.parsing;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import in.sivareddy.graphparser.ccg.LexicalItem;
+import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.graphparser.util.graph.Edge;
 import in.sivareddy.graphparser.util.graph.Type;
 import in.sivareddy.graphparser.util.knowledgebase.EntityType;
 import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
-import in.sivareddy.graphparser.util.Schema;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +14,13 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class GraphToSparqlConverter {
 

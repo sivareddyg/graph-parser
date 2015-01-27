@@ -1,22 +1,33 @@
 package in.sivareddy.graphparser.learning;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.ml.learning.StructuredPercepton;
 
-import org.apache.log4j.*;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
+
+import org.apache.log4j.Appender;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.RollingFileAppender;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 
 public class GraphToQueryTrainingMain {
 

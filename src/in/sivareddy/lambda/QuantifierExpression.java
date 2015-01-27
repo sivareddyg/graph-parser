@@ -1,10 +1,10 @@
 package in.sivareddy.lambda;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 import java.util.Set;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class QuantifierExpression extends AbstractExpression {
   private static final long serialVersionUID = 1L;
@@ -50,8 +50,7 @@ public class QuantifierExpression extends AbstractExpression {
   }
 
   @Override
-  public Expression substitute(Expression constant,
-      Expression replacement) {
+  public Expression substitute(Expression constant, Expression replacement) {
     if (!boundVariables.contains(constant)) {
       Expression substitution = body.substitute(constant, replacement);
       return new QuantifierExpression(quantifierName, boundVariables,

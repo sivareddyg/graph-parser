@@ -1,15 +1,19 @@
 package in.sivareddy.graphparser.util.graph;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import in.sivareddy.graphparser.util.knowledgebase.EntityType;
 import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class Graph<T> implements Comparable<Graph<T>> {
   private List<T> actualNodes;

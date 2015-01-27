@@ -1,8 +1,10 @@
 package in.sivareddy.graphparser.ccg;
 
-import com.google.common.base.Preconditions;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
+
 import org.apache.commons.lang3.tuple.Pair;
+
+import com.google.common.base.Preconditions;
 
 public class Category {
   private SyntacticCategory synCat;

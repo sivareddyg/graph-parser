@@ -1,11 +1,11 @@
 package in.sivareddy.lambda;
 
+import java.util.List;
+import java.util.Set;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
-import java.util.List;
-import java.util.Set;
 
 public class ApplicationExpression extends AbstractExpression {
   public static final long serialVersionUID = 1L;
@@ -39,8 +39,7 @@ public class ApplicationExpression extends AbstractExpression {
   }
 
   @Override
-  public Expression substitute(Expression constant,
-      Expression replacement) {
+  public Expression substitute(Expression constant, Expression replacement) {
     List<Expression> substituted = Lists.newArrayList();
     for (Expression subexpression : subexpressions) {
       substituted.add(subexpression.substitute(constant, replacement));

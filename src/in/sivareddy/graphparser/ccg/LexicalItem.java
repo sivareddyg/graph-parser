@@ -3,9 +3,10 @@ package in.sivareddy.graphparser.ccg;
 import com.google.common.base.Objects;
 
 /**
-* Created by bisk1 on 1/26/15.
-*/
-public class LexicalItem extends CcgParseTree implements Comparable<LexicalItem> {
+ * Created by bisk1 on 1/26/15.
+ */
+public class LexicalItem extends CcgParseTree implements
+    Comparable<LexicalItem> {
   int wordPosition = -1;
   private String synCat;
   String word;
@@ -28,7 +29,7 @@ public class LexicalItem extends CcgParseTree implements Comparable<LexicalItem>
   in.sivareddy.graphparser.ccg.LexicalItem copula;
 
   public LexicalItem(String synCat, String word, String lemma, String pos,
-                     String neType, Category cat) {
+      String neType, Category cat) {
     // (<L N Titanic Titanic NNP O I-NP N>)
     super();
     this.synCat = synCat;
@@ -53,7 +54,8 @@ public class LexicalItem extends CcgParseTree implements Comparable<LexicalItem>
   public in.sivareddy.graphparser.ccg.LexicalItem shallowCopy() {
     Category copyCat = currentCategory.shallowCopy();
     in.sivareddy.graphparser.ccg.LexicalItem item =
-        new in.sivareddy.graphparser.ccg.LexicalItem(synCat, word, lemma, pos, neType, copyCat);
+        new in.sivareddy.graphparser.ccg.LexicalItem(synCat, word, lemma, pos,
+            neType, copyCat);
     return item;
   };
 
@@ -79,7 +81,8 @@ public class LexicalItem extends CcgParseTree implements Comparable<LexicalItem>
       return false;
     if (!obj.getClass().equals(getClass()))
       return false;
-    in.sivareddy.graphparser.ccg.LexicalItem other = (in.sivareddy.graphparser.ccg.LexicalItem) obj;
+    in.sivareddy.graphparser.ccg.LexicalItem other =
+        (in.sivareddy.graphparser.ccg.LexicalItem) obj;
     // if the word positions are equal, then they are the same lexical
     // items.
     if (wordPosition == other.wordPosition)

@@ -1,21 +1,22 @@
 package in.sivareddy.graphparser.cli;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.learning.GraphToQueryTrainingMain;
 import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 
 public class RunGraphToQueryTrainingMain extends AbstractCli {
 

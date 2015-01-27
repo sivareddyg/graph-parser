@@ -1,5 +1,19 @@
 package in.sivareddy.graphparser.util.knowledgebase;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.GZIPInputStream;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
@@ -7,13 +21,6 @@ import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import org.apache.commons.lang3.tuple.Pair;
-
-import java.io.*;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
 
 public class KnowledgeBase {
 

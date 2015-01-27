@@ -2,8 +2,8 @@ package in.sivareddy.graphparser.ccg;
 
 /**
  * candc parser uses weird combinators when standard combinators, binary and
- * unary rules fail. Semantics gets messed up when these combinators are used.
- * I recommend to ignore those parses.
+ * unary rules fail. Semantics gets messed up when these combinators are used. I
+ * recommend to ignore those parses.
  *
  */
 public class FunnyCombinatorException extends Exception {

@@ -1,28 +1,43 @@
 package in.sivareddy.graphparser.parsing;
 
+import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.ccg.CcgParseTree;
+import in.sivareddy.graphparser.ccg.CcgParser;
+import in.sivareddy.graphparser.ccg.FunnyCombinatorException;
+import in.sivareddy.graphparser.ccg.LexicalItem;
+import in.sivareddy.graphparser.ccg.SemanticCategoryType;
+import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.Relation;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.gson.*;
-
-import in.sivareddy.graphparser.ccg.*;
-import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
-import in.sivareddy.graphparser.util.knowledgebase.Relation;
-
-import org.apache.commons.lang3.tuple.Pair;
-
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class CreateGroundedLexicon {
   private ConcurrentMap<Relation, ConcurrentMap<Relation, Double>> predicateToGroundedRelationMap;

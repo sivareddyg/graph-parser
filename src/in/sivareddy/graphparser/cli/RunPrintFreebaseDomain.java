@@ -1,15 +1,17 @@
 package in.sivareddy.graphparser.cli;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import in.sivareddy.graphparser.util.PrintFreebaseDomain;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 
 public class RunPrintFreebaseDomain extends AbstractCli {
 

@@ -1,18 +1,19 @@
 package in.sivareddy.graphparser.cli;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
-import joptsimple.OptionException;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 
 /**
  * This Object has functionalities for parsing arguments and also create a log
