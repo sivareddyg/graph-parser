@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -752,9 +756,23 @@ public class GraphToQueryTraining {
       learningModel.printFeatureWeights(goldGraphFeatures, logger);
     }
 
-    // TODO(sivareddyg) Print out the gold parses of jsons strored inside gold
-    // graphs.
 
+    if (semanticParseKey.equals("synPars")) {
+      Set<String> goldSynParsSet = new HashSet<>();
+      JsonArray goldSynPars = new JsonArray();
+      for (Pair<Integer, LexicalGraph> gGraph : goldGraphs) {
+        String goldSynPar = gGraph.getRight().getSyntacticParse();
+        if (!goldSynParsSet.contains(goldSynPar)) {
+          JsonObject synParseObject = new JsonObject();
+          synParseObject.addProperty("score", gGraph.getRight().getScore());
+          synParseObject.addProperty("synPar", goldSynPar);
+          goldSynPars.add(synParseObject);
+          goldSynParsSet.add(goldSynPar);
+        }
+      }
+      jsonSentence.add("goldSynPars", goldSynPars);
+    }
+    logger.debug("Valid Gold Parses: " + jsonSentence.toString());
     logger.debug("#############");
   }
 

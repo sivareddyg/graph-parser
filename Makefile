@@ -637,3 +637,58 @@ tacl_unsupervised_paraphrase:
 # Spanish Experiments
 extract_spanish_sentences:
 	bzcat data/bravas/wiki_00.bz2 | java -cp lib/*:graph-parser.jar others.SpanishTokenizer | perl -pe 's|=LRB=.*?=RRB=||g' | grep -v =LRB= | grep -v =RRB= 
+
+
+## Unsupervised Parsing experiments
+
+unsupervised_first_experiment:
+	mkdir -p working/unsupervised_first_experiment
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+    -schema data/freebase/schema/business_schema.txt \
+    -relationTypesFile data/freebase/stats/business_relation_types.txt \
+    -lexicon data/dummy.txt \
+    -ccgLexicon data/dummy.txt \
+    -ccgIndexedMapping lib_data/ybisk-mapping.txt \
+    -unaryRules data/dummy.txt \
+    -binaryRules data/dummy.txt \
+    -cachedKB data/freebase/domain_facts/business_facts.txt.gz \
+    -domain "http://business.freebase.com" \
+    -nthreads 10 \
+    -trainingSampleSize 600000 \
+    -iterations 10 \
+    -nBestTrainSyntacticParses 100 \
+    -nBestTestSyntacticParses 1 \
+    -nbestGraphs 1000 \
+    -useSchema true \
+    -useKB true \
+    -groundFreeVariables true \
+    -useEmptyTypes false \
+    -ignoreTypes true \
+    -urelGrelFlag true \
+    -urelPartGrelPartFlag false \
+    -utypeGtypeFlag false \
+    -gtypeGrelFlag false \
+    -wordGrelPartFlag false \
+    -wordBigramGrelPartFlag false \
+    -argGrelPartFlag false \
+    -stemMatchingFlag false \
+    -mediatorStemGrelPartMatchingFlag false \
+    -argumentStemMatchingFlag false \
+    -argumentStemGrelPartMatchingFlag false \
+    -graphIsConnectedFlag true \
+    -graphHasEdgeFlag true \
+    -countNodesFlag true \
+    -edgeNodeCountFlag true \
+    -duplicateEdgesFlag true \
+    -grelGrelFlag true \
+    -useLexiconWeightsRel false \
+    -useLexiconWeightsType false \
+    -validQueryFlag true \
+    -initialEdgeWeight 1.0 \
+    -initialTypeWeight 1.0 \
+    -initialWordWeight 10.00 \
+    -stemFeaturesWeight 0.0 \
+    -endpoint kinloch \
+    -trainingCorpora "test_data/unsupervised_parser.json.gz" \
+    -logFile working/unsupervised_first_experiment/business.log.txt \
+    > working/unsupervised_first_experiment/business.txt

@@ -9,7 +9,7 @@
 	<classpathentry kind="lib" path="lib/stanford-spanish-corenlp-2014-10-23-models.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-corenlp-3.5.0-models.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-corenlp-3.5.0.jar"/>
-	<classpathentry kind="lib" path="lib/commons-lang3-3.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-lang3-3.1.jar" sourcepath="/home/siva/.m2/repository/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/easyccg.jar"/>
 	<classpathentry kind="lib" path="lib/arq.jar"/>
 	<classpathentry kind="lib" path="lib/jena.jar"/>
