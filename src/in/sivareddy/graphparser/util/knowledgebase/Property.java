@@ -1,9 +1,9 @@
-package in.sivareddy.graphparser.util.KnowledgeBase;
+package in.sivareddy.graphparser.util.knowledgebase;
 
 /**
  *
- * {@link Property} describe properties of {@link in.sivareddy.graphparser.util.KnowledgeBase.EntityType}s or
- * {@link in.sivareddy.graphparser.util.KnowledgeBase.Relation}s.
+ * {@link Property} describe properties of {@link in.sivareddy.graphparser.util.knowledgebase.EntityType}s or
+ * {@link in.sivareddy.graphparser.util.knowledgebase.Relation}s.
  *
  * @author Siva Reddy
  *

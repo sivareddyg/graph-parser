@@ -1,12 +1,13 @@
-package in.sivareddy.graphparser.util.Graph;
+package in.sivareddy.graphparser.util.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import in.sivareddy.graphparser.util.KnowledgeBase.EntityType;
-import in.sivareddy.graphparser.util.KnowledgeBase.Property;
-import in.sivareddy.graphparser.util.KnowledgeBase.Relation;
+
+import in.sivareddy.graphparser.util.knowledgebase.EntityType;
+import in.sivareddy.graphparser.util.knowledgebase.Property;
+import in.sivareddy.graphparser.util.knowledgebase.Relation;
 
 import java.util.*;
 

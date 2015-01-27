@@ -9,21 +9,23 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.ccg.LexicalItem;
 import in.sivareddy.graphparser.parsing.GraphToSparqlConverter;
 import in.sivareddy.graphparser.parsing.GroundedGraphs;
 import in.sivareddy.graphparser.parsing.LexicalGraph;
 import in.sivareddy.graphparser.parsing.LexicalGraph.ValidQueryFeature;
-import in.sivareddy.graphparser.util.Graph.Edge;
-import in.sivareddy.graphparser.util.Graph.Type;
 import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.KnowledgeBase.KnowledgeBase;
-import in.sivareddy.graphparser.util.KnowledgeBase.Property;
+import in.sivareddy.graphparser.util.graph.Edge;
+import in.sivareddy.graphparser.util.graph.Type;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.ml.basic.Feature;
 import in.sivareddy.ml.learning.StructuredPercepton;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;

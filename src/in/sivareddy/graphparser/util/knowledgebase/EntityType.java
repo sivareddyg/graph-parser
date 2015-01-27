@@ -1,4 +1,4 @@
-package in.sivareddy.graphparser.util.KnowledgeBase;
+package in.sivareddy.graphparser.util.knowledgebase;
 
 import java.util.Comparator;
 

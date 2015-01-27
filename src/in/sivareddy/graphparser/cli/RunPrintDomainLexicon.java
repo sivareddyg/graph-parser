@@ -4,9 +4,10 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.*;
+
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.parsing.CreateGroundedLexicon;
-import in.sivareddy.graphparser.util.KnowledgeBase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;

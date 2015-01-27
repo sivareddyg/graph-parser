@@ -1,6 +1,6 @@
-package in.sivareddy.graphparser.util.Graph;
+package in.sivareddy.graphparser.util.graph;
 
-import in.sivareddy.graphparser.util.KnowledgeBase.EntityType;
+import in.sivareddy.graphparser.util.knowledgebase.EntityType;
 
 import java.util.Comparator;
 

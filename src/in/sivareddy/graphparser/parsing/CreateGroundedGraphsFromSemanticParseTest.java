@@ -2,10 +2,12 @@ package in.sivareddy.graphparser.parsing;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.KnowledgeBase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.graphparser.util.Schema;
+
 import org.apache.log4j.*;
 import org.junit.Test;
 

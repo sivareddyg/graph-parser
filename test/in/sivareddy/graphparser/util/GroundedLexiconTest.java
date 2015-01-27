@@ -1,7 +1,8 @@
 package in.sivareddy.graphparser.util;
 
-import in.sivareddy.graphparser.util.KnowledgeBase.EntityType;
-import in.sivareddy.graphparser.util.KnowledgeBase.Relation;
+import in.sivareddy.graphparser.util.knowledgebase.EntityType;
+import in.sivareddy.graphparser.util.knowledgebase.Relation;
+
 import org.junit.Test;
 
 import java.io.IOException;

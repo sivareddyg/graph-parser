@@ -1,6 +1,7 @@
 package in.sivareddy.graphparser.util;
 
-import in.sivareddy.graphparser.util.KnowledgeBase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+
 import org.junit.Test;
 
 import java.io.IOException;

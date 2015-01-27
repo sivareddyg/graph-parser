@@ -3,11 +3,12 @@ package in.sivareddy.graphparser.parsing;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import in.sivareddy.graphparser.ccg.LexicalItem;
-import in.sivareddy.graphparser.util.Graph.Edge;
-import in.sivareddy.graphparser.util.Graph.Graph;
-import in.sivareddy.graphparser.util.Graph.Type;
-import in.sivareddy.graphparser.util.KnowledgeBase.Property;
+import in.sivareddy.graphparser.util.graph.Edge;
+import in.sivareddy.graphparser.util.graph.Graph;
+import in.sivareddy.graphparser.util.graph.Type;
+import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.ml.basic.AbstractFeature;
 import in.sivareddy.ml.basic.Feature;
 

@@ -2,8 +2,10 @@ package in.sivareddy.graphparser.util;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import in.sivareddy.graphparser.util.KnowledgeBase.EntityType;
-import in.sivareddy.graphparser.util.KnowledgeBase.Relation;
+
+import in.sivareddy.graphparser.util.knowledgebase.EntityType;
+import in.sivareddy.graphparser.util.knowledgebase.Relation;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedReader;

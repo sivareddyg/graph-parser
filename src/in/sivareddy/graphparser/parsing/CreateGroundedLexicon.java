@@ -7,10 +7,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.*;
+
 import in.sivareddy.graphparser.ccg.*;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
-import in.sivareddy.graphparser.util.KnowledgeBase.KnowledgeBase;
-import in.sivareddy.graphparser.util.KnowledgeBase.Relation;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.Relation;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedWriter;

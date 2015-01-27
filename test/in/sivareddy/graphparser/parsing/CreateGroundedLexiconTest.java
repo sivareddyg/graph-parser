@@ -1,9 +1,11 @@
 package in.sivareddy.graphparser.parsing;
 
 import com.google.common.collect.Lists;
+
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.parsing.CreateGroundedLexicon.CreateGroundedLexiconRunnable;
-import in.sivareddy.graphparser.util.KnowledgeBase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+
 import org.junit.Test;
 
 import java.io.*;

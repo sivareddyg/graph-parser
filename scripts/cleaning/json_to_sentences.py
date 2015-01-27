@@ -1,5 +1,6 @@
-import sys
 import json
+import sys
+
 
 for line in sys.stdin:
     parts = json.loads(line)

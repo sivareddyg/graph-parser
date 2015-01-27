@@ -1,4 +1,4 @@
-package in.sivareddy.graphparser.util.KnowledgeBase;
+package in.sivareddy.graphparser.util.knowledgebase;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;

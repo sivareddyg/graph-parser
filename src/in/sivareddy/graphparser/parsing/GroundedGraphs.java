@@ -11,19 +11,21 @@ import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import in.sivareddy.graphparser.ccg.*;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
 import in.sivareddy.graphparser.parsing.LexicalGraph.*;
-import in.sivareddy.graphparser.util.Graph.Edge;
-import in.sivareddy.graphparser.util.Graph.Type;
 import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.KnowledgeBase.EntityType;
-import in.sivareddy.graphparser.util.KnowledgeBase.KnowledgeBase;
-import in.sivareddy.graphparser.util.KnowledgeBase.Property;
-import in.sivareddy.graphparser.util.KnowledgeBase.Relation;
+import in.sivareddy.graphparser.util.graph.Edge;
+import in.sivareddy.graphparser.util.graph.Type;
+import in.sivareddy.graphparser.util.knowledgebase.EntityType;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.Property;
+import in.sivareddy.graphparser.util.knowledgebase.Relation;
 import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.ml.learning.StructuredPercepton;
 import in.sivareddy.util.PorterStemmer;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 
