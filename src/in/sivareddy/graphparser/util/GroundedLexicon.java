@@ -2,20 +2,14 @@ package in.sivareddy.graphparser.util;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.commons.lang3.tuple.Pair;
-
 import in.sivareddy.graphparser.util.KnowledgeBase.EntityType;
 import in.sivareddy.graphparser.util.KnowledgeBase.Relation;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class GroundedLexicon {
 

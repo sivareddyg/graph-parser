@@ -1,17 +1,16 @@
 package in.sivareddy.graphparser.ccg;
 
-import in.sivareddy.util.IntegerObject;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import in.sivareddy.util.IntegerObject;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Class useful to represent the variables used in a syntactic category. e.g. in

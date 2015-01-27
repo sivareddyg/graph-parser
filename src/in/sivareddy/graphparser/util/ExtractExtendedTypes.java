@@ -1,16 +1,11 @@
 package in.sivareddy.graphparser.util;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.Set;
-
 import com.google.common.collect.Sets;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
+
+import java.io.*;
+import java.util.Set;
 
 public class ExtractExtendedTypes {
 

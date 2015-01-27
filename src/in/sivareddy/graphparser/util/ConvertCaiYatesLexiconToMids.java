@@ -1,13 +1,13 @@
 package in.sivareddy.graphparser.util;
 
+import com.google.common.collect.Lists;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
 
 public class ConvertCaiYatesLexiconToMids {
   String namespace = "http://rdf.freebase.com/ns/";

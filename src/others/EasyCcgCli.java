@@ -1,31 +1,23 @@
 package others;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import uk.ac.ed.easyccg.main.EasyCCG.CommandLineArguments;
+import uk.ac.ed.easyccg.main.EasyCCG.InputFormat;
+import uk.ac.ed.easyccg.main.EasyCCG.OutputFormat;
+import uk.ac.ed.easyccg.syntax.*;
+import uk.ac.ed.easyccg.syntax.ParserAStar.SuperTaggingResults;
+import uk.ac.ed.easyccg.syntax.SyntaxTreeNode.SyntaxTreeNodeFactory;
+import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
+import uk.co.flamingpenguin.jewel.cli.CliFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
-
-import uk.ac.ed.easyccg.main.EasyCCG.CommandLineArguments;
-import uk.ac.ed.easyccg.main.EasyCCG.InputFormat;
-import uk.ac.ed.easyccg.main.EasyCCG.OutputFormat;
-import uk.ac.ed.easyccg.syntax.Category;
-import uk.ac.ed.easyccg.syntax.InputReader;
-import uk.ac.ed.easyccg.syntax.ParsePrinter;
-import uk.ac.ed.easyccg.syntax.Parser;
-import uk.ac.ed.easyccg.syntax.ParserAStar;
-import uk.ac.ed.easyccg.syntax.SyntaxTreeNode;
-import uk.ac.ed.easyccg.syntax.TagDict;
-import uk.ac.ed.easyccg.syntax.TaggerEmbeddings;
-import uk.ac.ed.easyccg.syntax.ParserAStar.SuperTaggingResults;
-import uk.ac.ed.easyccg.syntax.SyntaxTreeNode.SyntaxTreeNodeFactory;
-import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
-import uk.co.flamingpenguin.jewel.cli.CliFactory;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 
 public class EasyCcgCli {
 

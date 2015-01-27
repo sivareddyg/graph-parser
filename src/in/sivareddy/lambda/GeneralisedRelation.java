@@ -1,9 +1,9 @@
 package in.sivareddy.lambda;
 
-import java.util.ArrayList;
-
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+
+import java.util.ArrayList;
 
 public class GeneralisedRelation {
   public String relationName;

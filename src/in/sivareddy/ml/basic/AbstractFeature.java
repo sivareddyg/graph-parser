@@ -1,8 +1,8 @@
 package in.sivareddy.ml.basic;
 
-import java.util.List;
-
 import com.google.common.base.Objects;
+
+import java.util.List;
 
 public abstract class AbstractFeature implements Feature, Comparable<Feature> {
   private final List<?> key;

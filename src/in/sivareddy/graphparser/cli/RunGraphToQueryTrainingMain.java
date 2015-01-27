@@ -2,11 +2,10 @@ package in.sivareddy.graphparser.cli;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.learning.GraphToQueryTrainingMain;
 import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.KnowledgeBase;
+import in.sivareddy.graphparser.util.KnowledgeBase.KnowledgeBase;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
 import joptsimple.OptionParser;

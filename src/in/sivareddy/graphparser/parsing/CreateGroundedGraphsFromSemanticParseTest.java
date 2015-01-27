@@ -2,19 +2,12 @@ package in.sivareddy.graphparser.parsing;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.junit.Test;
-
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
-import in.sivareddy.graphparser.parsing.GroundedGraphs.LexicalGraph;
 import in.sivareddy.graphparser.util.GroundedLexicon;
-import in.sivareddy.graphparser.util.KnowledgeBase;
+import in.sivareddy.graphparser.util.KnowledgeBase.KnowledgeBase;
 import in.sivareddy.graphparser.util.Schema;
+import org.apache.log4j.*;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;

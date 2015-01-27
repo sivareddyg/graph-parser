@@ -1,10 +1,10 @@
 package in.sivareddy.lambda;
 
-import java.util.List;
-import java.util.Set;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
+import java.util.List;
+import java.util.Set;
 
 public class LambdaExpression extends AbstractExpression {
   private static final long serialVersionUID = 1L;
@@ -134,14 +134,13 @@ public class LambdaExpression extends AbstractExpression {
   }
 
   @Override
-  public void getFreeVariables(Set<ConstantExpression> accumulator) {
+  public void getFreeVariables(Set<Expression> accumulator) {
     body.getFreeVariables(accumulator);
     accumulator.removeAll(argumentVariables);
   }
 
   @Override
-  public Expression substitute(ConstantExpression constant,
-      Expression replacement) {
+  public Expression substitute(Expression constant, Expression replacement) {
     if (!argumentVariables.contains(constant)) {
       Expression substitution = body.substitute(constant, replacement);
       return new LambdaExpression(argumentVariables, substitution);

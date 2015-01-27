@@ -1,11 +1,10 @@
 package in.sivareddy.lambda;
 
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.Sets;
 import junit.framework.TestCase;
 
-import com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Set;
 
 public class ExpressionTest extends TestCase {
 

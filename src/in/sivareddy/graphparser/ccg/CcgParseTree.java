@@ -1,30 +1,17 @@
 package in.sivareddy.graphparser.ccg;
 
-import in.sivareddy.graphparser.ccg.SemanticCategory.SemanticCategoryType;
-import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
-import in.sivareddy.graphparser.ccg.SyntacticCategory.Direction;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
+import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
+import in.sivareddy.graphparser.ccg.SyntacticCategory.Direction;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CcgParseTree {
   /*- (<T S[dcl] ba 1 2> 
@@ -34,64 +21,8 @@ public class CcgParseTree {
   					
    */
 
-  /**
-   * Class which provides all the functions to create ccg parse trees and create
-   * semantic parses
-   * 
-   * @author Siva Reddy
-   * 
-   */
-  public static class CcgParser extends CcgParseTree {
-    public CcgParser(CcgAutoLexicon lexicon,
-        String[] relationLexicalIdentifiers, String[] argumentLexicalIdenfiers,
-        String[] relationTypingIdentifiers, boolean ignorePronouns) {
-      autoLexicon = lexicon;
-      RELATION_IDENTIFIERS = relationLexicalIdentifiers;
-      ARGUMENT_IDENTIFIERS = argumentLexicalIdenfiers;
-      RELATION_TYPING_IDENTIFIERS = relationTypingIdentifiers;
-      IGNOREPRONOUNS = ignorePronouns;
-    }
-  }
-
-  public enum CcgCombinator {
-    conj, tr, lex, fa, ba, gfc, gbc, gbx, fc, bc, bx, lp, rp, ltc, rtc, other;
-
-    public static Map<String, CcgCombinator> map;
-
-    static {
-      Map<String, CcgCombinator> mutMap = Maps.newHashMap();
-      mutMap.put("conj", conj);
-      mutMap.put("tr", tr);
-      mutMap.put("lex", lex);
-      mutMap.put("fa", fa);
-      mutMap.put("ba", ba);
-      mutMap.put("gfc", gfc);
-      mutMap.put("gbc", gbc);
-      mutMap.put("gbx", gbx);
-      mutMap.put("fc", fc);
-      mutMap.put("bc", bc);
-      mutMap.put("bx", bx);
-      mutMap.put("lp", lp);
-      mutMap.put("rp", rp);
-      mutMap.put("ltc", ltc);
-      mutMap.put("rtc", rtc);
-      map = Collections.unmodifiableMap(mutMap);
-    }
-
-    public static CcgCombinator getCombinator(String combinator) {
-      if (map.containsKey(combinator))
-        return map.get(combinator);
-      else
-        return other;
-    }
-
-    public final static ImmutableSet<String> types = ImmutableSet.of("conj",
-        "tr", "lex", "fa", "ba", "gfc", "gbc", "gbx", "fc", "bc", "bx", "lp",
-        "rp", "ltc", "rtc", "other");
-  }
-
   protected CcgAutoLexicon autoLexicon = null;
-  private static Map<Integer, LexicalItem> nodesIndexMap =
+  static Map<Integer, LexicalItem> nodesIndexMap =
       new ConcurrentHashMap<>();
   private static int nodeCount = 1;
   private static int maxNodeCount = 50000;
@@ -107,32 +38,6 @@ public class CcgParseTree {
   public static String[] RELATION_TYPING_IDENTIFIERS;
   public boolean IGNOREPRONOUNS = true;
 
-  /**
-   * candc parser uses weird combinators when standard combinators, binary and
-   * unary rules fail. Semantics gets messed up when these combinators are used.
-   * I recommend to ignore those parses.
-   * 
-   */
-  public static class FunnyCombinatorException extends Exception {
-    private static final long serialVersionUID = 1L;
-
-    public FunnyCombinatorException() {
-      super();
-    }
-
-    public FunnyCombinatorException(String message) {
-      super(message);
-    }
-
-    public FunnyCombinatorException(String message, Throwable cause) {
-      super(message, cause);
-    }
-
-    public FunnyCombinatorException(Throwable cause) {
-      super(cause);
-    }
-  }
-
   public static synchronized int getNodeCount() {
     nodeCount++;
     if (nodeCount % maxNodeCount == 0)
@@ -143,7 +48,7 @@ public class CcgParseTree {
   /**
    * Construct leaf nodes of a CCG Tree.
    * 
-   * @param lexicalItem
+   * @param lexicalItemString
    * @return
    */
   public List<LexicalItem> buildLexicalItems(String lexicalItemString) {
@@ -165,218 +70,7 @@ public class CcgParseTree {
     return lexItems;
   }
 
-  public static class LexicalItem extends CcgParseTree implements
-      Comparable<LexicalItem> {
-    private int wordPosition = -1;
-    private String synCat;
-    private String word;
-    private String lemma;
-    private String pos;
-    // named entity type
-    private String neType;
-    // useful field to set freebase mids or any other
-    private String mid;
-
-    public String getMID() {
-      return mid;
-    }
-
-    public void setMID(String mid) {
-      this.mid = mid;
-    }
-
-    private int key = -1;
-    private LexicalItem copula;
-
-    public LexicalItem(String synCat, String word, String lemma, String pos,
-        String neType, Category cat) {
-      // (<L N Titanic Titanic NNP O I-NP N>)
-      super();
-      this.synCat = synCat;
-      this.word = word;
-      this.lemma = lemma;
-      this.mid = lemma;
-      this.pos = pos;
-      this.neType = neType;
-      this.currentCategory = cat;
-      key = getNodeCount();
-      nodesIndexMap.put(key, this);
-      currentCategory.getSyntacticCategory().getIndex().setVariableValue(key);
-      copula = this;
-    }
-
-    /**
-     * Copy lexical item without unifying the new index variables with the
-     * original index variables in syntactic and semantic category.
-     * 
-     * @return
-     */
-    public LexicalItem shallowCopy() {
-      Category copyCat = currentCategory.shallowCopy();
-      LexicalItem item =
-          new LexicalItem(synCat, word, lemma, pos, neType, copyCat);
-      return item;
-    };
-
-    @Override
-    public int hashCode() {
-      // final int prime = 31;
-      // int result = 1;
-      // result = prime * result + wordPosition;
-      /*-result = prime * result + word.hashCode();
-      result = prime * result + lemma.hashCode();
-      result = prime * result + pos.hashCode();
-      result = prime * result + neType.hashCode();
-      result = prime * result + mid.hashCode();
-      result = prime * result + synCat.hashCode();*/
-      return wordPosition;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (!obj.getClass().equals(getClass()))
-        return false;
-      LexicalItem other = (LexicalItem) obj;
-      // if the word positions are equal, then they are the same lexical
-      // items.
-      if (wordPosition == other.wordPosition)
-        return true;
-      return false;
-    }
-
-    public int getWordPosition() {
-      return wordPosition;
-    }
-
-    public void setWordPosition(int wordPosition) {
-      this.wordPosition = wordPosition;
-    }
-
-    public String getSynCat() {
-      return synCat;
-    }
-
-    public void setSynCat(String synCat) {
-      this.synCat = synCat;
-    }
-
-    public String getWord() {
-      return word;
-    }
-
-    public void setWord(String word) {
-      this.word = word;
-    }
-
-    public String getLemma() {
-      return lemma;
-    }
-
-    public void setLemma(String lemma) {
-      this.lemma = lemma;
-    }
-
-    public String getPos() {
-      return pos;
-    }
-
-    public void setPos(String pos) {
-      this.pos = pos;
-    }
-
-    public String getNeType() {
-      return neType;
-    }
-
-    public void setNeType(String neType) {
-      this.neType = neType;
-    }
-
-    public String getMid() {
-      return mid;
-    }
-
-    public void setMid(String mid) {
-      this.mid = mid;
-    }
-
-    @Override
-    public String toString() {
-      return Objects.toStringHelper(this).addValue(word).addValue(pos)
-          .addValue(currentCategory).toString();
-    }
-
-    public String lexicaliseRelationName() {
-      String result = "";
-      try {
-        String lexName = RELATION_IDENTIFIERS[0];
-        result = this.getClass().getDeclaredField(lexName).get(this).toString();
-        for (int i = 1; i < RELATION_IDENTIFIERS.length; i++) {
-          lexName = RELATION_IDENTIFIERS[i];
-          result +=
-              ":"
-                  + this.getClass().getDeclaredField(lexName).get(this)
-                      .toString();
-        }
-      } catch (NoSuchFieldException | SecurityException
-          | IllegalArgumentException | IllegalAccessException e) {
-        e.printStackTrace();
-      }
-      return result;
-    }
-
-    public String lexicaliseArgument() {
-      String result = "";
-      try {
-        String lexName;
-        result = String.valueOf(wordPosition);
-
-        for (int i = 0; i < ARGUMENT_IDENTIFIERS.length; i++) {
-          lexName = ARGUMENT_IDENTIFIERS[i];
-          result +=
-              ":"
-                  + this.getClass().getDeclaredField(lexName).get(this)
-                      .toString();
-        }
-      } catch (NoSuchFieldException | SecurityException
-          | IllegalArgumentException | IllegalAccessException e) {
-        e.printStackTrace();
-      }
-      return result;
-    }
-
-    public String getRelTypingIdentifier() {
-      String result = "";
-      try {
-        String lexName = RELATION_TYPING_IDENTIFIERS[0];
-        result = this.getClass().getDeclaredField(lexName).get(this).toString();
-
-        for (int i = 1; i < RELATION_TYPING_IDENTIFIERS.length; i++) {
-          lexName = RELATION_TYPING_IDENTIFIERS[i];
-          result +=
-              ":"
-                  + this.getClass().getDeclaredField(lexName).get(this)
-                      .toString();
-        }
-      } catch (NoSuchFieldException | SecurityException
-          | IllegalArgumentException | IllegalAccessException e) {
-        e.printStackTrace();
-      }
-      return result;
-    }
-
-    @Override
-    public int compareTo(LexicalItem o) {
-      return (new Integer(this.wordPosition)).compareTo(new Integer(
-          o.wordPosition));
-    }
-  }
-
-  private CcgParseTree() {}
+  CcgParseTree() {}
 
   public LexicalItem getFirstLeafNode() {
     if (this.getClass().equals(LexicalItem.class))

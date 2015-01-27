@@ -1,29 +1,18 @@
 package in.sivareddy.graphparser.ccg;
 
-import in.sivareddy.util.StringObject;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import in.sivareddy.lambda.ApplicationExpression;
-import in.sivareddy.lambda.ConstantExpression;
-import in.sivareddy.lambda.Expression;
-import in.sivareddy.lambda.ExpressionParser;
-import in.sivareddy.lambda.LambdaExpression;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.IndexedDependency;
+import in.sivareddy.lambda.*;
+import in.sivareddy.util.StringObject;
+
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*-
  * 
@@ -100,14 +89,6 @@ public class SemanticCategory extends LambdaExpression {
   }
 
   private static final long serialVersionUID = 1L;
-
-  public enum SemanticCategoryType {
-    TYPE, TYPEMOD, COMPLEMENT, EVENT, EVENTMOD, NEGATION, CLOSED, EMPTY, IDENTITY, COPULA, UNIQUE, COUNT, QUESTION;
-
-    public final static ImmutableSet<String> types = ImmutableSet.of("TYPE",
-        "TYPEMOD", "COMPLEMENT", "EVENT", "EVENTMOD", "NEGATION", "CLOSED",
-        "EMPTY", "IDENTITY", "COPULA", "UNIQUE", "COUNT", "QUESTION");
-  }
 
   private static Integer functionCount = 0;
   private static Integer maxFunctionCount = 10000;

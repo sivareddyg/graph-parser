@@ -2,7 +2,6 @@ package in.sivareddy.graphparser.cli;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-
 import in.sivareddy.graphparser.util.PrintFreebaseDomain;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;

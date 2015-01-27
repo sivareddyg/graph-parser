@@ -1,23 +1,17 @@
 package in.sivareddy.lambda;
 
-import in.sivareddy.util.StringUtils;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import in.sivareddy.graphparser.ccg.SemanticCategoryType;
+import in.sivareddy.util.StringUtils;
 
-import in.sivareddy.graphparser.ccg.SemanticCategory.SemanticCategoryType;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class AbstractExpression implements Expression {
   private static final long serialVersionUID = 1L;
@@ -40,8 +34,8 @@ public abstract class AbstractExpression implements Expression {
   }
 
   @Override
-  public Set<ConstantExpression> getFreeVariables() {
-    Set<ConstantExpression> variables = Sets.newHashSet();
+  public Set<Expression> getFreeVariables() {
+    Set<Expression> variables = Sets.newHashSet();
     getFreeVariables(variables);
     return variables;
   }

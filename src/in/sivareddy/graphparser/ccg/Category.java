@@ -1,11 +1,8 @@
 package in.sivareddy.graphparser.ccg;
 
-import org.apache.commons.lang3.tuple.Pair;
-
-import in.sivareddy.graphparser.ccg.SemanticCategory.SemanticCategoryType;
-import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
-
 import com.google.common.base.Preconditions;
+import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class Category {
   private SyntacticCategory synCat;

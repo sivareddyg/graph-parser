@@ -11,9 +11,9 @@ public interface Expression extends Serializable, Comparable<Expression> {
    *
    * @return
    */
-  Set<ConstantExpression> getFreeVariables();
+  Set<Expression> getFreeVariables();
 
-  void getFreeVariables(Set<ConstantExpression> accumulator);
+  void getFreeVariables(Set<Expression> accumulator);
 
   List<String> getAllVariables();
 
@@ -25,7 +25,7 @@ public interface Expression extends Serializable, Comparable<Expression> {
    * @param replacement
    * @return
    */
-  Expression substitute(ConstantExpression constant, Expression replacement);
+  Expression substitute(Expression constant, Expression replacement);
 
   Expression simplify();
 

@@ -1,8 +1,8 @@
 package in.sivareddy.lambda;
 
-import java.util.Set;
-
 import com.google.common.base.Preconditions;
+
+import java.util.Set;
 
 public class ConstantExpression extends AbstractExpression {
   public static final long serialVersionUID = 1L;
@@ -18,13 +18,12 @@ public class ConstantExpression extends AbstractExpression {
   }
 
   @Override
-  public void getFreeVariables(Set<ConstantExpression> accumulator) {
+  public void getFreeVariables(Set<Expression> accumulator) {
     accumulator.add(this);
   }
 
   @Override
-  public Expression substitute(ConstantExpression constant,
-      Expression replacement) {
+  public Expression substitute(Expression constant, Expression replacement) {
     if (this.equals(constant)) {
       return replacement;
     } else {

@@ -1,14 +1,20 @@
 package others;
 
-import java.io.*;
-import java.util.*;
-
-import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
-import edu.stanford.nlp.pipeline.*;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.util.ArrayCoreMap;
+import edu.stanford.nlp.util.CoreMap;
 
-import edu.stanford.nlp.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 public class SpanishTokenizer {
   private StanfordCoreNLP pipeline;
