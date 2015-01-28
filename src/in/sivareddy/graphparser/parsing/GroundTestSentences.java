@@ -236,8 +236,9 @@ public class GroundTestSentences {
                 goldGraphFeatures = groundedGraph.getFeatures();
                 System.out
                     .println("Before Update: " + groundedGraph.getScore());
-                learningModel.updateWeightVector(goldGraphFeatures,
-                    predGraphFeatures);
+                learningModel.updateWeightVector(1,
+                    Lists.newArrayList(goldGraphFeatures), 1,
+                    Lists.newArrayList(predGraphFeatures));
                 groundedGraph.setScore(learningModel
                     .getScoreTraining(goldGraphFeatures));
                 System.out.println("After Update: " + groundedGraph.getScore());

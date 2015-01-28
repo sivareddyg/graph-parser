@@ -67,9 +67,10 @@ public class GraphToQueryTrainingUnsupervised {
       boolean graphHasEdgeFlag, boolean countNodesFlag,
       boolean edgeNodeCountFlag, boolean duplicateEdgesFlag,
       boolean grelGrelFlag, boolean useLexiconWeightsRel,
-      boolean useLexiconWeightsType, double initialEdgeWeight,
+      boolean useLexiconWeightsType, boolean validQueryFlag,
+      boolean useNbestGraphs, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight, boolean validQueryFlag) throws IOException {
+      double stemFeaturesWeight) throws IOException {
 
     this.semanticParseKey = sematicParseKey;
     this.nBestTestSyntacticParses = nBestTestSyntacticParses;
@@ -109,8 +110,9 @@ public class GraphToQueryTrainingUnsupervised {
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            validQueryFlag, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight, rdfGraphTools, kbGraphUri);
+            validQueryFlag, useNbestGraphs, initialEdgeWeight,
+            initialTypeWeight, initialWordWeight, stemFeaturesWeight,
+            rdfGraphTools, kbGraphUri);
 
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
       supervisedTrainingExamples =
@@ -319,6 +321,7 @@ public class GraphToQueryTrainingUnsupervised {
 
     // Denotation feature
     boolean validQueryFlag = true;
+    boolean useNbestGraphs = false;
 
     GraphToQueryTrainingUnsupervised graphToQueryModel =
         new GraphToQueryTrainingUnsupervised(schema, kb, groundedLexicon,
@@ -335,8 +338,9 @@ public class GraphToQueryTrainingUnsupervised {
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             duplicateEdgesFlag, grelGrelFlag, useLexiconWeightsRel,
-            useLexiconWeightsType, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight, validQueryFlag);
+            useLexiconWeightsType, validQueryFlag, useNbestGraphs,
+            initialEdgeWeight, initialTypeWeight, initialWordWeight,
+            stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;

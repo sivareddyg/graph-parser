@@ -115,6 +115,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   // Denotation feature
   private OptionSpec<Boolean> validQueryFlag;
 
+  // Denotation feature
+  private OptionSpec<Boolean> useNbestGraphsFlag;
+
+
   @Override
   public void initializeOptions(OptionParser parser) {
     parser.acceptsAll(Arrays.asList("help", "h"), "Print this help message.");
@@ -405,6 +409,13 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "use denotation as feature to see if the graph is valid - good but slow")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
+    useNbestGraphsFlag =
+        parser
+            .accepts(
+                "useNbestGraphsFlag",
+                "use n-best graphs for training. Unless you are in a supervised setting or using an unsupervised syntatic parser, set this to false")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
   }
 
   @Override
@@ -513,6 +524,11 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       // Denotation feature
       boolean validQueryFlagVal = options.valueOf(validQueryFlag);
 
+      // Use n-best graphs for training. Unless you are using supervised
+      // training or unsupervised syntactic parser, do not set this flag to
+      // true.
+      boolean useNbestGraphsVal = options.valueOf(useNbestGraphsFlag);
+
       GraphToQueryTrainingMain graphToQueryModel =
           new GraphToQueryTrainingMain(schemaObj, kb, groundedLexicon,
               normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
@@ -529,9 +545,9 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
               graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
               duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
-              useLexiconWeightsTypeVal, initialEdgeWeightVal,
-              initialTypeWeightVal, initialWordWeightVal,
-              stemFeaturesWeightVal, validQueryFlagVal);
+              useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
+              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
+              stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
 
     } catch (IOException e) {

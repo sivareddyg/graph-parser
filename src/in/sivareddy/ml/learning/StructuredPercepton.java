@@ -2,6 +2,7 @@ package in.sivareddy.ml.learning;
 
 import in.sivareddy.ml.basic.Feature;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -57,22 +58,34 @@ public class StructuredPercepton {
     return score;
   }
 
-  // simple perceptron update with feature-wise averaging
-  public synchronized void updateWeightVector(Set<Feature> goldFeatVec,
-      Set<Feature> predFeatVec) {
+  // Simple perceptron update with feature-wise averaging
+  // This is different from traditional averaging. This is found to be working
+  // better than averaged perceptron.
+  public synchronized void updateWeightVector(int goldParsesSize,
+      List<Feature> goldFeatVec, int wrongParsesSize, List<Feature> predFeatVec) {
+    Double goldParsesWeight = 1.0 / goldParsesSize;
+    Double wrongParsesWeight = 1.0 / wrongParsesSize;
 
     Set<Feature> features = Sets.newHashSet();
     Map<Feature, Double> goldFeatVecMap = Maps.newHashMap();
     for (Feature feature : goldFeatVec) {
       if (Math.abs(feature.getFeatureValue()) > 0.0) {
-        goldFeatVecMap.put(feature, feature.getFeatureValue());
+        if (!goldFeatVecMap.containsKey(feature)) {
+          goldFeatVecMap.put(feature, 0.0);
+        }
+        goldFeatVecMap.put(feature, goldFeatVecMap.get(feature)
+            + goldParsesWeight * feature.getFeatureValue());
         features.add(feature);
       }
     }
     Map<Feature, Double> predFeatVecMap = Maps.newHashMap();
     for (Feature feature : predFeatVec) {
       if (Math.abs(feature.getFeatureValue()) > 0.0) {
-        predFeatVecMap.put(feature, feature.getFeatureValue());
+        if (!predFeatVecMap.containsKey(feature)) {
+          predFeatVecMap.put(feature, 0.0);
+        }
+        predFeatVecMap.put(feature, predFeatVecMap.get(feature)
+            + wrongParsesWeight * feature.getFeatureValue());
         features.add(feature);
       }
     }
@@ -105,7 +118,7 @@ public class StructuredPercepton {
     }
   }
 
-  public synchronized void printFeatureWeights(Set<Feature> featVec,
+  public synchronized void printFeatureWeights(Collection<Feature> featVec,
       Logger logger) {
     List<Pair<Double, Feature>> feats = Lists.newArrayList();
     for (Feature feature : featVec) {

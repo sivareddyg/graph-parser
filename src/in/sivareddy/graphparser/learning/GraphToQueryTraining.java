@@ -72,6 +72,8 @@ public class GraphToQueryTraining {
   boolean ignoreTypes = false;
 
   boolean validQueryFlag = true;
+  boolean useNbestGraphs = false;
+
   String semanticParseKey;
 
   RdfGraphTools rdfGraphTools;
@@ -95,7 +97,7 @@ public class GraphToQueryTraining {
       boolean graphHasEdgeFlag, boolean countNodesFlag,
       boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
-      boolean validQueryFlag, double initialEdgeWeight,
+      boolean validQueryFlag, boolean useNbestGraphs, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
       double stemFeaturesWeight, RdfGraphTools rdfGraphTools,
       List<String> kbGraphUri) throws IOException {
@@ -123,6 +125,7 @@ public class GraphToQueryTraining {
 
     this.rdfGraphTools = rdfGraphTools;
     this.kbGraphUri = kbGraphUri;
+    this.useNbestGraphs = useNbestGraphs;
 
     this.graphCreator =
         new GroundedGraphs(this.schema, this.kb, this.groundedLexicon,
@@ -495,42 +498,6 @@ public class GraphToQueryTraining {
 
     Collections.sort(predGgraphsWild);
 
-    // if the first predicted graph results in answer, there is nothing to
-    // learn
-    LexicalGraph firstPredictedGraph = predGgraphsWild.get(0);
-    String query =
-        GraphToSparqlConverter.convertGroundedGraph(firstPredictedGraph,
-            targetNode, schema, kbGraphUri);
-    logger.debug("First predicted graph query: " + query);
-    // ResultSet resultSet = rdfGraphTools.runQueryJdbc(query);
-    Map<String, LinkedHashSet<String>> resultsMap =
-        rdfGraphTools.runQueryHttp(query);
-    logger.debug("First Predicted Results: " + resultsMap);
-    LinkedHashSet<String> results =
-        resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
-            .get(targetVar) : null;
-    if (answerIsDecimal) {
-      logger.debug("Answer is decimal: " + integerAnswer + " : " + results);
-      if (setContainsDecimal(results, integerAnswer)) {
-        logger
-            .debug("Decimal answer found: First best graph predicts the answer");
-        return;
-      }
-    } else {
-      if (answerIsDate) {
-        results = RdfGraphTools.convertDatesToYears(results);
-      }
-      if (results != null && results.contains(answer)) {
-        logger.debug("First best graph predicts the answer");
-        // learning even from correct predictions since the model is
-        // average perceptron
-        Set<Feature> predGraphFeatures = firstPredictedGraph.getFeatures();
-        Set<Feature> goldGraphFeatures = firstPredictedGraph.getFeatures();
-        learningModel.updateWeightVector(goldGraphFeatures, predGraphFeatures);
-        return;
-      }
-    }
-
     // constrained graphs which are used to select gold graphs - constrained
     // graphs help in search space reduction so that SPARQL query bottleneck
     // can be removed to some extent - Sadly Sparql querying is still slow.
@@ -568,8 +535,10 @@ public class GraphToQueryTraining {
     // Add the feature if the graph results is a valid query
     List<Pair<LexicalGraph, LinkedHashSet<String>>> gGraphsAndResults =
         Lists.newArrayList();
+    Map<String, LinkedHashSet<String>> resultsMap;
+    LinkedHashSet<String> results;
     for (LexicalGraph gGraph : predGgraphsConstrained) {
-      query =
+      String query =
           GraphToSparqlConverter.convertGroundedGraph(gGraph, targetNode,
               schema, kbGraphUri);
       logger.debug("Pred constrained query: " + query);
@@ -657,7 +626,6 @@ public class GraphToQueryTraining {
     }
 
     // second filtering - the graph should have all entities
-
     if (hasYear && !answerIsDate) {
       List<Pair<Integer, LexicalGraph>> filteredGoldGraphs =
           Lists.newArrayList();
@@ -675,7 +643,7 @@ public class GraphToQueryTraining {
         if (matcher.find()) {
           year = matcher.group(1);
         }
-        query =
+        String query =
             GraphToSparqlConverter.convertGroundedGraph(goldGraph, targetNode,
                 schema, kbGraphUri);
         logger.debug("Year query: " + query);
@@ -697,37 +665,58 @@ public class GraphToQueryTraining {
       goldGraphs = filteredGoldGraphs;
     }
 
-    LexicalGraph predGraph = firstPredictedGraph;
-
-    if (debugEnabled) {
-      logger.debug("Predicted Graph: " + predGraph);
-      logger.debug("Gold Graphs: " + goldGraphs);
-    }
-
     if (goldGraphs == null || goldGraphs.size() == 0) {
       logger.debug("No gold graphs found");
       return;
     }
 
-    LexicalGraph firstGoldGraph = goldGraphs.get(0).getRight();
-    double marginDifference =
-        Math.abs(firstGoldGraph.getScore() - firstPredictedGraph.getScore());
-    if (marginDifference > MARGIN) {
-      logger.debug("Difference is greater than margin. " + marginDifference);
-      return;
+    LexicalGraph bestGoldGraph = goldGraphs.get(0).getRight();
+
+    // Predicted Graphs within margin of bestGoldGraph.
+    List<LexicalGraph> predGraphsWithinMargin = Lists.newArrayList();
+    for (LexicalGraph gGraph : predGgraphsWild) {
+      double marginDifference =
+          Math.abs(bestGoldGraph.getScore() - gGraph.getScore());
+      if (marginDifference > MARGIN)
+        break;
+      predGraphsWithinMargin.add(gGraph);
+      if (!useNbestGraphs)
+        break;
     }
 
-    Set<Feature> goldGraphFeatures = firstGoldGraph.getFeatures();
-    /*-Set<Feature> goldGraphFeatures = Sets.newHashSet();
+    // Gold Graphs within margin of bestGoldGraph.
+    List<LexicalGraph> goldGraphsWithinMargin = Lists.newArrayList();
+    for (Pair<Integer, LexicalGraph> gGraphPair : goldGraphs) {
+      double marginDifference =
+          Math.abs(bestGoldGraph.getScore() - gGraphPair.getRight().getScore());
+      if (marginDifference > MARGIN)
+        break;
+      goldGraphsWithinMargin.add(gGraphPair.getRight());
+      if (!useNbestGraphs)
+        break;
+    }
 
-    for (Pair<Integer, LexicalGraph> goldGraphPair : goldGraphs) {
-    	Set<Feature> feats = goldGraphPair.getRight().getFeatures();
-    	goldGraphFeatures.addAll(feats);
-    }*/
-    Set<Feature> predGraphFeatures = predGraph.getFeatures();
+    // Collect all features from gold graphs.
+    List<Feature> goldGraphFeatures = Lists.newArrayList();
+    for (LexicalGraph goldGraph : goldGraphsWithinMargin) {
+      Set<Feature> feats = goldGraph.getFeatures();
+      goldGraphFeatures.addAll(feats);
+    }
+
+    // Collect all features from predicted graphs.
+    List<Feature> predGraphFeatures = Lists.newArrayList();
+    for (LexicalGraph predGraph : predGraphsWithinMargin) {
+      Set<Feature> feats = predGraph.getFeatures();
+      predGraphFeatures.addAll(feats);
+    }
+
+    if (debugEnabled) {
+      logger.debug("Predicted Graphs: " + predGraphsWithinMargin);
+      logger.debug("Gold Graphs: " + goldGraphsWithinMargin);
+    }
+
 
     logger.debug("Sentence: " + sentence);
-
     if (debugEnabled) {
       logger.debug("Gold graph features before update");
       learningModel.printFeatureWeights(goldGraphFeatures, logger);
@@ -738,13 +727,17 @@ public class GraphToQueryTraining {
       learningModel.printFeatureWeights(predGraphFeatures, logger);
     }
 
-    logger.debug("Predicted Before Update: " + predGraph.getScore());
-    logger.debug("Gold Before Update: " + firstGoldGraph.getScore());
-    learningModel.updateWeightVector(goldGraphFeatures, predGraphFeatures);
-    predGraph.setScore(learningModel.getScoreTraining(predGraphFeatures));
-    firstGoldGraph.setScore(learningModel.getScoreTraining(goldGraphFeatures));
-    logger.debug("Predicted After Update: " + predGraph.getScore());
-    logger.debug("Gold After Update: " + firstGoldGraph.getScore());
+    LexicalGraph bestPredictedGraph = predGraphsWithinMargin.get(0);
+    logger.debug("Predicted Before Update: " + bestPredictedGraph.getScore());
+    logger.debug("Gold Before Update: " + bestGoldGraph.getScore());
+    learningModel.updateWeightVector(goldGraphsWithinMargin.size(),
+        goldGraphFeatures, predGraphsWithinMargin.size(), predGraphFeatures);
+    bestPredictedGraph.setScore(learningModel
+        .getScoreTraining(bestPredictedGraph.getFeatures()));
+    bestGoldGraph.setScore(learningModel.getScoreTraining(bestGoldGraph
+        .getFeatures()));
+    logger.debug("Predicted After Update: " + bestPredictedGraph.getScore());
+    logger.debug("Gold After Update: " + bestGoldGraph.getScore());
 
     if (debugEnabled) {
       logger.debug("Predicted graph features after update");
@@ -756,23 +749,24 @@ public class GraphToQueryTraining {
       learningModel.printFeatureWeights(goldGraphFeatures, logger);
     }
 
-
     if (semanticParseKey.equals("synPars")) {
       Set<String> goldSynParsSet = new HashSet<>();
       JsonArray goldSynPars = new JsonArray();
-      for (Pair<Integer, LexicalGraph> gGraph : goldGraphs) {
-        String goldSynPar = gGraph.getRight().getSyntacticParse();
+      for (LexicalGraph gGraph : goldGraphsWithinMargin) {
+        String goldSynPar = gGraph.getSyntacticParse();
         if (!goldSynParsSet.contains(goldSynPar)) {
           JsonObject synParseObject = new JsonObject();
-          synParseObject.addProperty("score", gGraph.getRight().getScore());
+          synParseObject.addProperty("score", gGraph.getScore());
           synParseObject.addProperty("synPar", goldSynPar);
           goldSynPars.add(synParseObject);
           goldSynParsSet.add(goldSynPar);
         }
       }
       jsonSentence.add("goldSynPars", goldSynPars);
+      if (goldSynParsSet.size() > 0) {
+        logger.debug("Valid Gold Parses: " + jsonSentence.toString());
+      }
     }
-    logger.debug("Valid Gold Parses: " + jsonSentence.toString());
     logger.debug("#############");
   }
 
@@ -972,7 +966,10 @@ public class GraphToQueryTraining {
         learningModel.printFeatureWeights(goldGraphFeatures, logger);
 
         logger.debug("Before Update: " + gGraph.getScore());
-        learningModel.updateWeightVector(goldGraphFeatures, predGraphFeatures);
+        // TODO(sivareddyg) update nbest version. Don't use this function until
+        // then.
+        // learningModel.updateWeightVector(goldGraphFeatures,
+        // predGraphFeatures);
         gGraph.setScore(learningModel.getScoreTraining(goldGraphFeatures));
         logger.debug("After Update: " + gGraph.getScore());
         logger.debug("CORRECT!!");

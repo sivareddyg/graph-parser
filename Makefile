@@ -688,6 +688,7 @@ unsupervised_first_experiment:
     -initialTypeWeight 1.0 \
     -initialWordWeight 10.00 \
     -stemFeaturesWeight 0.0 \
+    -useNbestGraphsFlag true \
     -endpoint kinloch \
     -trainingCorpora "test_data/unsupervised_parser.json.gz" \
     -logFile working/unsupervised_first_experiment/business.log.txt \
