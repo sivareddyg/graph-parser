@@ -48,9 +48,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -156,6 +154,11 @@ public class GraphToQueryTraining {
       RollingFileAppender appender = new RollingFileAppender(layout, logFile);
       appender.setMaxFileSize("100MB");
       logger.addAppender(appender);
+    } else {
+      logger.setLevel(Level.INFO);
+      RollingFileAppender appender = new RollingFileAppender(layout, logFile);
+      appender.setMaxFileSize("100MB");
+      logger.addAppender(appender);
     }
 
     if (trainingSample == null || trainingSample.size() == 0) {
@@ -182,15 +185,17 @@ public class GraphToQueryTraining {
     Queue<Logger> deadThredsLogs = new ConcurrentLinkedQueue<>();
     for (int i = 0; i < nthreads + 2; i++) {
       Logger threadLogger = Logger.getLogger(logFile + ".thread" + i);
-      threadLogger.setAdditivity(true);
-      if (debugEnabled) {
+      threadLogger.setAdditivity(false);
+      if (debugEnabled)
         threadLogger.setLevel(Level.DEBUG);
-        RollingFileAppender appender =
-            new RollingFileAppender(layout, logFile + ".thread" + i);
-        appender.setMaxFileSize("100MB");
-        threadLogger.addAppender(appender);
-        threadLogger.info("######## Training Starts");
-      }
+      else
+        threadLogger.setLevel(Level.INFO);
+      
+      RollingFileAppender appender =
+          new RollingFileAppender(layout, logFile + ".thread" + i);
+      appender.setMaxFileSize("100MB");
+      threadLogger.addAppender(appender);
+      threadLogger.info("######## Training Starts");
       deadThredsLogs.add(threadLogger);
     }
 
@@ -684,6 +689,12 @@ public class GraphToQueryTraining {
         break;
     }
 
+    if (predGraphsWithinMargin.size() == 0) {
+      logger.debug("Difference in predicted and gold are beyond margin");
+      return;
+    }
+    LexicalGraph bestPredictedGraph = predGraphsWithinMargin.get(0);
+
     // Gold Graphs within margin of bestGoldGraph.
     List<LexicalGraph> goldGraphsWithinMargin = Lists.newArrayList();
     for (Pair<Integer, LexicalGraph> gGraphPair : goldGraphs) {
@@ -711,23 +722,25 @@ public class GraphToQueryTraining {
     }
 
     if (debugEnabled) {
-      logger.debug("Predicted Graphs: " + predGraphsWithinMargin);
-      logger.debug("Gold Graphs: " + goldGraphsWithinMargin);
+      logger.debug("Predicted Graphs Within Margin Size: "
+          + predGraphsWithinMargin.size());
+      logger.debug("Gold Graphs Within Margin Size: "
+          + goldGraphsWithinMargin.size());
     }
 
 
     logger.debug("Sentence: " + sentence);
     if (debugEnabled) {
-      logger.debug("Gold graph features before update");
-      learningModel.printFeatureWeights(goldGraphFeatures, logger);
+      logger.debug("Best Gold graph features before update");
+      learningModel.printFeatureWeights(bestGoldGraph.getFeatures(), logger);
     }
 
     if (debugEnabled) {
-      logger.debug("Predicted graph features before update");
-      learningModel.printFeatureWeights(predGraphFeatures, logger);
+      logger.debug("Best Predicted graph features before update");
+      learningModel.printFeatureWeights(bestPredictedGraph.getFeatures(),
+          logger);
     }
 
-    LexicalGraph bestPredictedGraph = predGraphsWithinMargin.get(0);
     logger.debug("Predicted Before Update: " + bestPredictedGraph.getScore());
     logger.debug("Gold Before Update: " + bestGoldGraph.getScore());
     learningModel.updateWeightVector(goldGraphsWithinMargin.size(),
@@ -741,12 +754,13 @@ public class GraphToQueryTraining {
 
     if (debugEnabled) {
       logger.debug("Predicted graph features after update");
-      learningModel.printFeatureWeights(predGraphFeatures, logger);
+      learningModel.printFeatureWeights(bestPredictedGraph.getFeatures(),
+          logger);
     }
 
     if (debugEnabled) {
       logger.debug("Gold graph features after update");
-      learningModel.printFeatureWeights(goldGraphFeatures, logger);
+      learningModel.printFeatureWeights(bestGoldGraph.getFeatures(), logger);
     }
 
     if (semanticParseKey.equals("synPars")) {
@@ -764,7 +778,7 @@ public class GraphToQueryTraining {
       }
       jsonSentence.add("goldSynPars", goldSynPars);
       if (goldSynParsSet.size() > 0) {
-        logger.debug("Valid Gold Parses: " + jsonSentence.toString());
+        logger.info("Valid Gold Parses: " + jsonSentence.toString());
       }
     }
     logger.debug("#############");

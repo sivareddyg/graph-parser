@@ -237,14 +237,15 @@ public class GroundedGraphs {
         JsonObject synParseObject = synParseElement.getAsJsonObject();
         String synParse = synParseObject.get("synPar").getAsString();
         Double score = synParseObject.get("score").getAsDouble();
-        logger.debug("SynParse: " + synParse + " : " + score);
+        
         List<CcgParseTree> ccgParses;
         try {
           if (synParse.startsWith("(<T S[dcl] ")
               || synParse.startsWith("(<T S[pss] ")
               || synParse.startsWith("(<T S[pt] ")
               || synParse.startsWith("(<T S[b] ")
-              || synParse.startsWith("(<T S[ng] "))
+              || synParse.startsWith("(<T S[ng] ")
+              || synParse.startsWith("(<T S "))
             ccgParses = normalCcgParser.parseFromString(synParse);
           else
             ccgParses = questionCcgParser.parseFromString(synParse);

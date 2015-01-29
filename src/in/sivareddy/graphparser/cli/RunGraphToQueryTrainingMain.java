@@ -66,6 +66,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
   // Set these true, or else graph construction mechanism will be
   // completely driven by lexicon
+  private OptionSpec<Boolean> debugEnabledFlag;
   private OptionSpec<Boolean> useSchema;
   private OptionSpec<Boolean> useKB;
   private OptionSpec<Boolean> groundFreeVariables;
@@ -238,6 +239,13 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "number of edges/types for each ungrounded edge/types")
             .withRequiredArg().ofType(Integer.class).defaultsTo(20);
 
+    debugEnabledFlag =
+        parser
+            .accepts(
+                "debugEnabledFlag",
+                "Enable debug mode")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+    
     // Set these true, or else graph construction mechanism will be
     // completely driven by lexicon
     useSchema =
@@ -455,7 +463,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       String semanticParseKeyString = options.valueOf(semanticParseKey);
 
       String logfile = options.valueOf(logFile);
-      boolean debugEnabled = true;
+      boolean debugEnabled = options.valueOf(debugEnabledFlag);
 
       int threadCount = options.valueOf(nthreads);
       int iterationCount = options.valueOf(iterations);

@@ -659,6 +659,7 @@ unsupervised_first_experiment:
     -nBestTrainSyntacticParses 100 \
     -nBestTestSyntacticParses 1 \
     -nbestGraphs 1000 \
+    -debugEnabledFlag false \
     -useSchema true \
     -useKB true \
     -groundFreeVariables true \
