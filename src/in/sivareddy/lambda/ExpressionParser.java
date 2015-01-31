@@ -3,16 +3,17 @@ package in.sivareddy.lambda;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class ExpressionParser {
 
-  private static final ConstantExpression OPEN_PAREN = new ConstantExpression(
-      "(");
-  private static final ConstantExpression CLOSE_PAREN = new ConstantExpression(
-      ")");
+  private static final ConstantExpression OPEN_PAREN = new ConstantExpression("(");
+  private static final ConstantExpression CLOSE_PAREN = new ConstantExpression(")");
+  static final Pattern whitespace_pattern = Pattern.compile("\\s+");
+  static final Pattern replace_brackets = Pattern.compile("([()])");
 
   public ExpressionParser() {}
 
@@ -20,8 +21,8 @@ public class ExpressionParser {
   // Changed from private to public
   // Siva Reddy
   public static List<String> tokenize(String expression) {
-    String transformedExpression = expression.replaceAll("([()])", " $1 ");
-    return Arrays.asList(transformedExpression.trim().split("\\s+"));
+    String transformedExpression = replace_brackets.matcher(expression).replaceAll(" $1 ");
+    return Arrays.asList(whitespace_pattern.split(transformedExpression.trim()));
   }
 
   public static Expression parseSingleExpression(String expression) {

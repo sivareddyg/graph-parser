@@ -37,11 +37,10 @@ public class StructuredPercepton {
 
   public synchronized Double getScoreTraining(Set<Feature> featureVector) {
     Double score = 0.0;
+    Double weight;
     for (Feature feature : featureVector) {
-      Double value = feature.getFeatureValue();
-      Double weight =
-          weightVector.containsKey(feature) ? weightVector.get(feature) : 0.0;
-      score += value * weight;
+      weight = weightVector.get(feature);
+      score += feature.getFeatureValue() * (weight == null ? 0.0 : weight);
     }
     return score;
   }

@@ -7,6 +7,7 @@ import com.google.common.base.Objects;
 public abstract class AbstractFeature implements Feature, Comparable<Feature> {
   private final List<?> key;
   private Double value;
+  private static final int prime = 31;
 
   public AbstractFeature(List<?> key, Double value) {
     this.key = key;
@@ -30,12 +31,7 @@ public abstract class AbstractFeature implements Feature, Comparable<Feature> {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    String featureName = getClass().getSimpleName();
-    result = result * prime + featureName.hashCode();
-    result = result * prime + key.hashCode();
-    return result;
+    return getClass().hashCode() * (prime + key.hashCode());
   }
 
   @Override
@@ -50,10 +46,7 @@ public abstract class AbstractFeature implements Feature, Comparable<Feature> {
       return false;
     }
     AbstractFeature other = (AbstractFeature) obj;
-    if (!other.key.equals(key)) {
-      return false;
-    }
-    return true;
+    return other.key.equals(key);
   }
 
   @Override
