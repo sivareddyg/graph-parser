@@ -18,9 +18,22 @@ copy_deplambda_output:
 
 # Converts deplambda documents in json format to graphparsers json format.
 convert_deplambda_output_to_graphparser:
-	cat data/deplambda/unsupervised/* | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py | gzip > data/deplambda/unsupervised.graphparser.txt.gz
-	cat data/deplambda/webquestions.train.documents.txt | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_questions.py data/deplambda/entity_lexicon.txt | python scripts/dependency_semantic_parser/add_answers.py data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json > data/deplambda/webquestions.train.graphparser.txt
-	cat data/deplambda/webquestions.test.documents.txt | python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_questions.py data/deplambda/entity_lexicon.txt | python scripts/dependency_semantic_parser/add_answers.py data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json > data/deplambda/webquestions.test.graphparser.txt
+	cat data/deplambda/training/* \
+| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+| python scripts/cleaning/remove_duplicate_sentences.py \
+| gzip > data/deplambda/unsupervised.graphparser.txt.gz
+	cat data/deplambda/wq-training/* \
+| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json \
+> data/deplambda/webquestions.train.graphparser.txt
+	python scripts/dependency_semantic_parser/select_dev_from_train.py \
+data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+data/deplambda/webquestions.train.graphparser.txt \
+> data/deplambda/webquestions.train.graphparser.txt.200
+	cat data/deplambda/wq-test/* \
+| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+> data/deplambda/webquestions.test.graphparser.txt
 
 # Create dependency based grounded lexicon.
 # Unfortunately, this cannot run parallel version since I have to write
@@ -29,17 +42,16 @@ create_deplambda_grounded_lexicon:
 	mkdir -p data/deplambda/sentences_training
 	mkdir -p data/deplambda/grounded_lexicon
 	zcat data/deplambda/unsupervised.graphparser.txt.gz \
-	| java -Xms2048m -Xmx20g -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	| python scripts/cleaning/remove_duplicate_sentences.py \
+	| java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
 	--relationLexicalIdentifiers lemma \
 	--semanticParseKey dependency_lambda \
 	--argumentLexicalIdentifiers mid \
-	--candcIndexFile data/candc_markedup.modified \
-	--unaryRulesFile data/unary_rules.txt \
-	--binaryRulesFile data/binary_rules.txt \
-	--specialCasesFile data/lexicon_specialCases.txt \
 	--relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	--outputLexiconFile data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
+	| python scripts/freebase-training/filter_training_sentences.py 0 0 0 0 0 \
+	| python scripts/cleaning/remove_duplicate_sentences.py \
 	| gzip > data/deplambda/sentences_training/deplambda_training_sentences.txt.gz
 
 # Create ccg based grounded lexicon.
@@ -47,21 +59,171 @@ create_ccg_grounded_lexicon:
 	mkdir -p data/deplambda/sentences_training
 	mkdir -p data/deplambda/grounded_lexicon
 	zcat data/deplambda/unsupervised.graphparser.txt.gz \
-	| java -Xms2048m -cp .:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	| python scripts/cleaning/remove_duplicate_sentences.py \
+	| java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
 	--relationLexicalIdentifiers lemma \
 	--semanticParseKey ccg_lambda \
 	--argumentLexicalIdentifiers mid \
-	--candcIndexFile data/candc_markedup.modified \
-	--unaryRulesFile data/unary_rules.txt \
-	--binaryRulesFile data/binary_rules.txt \
-	--specialCasesFile data/lexicon_specialCases.txt \
 	--relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	--outputLexiconFile data/deplambda/grounded_lexicon/ccg_grounded_lexicon.txt \
+	| python scripts/freebase-training/filter_training_sentences.py 0 0 0 0 0 \
+	| python scripts/cleaning/remove_duplicate_sentences.py \
 	| gzip > data/deplambda/sentences_training/ccg_training_sentences.txt.gz
 
-# Supervised Expermients
+# TACL CCG lexicon and training sentences
+create_tacl_ccg_grounded_lexicon_and_training_sentences:
+	mkdir -p data/tacl/sentences_training
+	mkdir -p data/tacl/grounded_lexicon
+	zcat data/freebase/sentences_filtered/* \
+	| python scripts/cleaning/remove_duplicate_sentences.py \
+	| java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	--relationLexicalIdentifiers lemma \
+	--semanticParseKey synPars \
+	--argumentLexicalIdentifiers mid \
+	--candcIndexFile lib_data/candc_markedup.modified \
+	--unaryRulesFile lib_data/unary_rules.txt \
+	--binaryRulesFile lib_data/binary_rules.txt \
+	--specialCasesFile lib_data/lexicon_specialCases.txt \
+	--relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	--outputLexiconFile data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
+	| python scripts/freebase-training/filter_training_sentences.py 0 0 0 0 0 \
+	| python scripts/cleaning/remove_duplicate_sentences.py \
+	| gzip > data/tacl/sentences_training/tacl_training_sentences.txt.gz
 
+# TACL CCG lexicon and training sentences
+create_tacl_ccg_grounded_lexicon_and_training_sentences_%:
+	mkdir -p data/tacl/sentences_training
+	mkdir -p data/tacl/grounded_lexicon
+	zcat data/freebase/sentences_filtered/$*_sentences.txt.gz \
+	| python scripts/cleaning/remove_duplicate_sentences.py \
+	| java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	--relationLexicalIdentifiers lemma \
+	--semanticParseKey synPars \
+	--argumentLexicalIdentifiers mid \
+	--candcIndexFile lib_data/candc_markedup.modified \
+	--unaryRulesFile lib_data/unary_rules.txt \
+	--binaryRulesFile lib_data/binary_rules.txt \
+	--specialCasesFile lib_data/lexicon_specialCases.txt \
+	--relationTypesFile data/freebase/stats/$*_relation_types.txt \
+	--kbZipFile data/freebase/domain_facts/$*_facts.txt.gz \
+	--outputLexiconFile data/tacl/grounded_lexicon/$*_tacl_grounded_lexicon.txt \
+	| python scripts/freebase-training/filter_training_sentences.py 0 0 0 0 0 \
+	| python scripts/cleaning/remove_duplicate_sentences.py \
+	| gzip > data/tacl/sentences_training/$*_tacl_training_sentences.txt.gz
+
+create_tacl_ccg_grounded_lexicon_and_training_sentences_individual:
+	make create_tacl_ccg_grounded_lexicon_and_training_sentences_business
+	make create_tacl_ccg_grounded_lexicon_and_training_sentences_film
+	make create_tacl_ccg_grounded_lexicon_and_training_sentences_people
+
+merge_lexicon_individual:
+	python scripts/freebase/merge_lexicon.py \
+	data/tacl/grounded_lexicon/business_tacl_grounded_lexicon.txt \
+	data/tacl/grounded_lexicon/film_tacl_grounded_lexicon.txt \
+	data/tacl/grounded_lexicon/people_tacl_grounded_lexicon.txt \
+	> data/tacl/grounded_lexicon/business_film_people_merged_tacl_grounded_lexicon.txt
+
+# Deplambda Experiments
+# Baseline to evaluate the accuracy of lexicon
+deplambda_mwg:
+	mkdir -p working/deplambda_mwg
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-trainingSampleSize 100 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint bravas \
+	-devFile data/deplambda/webquestions.train.graphparser.txt.200 \
+	-testFile data/deplambda/webquestions.test.graphparser.txt \
+	-logFile working/deplambda_mwg/business_film_people.log.txt \
+	> working/deplambda_mwg/business_film_people.txt
+
+ccg_mwg:
+	mkdir -p working/ccg_mwg
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/ccg_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-trainingSampleSize 100 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint kinloch \
+	-devFile data/deplambda/webquestions.train.graphparser.txt.200 \
+	-testFile data/deplambda/webquestions.test.graphparser.txt \
+	-logFile working/ccg_mwg/business_film_people.log.txt \
+	> working/ccg_mwg/business_film_people.txt
+
+# Supervised Expermients
 # Deplambda results without unsupervised lexicon.
 deplambda_supervised:
 	mkdir -p working/deplambda_supervised
@@ -417,7 +579,7 @@ merge_lexicon:
 	data/freebase/grounded_lexicon/business_grounded_lexicon.txt \
 	data/freebase/grounded_lexicon/film_grounded_lexicon.txt \
 	data/freebase/grounded_lexicon/people_grounded_lexicon.txt \
-	> data/freebase/grounded_lexicon/business_film_people_grounded_lexicon.txt
+	> data/freebase/grounded_lexicon/tacl_merged_grounded_lexicon.txt
 
 # Web Questions Experiments
 
@@ -486,13 +648,13 @@ parse_webquestions_easyccg_paraphrase:
 # TACL MWG Baseline
 tacl_mwg:
 	mkdir -p working/tacl_mwg
-	java -Xms2048m -cp .:GraphParser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-lexicon data/freebase/grounded_lexicon/business_film_people_grounded_lexicon.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
-	-nthreads 20 \
+	-nthreads 10 \
 	-trainingSampleSize 100 \
 	-iterations 10 \
 	-nBestTrainSyntacticParses 1 \
@@ -502,7 +664,7 @@ tacl_mwg:
 	-useKB true \
 	-groundFreeVariables false \
 	-useEmptyTypes false \
-	-ignoreTypes false \
+	-ignoreTypes true \
 	-urelGrelFlag true \
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
@@ -523,22 +685,70 @@ tacl_mwg:
 	-useLexiconWeightsType false \
 	-validQueryFlag false \
 	-initialEdgeWeight 1.0 \
-	-initialTypeWeight 1.0 \
+	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint localhost \
-	-devFile data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
-	-testFile data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+	-endpoint kinloch \
+	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	-logFile working/tacl_mwg/business_film_people.log.txt \
 	> working/tacl_mwg/business_film_people.txt
 
-# TACL GraphPaser results
-tacl_unsupervised:
-	mkdir -p working/tacl_unsupervised
-	java -Xms2048m -cp .:GraphParser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+tacl_mwg_merged:
+	mkdir -p working/tacl_mwg_merged
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-lexicon data/freebase/grounded_lexicon/business_film_people_grounded_lexicon.txt \
+	-lexicon data/tacl/grounded_lexicon/business_film_people_merged_tacl_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-trainingSampleSize 100 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint bravas \
+	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+	-logFile working/tacl_mwg_merged/business_film_people.log.txt \
+	> working/tacl_mwg_merged/business_film_people.txt
+
+# TACL GraphPaser results
+tacl_unsupervised:
+	mkdir -p working/tacl_unsupervised.1
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
@@ -576,12 +786,12 @@ tacl_unsupervised:
 	-initialTypeWeight 1.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint localhost \
-	-trainingCorpora "data/freebase/sentences_training_filtered/business_training_sentences_filtered_00000.txt.gz;data/freebase/sentences_training_filtered/film_training_sentences_filtered_00000.txt.gz;data/freebase/sentences_training_filtered/people_training_sentences_filtered_00000.txt.gz" \
-	-devFile data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
-	-testFile data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-	-logFile working/tacl_unsupervised/business_film_people.log.txt \
-	> working/tacl_unsupervised/business_film_people.txt
+	-endpoint bravas \
+	-trainingCorpora "data/tacl/sentences_training/tacl_training_sentences.txt.gz" \
+	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+	-logFile working/tacl_unsupervised.1/business_film_people.log.txt \
+	> working/tacl_unsupervised.1/business_film_people.txt
 
 # TACL GraphParser + Para results
 tacl_unsupervised_paraphrase:
@@ -638,27 +848,25 @@ tacl_unsupervised_paraphrase:
 extract_spanish_sentences:
 	bzcat data/bravas/wiki_00.bz2 | java -cp lib/*:graph-parser.jar others.SpanishTokenizer | perl -pe 's|=LRB=.*?=RRB=||g' | grep -v =LRB= | grep -v =RRB= 
 
-
 ## Unsupervised Parsing experiments
-
 unsupervised_first_experiment:
 	mkdir -p working/unsupervised_first_experiment
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
-    -schema data/freebase/schema/business_schema.txt \
-    -relationTypesFile data/freebase/stats/business_relation_types.txt \
+    -schema data/freebase/schema/business_film_people_schema.txt \
+    -relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
     -lexicon data/dummy.txt \
     -ccgLexicon data/dummy.txt \
     -ccgIndexedMapping lib_data/ybisk-mapping.txt \
     -unaryRules data/dummy.txt \
     -binaryRules data/dummy.txt \
-    -cachedKB data/freebase/domain_facts/business_facts.txt.gz \
-    -domain "http://business.freebase.com" \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
     -nthreads 10 \
-    -trainingSampleSize 600000 \
+    -trainingSampleSize 600 \
     -iterations 10 \
     -nBestTrainSyntacticParses 100 \
     -nBestTestSyntacticParses 1 \
-    -nbestGraphs 1000 \
+    -nbestGraphs 100 \
     -debugEnabledFlag false \
     -useSchema true \
     -useKB true \
@@ -672,7 +880,7 @@ unsupervised_first_experiment:
     -wordGrelPartFlag false \
     -wordBigramGrelPartFlag false \
     -argGrelPartFlag false \
-    -stemMatchingFlag false \
+    -stemMatchingFlag true \
     -mediatorStemGrelPartMatchingFlag false \
     -argumentStemMatchingFlag false \
     -argumentStemGrelPartMatchingFlag false \
@@ -686,11 +894,11 @@ unsupervised_first_experiment:
     -useLexiconWeightsType false \
     -validQueryFlag true \
     -initialEdgeWeight 1.0 \
-    -initialTypeWeight 1.0 \
+    -initialTypeWeight -1.0 \
     -initialWordWeight 10.00 \
     -stemFeaturesWeight 0.0 \
-    -useNbestGraphsFlag true \
+    -useNbestGraphsFlag false \
     -endpoint kinloch \
-    -trainingCorpora "test_data/unsupervised_parser.json.gz" \
-    -logFile working/unsupervised_first_experiment/business.log.txt \
-    > working/unsupervised_first_experiment/business.txt
+    -trainingCorpora "data/unsupervised/training/unsupervised_parser.json.noDeps.gz" \
+    -logFile working/unsupervised_first_experiment/business_film_people.log.txt \
+    > working/unsupervised_first_experiment/business_film_people.txt

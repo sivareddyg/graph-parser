@@ -147,6 +147,7 @@ public class GraphToQueryTraining {
       String logFile, boolean debugEnabled) throws IOException,
       InterruptedException {
     Logger logger = Logger.getLogger(logFile);
+    logger.removeAllAppenders();
     PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
     logger.setAdditivity(false);
     if (debugEnabled) {
@@ -185,6 +186,7 @@ public class GraphToQueryTraining {
     Queue<Logger> deadThredsLogs = new ConcurrentLinkedQueue<>();
     for (int i = 0; i < nthreads + 2; i++) {
       Logger threadLogger = Logger.getLogger(logFile + ".thread" + i);
+      threadLogger.removeAllAppenders();
       threadLogger.setAdditivity(false);
       if (debugEnabled)
         threadLogger.setLevel(Level.DEBUG);
@@ -1024,6 +1026,7 @@ public class GraphToQueryTraining {
     Queue<Logger> deadThredsLogs = new ConcurrentLinkedQueue<>();
     for (int i = 0; i < nthreads; i++) {
       Logger threadLogger = Logger.getLogger(logFile + ".thread" + i);
+      threadLogger.removeAllAppenders();
       threadLogger.setAdditivity(false);
       if (debugEnabled) {
         threadLogger.setLevel(Level.DEBUG);

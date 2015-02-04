@@ -28,9 +28,9 @@ public class CreateGroundedLexiconTest {
             "data/freebase/stats/business_relation_types.txt");
     // KnowledgeBase kb = null;
     CcgAutoLexicon ccgAutoLexicon =
-        new CcgAutoLexicon("./data/candc_markedup.modified",
-            "./data/unary_rules.txt", "./data/binary_rules.txt",
-            "./data/lexicon_specialCases.txt");
+        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
+            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
+            "./lib_data/lexicon_specialCases.txt");
     boolean ignorePronouns = true;
     CreateGroundedLexicon creator =
         new CreateGroundedLexicon(kb, ccgAutoLexicon, lexicalFields,

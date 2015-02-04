@@ -439,7 +439,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           new RdfGraphTools(String.format("jdbc:virtuoso://%s:1111",
               options.valueOf(endpoint)), String.format(
               "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
-              "dba", 4);
+              "dba", 100);
       List<String> kbGraphUri =
           Lists.newArrayList(Splitter.on(";").split(options.valueOf(domain)));
 

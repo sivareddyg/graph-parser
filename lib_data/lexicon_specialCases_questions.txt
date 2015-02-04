@@ -7,9 +7,8 @@ be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X	(lambda $f1 $f2 $_ (ex
 be	*	(S[q]/NP)/NP	((S[q]{_}/NP{X}){_}/NP{Y}){_};_ 1 X	(lambda $f1 $f2 $_ (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
 
 # non-copula
-# be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X,_ 2 Y	EVENT 
-# be	*	(S[q]/NP)/NP	((S[q]{_}/NP{X}){_}/NP{Y}){_};_ 1 Y,_ 2 X	EVENT
-# be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X,_ 2 Y	EVENT
+#be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X,_ 2 Y	EVENT 
+#be	*	(S[q]/NP)/NP	((S[q]{_}/NP{X}){_}/NP{Y}){_};_ 1 Y,_ 2 X	EVENT
 
 # quantifiers
 no	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
@@ -62,7 +61,8 @@ be	*	(S[dcl]\NP)/(S[adj]\NP)	((S[dcl]{Z}\NP{Y}){_}/(S[adj]{Z}\NP{Y*}){Z}){_};_ 1
 *	*	(S[q]/(S[adj]\NP))/NP	((S[q]{_}/(S[adj]{Y}\NP{Z}){Y}){Y}/NP{W}){_};_ 1 W,_ 2 Z	EVENT
 
 # Natural possessive
-'s	*	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+'s	POS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+'s	POS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))
 
 # Artificial possessive - Over generation of ungrounded graphs - Comment it for public usage
 's	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))

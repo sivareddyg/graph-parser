@@ -80,25 +80,29 @@ public class RunPrintDomainLexicon extends AbstractCli {
         parser
             .accepts("candcIndexFile",
                 "candc markedup file e.g. data/candc_markedup.modified")
-            .withRequiredArg().ofType(String.class).required();
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("lib_data/dummy.txt");
 
     unaryRulesFile =
         parser
             .accepts("unaryRulesFile",
                 "candc parser unary rules file e.g. data/unary_rules.txt")
-            .withRequiredArg().ofType(String.class).required();
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("lib_data/dummy.txt");
 
     binaryRulesFile =
         parser
             .accepts("binaryRulesFile",
                 "candc binary rules file e.g. data/binary_rules.txt")
-            .withRequiredArg().ofType(String.class).required();
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("lib_data/dummy.txt");
 
     specialCasesFile =
         parser
             .accepts("specialCasesFile",
                 "file containing candc special rules e.g. data/lexicon_specialCases.txt")
-            .withRequiredArg().ofType(String.class).required();
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("lib_data/dummy.txt");
 
     relationTypesFile =
         parser
@@ -208,7 +212,7 @@ public class RunPrintDomainLexicon extends AbstractCli {
 
           String semanticParseKeyString = options.valueOf(semanticParseKey);
           List<Set<String>> semanticParses;
-          if (semanticParseKeyString == "synPars") {
+          if (semanticParseKeyString.equals("synPars")) {
             semanticParses =
                 creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
           } else {

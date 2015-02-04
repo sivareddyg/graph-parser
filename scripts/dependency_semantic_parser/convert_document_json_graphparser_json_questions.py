@@ -5,7 +5,7 @@ Created on Nov 22, 2014
 '''
 
 import sys
-import simplejson
+import json
 import re
 
 measure_types = { 0: "type.int", 1: "type.float", 3: "type.datetime", 4: "type.datetime"}
@@ -204,18 +204,18 @@ if __name__ == "__main__":
   
   cache = set()
   for i, line in enumerate(sys.stdin):
-    # document = simplejson.loads(line)
+    # document = json.loads(line)
     # gdoc = document_to_graphparser_input(document)
     #print i
   #if True:
     #try:
     
-      document = simplejson.loads(line.strip())  
+      document = json.loads(line.strip())  
       #try:
       gdoc = document_to_graphparser_input(document)
       sentence = " ".join([word['word'] for word in gdoc['words']])
       if sentence not in cache:
-        print simplejson.dumps(gdoc)
+        print json.dumps(gdoc)
         cache.add(sentence)
       #except:
       #  sys.stderr.write("Bug in document_to_graphparser\n")

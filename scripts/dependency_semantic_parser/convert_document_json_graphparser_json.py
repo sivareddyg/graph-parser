@@ -5,7 +5,7 @@ Created on Nov 22, 2014
 '''
 
 import sys
-import simplejson
+import json
 import re
 
 measure_types = { 0: "type.int", 1: "type.float", 3: "type.datetime", 4: "type.datetime"}
@@ -15,6 +15,8 @@ def document_to_graphparser_input(document):
   
   if 'text' in document:
     gdoc['sentence'] = document['text']
+ 
+  sent_words = [word['word'] for word in document['token']]
   
   # Process entities
   token_to_mention_or_measure_head = {}  # {int : int}
@@ -26,7 +28,7 @@ def document_to_graphparser_input(document):
         for mention in entity['mention']:
           if 'type' not in mention or mention['type'] == 0:  # mention is a named entity
             head = mention['phrase']['head']
-            head_to_phrase[head] = entity['name']
+            head_to_phrase[head] = ' '.join(sent_words[mention['phrase']['start'] : mention['phrase']['end'] + 1])
             for token_index in range(mention['phrase']['start'], mention['phrase']['end'] + 1):
               if token_index != head:
                 token_to_mention_or_measure_head[token_index] = head
@@ -42,7 +44,7 @@ def document_to_graphparser_input(document):
     for measure in document['measure']:
       # If there is a head, use it, else treat the first word in the phrase as head.
       head = measure['phrase']['head']  if 'head' in measure else measure['phrase']['start']
-      head_to_phrase[head] = str(measure['value']) if 'value' in measure else measure['phrase']['start']
+      head_to_phrase[head] = ' '.join(sent_words[measure['phrase']['start'] : measure['phrase']['end'] + 1])
       for token_index in range(measure['phrase']['start'], measure['phrase']['end'] + 1):
         if token_index != head:
           token_to_mention_or_measure_head[token_index] = head
@@ -65,11 +67,9 @@ def document_to_graphparser_input(document):
     words.append({})
     word = words[-1]
     for key in token:
-      if type(key) is not str:
-        continue
       if key[0] == "[":
         continue
-      if key == "tag":
+      if key == u"tag":
         word["pos"] = token[key]
       else:
         word[key] = token[key]
@@ -236,9 +236,12 @@ if __name__ == "__main__":
   
   cache = set()
   for i, line in enumerate(sys.stdin):
-      document = simplejson.loads(line.strip())  
+    document = json.loads(line.strip())
+    try:
       gdoc = document_to_graphparser_input(document)
       sentence = " ".join([word['word'] for word in gdoc['words']])
       if sentence not in cache:
-        print simplejson.dumps(gdoc)
+        print json.dumps(gdoc)
         cache.add(sentence)
+    except:
+      sys.stderr.write("Cannot process sentid:%d %s" %(i, line))

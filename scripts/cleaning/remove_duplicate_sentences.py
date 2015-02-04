@@ -6,14 +6,14 @@ Created on 30 Aug 2013
 
 import hashlib
 import sys
-import simplejson
+import json
 
 sentences_hashes = set()
 
 for line in sys.stdin:
     line = line.rstrip()
     try:
-        parts = simplejson.loads(line)
+        parts = json.loads(line)
         words = [word['word'] for word in parts['words']]
         sent = " ".join(words).encode('ascii', 'ignore')
         # sys.stderr.write(sent + "\n")
