@@ -41,7 +41,8 @@ public class LexicalItem extends CcgParseTree implements
     this.currentCategory = cat;
     key = getNodeCount();
     nodesIndexMap.put(key, this);
-    currentCategory.getSyntacticCategory().getIndex().setVariableValue(key);
+    if (currentCategory != null)
+      currentCategory.getSyntacticCategory().getIndex().setVariableValue(key);
     copula = this;
   }
 

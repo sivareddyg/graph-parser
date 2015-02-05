@@ -1024,7 +1024,7 @@ public class GraphToQueryTraining {
     });
 
     Queue<Logger> deadThredsLogs = new ConcurrentLinkedQueue<>();
-    for (int i = 0; i < nthreads; i++) {
+    for (int i = 0; i < nthreads + 2; i++) {
       Logger threadLogger = Logger.getLogger(logFile + ".thread" + i);
       threadLogger.removeAllAppenders();
       threadLogger.setAdditivity(false);

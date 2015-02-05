@@ -240,12 +240,9 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .withRequiredArg().ofType(Integer.class).defaultsTo(20);
 
     debugEnabledFlag =
-        parser
-            .accepts(
-                "debugEnabledFlag",
-                "Enable debug mode")
+        parser.accepts("debugEnabledFlag", "Enable debug mode")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-    
+
     // Set these true, or else graph construction mechanism will be
     // completely driven by lexicon
     useSchema =
@@ -563,7 +560,6 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-
   }
 
   /**

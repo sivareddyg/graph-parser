@@ -130,6 +130,7 @@ merge_lexicon_individual:
 deplambda_mwg:
 	mkdir -p working/deplambda_mwg
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
@@ -169,7 +170,7 @@ deplambda_mwg:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint darkstar \
 	-devFile data/deplambda/webquestions.train.graphparser.txt.200 \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
 	-logFile working/deplambda_mwg/business_film_people.log.txt \
@@ -178,6 +179,7 @@ deplambda_mwg:
 ccg_mwg:
 	mkdir -p working/ccg_mwg
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey ccg_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/deplambda/grounded_lexicon/ccg_grounded_lexicon.txt \
@@ -217,7 +219,7 @@ ccg_mwg:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint kinloch \
+	-endpoint bravas \
 	-devFile data/deplambda/webquestions.train.graphparser.txt.200 \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
 	-logFile working/ccg_mwg/business_film_people.log.txt \
@@ -656,7 +658,7 @@ tacl_mwg:
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 10 \
 	-trainingSampleSize 100 \
-	-iterations 10 \
+	-iterations 1 \
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
@@ -688,7 +690,7 @@ tacl_mwg:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint kinloch \
+	-endpoint bravas \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	-logFile working/tacl_mwg/business_film_people.log.txt \
