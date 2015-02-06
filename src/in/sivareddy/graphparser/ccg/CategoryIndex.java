@@ -259,7 +259,7 @@ public class CategoryIndex {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    if (unifiedVariables.contains(obj))
+    if (unifiedVariables == ((CategoryIndex) obj).unifiedVariables)
       return true;
     return false;
   }

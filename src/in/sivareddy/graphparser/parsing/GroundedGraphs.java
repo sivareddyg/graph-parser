@@ -237,7 +237,7 @@ public class GroundedGraphs {
         JsonObject synParseObject = synParseElement.getAsJsonObject();
         String synParse = synParseObject.get("synPar").getAsString();
         Double score = synParseObject.get("score").getAsDouble();
-        
+
         List<CcgParseTree> ccgParses;
         try {
           if (synParse.startsWith("(<T S[dcl] ")
@@ -431,8 +431,10 @@ public class GroundedGraphs {
             eventEventModifiers);
     graph.setActualNodes(leaves);
     graph.setScore(parseScore);
-    graphs.add(graph);
 
+    // Traceback the semantic parse from which the graph is created.
+    graph.setSemanticParse(semanticParse);
+    graphs.add(graph);
   }
 
   private LexicalGraph buildUngroundedGraph(List<LexicalItem> leaves,
@@ -850,7 +852,10 @@ public class GroundedGraphs {
         groundedGraphs.size() < nbestGraphs ? groundedGraphs : groundedGraphs
             .subList(0, nbestGraphs);
 
-
+    // Set the semantic parse to the corresponding ungrounded graph.
+    for (LexicalGraph gGraph : groundedGraphs) {
+      gGraph.setSemanticParse(graph.getSemanticParse());
+    }
     return groundedGraphs;
   }
 

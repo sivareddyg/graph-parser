@@ -192,7 +192,7 @@ public class GraphToQueryTraining {
         threadLogger.setLevel(Level.DEBUG);
       else
         threadLogger.setLevel(Level.INFO);
-      
+
       RollingFileAppender appender =
           new RollingFileAppender(layout, logFile + ".thread" + i);
       appender.setMaxFileSize("100MB");
@@ -474,17 +474,16 @@ public class GraphToQueryTraining {
       int nbestPredictedGraphs =
           predGgraphsWild.size() < nbestGraphs / 4 ? predGgraphsWild.size()
               : nbestGraphs / 4;
-      logger.debug("Reranking the top " + nbestPredictedGraphs + " parses");
+      logger.debug("validQueryFlag on: Reranking the top "
+          + nbestPredictedGraphs + " parses");
       for (LexicalGraph pGraph : predGgraphsWild.subList(0,
           nbestPredictedGraphs)) {
         String query =
             GraphToSparqlConverter.convertGroundedGraph(pGraph, targetNode,
                 schema, kbGraphUri);
-        logger.debug("Predicted graph query: " + query);
-        // ResultSet resultSet = rdfGraphTools.runQueryJdbc(query);
+
         Map<String, LinkedHashSet<String>> resultsMap =
             rdfGraphTools.runQueryHttp(query);
-        logger.debug("Predicted Results: " + resultsMap);
         LinkedHashSet<String> results =
             resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
                 .get(targetVar) : null;
@@ -548,10 +547,7 @@ public class GraphToQueryTraining {
       String query =
           GraphToSparqlConverter.convertGroundedGraph(gGraph, targetNode,
               schema, kbGraphUri);
-      logger.debug("Pred constrained query: " + query);
-      // resultSet = rdfGraphTools.runQueryJdbc(query);
       resultsMap = rdfGraphTools.runQueryHttp(query);
-      logger.debug("Pred results: " + resultsMap);
       results =
           resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
               .get(targetVar) : null;
@@ -587,8 +583,6 @@ public class GraphToQueryTraining {
     for (Pair<LexicalGraph, LinkedHashSet<String>> gGraphPair : gGraphsAndResults) {
       LexicalGraph gGraph = gGraphPair.getLeft();
       results = gGraphPair.getRight();
-      // if (gGraph.getScore() < 0)
-      // break;
 
       if (answerIsDecimal) {
         logger.debug("Decimal answers: " + results);
@@ -632,7 +626,8 @@ public class GraphToQueryTraining {
       goldGraphs = goldGraphsPossible;
     }
 
-    // second filtering - the graph should have all entities
+    // second filtering - If the sentence has a year, check if the year is
+    // predicted.
     if (hasYear && !answerIsDate) {
       List<Pair<Integer, LexicalGraph>> filteredGoldGraphs =
           Lists.newArrayList();
@@ -697,21 +692,22 @@ public class GraphToQueryTraining {
     }
     LexicalGraph bestPredictedGraph = predGraphsWithinMargin.get(0);
 
-    // Gold Graphs within margin of bestGoldGraph.
-    List<LexicalGraph> goldGraphsWithinMargin = Lists.newArrayList();
+    // Gold Graphs that are used for learning.
+    List<LexicalGraph> finalGoldGraphs = Lists.newArrayList();
     for (Pair<Integer, LexicalGraph> gGraphPair : goldGraphs) {
-      double marginDifference =
-          Math.abs(bestGoldGraph.getScore() - gGraphPair.getRight().getScore());
-      if (marginDifference > MARGIN)
-        break;
-      goldGraphsWithinMargin.add(gGraphPair.getRight());
+      finalGoldGraphs.add(gGraphPair.getRight());
       if (!useNbestGraphs)
         break;
+      else {
+        // Duplicate the gold graph since all gold graphs will also be present
+        // in the predicted graphs.
+        finalGoldGraphs.add(gGraphPair.getRight());
+      }
     }
 
     // Collect all features from gold graphs.
     List<Feature> goldGraphFeatures = Lists.newArrayList();
-    for (LexicalGraph goldGraph : goldGraphsWithinMargin) {
+    for (LexicalGraph goldGraph : finalGoldGraphs) {
       Set<Feature> feats = goldGraph.getFeatures();
       goldGraphFeatures.addAll(feats);
     }
@@ -723,21 +719,19 @@ public class GraphToQueryTraining {
       predGraphFeatures.addAll(feats);
     }
 
-    if (debugEnabled) {
-      logger.debug("Predicted Graphs Within Margin Size: "
-          + predGraphsWithinMargin.size());
-      logger.debug("Gold Graphs Within Margin Size: "
-          + goldGraphsWithinMargin.size());
-    }
+    logger.info("Sentence: " + sentence);
+    logger.info("Predicted Graphs Within Margin Size: "
+        + predGraphsWithinMargin.size());
+    logger.info("Gold Graphs Size: " + finalGoldGraphs.size());
+    logger.info("Best predicted graph: " + predGraphsWithinMargin.get(0));
+    logger.info("Best gold graph: " + finalGoldGraphs.get(0));
 
-
-    logger.debug("Sentence: " + sentence);
-    if (debugEnabled) {
+    if (debugEnabled && !useNbestGraphs) {
       logger.debug("Best Gold graph features before update");
       learningModel.printFeatureWeights(bestGoldGraph.getFeatures(), logger);
     }
 
-    if (debugEnabled) {
+    if (debugEnabled && !useNbestGraphs) {
       logger.debug("Best Predicted graph features before update");
       learningModel.printFeatureWeights(bestPredictedGraph.getFeatures(),
           logger);
@@ -745,8 +739,8 @@ public class GraphToQueryTraining {
 
     logger.debug("Predicted Before Update: " + bestPredictedGraph.getScore());
     logger.debug("Gold Before Update: " + bestGoldGraph.getScore());
-    learningModel.updateWeightVector(goldGraphsWithinMargin.size(),
-        goldGraphFeatures, predGraphsWithinMargin.size(), predGraphFeatures);
+    learningModel
+        .updateWeightVector(1, goldGraphFeatures, 1, predGraphFeatures);
     bestPredictedGraph.setScore(learningModel
         .getScoreTraining(bestPredictedGraph.getFeatures()));
     bestGoldGraph.setScore(learningModel.getScoreTraining(bestGoldGraph
@@ -754,13 +748,13 @@ public class GraphToQueryTraining {
     logger.debug("Predicted After Update: " + bestPredictedGraph.getScore());
     logger.debug("Gold After Update: " + bestGoldGraph.getScore());
 
-    if (debugEnabled) {
+    if (debugEnabled && !useNbestGraphs) {
       logger.debug("Predicted graph features after update");
       learningModel.printFeatureWeights(bestPredictedGraph.getFeatures(),
           logger);
     }
 
-    if (debugEnabled) {
+    if (debugEnabled && !useNbestGraphs) {
       logger.debug("Gold graph features after update");
       learningModel.printFeatureWeights(bestGoldGraph.getFeatures(), logger);
     }
@@ -768,7 +762,7 @@ public class GraphToQueryTraining {
     if (semanticParseKey.equals("synPars")) {
       Set<String> goldSynParsSet = new HashSet<>();
       JsonArray goldSynPars = new JsonArray();
-      for (LexicalGraph gGraph : goldGraphsWithinMargin) {
+      for (LexicalGraph gGraph : finalGoldGraphs) {
         String goldSynPar = gGraph.getSyntacticParse();
         if (!goldSynParsSet.contains(goldSynPar)) {
           JsonObject synParseObject = new JsonObject();

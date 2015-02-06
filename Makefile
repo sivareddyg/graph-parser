@@ -1,3 +1,12 @@
+# Convert GraphParser format to deplambda input format
+convert_graphparser_to_deplambda_format:
+	tail -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.train.txt
+	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.dev.txt
+	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.test.txt
+	tail -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.train.noheuristics.txt
+	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.dev.noheuristics.txt
+	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.test.noheuristics.txt
+
 # Creates deplambda webquestions testing and training data
 # If the tokenization is disabled in the workflow, you will be able to use all
 # the examples, or else some of the examples cannot be used.
@@ -137,59 +146,7 @@ deplambda_mwg:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 10 \
-	-trainingSampleSize 100 \
-	-iterations 10 \
-	-nBestTrainSyntacticParses 1 \
-	-nBestTestSyntacticParses 1 \
-	-nbestGraphs 100 \
-	-useSchema true \
-	-useKB true \
-	-groundFreeVariables false \
-	-useEmptyTypes false \
-	-ignoreTypes true \
-	-urelGrelFlag true \
-	-urelPartGrelPartFlag false \
-	-utypeGtypeFlag true \
-	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
-	-argGrelPartFlag true \
-	-stemMatchingFlag true \
-	-mediatorStemGrelPartMatchingFlag true \
-	-argumentStemMatchingFlag true \
-	-argumentStemGrelPartMatchingFlag true \
-	-graphIsConnectedFlag false \
-	-graphHasEdgeFlag true \
-	-countNodesFlag false \
-	-edgeNodeCountFlag false \
-	-duplicateEdgesFlag true \
-	-grelGrelFlag true \
-	-useLexiconWeightsRel true \
-	-useLexiconWeightsType false \
-	-validQueryFlag false \
-	-initialEdgeWeight 1.0 \
-	-initialTypeWeight -1.0 \
-	-initialWordWeight 1.0 \
-	-stemFeaturesWeight 0.0 \
-	-endpoint darkstar \
-	-devFile data/deplambda/webquestions.train.graphparser.txt.200 \
-	-testFile data/deplambda/webquestions.test.graphparser.txt \
-	-logFile working/deplambda_mwg/business_film_people.log.txt \
-	> working/deplambda_mwg/business_film_people.txt
-
-ccg_mwg:
-	mkdir -p working/ccg_mwg
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
-	-semanticParseKey ccg_lambda \
-	-schema data/freebase/schema/business_film_people_schema.txt \
-	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-lexicon data/deplambda/grounded_lexicon/ccg_grounded_lexicon.txt \
-	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
-	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
-	-nthreads 10 \
-	-trainingSampleSize 100 \
-	-iterations 10 \
-	-nBestTrainSyntacticParses 1 \
-	-nBestTestSyntacticParses 1 \
+	-iterations 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
 	-useKB true \
@@ -220,6 +177,52 @@ ccg_mwg:
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
 	-endpoint bravas \
+	-devFile data/deplambda/webquestions.train.graphparser.txt.200 \
+	-testFile data/deplambda/webquestions.test.graphparser.txt \
+	-logFile working/deplambda_mwg/business_film_people.log.txt \
+	> working/deplambda_mwg/business_film_people.txt
+
+ccg_mwg:
+	mkdir -p working/ccg_mwg
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey ccg_lambda \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/ccg_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-iterations 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint darkstar \
 	-devFile data/deplambda/webquestions.train.graphparser.txt.200 \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
 	-logFile working/ccg_mwg/business_film_people.log.txt \
@@ -657,9 +660,7 @@ tacl_mwg:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 10 \
-	-trainingSampleSize 100 \
 	-iterations 1 \
-	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
@@ -690,7 +691,7 @@ tacl_mwg:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint kinloch \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	-logFile working/tacl_mwg/business_film_people.log.txt \
@@ -746,7 +747,7 @@ tacl_mwg_merged:
 
 # TACL GraphPaser results
 tacl_unsupervised:
-	mkdir -p working/tacl_unsupervised.1
+	mkdir -p working/tacl_unsupervised
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -788,12 +789,12 @@ tacl_unsupervised:
 	-initialTypeWeight 1.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint kinloch \
 	-trainingCorpora "data/tacl/sentences_training/tacl_training_sentences.txt.gz" \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-	-logFile working/tacl_unsupervised.1/business_film_people.log.txt \
-	> working/tacl_unsupervised.1/business_film_people.txt
+	-logFile working/tacl_unsupervised/business_film_people.log.txt \
+	> working/tacl_unsupervised/business_film_people.txt
 
 # TACL GraphParser + Para results
 tacl_unsupervised_paraphrase:
@@ -861,9 +862,9 @@ unsupervised_first_experiment:
     -ccgIndexedMapping lib_data/ybisk-mapping.txt \
     -unaryRules data/dummy.txt \
     -binaryRules data/dummy.txt \
-	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
-	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
-    -nthreads 10 \
+    -cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+    -domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+    -nthreads 20 \
     -trainingSampleSize 600 \
     -iterations 10 \
     -nBestTrainSyntacticParses 100 \
@@ -899,8 +900,8 @@ unsupervised_first_experiment:
     -initialTypeWeight -1.0 \
     -initialWordWeight 10.00 \
     -stemFeaturesWeight 0.0 \
-    -useNbestGraphsFlag false \
-    -endpoint kinloch \
+    -useNbestGraphsFlag true \
+    -endpoint darkstar \
     -trainingCorpora "data/unsupervised/training/unsupervised_parser.json.noDeps.gz" \
     -logFile working/unsupervised_first_experiment/business_film_people.log.txt \
     > working/unsupervised_first_experiment/business_film_people.txt

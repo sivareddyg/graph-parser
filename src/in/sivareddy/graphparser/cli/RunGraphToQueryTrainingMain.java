@@ -209,13 +209,15 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
     nthreads =
-        parser.accepts("nthreads", "number of threads: >10 preferred")
+        parser.accepts("nthreads", "number of threads")
             .withRequiredArg().ofType(Integer.class).required();
+    
     trainingSampleSize =
         parser
             .accepts("trainingSampleSize",
                 "number of training samples used in each iteration")
-            .withRequiredArg().ofType(Integer.class).required();
+            .withRequiredArg().ofType(Integer.class).defaultsTo(600);
+    
     iterations =
         parser.accepts("iterations", "number of training iterations")
             .withRequiredArg().ofType(Integer.class).required();

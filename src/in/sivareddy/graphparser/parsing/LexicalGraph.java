@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 public class LexicalGraph extends Graph<LexicalItem> {
   private Set<Feature> features;
   private String syntacticParse;
+  private Set<String> semanticParse;
   StemMatchingFeature stemMatchingFeature;
   ArgStemMatchingFeature argStemMatchingFeature;
   MediatorStemGrelPartMatchingFeature mediatorStemGrelPartMatchingFeature;
@@ -234,6 +235,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
     copyTo(newGraph);
     newGraph.features = Sets.newHashSet(features);
     newGraph.syntacticParse = syntacticParse;
+    newGraph.semanticParse = semanticParse;
 
     newGraph.stemMatchingFeature.setFeatureValue(stemMatchingFeature
         .getFeatureValue());
@@ -276,12 +278,29 @@ public class LexicalGraph extends Graph<LexicalItem> {
     this.syntacticParse = syntacticParse;
   }
 
+  public Set<String> getSemanticParse() {
+    return semanticParse;
+  }
+
+  public void setSemanticParse(Set<String> semanticParse) {
+    this.semanticParse = semanticParse;
+  }
+
   @Override
   public String toString() {
     StringBuilder graphString = new StringBuilder();
     graphString.append("Score: " + this.getScore() + '\n');
-    if (syntacticParse != null)
-      graphString.append("SynParse: " + this.getSyntacticParse() + '\n');
+    if (syntacticParse != null) {
+      graphString.append("SynParse: ");
+      graphString.append(this.getSyntacticParse());
+      graphString.append("\n");
+    }
+    
+    if (semanticParse != null) {
+      graphString.append("Semantic Parse: ");
+      graphString.append(this.getSemanticParse());
+      graphString.append("\n");
+    }
 
     graphString.append("Words: \n");
     for (LexicalItem node : super.getNodes()) {
