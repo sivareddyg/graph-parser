@@ -1,11 +1,25 @@
 # Convert GraphParser format to deplambda input format
 convert_graphparser_to_deplambda_format:
-	tail -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.train.txt
+	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.train.txt
 	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.dev.txt
 	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.test.txt
-	tail -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.train.noheuristics.txt
+	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.train.noheuristics.txt
 	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.dev.noheuristics.txt
 	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.test.noheuristics.txt
+	cat data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt | python scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people.txt
+
+convert_cai_yates_splits_to_deplambda:
+	mkdir -p working/free917_business_film_people_splits
+	cat data/cai-yates-2013/free917_business_film_people_splits/0.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/0.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/1.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/1.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/2.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/2.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/3.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/3.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/4.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/4.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/5.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/5.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/6.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/6.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/7.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/7.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/8.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/8.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/9.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/9.txt
 
 # Creates deplambda webquestions testing and training data
 # If the tokenization is disabled in the workflow, you will be able to use all
@@ -697,6 +711,51 @@ tacl_mwg:
 	-logFile working/tacl_mwg/business_film_people.log.txt \
 	> working/tacl_mwg/business_film_people.txt
 
+tacl_mwg_free917:
+	mkdir -p working/tacl_mwg_free917
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-iterations 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint bravas \
+	-devFile data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt \
+	-logFile working/tacl_mwg_free917/business_film_people.log.txt \
+	> working/tacl_mwg_free917/business_film_people.txt
+
 tacl_mwg_merged:
 	mkdir -p working/tacl_mwg_merged
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
@@ -755,7 +814,7 @@ tacl_unsupervised:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
-	-trainingSampleSize 600 \
+	-trainingSampleSize 2000 \
 	-iterations 20 \
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \

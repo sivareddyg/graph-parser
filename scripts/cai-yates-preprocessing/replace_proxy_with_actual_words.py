@@ -17,17 +17,19 @@ for line in sys.stdin:
         print line
         continue
     words = sentence["words"]
-    word_sent = " ".join(word['word'].lower() for word in words)
+    words_lower = [word['word'].lower() for word in words]
+    try:
+        year_index = words_lower.index('year')
+    except:
+        year_index = -1
+    word_sent = " ".join(words_lower)
     # print word_sent
-    whenWordPosition = word_sent.find("in what year");
-    if whenWordPosition >= 0:
-        whenWordPosition += len("in what")
-        yearPosition = len(word_sent[:whenWordPosition].split())
-        words[yearPosition]["ner"] = 'DATE'
+    if year_index >= 0:
+        words[year_index]["ner"] = 'DATE'
         for synPar in sentence["synPars"]:
             leaves = re.findall("(\(\<L ([^\>]+) [^\>]+ [^\>]+ [^\>]+ [^\>]+ [^\>]+ ([^\>]+)\>\))", synPar['synPar'])
-            newReplacement = "(<L %s %s %s CD I-DAT I-NP %s>)" %(leaves[yearPosition][1], "year", "year", leaves[yearPosition][2])
-            synPar['synPar'] = synPar['synPar'].replace(leaves[yearPosition][0], newReplacement)
+            newReplacement = "(<L %s %s %s CD I-DAT I-NP %s>)" %(leaves[year_index][1], "year", "year", leaves[year_index][2])
+            synPar['synPar'] = synPar['synPar'].replace(leaves[year_index][0], newReplacement)
     #print json.dumps(sentence)
     
     '''(<T S[wq] rp 0 2> (<T S[wq] fa 0 2> (<T S[wq]/(S[q]/PP) fa 0 2> 

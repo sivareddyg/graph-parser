@@ -10,7 +10,11 @@ for line in sys.stdin:
         entity_mapping[entity['index']] = entity
     for original_index, word in enumerate(line['words']):
         if ("ner" in word and word['ner'] != "O" and word['ner'] != "0") or (original_index in entity_mapping):
-            word_parts = word['word'].split("_")
+            word_parts = []
+            if "ner" in word and word['ner'] == "DATE":
+                word_parts = word['word'].split("_")
+            else:
+                word_parts = [word_part[0].upper() + word_part[1:] for word_part in word['word'].split("_")]
             sent.extend(word_parts)
             word_to_mention[original_index] = {}
             word_to_mention[original_index]["start"] = word_index
@@ -28,6 +32,6 @@ for line in sys.stdin:
     sentence["entities"] = [] 
     for word_index in sorted(word_to_mention.keys()):
         sentence["entities"].append(word_to_mention[word_index])
-    if len(sentence["entities"]) > 0:
-        print json.dumps(sentence)
+    #if len(sentence["entities"]) > 0:
+    print json.dumps(sentence)
     # print sent, word_to_mention
