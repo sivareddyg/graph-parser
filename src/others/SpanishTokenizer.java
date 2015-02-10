@@ -19,7 +19,7 @@ import edu.stanford.nlp.util.CoreMap;
 public class SpanishTokenizer {
   private StanfordCoreNLP pipeline;
 
-  public SpanishTokenizer(String languageCode) {
+  public SpanishTokenizer() {
     Properties props = new Properties();
     props.put("annotators", "tokenize, ssplit");
 
@@ -59,7 +59,7 @@ public class SpanishTokenizer {
 
   public static void main(String[] args) throws IOException {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    SpanishTokenizer spanishPipeline = new SpanishTokenizer("es");
+    SpanishTokenizer spanishPipeline = new SpanishTokenizer();
 
     try {
       String line = br.readLine();

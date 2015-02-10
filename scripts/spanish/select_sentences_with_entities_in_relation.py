@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Created on 21 Jan 2015
 
@@ -6,11 +7,12 @@ Created on 21 Jan 2015
 
 import gzip
 import json
+import string
 import sys
 
 
 def load_name_to_entity_dict(entity_file_name):
-    """ Hello world """
+    """  """
     name_to_entity_dict = {}
     entity_file = gzip.open(entity_file_name, 'rb')
     for line in entity_file:
@@ -20,7 +22,9 @@ def load_name_to_entity_dict(entity_file_name):
         words = name.split()
         current = name_to_entity_dict
         for word in words:
-            word = "w:" + word.lower()
+            if word in string.punctuation:  # do not use punctuation.
+                continue
+            word = "w:" + word
             current = current.setdefault(word, {})
         entities = current.setdefault("entities", set())
         entities.add(entity)
@@ -94,9 +98,12 @@ def process_sentence(sent, name_to_entity_dict, entities_with_facts):
     entities = []
     words = sent.strip().split()
     for index in range(0, len(words)):
-        cur_word = "w:" + words[index].lower()
+        if words[index] in string.punctuation:
+            continue
+        cur_word = "w:" + words[index]
         last_entities_matched = None
         last_entities_matched_index = -1
+        last_non_punctuation_index = index
         if cur_word in name_to_entity_dict:
             next_word = cur_word
             entity_end = index
@@ -104,27 +111,38 @@ def process_sentence(sent, name_to_entity_dict, entities_with_facts):
             while next_word in next_word_dict:
                 if "entities" in next_word_dict:
                     last_entities_matched = next_word_dict["entities"]
-                    last_entities_matched_index = entity_end - 1
+                    last_entities_matched_index = last_non_punctuation_index
+                last_non_punctuation_index = entity_end
                 next_word_dict = next_word_dict[next_word]
                 entity_end += 1
+                while entity_end < len(words) and words[entity_end] in string.punctuation:
+                    entity_end += 1
                 if entity_end >= len(words):
                     break
-                next_word = "w:" + words[entity_end].lower()
+                next_word = "w:" + words[entity_end]
+            if "entities" in next_word_dict:
+                last_entities_matched = next_word_dict["entities"]
+                last_entities_matched_index = last_non_punctuation_index
         if last_entities_matched:
             entity = {"start": index, "end": last_entities_matched_index,
                       "entities": last_entities_matched}
+            prev_index = index
             index += last_entities_matched_index - index
             entities.append(entity)
-    if entities != []:
-        print sent
+    if len(entities) > 1:
+        print sent.strip()
         print entities
+        print
 
 
 def main():
     name_to_entity = load_name_to_entity_dict(sys.argv[1])
-    print name_to_entity.items()[0:100]
+    # print name_to_entity.items()[0:100]
     # facts = load_kb(sys.argv[2], sys.argv[3])
     facts = set()
+    # print
+    # name_to_entity["w:Asociación"]["w:Mexicana"]["w:de"]["w:Productores"]["w:de"]["w:Fonogramas"]["w:y"]["w:Videogramas"]["w:A."]
+    # line = '''Asociación Mexicana de Productores de Fonogramas y Videogramas , A. C. , he.'''
     for line in sys.stdin:
         process_sentence(line, name_to_entity, facts)
 

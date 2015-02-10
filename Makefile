@@ -907,8 +907,15 @@ tacl_unsupervised_paraphrase:
 	> working/tacl_unsupervised_paraphrase/business_film_people.txt
 
 # Spanish Experiments
+
+# Tokenize Entities
+tokenize_spanish_entities:
+	zcat data/freebase/spanish/spanish_business_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_business_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_film_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_film_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_people_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_people_entities.tokenized.txt.gz
+
 extract_spanish_sentences:
-	bzcat data/bravas/wiki_00.bz2 | java -cp lib/*:graph-parser.jar others.SpanishTokenizer | perl -pe 's|=LRB=.*?=RRB=||g' | grep -v =LRB= | grep -v =RRB= 
+	bzcat data/bravas/extracted/wiki_00.bz2 | java -cp lib/*:graph-parser.jar others.SpanishTokenizer | perl -pe 's|=LRB=.*?=RRB=||g' | grep -v =LRB= | grep -v =RRB= 
 
 ## Unsupervised Parsing experiments
 unsupervised_first_experiment:
