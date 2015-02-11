@@ -913,9 +913,13 @@ tokenize_spanish_entities:
 	zcat data/freebase/spanish/spanish_business_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_business_entities.tokenized.txt.gz
 	zcat data/freebase/spanish/spanish_film_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_film_entities.tokenized.txt.gz
 	zcat data/freebase/spanish/spanish_people_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_people_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_business_entities.tokenized.txt.gz data/freebase/spanish/spanish_film_entities.tokenized.txt.gz data/freebase/spanish/spanish_people_entities.tokenized.txt.gz | gzip > data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz
 
 extract_spanish_sentences:
-	bzcat data/bravas/extracted/wiki_00.bz2 | java -cp lib/*:graph-parser.jar others.SpanishTokenizer | perl -pe 's|=LRB=.*?=RRB=||g' | grep -v =LRB= | grep -v =RRB= 
+	bzcat data/bravas/extracted/AA/wiki_00.bz2 | java -cp lib/*:graph-parser.jar others.SpanishTokenizer \
+		| perl -pe 's|=LRB=.*?=RRB=||g' \
+		| grep -v =LRB= | grep -v =RRB= \
+		| python scripts/spanish/select_sentences_with_entities_in_relation.py data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt | gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz
 
 ## Unsupervised Parsing experiments
 unsupervised_first_experiment:

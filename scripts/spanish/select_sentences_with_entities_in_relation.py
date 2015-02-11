@@ -58,9 +58,6 @@ def load_kb(facts_file_name, schema_file_name):
                     relations_all[rel_inv] = (child, parent)
                 line = f.readline()
     f.close()
-    # print relations_all
-    # print types_all
-    # exit()
 
     entities_with_facts = set()
     for line in gzip.open(facts_file_name):
@@ -80,11 +77,12 @@ def load_kb(facts_file_name, schema_file_name):
             for relation in relations:
                 check = False
                 for relation_part in relation:
-                    if relations_all.has_key(relation_part) and ((types_all.has_key(relations_all[relation_part][0]) and types_all[relations_all[relation_part][0]] == "main") or (types_all.has_key(relations_all[relation_part][1]) and types_all[relations_all[relation_part][1]] == "main")):
+                    if relations_all.has_key(relation_part):
                         entity1 = "/" + entities[0].replace(".", "/")
                         entity2 = "/" + entities[1].replace(".", "/")
-                        # print (entity1, entity2)
-                        entities_with_facts.add((entity1, entity2))
+                        entry = (
+                            entity1.strip("/").replace("/", "."), entity2.strip("/").replace("/", "."))
+                        entities_with_facts.add(entry)
                         check = True
                         break
                 if check:
@@ -94,11 +92,14 @@ def load_kb(facts_file_name, schema_file_name):
     return entities_with_facts
 
 
-def process_sentence(sent, name_to_entity_dict, entities_with_facts):
+def process_sentence(sent, name_to_entity_dict, facts):
     entities = []
+    entity_maps = []
     words = sent.strip().split()
-    for index in range(0, len(words)):
+    index = 0
+    while index < len(words):
         if words[index] in string.punctuation:
+            index += 1
             continue
         cur_word = "w:" + words[index]
         last_entities_matched = None
@@ -121,28 +122,72 @@ def process_sentence(sent, name_to_entity_dict, entities_with_facts):
                     break
                 next_word = "w:" + words[entity_end]
             if "entities" in next_word_dict:
-                last_entities_matched = next_word_dict["entities"]
+                last_entities_matched = list(next_word_dict["entities"])
                 last_entities_matched_index = last_non_punctuation_index
         if last_entities_matched:
-            entity = {"start": index, "end": last_entities_matched_index,
-                      "entities": last_entities_matched}
-            prev_index = index
+            entity_map = {"start": index, "end": last_entities_matched_index, "name": " ".join(
+                words[index:last_entities_matched_index + 1])}
+            entity_maps.append(entity_map)
+            entities.append(last_entities_matched)
             index += last_entities_matched_index - index
-            entities.append(entity)
-    if len(entities) > 1:
-        print sent.strip()
-        print entities
-        print
+        index += 1
+    if len(entities) > 1 and len(entities) < 5:
+        disambiguated_entities = disamabiguate(entities, facts)
+        final_entities = []
+        sentence_map = {}
+        if disambiguated_entities[1] > 0:
+            for i, entity_map in enumerate(entity_maps):
+                if disambiguated_entities[2][i] == 1:
+                    entity_map['entity'] = disambiguated_entities[0][i]
+                    final_entities.append(entity_map)
+            sentence_map['entities'] = final_entities
+            sentence_map['words'] = " ".join(words)
+            print json.dumps(sentence_map)
+
+
+def generate_all_combinations(list_of_list_of_entities):
+    if list_of_list_of_entities == []:
+        return [[]]
+
+    new_combinations = []
+    combinations_so_far = generate_all_combinations(
+        list_of_list_of_entities[1:])
+
+    for entity in list_of_list_of_entities[0]:
+        for combination in combinations_so_far:
+            new_combinations.append([entity] + combination)
+    return new_combinations
+
+
+def get_combination_score(entity_list, facts):
+    score = 0
+    valid_entities = [0] * len(entity_list)
+    for i, entity1 in enumerate(entity_list):
+        for j, entity2 in enumerate(entity_list[i + 1:]):
+            if (entity1, entity2) in facts or (entity2, entity1) in facts:
+                valid_entities[i] = 1
+                valid_entities[i + j + 1] = 1
+                score += 1
+    return (score, valid_entities)
+
+
+def disamabiguate(entities, facts):
+    combinations = generate_all_combinations(entities)
+    pairs = []
+    for combination in combinations:
+        score, valid_entities = get_combination_score(combination, facts)
+        pairs.append((combination, score, valid_entities))
+    pairs.sort(key=lambda x: x[1], reverse=True)
+    if pairs != []:
+        return pairs[0]
 
 
 def main():
     name_to_entity = load_name_to_entity_dict(sys.argv[1])
-    # print name_to_entity.items()[0:100]
-    # facts = load_kb(sys.argv[2], sys.argv[3])
-    facts = set()
-    # print
+    facts = load_kb(sys.argv[2], sys.argv[3])
     # name_to_entity["w:Asociación"]["w:Mexicana"]["w:de"]["w:Productores"]["w:de"]["w:Fonogramas"]["w:y"]["w:Videogramas"]["w:A."]
     # line = '''Asociación Mexicana de Productores de Fonogramas y Videogramas , A. C. , he.'''
+    # line = '''El Darwin College de la Universidad de Cambridge , fundado en 1964.'''
     for line in sys.stdin:
         process_sentence(line, name_to_entity, facts)
 
