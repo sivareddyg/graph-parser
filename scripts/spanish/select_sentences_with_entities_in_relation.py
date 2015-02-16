@@ -2,23 +2,32 @@
 '''
 Created on 21 Jan 2015
 
+# TODO(sivareddyg): zip file loading is annoyingly slow in Python. Consider to use Java instead.
+
 @author: siva
 '''
 
-import gzip
 import json
+import os
+import re
 import string
 import sys
 
+MIN_ENTITY_LENGTH = 4
+MAX_ENTITY_AMBIGUITY = 3
+NUMBERS_PATTERN = re.compile("[0-9]+$")
+
 
 def load_name_to_entity_dict(entity_file_name):
-    """  """
     name_to_entity_dict = {}
-    entity_file = gzip.open(entity_file_name, 'rb')
-    for line in entity_file:
+    for line in os.popen("zcat %s" % (entity_file_name)):
         (entity, name) = line.split(" ", 1)
         name = name[0:name.rfind("@")]
         name = name.strip('"')
+        if len(name) < MIN_ENTITY_LENGTH:
+            continue
+        if NUMBERS_PATTERN.match(name):  # if the entity is a number
+            continue
         words = name.split()
         current = name_to_entity_dict
         for word in words:
@@ -60,7 +69,7 @@ def load_kb(facts_file_name, schema_file_name):
     f.close()
 
     entities_with_facts = set()
-    for line in gzip.open(facts_file_name):
+    for line in os.popen("zcat %s" % (facts_file_name)):
         if line[0] == "#":
             continue
         line = line.strip()
@@ -77,7 +86,7 @@ def load_kb(facts_file_name, schema_file_name):
             for relation in relations:
                 check = False
                 for relation_part in relation:
-                    if relations_all.has_key(relation_part):
+                    if relation_part in relations_all:
                         entity1 = "/" + entities[0].replace(".", "/")
                         entity2 = "/" + entities[1].replace(".", "/")
                         entry = (
@@ -87,7 +96,6 @@ def load_kb(facts_file_name, schema_file_name):
                         break
                 if check:
                     break
-
     sys.stderr.write("No. of facts loaded: %d\n" % (len(entities_with_facts)))
     return entities_with_facts
 
@@ -125,10 +133,11 @@ def process_sentence(sent, name_to_entity_dict, facts):
                 last_entities_matched = list(next_word_dict["entities"])
                 last_entities_matched_index = last_non_punctuation_index
         if last_entities_matched:
-            entity_map = {"start": index, "end": last_entities_matched_index, "name": " ".join(
-                words[index:last_entities_matched_index + 1])}
-            entity_maps.append(entity_map)
-            entities.append(last_entities_matched)
+            if len(last_entities_matched) <= MAX_ENTITY_AMBIGUITY:
+                entity_map = {"start": index, "end": last_entities_matched_index, "name": " ".join(
+                    words[index:last_entities_matched_index + 1])}
+                entity_maps.append(entity_map)
+                entities.append(last_entities_matched)
             index += last_entities_matched_index - index
         index += 1
     if len(entities) > 1 and len(entities) < 5:
@@ -141,7 +150,7 @@ def process_sentence(sent, name_to_entity_dict, facts):
                     entity_map['entity'] = disambiguated_entities[0][i]
                     final_entities.append(entity_map)
             sentence_map['entities'] = final_entities
-            sentence_map['words'] = " ".join(words)
+            sentence_map['sentence'] = " ".join(words)
             print json.dumps(sentence_map)
 
 

@@ -64,8 +64,12 @@ public class SpanishTokenizer {
     try {
       String line = br.readLine();
       while (line != null) {
-        for (String tokenisedLine : spanishPipeline.processText(line)) {
-          System.out.println(tokenisedLine);
+        try {
+          for (String tokenisedLine : spanishPipeline.processText(line)) {
+            System.out.println(tokenisedLine);
+          }
+        } catch (Exception e) {
+            // Skip sentence.
         }
         line = br.readLine();
       }

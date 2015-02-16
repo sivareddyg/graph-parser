@@ -42,21 +42,25 @@ copy_deplambda_output:
 # Converts deplambda documents in json format to graphparsers json format.
 convert_deplambda_output_to_graphparser:
 	cat data/deplambda/training/* \
-| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
-| python scripts/cleaning/remove_duplicate_sentences.py \
-| gzip > data/deplambda/unsupervised.graphparser.txt.gz
-	cat data/deplambda/wq-training/* \
-| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
-| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json \
-> data/deplambda/webquestions.train.graphparser.txt
-	python scripts/dependency_semantic_parser/select_dev_from_train.py \
-data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
-data/deplambda/webquestions.train.graphparser.txt \
-> data/deplambda/webquestions.train.graphparser.txt.200
-	cat data/deplambda/wq-test/* \
-| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
-| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-> data/deplambda/webquestions.test.graphparser.txt
+	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+	| python scripts/cleaning/remove_duplicate_sentences.py \
+	| gzip > data/deplambda/unsupervised.graphparser.txt.gz
+	cat data/deplambda/wq-train.json \
+	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json \
+	> data/deplambda/webquestions.train.graphparser.txt
+	cat data/deplambda/wq-dev.json \
+	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.200 \
+	> data/deplambda/webquestions.train.graphparser.txt.200
+	cat data/deplambda/wq-test.json \
+	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+	> data/deplambda/webquestions.test.graphparser.txt
+	cat data/deplambda/free917_business_film_people.txt \
+	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+	| python scripts/dependency_semantic_parser/add_answers.py data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt \
+	> data/deplambda/free917.txt
 
 # Create dependency based grounded lexicon.
 # Unfortunately, this cannot run parallel version since I have to write
@@ -190,11 +194,56 @@ deplambda_mwg:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint kinloch \
 	-devFile data/deplambda/webquestions.train.graphparser.txt.200 \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
 	-logFile working/deplambda_mwg/business_film_people.log.txt \
 	> working/deplambda_mwg/business_film_people.txt
+
+deplambda_mwg_free917:
+	mkdir -p working/deplambda_mwg_free917
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-iterations 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint kinloch \
+	-devFile data/deplambda/free917.txt \
+	-logFile working/deplambda_mwg_free917/business_film_people.log.txt \
+	> working/deplambda_mwg_free917/business_film_people.txt
 
 ccg_mwg:
 	mkdir -p working/ccg_mwg
@@ -241,6 +290,51 @@ ccg_mwg:
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
 	-logFile working/ccg_mwg/business_film_people.log.txt \
 	> working/ccg_mwg/business_film_people.txt
+
+ccg_mwg_free917:
+	mkdir -p working/ccg_mwg_free917
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey ccg_lambda \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/ccg_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-iterations 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint bravas \
+	-devFile data/deplambda/free917.txt \
+	-logFile working/ccg_mwg_free917/business_film_people.log.txt \
+	> working/ccg_mwg_free917/business_film_people.txt
 
 # Supervised Expermients
 # Deplambda results without unsupervised lexicon.
@@ -916,10 +1010,21 @@ tokenize_spanish_entities:
 	zcat data/freebase/spanish/spanish_business_entities.tokenized.txt.gz data/freebase/spanish/spanish_film_entities.tokenized.txt.gz data/freebase/spanish/spanish_people_entities.tokenized.txt.gz | gzip > data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz
 
 extract_spanish_sentences:
-	bzcat data/bravas/extracted/AA/wiki_00.bz2 | java -cp lib/*:graph-parser.jar others.SpanishTokenizer \
-		| perl -pe 's|=LRB=.*?=RRB=||g' \
-		| grep -v =LRB= | grep -v =RRB= \
-		| python scripts/spanish/select_sentences_with_entities_in_relation.py data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt | gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz
+	bzcat data/bravas/extracted/AA/wiki_00.bz2 \
+		| java -cp lib/*:bin others.SpanishTokenizer                 \
+		| perl -pe 's|=LRB=.*?=RRB=||g'                 \
+		| grep -v =LRB= | grep -v =RRB=                 \
+		| python scripts/spanish/select_sentences_with_entities_in_relation.py data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt                 \
+		| python scripts/spanish/select_sentences_with_non_adjacent_main_relation.py data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt \
+		| java -cp lib/*:bin others.SpanishPosAndNer \
+		| python scripts/spanish/process_named_entities.py \
+		| gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz
+
+create_spanish_deplambda_format:
+	zcat data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz \
+		| python scripts/spanish/create-entity-mention-format.py \
+		| gzip \
+		> working/spanish_wikipedia.txt.gz
 
 ## Unsupervised Parsing experiments
 unsupervised_first_experiment:
