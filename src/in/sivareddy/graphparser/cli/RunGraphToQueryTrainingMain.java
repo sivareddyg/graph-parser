@@ -41,6 +41,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
   // Log File
   private OptionSpec<String> logFile;
+  private OptionSpec<String> loadModelFromFile;
   private OptionSpec<String> lexicon;
   private OptionSpec<String> cachedKB;
   private OptionSpec<String> testFile;
@@ -192,6 +193,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
         parser.accepts("logFile", "log file").withRequiredArg()
             .ofType(String.class).required();
 
+    loadModelFromFile =
+        parser
+            .accepts("loadModelFromFile",
+                "Load model from serialized model file").withRequiredArg()
+            .ofType(String.class).defaultsTo(null);
+
     lexicon =
         parser.accepts("lexicon", "lexicon containing nl to grounded mappings")
             .withRequiredArg().ofType(String.class).required();
@@ -209,15 +216,15 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
     nthreads =
-        parser.accepts("nthreads", "number of threads")
-            .withRequiredArg().ofType(Integer.class).required();
-    
+        parser.accepts("nthreads", "number of threads").withRequiredArg()
+            .ofType(Integer.class).required();
+
     trainingSampleSize =
         parser
             .accepts("trainingSampleSize",
                 "number of training samples used in each iteration")
             .withRequiredArg().ofType(Integer.class).defaultsTo(600);
-    
+
     iterations =
         parser.accepts("iterations", "number of training iterations")
             .withRequiredArg().ofType(Integer.class).required();
@@ -462,6 +469,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       String semanticParseKeyString = options.valueOf(semanticParseKey);
 
       String logfile = options.valueOf(logFile);
+      String loadModelFromFileVal = options.valueOf(loadModelFromFile);
       boolean debugEnabled = options.valueOf(debugEnabledFlag);
 
       int threadCount = options.valueOf(nthreads);
@@ -541,22 +549,21 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
               kbGraphUri, testfile, devfile, supervisedTrainingFile,
               corupusTrainingFile, semanticParseKeyString, debugEnabled,
-              trainingSampleSizeCount, logfile, nBestTrainSyntacticParsesVal,
-              nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal,
-              useSchemaVal, useKBVal, groundFreeVariablesVal, useEmptyTypesVal,
-              ignoreTypesVal, urelGrelFlagVal, urelPartGrelPartFlagVal,
-              utypeGtypeFlagVal, gtypeGrelFlagVal, wordGrelPartFlagVal,
-              wordGrelFlagVal, wordBigramGrelPartFlagVal, argGrelPartFlagVal,
-              argGrelFlagVal, stemMatchingFlagVal,
-              mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
-              argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
-              graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
-              duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
-              useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
-              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
-              stemFeaturesWeightVal);
+              trainingSampleSizeCount, logfile, loadModelFromFileVal,
+              nBestTrainSyntacticParsesVal, nBestTestSyntacticParsesVal,
+              nbestEdgesVal, nbestGraphsVal, useSchemaVal, useKBVal,
+              groundFreeVariablesVal, useEmptyTypesVal, ignoreTypesVal,
+              urelGrelFlagVal, urelPartGrelPartFlagVal, utypeGtypeFlagVal,
+              gtypeGrelFlagVal, wordGrelPartFlagVal, wordGrelFlagVal,
+              wordBigramGrelPartFlagVal, argGrelPartFlagVal, argGrelFlagVal,
+              stemMatchingFlagVal, mediatorStemGrelPartMatchingFlagVal,
+              argumentStemMatchingFlagVal, argumentStemGrelPartMatchingFlagVal,
+              graphIsConnectedFlagVal, graphHasEdgeFlagVal, countNodesFlagVal,
+              edgeNodeCountFlagVal, duplicateEdgesFlagVal, grelGrelFlagVal,
+              useLexiconWeightsRelVal, useLexiconWeightsTypeVal,
+              validQueryFlagVal, useNbestGraphsVal, initialEdgeWeightVal,
+              initialTypeWeightVal, initialWordWeightVal, stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
-
     } catch (IOException e) {
       e.printStackTrace();
     } catch (InterruptedException e) {
@@ -570,5 +577,4 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   public static void main(String[] args) {
     new RunGraphToQueryTrainingMain().run(args);
   }
-
 }

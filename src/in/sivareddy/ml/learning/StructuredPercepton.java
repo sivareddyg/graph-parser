@@ -2,10 +2,21 @@ package in.sivareddy.ml.learning;
 
 import in.sivareddy.ml.basic.Feature;
 
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,8 +26,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class StructuredPercepton {
-
+public class StructuredPercepton implements Serializable {
+  private static final long serialVersionUID = 5892061696728510700L;
   private Map<Feature, Double> weightVector;
   private Map<Feature, Double> cumulativeWeightVector;
   private Map<Feature, Integer> updateFrequency;
@@ -152,5 +163,56 @@ public class StructuredPercepton {
 
   public synchronized boolean containsFeature(Feature feature) {
     return weightVector.containsKey(feature);
+  }
+
+  /**
+   * Saves the serialized object in a file. Additionally, a readable model is
+   * also saved into fileName.readable.txt.
+   * 
+   * @param fileName
+   * @throws IOException
+   */
+  public void saveModel(String fileName) throws IOException {
+    FileOutputStream fileOut = new FileOutputStream(fileName);
+    ObjectOutputStream out = new ObjectOutputStream(fileOut);
+    out.writeObject(this);
+    out.close();
+    fileOut.close();
+
+    List<Entry<Feature, Double>> entries =
+        new ArrayList<>(weightVector.entrySet());
+    entries.sort(Comparator.comparing(e -> -1 * e.getValue()
+        / updateFrequency.get(e.getKey())));
+    BufferedWriter bw =
+        new BufferedWriter(new FileWriter(fileName + ".readable.txt"));
+
+    for (Entry<Feature, Double> entry : entries) {
+      bw.write(String.format("%f\t%s\n",
+          entry.getValue() / updateFrequency.get(entry.getKey()),
+          entry.getKey()));
+    }
+    bw.close();
+  }
+
+  /**
+   * Loads and returns the model from the given serialized file.
+   * 
+   * @param fileName
+   * @return
+   * @throws IOException
+   */
+  public static StructuredPercepton loadModel(String fileName)
+      throws IOException {
+    FileInputStream fileIn = new FileInputStream(fileName);
+    ObjectInputStream in = new ObjectInputStream(fileIn);
+    StructuredPercepton sp = null;
+    try {
+      sp = (StructuredPercepton) in.readObject();
+    } catch (ClassNotFoundException e1) {
+      e1.printStackTrace();
+    }
+    in.close();
+    fileIn.close();
+    return sp;
   }
 }

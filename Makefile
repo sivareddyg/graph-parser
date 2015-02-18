@@ -240,7 +240,7 @@ deplambda_mwg_free917:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint kinloch \
+	-endpoint bravas \
 	-devFile data/deplambda/free917.txt \
 	-logFile working/deplambda_mwg_free917/business_film_people.log.txt \
 	> working/deplambda_mwg_free917/business_film_people.txt

@@ -1,5 +1,6 @@
 package in.sivareddy.graphparser.util.knowledgebase;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
@@ -8,7 +9,8 @@ import java.util.Comparator;
  * relation is.
  *
  */
-public class Relation implements Comparable<Relation> {
+public class Relation implements Comparable<Relation>, Serializable {
+  private static final long serialVersionUID = -8122473792873243419L;
   private String leftEdge;
   private String rightEdge;
   private Double weight;

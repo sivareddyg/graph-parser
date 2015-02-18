@@ -1,10 +1,13 @@
 package in.sivareddy.ml.basic;
 
+import java.io.Serializable;
 import java.util.List;
 
 import com.google.common.base.Objects;
 
-public abstract class AbstractFeature implements Feature, Comparable<Feature> {
+public abstract class AbstractFeature implements Feature, Comparable<Feature>,
+    Serializable {
+  private static final long serialVersionUID = -7471409940498505373L;
   private final List<?> key;
   private Double value;
   private static final int prime = 31;

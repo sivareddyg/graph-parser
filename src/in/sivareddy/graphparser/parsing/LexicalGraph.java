@@ -59,42 +59,55 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class UrelGrelFeature extends AbstractFeature {
+    private static final long serialVersionUID = -3957627404087338155L;
     public UrelGrelFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class UrelPartGrelPartFeature extends AbstractFeature {
+    private static final long serialVersionUID = -318008383692094097L;
+
     public UrelPartGrelPartFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class UtypeGtypeFeature extends AbstractFeature {
+    private static final long serialVersionUID = -4366189677468391943L;
+
     public UtypeGtypeFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class GrelGrelFeature extends AbstractFeature {
+    private static final long serialVersionUID = 8038517923152193214L;
+
     public GrelGrelFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class GtypeGrelPartFeature extends AbstractFeature {
+    private static final long serialVersionUID = 678521218675753759L;
+
     public GtypeGrelPartFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class WordGrelPartFeature extends AbstractFeature {
+    private static final long serialVersionUID = 7030473228708723413L;
+
     public WordGrelPartFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class WordGrelFeature extends AbstractFeature {
+    private static final long serialVersionUID = 6481934970173246526L;
+
     public WordGrelFeature(List<?> key, Double value) {
       super(key, value);
     }
@@ -102,36 +115,47 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
 
   public static class ArgGrelPartFeature extends AbstractFeature {
+    private static final long serialVersionUID = -195841457238867772L;
+
     public ArgGrelPartFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class ArgGrelFeature extends AbstractFeature {
+    private static final long serialVersionUID = 586114137963669327L;
+
     public ArgGrelFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class WordBigramGrelPartFeature extends AbstractFeature {
+    private static final long serialVersionUID = 7844786020868030663L;
+
     public WordBigramGrelPartFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class WordTypeFeature extends AbstractFeature {
+    private static final long serialVersionUID = -508228066503934930L;
+
     public WordTypeFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class WordBIgramTypeFeature extends AbstractFeature {
+    private static final long serialVersionUID = -8391768811682370426L;
+
     public WordBIgramTypeFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
 
   public static class ValidQueryFeature extends AbstractFeature {
+    private static final long serialVersionUID = -2975306984616977348L;
     private static List<String> key = Lists.newArrayList("ValidQuery");
 
     public ValidQueryFeature(boolean flag) {
@@ -140,6 +164,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class GraphIsConnectedFeature extends AbstractFeature {
+    private static final long serialVersionUID = 6624420194050239749L;
     private static List<String> key = Lists.newArrayList("GraphIsConnected");
 
     public GraphIsConnectedFeature(boolean flag) {
@@ -148,6 +173,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class GraphHasEdgeFeature extends AbstractFeature {
+    private static final long serialVersionUID = 8641425379382235881L;
     private static List<String> key = Lists.newArrayList("GraphHasEdge");
 
     public GraphHasEdgeFeature(boolean flag) {
@@ -156,6 +182,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class GraphNodeCountFeature extends AbstractFeature {
+    private static final long serialVersionUID = 3145845168997429173L;
     private static List<String> key = Lists.newArrayList("GraphNodeCount");
 
     public GraphNodeCountFeature(double value) {
@@ -164,6 +191,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class EdgeNodeCountFeature extends AbstractFeature {
+    private static final long serialVersionUID = -4032692371636714168L;
     private static List<String> key = Lists.newArrayList("EdgeNodeCount");
 
     public EdgeNodeCountFeature(double value) {
@@ -172,6 +200,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class DuplicateEdgeFeature extends AbstractFeature {
+    private static final long serialVersionUID = -1582319355989951987L;
     private static List<String> key = Lists.newArrayList("DuplicateEdgeCount");
 
     public DuplicateEdgeFeature(Double value) {
@@ -180,6 +209,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class StemMatchingFeature extends AbstractFeature {
+    private static final long serialVersionUID = 8298292895790279274L;
     private static List<String> key = Lists.newArrayList("Stem");
 
     public StemMatchingFeature(Double value) {
@@ -189,6 +219,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public static class MediatorStemGrelPartMatchingFeature extends
       AbstractFeature {
+    private static final long serialVersionUID = -5844790517734058452L;
     private static List<String> key = Lists
         .newArrayList("MediatorStemGrelPart");
 
@@ -198,6 +229,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class ArgStemMatchingFeature extends AbstractFeature {
+    private static final long serialVersionUID = 5445137371954280470L;
     private static List<String> key = Lists.newArrayList("ArgStem");
 
     public ArgStemMatchingFeature(Double value) {
@@ -206,6 +238,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   public static class ArgStemGrelPartMatchingFeature extends AbstractFeature {
+    private static final long serialVersionUID = -2146659098058016070L;
     private static List<String> key = Lists.newArrayList("ArgStemGrelPart");
 
     public ArgStemGrelPartMatchingFeature(Double value) {

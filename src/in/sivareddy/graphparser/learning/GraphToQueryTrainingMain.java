@@ -46,6 +46,7 @@ public class GraphToQueryTrainingMain {
   private int nBestTestSyntacticParses;
   private int nBestTrainSyntacticParses;
   private String semanticParseKey;
+  private StructuredPercepton learningModel;
 
   public GraphToQueryTrainingMain(Schema schema, KnowledgeBase kb,
       GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
@@ -53,7 +54,7 @@ public class GraphToQueryTrainingMain {
       List<String> kbGraphUri, String testingFile, String devFile,
       String supervisedTrainingFile, String unsupervisedTrainingFile,
       String sematicParseKey, boolean debugEnabled, int trainingSampleSize,
-      String logFile, int nBestTrainSyntacticParses,
+      String logFile, String loadModelFromFile, int nBestTrainSyntacticParses,
       int nBestTestSyntacticParses, int nbestBestEdges, int nbestGraphs,
       boolean useSchema, boolean useKB, boolean groundFreeVariables,
       boolean useEmtpyTypes, boolean ignoreTypes, boolean urelGrelFlag,
@@ -95,7 +96,11 @@ public class GraphToQueryTrainingMain {
       }
     }
 
-    StructuredPercepton learningModel = new StructuredPercepton();
+    if (loadModelFromFile != null && !loadModelFromFile.equals("")) {
+      learningModel = StructuredPercepton.loadModel(loadModelFromFile);
+    } else {
+      learningModel = new StructuredPercepton();
+    }
 
     graphToQuery =
         new GraphToQueryTraining(schema, kb, groundedLexicon,
@@ -188,10 +193,14 @@ public class GraphToQueryTrainingMain {
       graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
           + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
           nthreads);
+      learningModel.saveModel(logFile + ".model.iteration" + i);
+
+
       evalLogger.info("######## Testing Data ###########");
       graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile
           + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
           nthreads);
+
     }
   }
 
@@ -273,6 +282,7 @@ public class GraphToQueryTrainingMain {
     String corupusTrainingFile = null;
 
     String logFile = "working/sup_easyccg.log.txt";
+    String loadModelFromFile = null;
     boolean debugEnabled = true;
     int trainingSampleSize = 1000;
 
@@ -339,7 +349,7 @@ public class GraphToQueryTrainingMain {
             normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
             kbGraphUri, testFile, devFile, supervisedTrainingFile,
             corupusTrainingFile, semanticParseKey, debugEnabled,
-            trainingSampleSize, logFile, nBestTrainSyntacticParses,
+            trainingSampleSize, logFile, loadModelFromFile, nBestTrainSyntacticParses,
             nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, useSchema,
             useKB, groundFreeVariables, useEmtpyTypes, ignoreTypes,
             urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
