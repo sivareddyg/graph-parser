@@ -2,12 +2,14 @@ package in.sivareddy.graphparser.util.graph;
 
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  * Created by bisk1 on 1/26/15.
  */
-public class Edge<T> implements Comparable<Edge<T>> {
+public class Edge<T> implements Comparable<Edge<T>>, Serializable {
+  private static final long serialVersionUID = -4028291793069620184L;
   T node1;
   T node2;
   T mediator;

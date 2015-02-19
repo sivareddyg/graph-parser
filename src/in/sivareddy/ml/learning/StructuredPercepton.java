@@ -3,6 +3,8 @@ package in.sivareddy.ml.learning;
 import in.sivareddy.ml.basic.Feature;
 
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -214,5 +216,25 @@ public class StructuredPercepton implements Serializable {
     in.close();
     fileIn.close();
     return sp;
+  }
+
+  /**
+   * Returns a clone using serialization.
+   * 
+   * @return
+   */
+  public StructuredPercepton serialClone() {
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      ObjectOutputStream oos = new ObjectOutputStream(baos);
+      oos.writeObject(this);
+
+      ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+      ObjectInputStream ois = new ObjectInputStream(bais);
+      return (StructuredPercepton) ois.readObject();
+    } catch (ClassNotFoundException | IOException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 }

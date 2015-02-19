@@ -2,12 +2,14 @@ package in.sivareddy.graphparser.util.graph;
 
 import in.sivareddy.graphparser.util.knowledgebase.EntityType;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  * Created by bisk1 on 1/26/15.
  */
-public class Type<T> implements Comparable<Type<T>> {
+public class Type<T> implements Comparable<Type<T>>, Serializable {
+  private static final long serialVersionUID = 6958555581212849428L;
   private EntityType entityType;
   T parentNode;
   T modifierNode;

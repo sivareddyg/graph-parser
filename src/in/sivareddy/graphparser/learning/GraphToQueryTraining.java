@@ -990,7 +990,21 @@ public class GraphToQueryTraining {
     }
   }
 
-  public void testCurrentModel(List<String> testSentences, Logger logger,
+  /**
+   * Returns F1-measure of first best parse of the current model evaluated on
+   * the given test sentences.
+   * 
+   * @param testSentences
+   * @param logger
+   * @param logFile
+   * @param debugEnabled
+   * @param testingNbestParsesRange
+   * @param nthreads
+   * @return
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  public Double testCurrentModel(List<String> testSentences, Logger logger,
       String logFile, boolean debugEnabled,
       List<Integer> testingNbestParsesRange, int nthreads) throws IOException,
       InterruptedException {
@@ -998,7 +1012,7 @@ public class GraphToQueryTraining {
     logger.debug("Testing: =======================================");
     if (testSentences == null || testSentences.size() == 0) {
       logger.debug("No test sentences");
-      return;
+      return 0.0;
     }
 
     final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
@@ -1055,6 +1069,7 @@ public class GraphToQueryTraining {
       logger.debug("Awaiting completion of threads.");
     }
 
+    Double f1FirstBest = 0.0;
     for (Integer key : testingNbestParsesRange) {
       if (positives.containsKey(key) && negatives.containsKey(key)) {
         Integer positive_hits = positives.get(key);
@@ -1064,6 +1079,7 @@ public class GraphToQueryTraining {
             (positive_hits + 0.0) / (positive_hits + negative_hits) * 100;
         Double recall = (positive_hits + 0.0) / (total_hits) * 100;
         Double fmeas = 2 * precision * recall / (precision + recall);
+        if (key == 1) f1FirstBest = fmeas;
         logger
             .info(String
                 .format(
@@ -1082,6 +1098,7 @@ public class GraphToQueryTraining {
 
     logger.info("First Best Predictions");
     logger.info(Joiner.on(" ").join(firstBestPredictions));
+    return f1FirstBest;
   }
 
   public static class testCurrentModelSentenceRunnable implements Runnable {
@@ -1303,5 +1320,12 @@ public class GraphToQueryTraining {
     logger.info("\n###########################\n");
 
   }
+  
+  public StructuredPercepton getLearningModel() {
+    return learningModel;
+  }
 
+  public void setLearningModel(StructuredPercepton learningModel) {
+    this.learningModel = learningModel;
+  }
 }

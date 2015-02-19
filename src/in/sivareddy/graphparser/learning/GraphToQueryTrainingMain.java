@@ -46,7 +46,10 @@ public class GraphToQueryTrainingMain {
   private int nBestTestSyntacticParses;
   private int nBestTrainSyntacticParses;
   private String semanticParseKey;
-  private StructuredPercepton learningModel;
+  private StructuredPercepton currentIterationModel;
+  private StructuredPercepton bestModelSoFar;
+  private boolean currentModelIsTheBestModel;
+  private Double highestPerformace = 0.0;
 
   public GraphToQueryTrainingMain(Schema schema, KnowledgeBase kb,
       GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
@@ -97,17 +100,19 @@ public class GraphToQueryTrainingMain {
     }
 
     if (loadModelFromFile != null && !loadModelFromFile.equals("")) {
-      learningModel = StructuredPercepton.loadModel(loadModelFromFile);
+      currentIterationModel = StructuredPercepton.loadModel(loadModelFromFile);
     } else {
-      learningModel = new StructuredPercepton();
+      currentIterationModel = new StructuredPercepton();
     }
+    bestModelSoFar = currentIterationModel.serialClone();
+    currentModelIsTheBestModel = true;
 
     graphToQuery =
         new GraphToQueryTraining(schema, kb, groundedLexicon,
             normalCcgAutoLexicon, questionCcgAutoLexicon, semanticParseKey,
             this.nBestTrainSyntacticParses, this.nBestTestSyntacticParses,
             nbestBestEdges, nbestGraphs, useSchema, useKB, groundFreeVariables,
-            useEmtpyTypes, ignoreTypes, learningModel, urelGrelFlag,
+            useEmtpyTypes, ignoreTypes, currentIterationModel, urelGrelFlag,
             urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
             wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
             wordBigramGrelPartFlag, stemMatchingFlag,
@@ -172,9 +177,23 @@ public class GraphToQueryTrainingMain {
 
   public void train(int iterations, int nthreads) throws IOException,
       InterruptedException {
-    // int nthreads = Runtime.getRuntime().availableProcessors();
+
+    if (trainingExamples.size() > 0 && trainingSampleSize > 0) {
+      logger.info("######## Evaluating the model before training ###########");
+      highestPerformace =
+          graphToQuery.testCurrentModel(devExamples, logger, logFile
+              + ".eval.beforeTraining", debugEnabled, testingNbestParsesRange,
+              nthreads);
+    }
 
     for (int i = 0; i < iterations; i++) {
+      if (!currentModelIsTheBestModel) {
+        // If the previous iteration model is better than the current iteration
+        // model, use the previous iteration's model.
+        currentIterationModel = bestModelSoFar.serialClone();
+        graphToQuery.setLearningModel(currentIterationModel);
+      }
+
       List<String> trainingSample = getTrainingSample(trainingSampleSize);
       graphToQuery.trainFromSentences(trainingSample, nthreads, logFile
           + ".train.iteration" + i, debugEnabled);
@@ -190,18 +209,54 @@ public class GraphToQueryTrainingMain {
       }
 
       evalLogger.info("######## Development Data ###########");
-      graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
-          + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
-          nthreads);
-      learningModel.saveModel(logFile + ".model.iteration" + i);
-
+      Double performance =
+          graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
+              + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
+              nthreads);
+      if (devExamples.size() > 0 && trainingSample.size() > 0) {
+        if (performance > highestPerformace) {
+          evalLogger
+              .info("Gradient moved in CORRECT direction! Updating the best model.");
+          bestModelSoFar = currentIterationModel.serialClone();
+          currentModelIsTheBestModel = true;
+          highestPerformace = performance;
+        } else {
+          evalLogger
+              .info("Gradient moved in WRONG direction! Ignoring the current training iteration.");
+          currentModelIsTheBestModel = false;
+        }
+      }
+      currentIterationModel.saveModel(logFile + ".model.iteration" + i);
 
       evalLogger.info("######## Testing Data ###########");
       graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile
           + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
           nthreads);
-
     }
+  }
+
+  public void testBestModel(int nthreads) throws IOException,
+      InterruptedException {
+    graphToQuery.setLearningModel(bestModelSoFar);
+    bestModelSoFar.saveModel(logFile + ".model.bestIteration");
+
+    Logger evalLogger =
+        Logger.getLogger(GraphToQueryTraining.class + ".eval.bestIteration");
+    evalLogger.setLevel(Level.INFO);
+    RollingFileAppender appender =
+        new RollingFileAppender(layout, logFile + ".eval.bestIteration");
+    appender.setMaxFileSize("100MB");
+    evalLogger.addAppender(appender);
+
+    evalLogger.info("######## Development Data ###########");
+    graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
+        + ".eval.bestIteration", debugEnabled, testingNbestParsesRange,
+        nthreads);
+
+    evalLogger.info("######## Testing Data ###########");
+    graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile
+        + ".eval.bestIteration", debugEnabled, testingNbestParsesRange,
+        nthreads);
   }
 
   public List<String> getTrainingSample(int trainingSampleSize) {
@@ -349,19 +404,19 @@ public class GraphToQueryTrainingMain {
             normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
             kbGraphUri, testFile, devFile, supervisedTrainingFile,
             corupusTrainingFile, semanticParseKey, debugEnabled,
-            trainingSampleSize, logFile, loadModelFromFile, nBestTrainSyntacticParses,
-            nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, useSchema,
-            useKB, groundFreeVariables, useEmtpyTypes, ignoreTypes,
-            urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
-            wordGrelPartFlag, wordGrelFlag, wordBigramGrelPartFlag,
-            argGrelPartFlag, argGrelFlag, stemMatchingFlag,
-            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
-            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
-            duplicateEdgesFlag, grelGrelFlag, useLexiconWeightsRel,
-            useLexiconWeightsType, validQueryFlag, useNbestGraphs,
-            initialEdgeWeight, initialTypeWeight, initialWordWeight,
-            stemFeaturesWeight);
+            trainingSampleSize, logFile, loadModelFromFile,
+            nBestTrainSyntacticParses, nBestTestSyntacticParses,
+            nbestBestEdges, nbestGraphs, useSchema, useKB, groundFreeVariables,
+            useEmtpyTypes, ignoreTypes, urelGrelFlag, urelPartGrelPartFlag,
+            utypeGtypeFlag, gtypeGrelFlag, wordGrelPartFlag, wordGrelFlag,
+            wordBigramGrelPartFlag, argGrelPartFlag, argGrelFlag,
+            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
+            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
+            graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
+            edgeNodeCountFlag, duplicateEdgesFlag, grelGrelFlag,
+            useLexiconWeightsRel, useLexiconWeightsType, validQueryFlag,
+            useNbestGraphs, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;

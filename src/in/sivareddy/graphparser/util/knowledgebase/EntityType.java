@@ -1,5 +1,6 @@
 package in.sivareddy.graphparser.util.knowledgebase;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
@@ -10,7 +11,8 @@ import java.util.Comparator;
  * @author Siva Reddy
  *
  */
-public class EntityType implements Comparable<EntityType> {
+public class EntityType implements Comparable<EntityType>, Serializable {
+  private static final long serialVersionUID = -5326687351257004591L;
   private String type;
   private Double weight;
 

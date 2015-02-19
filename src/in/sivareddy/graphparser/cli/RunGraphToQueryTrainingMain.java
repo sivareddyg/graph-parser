@@ -197,7 +197,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
         parser
             .accepts("loadModelFromFile",
                 "Load model from serialized model file").withRequiredArg()
-            .ofType(String.class).defaultsTo(null);
+            .ofType(String.class).defaultsTo("");
 
     lexicon =
         parser.accepts("lexicon", "lexicon containing nl to grounded mappings")
@@ -564,6 +564,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               validQueryFlagVal, useNbestGraphsVal, initialEdgeWeightVal,
               initialTypeWeightVal, initialWordWeightVal, stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
+      graphToQueryModel.testBestModel(threadCount);
     } catch (IOException e) {
       e.printStackTrace();
     } catch (InterruptedException e) {

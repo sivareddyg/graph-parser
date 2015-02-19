@@ -41,18 +41,18 @@ copy_deplambda_output:
 
 # Converts deplambda documents in json format to graphparsers json format.
 convert_deplambda_output_to_graphparser:
-	cat data/deplambda/training/* \
-	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
-	| python scripts/cleaning/remove_duplicate_sentences.py \
-	| gzip > data/deplambda/unsupervised.graphparser.txt.gz
+	#cat data/deplambda/training/* \
+	#| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+	#| python scripts/cleaning/remove_duplicate_sentences.py \
+	#| gzip > data/deplambda/unsupervised.graphparser.txt.gz
 	cat data/deplambda/wq-train.json \
 	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
 	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json \
 	> data/deplambda/webquestions.train.graphparser.txt
 	cat data/deplambda/wq-dev.json \
 	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
-	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.200 \
-	> data/deplambda/webquestions.train.graphparser.txt.200
+	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	> data/deplambda/webquestions.dev.graphparser.txt
 	cat data/deplambda/wq-test.json \
 	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
 	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
@@ -195,7 +195,7 @@ deplambda_mwg:
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
 	-endpoint kinloch \
-	-devFile data/deplambda/webquestions.train.graphparser.txt.200 \
+	-devFile data/deplambda/webquestions.dev.graphparser.txt \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
 	-logFile working/deplambda_mwg/business_film_people.log.txt \
 	> working/deplambda_mwg/business_film_people.txt
@@ -240,7 +240,7 @@ deplambda_mwg_free917:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint kinloch \
 	-devFile data/deplambda/free917.txt \
 	-logFile working/deplambda_mwg_free917/business_film_people.log.txt \
 	> working/deplambda_mwg_free917/business_film_people.txt
@@ -799,7 +799,7 @@ tacl_mwg:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint kinloch \
+	-endpoint bravas \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	-logFile working/tacl_mwg/business_film_people.log.txt \
@@ -900,7 +900,7 @@ tacl_mwg_merged:
 
 # TACL GraphPaser results
 tacl_unsupervised:
-	mkdir -p working/tacl_unsupervised
+	mkdir -p ../working/tacl_unsupervised
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -908,8 +908,8 @@ tacl_unsupervised:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
-	-trainingSampleSize 2000 \
-	-iterations 20 \
+	-trainingSampleSize 500 \
+	-iterations 80 \
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
@@ -942,12 +942,12 @@ tacl_unsupervised:
 	-initialTypeWeight 1.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint kinloch \
-	-trainingCorpora "data/tacl/sentences_training/tacl_training_sentences.txt.gz" \
+	-endpoint stkilda \
+	-trainingCorpora data/tacl/sentences_training/business_tacl_training_sentences.txt.gz \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-	-logFile working/tacl_unsupervised/business_film_people.log.txt \
-	> working/tacl_unsupervised/business_film_people.txt
+	-logFile ../working/tacl_unsupervised/business_film_people.log.txt \
+	> ../working/tacl_unsupervised/business_film_people.txt
 
 # TACL GraphParser + Para results
 tacl_unsupervised_paraphrase:

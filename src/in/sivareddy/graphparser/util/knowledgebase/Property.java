@@ -1,5 +1,7 @@
 package in.sivareddy.graphparser.util.knowledgebase;
 
+import java.io.Serializable;
+
 /**
  *
  * {@link Property} describe properties of
@@ -9,7 +11,8 @@ package in.sivareddy.graphparser.util.knowledgebase;
  * @author Siva Reddy
  *
  */
-public class Property {
+public class Property implements Serializable {
+  private static final long serialVersionUID = -9033237257804335644L;
   private String propertyName;
   private String arguments;
 
