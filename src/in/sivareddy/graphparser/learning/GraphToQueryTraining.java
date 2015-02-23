@@ -1327,5 +1327,6 @@ public class GraphToQueryTraining {
 
   public void setLearningModel(StructuredPercepton learningModel) {
     this.learningModel = learningModel;
+    graphCreator.setLearningModel(learningModel);
   }
 }

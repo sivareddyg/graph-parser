@@ -34,7 +34,7 @@ public abstract class AbstractFeature implements Feature, Comparable<Feature>,
 
   @Override
   public int hashCode() {
-    return getClass().hashCode() * (prime + key.hashCode());
+    return getClass().getName().hashCode() * (prime + key.hashCode());
   }
 
   @Override

@@ -1044,7 +1044,7 @@ public class GroundedGraphs {
           if (!learningModel.containsFeature(utypeGtypeFeature)) {
             double value;
             if (useLexiconWeightsType)
-              value = groundedEntityType.getWeight() * initialTypeWeight;
+              value = groundedEntityType.getWeight() + initialTypeWeight;
             else
               value = initialTypeWeight;
 
@@ -1100,7 +1100,7 @@ public class GroundedGraphs {
             if (!learningModel.containsFeature(utypeGtypeFeature)) {
               double value;
               if (useLexiconWeightsType)
-                value = groundedAdditionalType.getWeight() * initialTypeWeight;
+                value = groundedAdditionalType.getWeight() + initialTypeWeight;
               else
                 value = initialTypeWeight;
 
@@ -2172,5 +2172,9 @@ public class GroundedGraphs {
     }
 
     return rightTypeIsValid;
+  }
+
+  public void setLearningModel(StructuredPercepton learningModel) {
+    this.learningModel = learningModel;
   }
 }

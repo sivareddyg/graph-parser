@@ -939,11 +939,11 @@ tacl_unsupervised:
 	-useLexiconWeightsType true \
 	-validQueryFlag true \
 	-initialEdgeWeight 1.0 \
-	-initialTypeWeight 1.0 \
+	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint stkilda \
-	-trainingCorpora data/tacl/sentences_training/business_tacl_training_sentences.txt.gz \
+	-endpoint bravas \
+	-trainingCorpora data/tacl/sentences_training/tacl_training_sentences.txt.gz \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	-logFile ../working/tacl_unsupervised/business_film_people.log.txt \

@@ -8,6 +8,7 @@ import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.ml.basic.AbstractFeature;
 import in.sivareddy.ml.basic.Feature;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +61,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public static class UrelGrelFeature extends AbstractFeature {
     private static final long serialVersionUID = -3957627404087338155L;
+
     public UrelGrelFeature(List<?> key, Double value) {
       super(key, value);
     }
@@ -328,7 +330,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
       graphString.append(this.getSyntacticParse());
       graphString.append("\n");
     }
-    
+
     if (semanticParse != null) {
       graphString.append("Semantic Parse: ");
       graphString.append(this.getSemanticParse());
