@@ -28,7 +28,7 @@ for word in open(word_list_file):
     if word_count > word_count_max:
         break
 
-key_to_mid_file = "data/freebase/lexicon/key_to_mid.txt"
+key_to_mid_file = sys.argv[3]
 key_to_mid = {}
 for line in open(key_to_mid_file):
     line = line.strip().split("\t")
@@ -53,9 +53,10 @@ for line in sys.stdin:
     for i, word in enumerate(words):
         if (word in entity_words) or (word_elements[i]['ner'] != "O" and word_elements[i]['ner'] != 'DATE') or (word.lower() not in word_list and not re.match("[0-9]+$", word)):
             if not span_check:
-                span_start = i
-                span_end = i
-                span_check = True
+                if word_elements[i]['pos'].startswith("NNP") or (word_elements[i]['ner'] != "O" and word_elements[i]['ner'] != 'NUMBER'): # span start should either be a nnp or a part of an entity.
+                    span_start = i
+                    span_end = i
+                    span_check = True
             else:
                 span_end += 1
         else:

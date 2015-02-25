@@ -139,7 +139,8 @@ def extract(sentence, gazetteer_tree):
         for i in range(cur_word, len(sent)):
             grouped_sent.append(sent[i])
     
-        entities = [{'entity':";".join(entity[0]), 'index':entity[1]} for entity in grouped_entities] 
+        #entities = [{'entity':";".join(entity[0]), 'index':entity[1]} for entity in grouped_entities] 
+        entities = [{'entity':entity[0][-1], 'index':entity[1]} for entity in grouped_entities] 
         # grouped_elements.append(grouped_entities)
         words = [{"word":word} for word in grouped_sent]
         sentence['entities'] = entities
