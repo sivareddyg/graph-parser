@@ -55,6 +55,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<String> supervisedCorpus;
   private OptionSpec<String> semanticParseKey;
 
+  // Optional corpus to be grounded.
+  private OptionSpec<String> groundInputCorpora;
+  private OptionSpec<Boolean> groundTrainingCorpusInTheEnd;
+
   private OptionSpec<Integer> trainingSampleSize;
   private OptionSpec<Integer> nthreads;
   private OptionSpec<Integer> iterations;
@@ -189,6 +193,20 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "key from which a semantic parse is read").withRequiredArg()
             .ofType(String.class).defaultsTo("synPars");
 
+    groundInputCorpora =
+        parser
+            .accepts(
+                "groundInputCorpora",
+                "Use this option to ground an input corpus. Multiple corpus files should be separated by ;")
+            .withRequiredArg().ofType(String.class).defaultsTo("");
+
+    groundTrainingCorpusInTheEnd =
+        parser
+            .accepts(
+                "groundTrainingCorpusInTheEnd",
+                "set this flag to true to ground the training corpus with the best model after training procedure")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
     logFile =
         parser.accepts("logFile", "log file").withRequiredArg()
             .ofType(String.class).required();
@@ -227,7 +245,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
     iterations =
         parser.accepts("iterations", "number of training iterations")
-            .withRequiredArg().ofType(Integer.class).required();
+            .withRequiredArg().ofType(Integer.class).defaultsTo(1);
 
     nBestTrainSyntacticParses =
         parser
@@ -466,6 +484,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
       String supervisedTrainingFile = options.valueOf(supervisedCorpus);
       String corupusTrainingFile = options.valueOf(trainingCorpora);
+      String groundInputCorporaFiles = options.valueOf(groundInputCorpora);
       String semanticParseKeyString = options.valueOf(semanticParseKey);
 
       String logfile = options.valueOf(logFile);
@@ -544,27 +563,37 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       // true.
       boolean useNbestGraphsVal = options.valueOf(useNbestGraphsFlag);
 
+      boolean groundTrainingCorpusInTheEndVal =
+          options.valueOf(groundTrainingCorpusInTheEnd);
+
       GraphToQueryTrainingMain graphToQueryModel =
           new GraphToQueryTrainingMain(schemaObj, kb, groundedLexicon,
               normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
               kbGraphUri, testfile, devfile, supervisedTrainingFile,
-              corupusTrainingFile, semanticParseKeyString, debugEnabled,
-              trainingSampleSizeCount, logfile, loadModelFromFileVal,
-              nBestTrainSyntacticParsesVal, nBestTestSyntacticParsesVal,
-              nbestEdgesVal, nbestGraphsVal, useSchemaVal, useKBVal,
-              groundFreeVariablesVal, useEmptyTypesVal, ignoreTypesVal,
-              urelGrelFlagVal, urelPartGrelPartFlagVal, utypeGtypeFlagVal,
-              gtypeGrelFlagVal, wordGrelPartFlagVal, wordGrelFlagVal,
-              wordBigramGrelPartFlagVal, argGrelPartFlagVal, argGrelFlagVal,
-              stemMatchingFlagVal, mediatorStemGrelPartMatchingFlagVal,
-              argumentStemMatchingFlagVal, argumentStemGrelPartMatchingFlagVal,
-              graphIsConnectedFlagVal, graphHasEdgeFlagVal, countNodesFlagVal,
-              edgeNodeCountFlagVal, duplicateEdgesFlagVal, grelGrelFlagVal,
-              useLexiconWeightsRelVal, useLexiconWeightsTypeVal,
-              validQueryFlagVal, useNbestGraphsVal, initialEdgeWeightVal,
-              initialTypeWeightVal, initialWordWeightVal, stemFeaturesWeightVal);
+              corupusTrainingFile, groundInputCorporaFiles,
+              semanticParseKeyString, debugEnabled,
+              groundTrainingCorpusInTheEndVal, trainingSampleSizeCount,
+              logfile, loadModelFromFileVal, nBestTrainSyntacticParsesVal,
+              nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal,
+              useSchemaVal, useKBVal, groundFreeVariablesVal, useEmptyTypesVal,
+              ignoreTypesVal, urelGrelFlagVal, urelPartGrelPartFlagVal,
+              utypeGtypeFlagVal, gtypeGrelFlagVal, wordGrelPartFlagVal,
+              wordGrelFlagVal, wordBigramGrelPartFlagVal, argGrelPartFlagVal,
+              argGrelFlagVal, stemMatchingFlagVal,
+              mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
+              argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
+              graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
+              duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
+              useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
+              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
+              stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
-      graphToQueryModel.testBestModel(threadCount);
+      if (corupusTrainingFile != null && !corupusTrainingFile.equals(""))
+        graphToQueryModel.testBestModel(threadCount);
+      if (groundInputCorporaFiles != null
+          && !groundInputCorporaFiles.equals("")) {
+        graphToQueryModel.groundSentences(threadCount);
+      }
     } catch (IOException e) {
       e.printStackTrace();
     } catch (InterruptedException e) {

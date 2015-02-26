@@ -1045,6 +1045,54 @@ tacl_unsupervised:
 	-logFile ../working/tacl_unsupervised/business_film_people.log.txt \
 	> ../working/tacl_unsupervised/business_film_people.txt
 
+tacl_unsupervised_loaded_model:
+	mkdir -p ../working/tacl_unsupervised_loaded_model
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 10 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint bravas \
+	-loadModelFromFile working/tacl_unsupervised/business_film_people.log.txt.model.iteration0.readable.txt \
+	-groundInputCorpora data/tacl/sentences_training/business_tacl_training_sentences_small.txt.gz \
+	-logFile ../working/tacl_unsupervised_loaded_model/business_film_people.log.txt \
+	> ../working/tacl_unsupervised_loaded_model/business_film_people.txt
+
+
 # TACL GraphParser + Para results
 tacl_unsupervised_paraphrase:
 	mkdir -p working/tacl_unsupervised_paraphrase

@@ -852,8 +852,12 @@ public class GroundedGraphs {
         groundedGraphs.size() < nbestGraphs ? groundedGraphs : groundedGraphs
             .subList(0, nbestGraphs);
 
-    // Set the semantic parse to the corresponding ungrounded graph.
+    // Set the syntactic and semantic parse to the corresponding ungrounded
+    // graph.
     for (LexicalGraph gGraph : groundedGraphs) {
+      if (graph.getSyntacticParse() != null) {
+        gGraph.setSyntacticParse(graph.getSyntacticParse());
+      }
       gGraph.setSemanticParse(graph.getSemanticParse());
     }
     return groundedGraphs;

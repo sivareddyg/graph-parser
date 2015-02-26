@@ -17,6 +17,7 @@ import in.sivareddy.ml.basic.Feature;
 import in.sivareddy.ml.learning.StructuredPercepton;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -444,7 +446,8 @@ public class GraphToQueryTraining {
         logger.debug("Graph has NO edges. Discard ");
         continue;
       }
-      // wild graphs do not use the entity type of target variable
+
+      // Wild graphs have an empty question slot on the target node.
       List<LexicalGraph> wildGraphs =
           graphCreator.createGroundedGraph(uGraph, Sets.newHashSet(targetNode),
               nbestEdges, nbestGraphs, useEntityTypes, useKB,
@@ -504,27 +507,23 @@ public class GraphToQueryTraining {
 
     Collections.sort(predGgraphsWild);
 
-    // constrained graphs which are used to select gold graphs - constrained
-    // graphs help in search space reduction so that SPARQL query bottleneck
-    // can be removed to some extent - Sadly Sparql querying is still slow.
+    // One or few of the constrained graphs are used to select gold graphs -
+    // constrained graphs help in search space reduction so that SPARQL query
+    // bottleneck can be removed to some extent - Sadly Sparql querying is still
+    // slow.
     List<LexicalGraph> predGgraphsConstrained = Lists.newArrayList();
     for (LexicalGraph uGraph : uGraphs) {
       if (uGraph.getEdges().size() == 0) {
         logger.debug("Graph has NO edges. Discard ");
         continue;
       }
-      // constrained graphs are created using entity types
+
+      // Constrained graphs try to use all the entities in the sentence while
+      // constructing grounded graphs.
       List<LexicalGraph> constrainedGraphs =
           graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
               useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes,
               ignoreTypes, false);
-
-      // Setting synParse of the constrained graphs.
-      if (uGraph.getSyntacticParse() != null) {
-        for (LexicalGraph constrainedGraph : constrainedGraphs) {
-          constrainedGraph.setSyntacticParse(uGraph.getSyntacticParse());
-        }
-      }
 
       predGgraphsConstrained.addAll(constrainedGraphs);
       Collections.sort(predGgraphsConstrained);
@@ -583,7 +582,6 @@ public class GraphToQueryTraining {
     for (Pair<LexicalGraph, LinkedHashSet<String>> gGraphPair : gGraphsAndResults) {
       LexicalGraph gGraph = gGraphPair.getLeft();
       results = gGraphPair.getRight();
-
       if (answerIsDecimal) {
         logger.debug("Decimal answers: " + results);
         if (setContainsDecimal(results, integerAnswer)) {
@@ -780,6 +778,180 @@ public class GraphToQueryTraining {
     logger.debug("#############");
   }
 
+  public void groundSentences(List<String> testSentences, Logger logger,
+      String logFile, int nthreads) throws IOException, InterruptedException {
+    PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
+    logger.debug("Testing: =======================================");
+    if (testSentences == null || testSentences.size() == 0) {
+      logger.debug("No test sentences");
+      return;
+    }
+
+    final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
+    ThreadPoolExecutor threadPool =
+        new ThreadPoolExecutor(nthreads, nthreads, 600, TimeUnit.SECONDS, queue);
+
+    threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
+      @Override
+      public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        // this will block if the queue is full
+        try {
+          executor.getQueue().put(r);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    });
+
+    Queue<Logger> deadThredsLogs = new ConcurrentLinkedQueue<>();
+    for (int i = 0; i < nthreads + 2; i++) {
+      Logger threadLogger = Logger.getLogger(logFile + ".thread" + i);
+      threadLogger.removeAllAppenders();
+      threadLogger.setAdditivity(false);
+      threadLogger.setLevel(Level.INFO);
+      RollingFileAppender appender =
+          new RollingFileAppender(layout, logFile + ".thread" + i);
+      appender.setMaxFileSize("10000MB");
+      threadLogger.addAppender(appender);
+      threadLogger.info("#### Grounding starts");
+      deadThredsLogs.add(threadLogger);
+    }
+
+    int sentCount = 0;
+    for (String testSentence : testSentences) {
+      JsonObject jsonSentence =
+          jsonParser.parse(testSentence).getAsJsonObject();
+      Runnable worker =
+          new GetGroundedGraphsWithAllEntitiesRunnable(this, jsonSentence,
+              deadThredsLogs, sentCount);
+      threadPool.execute(worker);
+      sentCount += 1;
+    }
+    threadPool.shutdown();
+
+    while (!threadPool.awaitTermination(15, TimeUnit.SECONDS)) {
+      logger.debug("Awaiting completion of threads.");
+    }
+  }
+
+  public List<LexicalGraph> getGroundedGraphsWithAllEntities(
+      JsonObject jsonSentence, Logger logger, int sentCount) {
+    String sentence = jsonSentence.get("sentence").getAsString();
+    logger.info("Sentence " + sentCount + ": " + sentence);
+    List<LexicalGraph> uGraphs =
+        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
+            nbestTestSyntacticParses, logger);
+    if (uGraphs.size() < 1) {
+      logger.info("No ungrounded graphs found");
+      return null;
+    }
+
+    List<LexicalGraph> bestGroundedGraphs = Lists.newArrayList();
+    for (LexicalGraph uGraph : uGraphs) {
+      if (uGraph.getEdges().size() == 0) {
+        continue;
+      }
+
+      // Constrained graphs try to use all the entities in the sentence while
+      // constructing grounded graphs.
+      List<LexicalGraph> groundedGraphs =
+          graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
+              useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes,
+              ignoreTypes, false);
+
+      bestGroundedGraphs.addAll(groundedGraphs);
+      Collections.sort(bestGroundedGraphs);
+      bestGroundedGraphs =
+          bestGroundedGraphs.size() < nbestGraphs ? bestGroundedGraphs
+              : bestGroundedGraphs.subList(0, nbestGraphs);
+    }
+
+    if (bestGroundedGraphs.size() == 0) {
+      logger.info("No grounded graphs found");
+      return null;
+    }
+
+    Set<String> entities = new HashSet<>();
+    for (JsonElement entityElement : jsonSentence.get("entities")
+        .getAsJsonArray()) {
+      JsonObject entityObject = entityElement.getAsJsonObject();
+      if (entityObject.has("entity")) {
+        if (entityObject.get("entity").getAsString().startsWith("m.")
+            || entityObject.get("entity").getAsString().equals("type.datetime")) {
+          entities.add(entityObject.get("entity").getAsString());
+        }
+      }
+    }
+
+    List<LexicalGraph> validGraphs = new ArrayList<>();
+    for (LexicalGraph groundedGraph : bestGroundedGraphs) {
+      Set<String> graphEntities = new HashSet<>();
+      List<LexicalItem> connectedNodes =
+          groundedGraph.getNodesConnectedByEdges();
+      for (LexicalItem node : connectedNodes) {
+        graphEntities.add(node.getMID());
+      }
+      if (graphEntities.containsAll(entities)) {
+        validGraphs.add(groundedGraph);
+      }
+    }
+
+    if (validGraphs.size() > 0) {
+      logger.info("Number of grounded graphs containing all entities: "
+          + validGraphs.size());
+      logger.info("Best grounded graph: ");
+      logger.info(validGraphs.get(0));
+    }
+    return validGraphs;
+  }
+
+  public static class GetGroundedGraphsWithAllEntitiesRunnable implements
+      Runnable {
+    private JsonObject jsonSentence;
+    GraphToQueryTraining graphToQuery;
+    Queue<Logger> loggers;
+    int sentCount = 0;
+
+    public GetGroundedGraphsWithAllEntitiesRunnable(
+        GraphToQueryTraining graphToQuery, JsonObject jsonSentence,
+        Queue<Logger> loggers, int sentCount) {
+      this.jsonSentence = jsonSentence;
+      this.graphToQuery = graphToQuery;
+      this.loggers = loggers;
+      this.sentCount = sentCount;
+    }
+
+    @Override
+    public void run() {
+      Preconditions
+          .checkArgument(
+              loggers.size() > 0,
+              "Insufficient number of loggers. Loggers should be at the size of blocking queue");
+      Logger logger = loggers.poll();
+      List<LexicalGraph> validGraphs =
+          graphToQuery.getGroundedGraphsWithAllEntities(jsonSentence, logger, sentCount);
+
+      if (graphToQuery.semanticParseKey.equals("synPars")) {
+        Set<String> goldSynParsSet = new HashSet<>();
+        JsonArray goldSynPars = new JsonArray();
+        for (LexicalGraph gGraph : validGraphs) {
+          String goldSynPar = gGraph.getSyntacticParse();
+          if (!goldSynParsSet.contains(goldSynPar)) {
+            JsonObject synParseObject = new JsonObject();
+            synParseObject.addProperty("score", gGraph.getScore());
+            synParseObject.addProperty("synPar", goldSynPar);
+            goldSynPars.add(synParseObject);
+            goldSynParsSet.add(goldSynPar);
+          }
+        }
+        jsonSentence.add("goldSynPars", goldSynPars);
+        if (goldSynParsSet.size() > 0) {
+          logger.info("Valid Gold Parses: " + jsonSentence.toString());
+        }
+      }
+    }
+  }
+
   private boolean setContainsDecimal(Set<String> results, Long integerAnswer) {
     if (results == null || integerAnswer == null) {
       return false;
@@ -911,19 +1083,18 @@ public class GraphToQueryTraining {
           }
 
           // adding the feature if the query produces any answer
-          if (validQueryFlag) {
-            if ((predResults == null || predResults.get(targetVar).size() == 0)
-                || (predResults.size() == 1 && predResults.get(targetVar)
-                    .iterator().next().startsWith("0^^"))) {
-              ValidQueryFeature feat = new ValidQueryFeature(false);
-              gGraph.addFeature(feat);
-            } else {
-              // if the query produces answer, update its score
-              ValidQueryFeature feat = new ValidQueryFeature(true);
-              gGraph.addFeature(feat);
-              gGraph.setScore(learningModel.getScoreTesting(gGraph
-                  .getFeatures()));
-            }
+
+          if ((predResults == null || predResults.get(targetVar).size() == 0)
+              || (predResults.size() == 1 && predResults.get(targetVar)
+                  .iterator().next().startsWith("0^^"))) {
+            ValidQueryFeature feat = new ValidQueryFeature(false);
+            gGraph.addFeature(feat);
+          } else {
+            // if the query produces answer, update its score
+            ValidQueryFeature feat = new ValidQueryFeature(true);
+            gGraph.addFeature(feat);
+            gGraph
+                .setScore(learningModel.getScoreTesting(gGraph.getFeatures()));
           }
         }
       }
@@ -976,10 +1147,13 @@ public class GraphToQueryTraining {
         learningModel.printFeatureWeights(goldGraphFeatures, logger);
 
         logger.debug("Before Update: " + gGraph.getScore());
-        // TODO(sivareddyg) update nbest version. Don't use this function until
-        // then.
-        // learningModel.updateWeightVector(goldGraphFeatures,
-        // predGraphFeatures);
+
+        // TODO(sivareddyg) Implement n-best version for supervised training
+        // scenario.
+        learningModel.updateWeightVector(1,
+            Lists.newArrayList(goldGraphFeatures), 1,
+            Lists.newArrayList(predGraphFeatures));
+
         gGraph.setScore(learningModel.getScoreTraining(goldGraphFeatures));
         logger.debug("After Update: " + gGraph.getScore());
         logger.debug("CORRECT!!");
@@ -1079,7 +1253,8 @@ public class GraphToQueryTraining {
             (positive_hits + 0.0) / (positive_hits + negative_hits) * 100;
         Double recall = (positive_hits + 0.0) / (total_hits) * 100;
         Double fmeas = 2 * precision * recall / (precision + recall);
-        if (key == 1) f1FirstBest = fmeas;
+        if (key == 1)
+          f1FirstBest = fmeas;
         logger
             .info(String
                 .format(
@@ -1320,7 +1495,7 @@ public class GraphToQueryTraining {
     logger.info("\n###########################\n");
 
   }
-  
+
   public StructuredPercepton getLearningModel() {
     return learningModel;
   }

@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -26,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.RollingFileAppender;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
@@ -40,7 +42,10 @@ public class GraphToQueryTrainingMain {
   private Logger logger;
   PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
   private String logFile = "/dev/null";
+  String groundInputCorpora = null;
   private boolean debugEnabled = false;
+  private boolean groundTrainingCorpusInTheEndVal = false;
+
   private List<Integer> testingNbestParsesRange = Lists.newArrayList(1, 5, 10,
       20, 50, 100);
   private int nBestTestSyntacticParses;
@@ -51,12 +56,14 @@ public class GraphToQueryTrainingMain {
   private boolean currentModelIsTheBestModel;
   private Double highestPerformace = 0.0;
 
+
   public GraphToQueryTrainingMain(Schema schema, KnowledgeBase kb,
       GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
       CcgAutoLexicon questionCcgAutoLexicon, RdfGraphTools rdfGraphTools,
       List<String> kbGraphUri, String testingFile, String devFile,
       String supervisedTrainingFile, String unsupervisedTrainingFile,
-      String sematicParseKey, boolean debugEnabled, int trainingSampleSize,
+      String groundInputCorpora, String sematicParseKey, boolean debugEnabled,
+      boolean groundTrainingCorpusInTheEndVal, int trainingSampleSize,
       String logFile, String loadModelFromFile, int nBestTrainSyntacticParses,
       int nBestTestSyntacticParses, int nbestBestEdges, int nbestGraphs,
       boolean useSchema, boolean useKB, boolean groundFreeVariables,
@@ -83,8 +90,10 @@ public class GraphToQueryTrainingMain {
     // Miscellaneous
     this.trainingSampleSize = trainingSampleSize;
     this.debugEnabled = debugEnabled;
+    this.groundTrainingCorpusInTheEndVal = groundTrainingCorpusInTheEndVal;
     this.logger = Logger.getLogger(this.getClass());
     this.logFile = logFile;
+    this.groundInputCorpora = groundInputCorpora;
 
     if (this.debugEnabled) {
       this.logger.setLevel(Level.DEBUG);
@@ -125,16 +134,19 @@ public class GraphToQueryTrainingMain {
             rdfGraphTools, kbGraphUri);
 
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
-      supervisedTrainingExamples =
-          loadExamples(new FileReader(supervisedTrainingFile));
+      supervisedTrainingExamples = new ArrayList<>();
+      loadExamples(new FileReader(supervisedTrainingFile),
+          supervisedTrainingExamples);
     }
 
     if (testingFile != null && !testingFile.equals("")) {
-      testingExamples = loadExamples(new FileReader(testingFile));
+      testingExamples = new ArrayList<>();
+      loadExamples(new FileReader(testingFile), testingExamples);
     }
 
     if (devFile != null && !devFile.equals("")) {
-      devExamples = loadExamples(new FileReader(devFile));
+      devExamples = new ArrayList<>();
+      loadExamples(new FileReader(devFile), devExamples);
     }
 
     // Loading training files from all domains
@@ -146,11 +158,10 @@ public class GraphToQueryTrainingMain {
       for (String fileName : unsupervisedTrainingFiles) {
         List<String> trainingExamplesPart = Lists.newArrayList();
         if (fileName != null && fileName.endsWith(".gz")) {
-          trainingExamplesPart =
-              loadExamples(new InputStreamReader(new GZIPInputStream(
-                  new FileInputStream(fileName)), "UTF-8"));
+          loadExamples(new InputStreamReader(new GZIPInputStream(
+              new FileInputStream(fileName)), "UTF-8"), trainingExamplesPart);
         } else if (fileName != null) {
-          trainingExamplesPart = loadExamples(new FileReader(fileName));
+          loadExamples(new FileReader(fileName), trainingExamplesPart);
         }
         trainingExamples.add(trainingExamplesPart);
       }
@@ -259,6 +270,36 @@ public class GraphToQueryTrainingMain {
         nthreads);
   }
 
+  public void groundSentences(int nthreads) throws IOException,
+      InterruptedException {
+
+    // Load sentences that have to be grounded after finishing the training.
+    List<String> groundTheseSentences = new ArrayList<>();
+    if (groundInputCorpora != null && !groundInputCorpora.equals("")) {
+      List<String> groundInputCorporaFiles =
+          Lists.newArrayList(Splitter.on(";").split(groundInputCorpora));
+      for (String fileName : groundInputCorporaFiles) {
+        if (fileName != null && fileName.endsWith(".gz")) {
+          loadExamples(new InputStreamReader(new GZIPInputStream(
+              new FileInputStream(fileName)), "UTF-8"), groundTheseSentences);
+        } else if (fileName != null) {
+          loadExamples(new FileReader(fileName), groundTheseSentences);
+        }
+      }
+    }
+    graphToQuery.setLearningModel(bestModelSoFar);
+    Logger evalLogger =
+        Logger.getLogger(GraphToQueryTraining.class + ".finalGroundings");
+    evalLogger.setLevel(Level.INFO);
+    RollingFileAppender appender =
+        new RollingFileAppender(layout, logFile + ".finalGroundings");
+    appender.setMaxFileSize("100MB");
+    evalLogger.addAppender(appender);
+
+    graphToQuery.groundSentences(groundTheseSentences, evalLogger,
+        ".finalGroundings", nthreads);
+  }
+
   public List<String> getTrainingSample(int trainingSampleSize) {
     List<String> trainingSample = Lists.newArrayList();
     for (List<String> trainingExamplesPart : trainingExamples) {
@@ -287,9 +328,10 @@ public class GraphToQueryTrainingMain {
     return trainingSample;
   }
 
-  public List<String> loadExamples(Reader inputReader) throws IOException {
+  public void loadExamples(Reader inputReader, List<String> examples)
+      throws IOException {
+    Preconditions.checkNotNull(examples);
     BufferedReader br = new BufferedReader(inputReader);
-    List<String> examples = Lists.newArrayList();
     try {
       String line = br.readLine();
       while (line != null) {
@@ -303,7 +345,6 @@ public class GraphToQueryTrainingMain {
     } finally {
       br.close();
     }
-    return examples;
   }
 
   public static void main_func(Schema schema, KnowledgeBase kb,
@@ -335,10 +376,12 @@ public class GraphToQueryTrainingMain {
     // String corupusTrainingFile =
     // "data/freebase/sentences_training_filtered/business_training_sentences_filtered_00000.txt.gz";
     String corupusTrainingFile = null;
+    String groundInputCorpora = null;
 
     String logFile = "working/sup_easyccg.log.txt";
     String loadModelFromFile = null;
     boolean debugEnabled = true;
+    boolean groundTrainingCorpusInTheEndVal = false;
     int trainingSampleSize = 1000;
 
     int nBestTrainSyntacticParses = 1;
@@ -403,20 +446,21 @@ public class GraphToQueryTrainingMain {
         new GraphToQueryTrainingMain(schema, kb, groundedLexicon,
             normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
             kbGraphUri, testFile, devFile, supervisedTrainingFile,
-            corupusTrainingFile, semanticParseKey, debugEnabled,
-            trainingSampleSize, logFile, loadModelFromFile,
-            nBestTrainSyntacticParses, nBestTestSyntacticParses,
-            nbestBestEdges, nbestGraphs, useSchema, useKB, groundFreeVariables,
-            useEmtpyTypes, ignoreTypes, urelGrelFlag, urelPartGrelPartFlag,
-            utypeGtypeFlag, gtypeGrelFlag, wordGrelPartFlag, wordGrelFlag,
-            wordBigramGrelPartFlag, argGrelPartFlag, argGrelFlag,
-            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
-            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
-            graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
-            edgeNodeCountFlag, duplicateEdgesFlag, grelGrelFlag,
-            useLexiconWeightsRel, useLexiconWeightsType, validQueryFlag,
-            useNbestGraphs, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            corupusTrainingFile, groundInputCorpora, semanticParseKey,
+            debugEnabled, groundTrainingCorpusInTheEndVal, trainingSampleSize,
+            logFile, loadModelFromFile, nBestTrainSyntacticParses,
+            nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, useSchema,
+            useKB, groundFreeVariables, useEmtpyTypes, ignoreTypes,
+            urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
+            wordGrelPartFlag, wordGrelFlag, wordBigramGrelPartFlag,
+            argGrelPartFlag, argGrelFlag, stemMatchingFlag,
+            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
+            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
+            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
+            duplicateEdgesFlag, grelGrelFlag, useLexiconWeightsRel,
+            useLexiconWeightsType, validQueryFlag, useNbestGraphs,
+            initialEdgeWeight, initialTypeWeight, initialWordWeight,
+            stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;

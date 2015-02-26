@@ -12,8 +12,10 @@ public class LexicalItem extends CcgParseTree implements
   String word;
   String lemma;
   String pos;
+  
   // named entity type
   String neType;
+  
   // useful field to set freebase mids or any other
   private String mid;
 
@@ -26,7 +28,7 @@ public class LexicalItem extends CcgParseTree implements
   }
 
   int key = -1;
-  in.sivareddy.graphparser.ccg.LexicalItem copula;
+  LexicalItem copula;
 
   public LexicalItem(String synCat, String word, String lemma, String pos,
       String neType, Category cat) {
@@ -52,11 +54,10 @@ public class LexicalItem extends CcgParseTree implements
    *
    * @return
    */
-  public in.sivareddy.graphparser.ccg.LexicalItem shallowCopy() {
+  public LexicalItem shallowCopy() {
     Category copyCat = currentCategory.shallowCopy();
-    in.sivareddy.graphparser.ccg.LexicalItem item =
-        new in.sivareddy.graphparser.ccg.LexicalItem(synCat, word, lemma, pos,
-            neType, copyCat);
+    LexicalItem item =
+        new LexicalItem(synCat, word, lemma, pos, neType, copyCat);
     return item;
   };
 
@@ -82,8 +83,7 @@ public class LexicalItem extends CcgParseTree implements
       return false;
     if (!obj.getClass().equals(getClass()))
       return false;
-    in.sivareddy.graphparser.ccg.LexicalItem other =
-        (in.sivareddy.graphparser.ccg.LexicalItem) obj;
+    LexicalItem other = (LexicalItem) obj;
     // if the word positions are equal, then they are the same lexical
     // items.
     if (wordPosition == other.wordPosition)
@@ -213,7 +213,7 @@ public class LexicalItem extends CcgParseTree implements
   }
 
   @Override
-  public int compareTo(in.sivareddy.graphparser.ccg.LexicalItem o) {
+  public int compareTo(LexicalItem o) {
     return (new Integer(this.wordPosition)).compareTo(new Integer(
         o.wordPosition));
   }
