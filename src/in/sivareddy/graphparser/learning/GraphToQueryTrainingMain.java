@@ -275,14 +275,13 @@ public class GraphToQueryTrainingMain {
       InterruptedException {
 
     graphToQuery.setLearningModel(bestModelSoFar);
-    Logger evalLogger =
+    Logger groundingLogger =
         Logger.getLogger(GraphToQueryTraining.class + ".finalGroundings");
-    evalLogger.setLevel(Level.INFO);
+    groundingLogger.setLevel(Level.INFO);
     RollingFileAppender appender =
         new RollingFileAppender(layout, logFile + ".finalGroundings");
     appender.setMaxFileSize("100MB");
-    evalLogger.addAppender(appender);
-
+    groundingLogger.addAppender(appender);
 
     // Load sentences that have to be grounded after finishing the training.
     if (groundInputCorpora != null && !groundInputCorpora.equals("")) {
@@ -298,7 +297,7 @@ public class GraphToQueryTrainingMain {
         } else if (fileName != null) {
           loadExamples(new FileReader(fileName), groundTheseSentences);
         }
-        graphToQuery.groundSentences(groundTheseSentences, evalLogger, logFile
+        graphToQuery.groundSentences(groundTheseSentences, groundingLogger, logFile
             + ".finalGroundings", nthreads);
       }
     }
@@ -306,7 +305,7 @@ public class GraphToQueryTrainingMain {
     if (groundTrainingCorpusInTheEndVal) {
       for (List<String> sentences : trainingExamples) {
         logger.info("######## Grounding training sentences ######");
-        graphToQuery.groundSentences(sentences, evalLogger, logFile
+        graphToQuery.groundSentences(sentences, groundingLogger, logFile
             + ".finalGroundings", nthreads);
       }
     }
