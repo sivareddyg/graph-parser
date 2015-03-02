@@ -224,7 +224,8 @@ public class GraphToQueryTrainingMain {
           graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
               + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
               nthreads);
-      if (devExamples.size() > 0 && trainingSample.size() > 0) {
+      if (devExamples != null && devExamples.size() > 0
+          && trainingSample.size() > 0) {
         if (performance > highestPerformace) {
           evalLogger
               .info("Gradient moved in CORRECT direction! Updating the best model.");
@@ -273,20 +274,6 @@ public class GraphToQueryTrainingMain {
   public void groundSentences(int nthreads) throws IOException,
       InterruptedException {
 
-    // Load sentences that have to be grounded after finishing the training.
-    List<String> groundTheseSentences = new ArrayList<>();
-    if (groundInputCorpora != null && !groundInputCorpora.equals("")) {
-      List<String> groundInputCorporaFiles =
-          Lists.newArrayList(Splitter.on(";").split(groundInputCorpora));
-      for (String fileName : groundInputCorporaFiles) {
-        if (fileName != null && fileName.endsWith(".gz")) {
-          loadExamples(new InputStreamReader(new GZIPInputStream(
-              new FileInputStream(fileName)), "UTF-8"), groundTheseSentences);
-        } else if (fileName != null) {
-          loadExamples(new FileReader(fileName), groundTheseSentences);
-        }
-      }
-    }
     graphToQuery.setLearningModel(bestModelSoFar);
     Logger evalLogger =
         Logger.getLogger(GraphToQueryTraining.class + ".finalGroundings");
@@ -296,8 +283,33 @@ public class GraphToQueryTrainingMain {
     appender.setMaxFileSize("100MB");
     evalLogger.addAppender(appender);
 
-    graphToQuery.groundSentences(groundTheseSentences, evalLogger,
-        ".finalGroundings", nthreads);
+
+    // Load sentences that have to be grounded after finishing the training.
+    if (groundInputCorpora != null && !groundInputCorpora.equals("")) {
+      List<String> groundInputCorporaFiles =
+          Lists.newArrayList(Splitter.on(";").split(groundInputCorpora));
+      for (String fileName : groundInputCorporaFiles) {
+        logger.info(String.format("######## Grounding sentences in %s",
+            fileName));
+        List<String> groundTheseSentences = new ArrayList<>();
+        if (fileName != null && fileName.endsWith(".gz")) {
+          loadExamples(new InputStreamReader(new GZIPInputStream(
+              new FileInputStream(fileName)), "UTF-8"), groundTheseSentences);
+        } else if (fileName != null) {
+          loadExamples(new FileReader(fileName), groundTheseSentences);
+        }
+        graphToQuery.groundSentences(groundTheseSentences, evalLogger, logFile
+            + ".finalGroundings", nthreads);
+      }
+    }
+
+    if (groundTrainingCorpusInTheEndVal) {
+      for (List<String> sentences : trainingExamples) {
+        logger.info("######## Grounding training sentences ######");
+        graphToQuery.groundSentences(sentences, evalLogger, logFile
+            + ".finalGroundings", nthreads);
+      }
+    }
   }
 
   public List<String> getTrainingSample(int trainingSampleSize) {

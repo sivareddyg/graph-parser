@@ -778,12 +778,12 @@ public class GraphToQueryTraining {
     logger.debug("#############");
   }
 
-  public void groundSentences(List<String> testSentences, Logger logger,
+  public void groundSentences(List<String> sentences, Logger logger,
       String logFile, int nthreads) throws IOException, InterruptedException {
     PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
-    logger.debug("Testing: =======================================");
-    if (testSentences == null || testSentences.size() == 0) {
-      logger.debug("No test sentences");
+    logger.info("Grounding Input Sentences: =============================");
+    if (sentences == null || sentences.size() == 0) {
+      logger.info("No sentences to ground");
       return;
     }
 
@@ -818,7 +818,7 @@ public class GraphToQueryTraining {
     }
 
     int sentCount = 0;
-    for (String testSentence : testSentences) {
+    for (String testSentence : sentences) {
       JsonObject jsonSentence =
           jsonParser.parse(testSentence).getAsJsonObject();
       Runnable worker =
@@ -857,7 +857,7 @@ public class GraphToQueryTraining {
       List<LexicalGraph> groundedGraphs =
           graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
               useEntityTypes, useKB, groundFreeVariables, useEmtpyTypes,
-              ignoreTypes, false);
+              ignoreTypes, true);
 
       bestGroundedGraphs.addAll(groundedGraphs);
       Collections.sort(bestGroundedGraphs);
@@ -929,7 +929,8 @@ public class GraphToQueryTraining {
               "Insufficient number of loggers. Loggers should be at the size of blocking queue");
       Logger logger = loggers.poll();
       List<LexicalGraph> validGraphs =
-          graphToQuery.getGroundedGraphsWithAllEntities(jsonSentence, logger, sentCount);
+          graphToQuery.getGroundedGraphsWithAllEntities(jsonSentence, logger,
+              sentCount);
 
       if (graphToQuery.semanticParseKey.equals("synPars")) {
         Set<String> goldSynParsSet = new HashSet<>();
@@ -949,6 +950,7 @@ public class GraphToQueryTraining {
           logger.info("Valid Gold Parses: " + jsonSentence.toString());
         }
       }
+      loggers.add(logger);
     }
   }
 

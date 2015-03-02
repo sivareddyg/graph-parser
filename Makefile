@@ -1087,10 +1087,10 @@ tacl_unsupervised_loaded_model:
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
 	-endpoint bravas \
-	-loadModelFromFile working/tacl_unsupervised/business_film_people.log.txt.model.iteration0.readable.txt \
+	-loadModelFromFile working/tacl_unsupervised/business_film_people.log.txt.model.bestIteration \
 	-groundInputCorpora data/tacl/sentences_training/business_tacl_training_sentences_small.txt.gz \
-	-logFile ../working/tacl_unsupervised_loaded_model/business_film_people.log.txt \
-	> ../working/tacl_unsupervised_loaded_model/business_film_people.txt
+	-logFile working/tacl_unsupervised_loaded_model/business_film_people.log.txt \
+	> working/tacl_unsupervised_loaded_model/business_film_people.txt
 
 
 # TACL GraphParser + Para results
