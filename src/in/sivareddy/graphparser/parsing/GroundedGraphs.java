@@ -274,16 +274,16 @@ public class GroundedGraphs {
     } else { // the semantic parses are already given
       if (!jsonSentence.has(key))
         return graphs;
+      List<LexicalItem> leaves = BuildLexicalItemsFromWords(jsonSentence);
       JsonArray semPars = jsonSentence.get(key).getAsJsonArray();
-      Set<String> semanticParse = new HashSet<>();
       for (JsonElement semPar : semPars) {
         JsonArray predicates = semPar.getAsJsonArray();
+        Set<String> semanticParse = new HashSet<>();
         for (JsonElement predicate : predicates) {
           semanticParse.add(predicate.getAsString());
         }
+        buildUngroundeGraphFromSemanticParse(semanticParse, leaves, 0.0, graphs);
       }
-      List<LexicalItem> leaves = BuildLexicalItemsFromWords(jsonSentence);
-      buildUngroundeGraphFromSemanticParse(semanticParse, leaves, 0.0, graphs);
     }
     return graphs;
   }
