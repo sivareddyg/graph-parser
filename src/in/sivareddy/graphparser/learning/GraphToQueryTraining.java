@@ -932,7 +932,8 @@ public class GraphToQueryTraining {
           graphToQuery.getGroundedGraphsWithAllEntities(jsonSentence, logger,
               sentCount);
 
-      if (graphToQuery.semanticParseKey.equals("synPars")) {
+      if (graphToQuery.semanticParseKey.equals("synPars")
+          && validGraphs != null) {
         Set<String> goldSynParsSet = new HashSet<>();
         JsonArray goldSynPars = new JsonArray();
         for (LexicalGraph gGraph : validGraphs) {
