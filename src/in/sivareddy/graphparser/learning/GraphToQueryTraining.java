@@ -186,6 +186,7 @@ public class GraphToQueryTraining {
     });
 
     Queue<Logger> deadThredsLogs = new ConcurrentLinkedQueue<>();
+    List<RollingFileAppender> appenders = new ArrayList<>();
     for (int i = 0; i < nthreads + 2; i++) {
       Logger threadLogger = Logger.getLogger(logFile + ".thread" + i);
       threadLogger.removeAllAppenders();
@@ -197,6 +198,7 @@ public class GraphToQueryTraining {
 
       RollingFileAppender appender =
           new RollingFileAppender(layout, logFile + ".thread" + i);
+      appenders.add(appender);
       appender.setMaxFileSize("100MB");
       threadLogger.addAppender(appender);
       threadLogger.info("######## Training Starts");
@@ -218,6 +220,9 @@ public class GraphToQueryTraining {
     // Wait until all threads are finished
     while (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
       logger.debug("Awaiting completion of threads.");
+    }
+    for (RollingFileAppender appender : appenders) {
+      appender.close();
     }
   }
 
@@ -804,6 +809,7 @@ public class GraphToQueryTraining {
     });
 
     Queue<Logger> deadThredsLogs = new ConcurrentLinkedQueue<>();
+    List<RollingFileAppender>appenders = new ArrayList<>(); 
     for (int i = 0; i < nthreads + 2; i++) {
       Logger threadLogger = Logger.getLogger(logFile + ".thread" + i);
       threadLogger.removeAllAppenders();
@@ -811,6 +817,7 @@ public class GraphToQueryTraining {
       threadLogger.setLevel(Level.INFO);
       RollingFileAppender appender =
           new RollingFileAppender(layout, logFile + ".thread" + i);
+      appenders.add(appender);
       appender.setMaxFileSize("10000MB");
       threadLogger.addAppender(appender);
       threadLogger.info("#### Grounding starts");
@@ -831,6 +838,9 @@ public class GraphToQueryTraining {
 
     while (!threadPool.awaitTermination(15, TimeUnit.SECONDS)) {
       logger.debug("Awaiting completion of threads.");
+    }
+    for (RollingFileAppender appender : appenders) {
+      appender.close();
     }
   }
 
@@ -1168,8 +1178,8 @@ public class GraphToQueryTraining {
   }
 
   /**
-   * Returns F1-measure of first best parse of the current model evaluated on
-   * the given test sentences.
+   * Returns F1-measure of first best parse of the current model evaluated on the given test
+   * sentences.
    * 
    * @param testSentences
    * @param logger
@@ -1209,6 +1219,7 @@ public class GraphToQueryTraining {
     });
 
     Queue<Logger> deadThredsLogs = new ConcurrentLinkedQueue<>();
+    List<RollingFileAppender> appenders = new ArrayList<>();
     for (int i = 0; i < nthreads + 2; i++) {
       Logger threadLogger = Logger.getLogger(logFile + ".thread" + i);
       threadLogger.removeAllAppenders();
@@ -1217,6 +1228,7 @@ public class GraphToQueryTraining {
         threadLogger.setLevel(Level.DEBUG);
         RollingFileAppender appender =
             new RollingFileAppender(layout, logFile + ".thread" + i);
+        appenders.add(appender);
         appender.setMaxFileSize("100MB");
         threadLogger.addAppender(appender);
         threadLogger.info("#### Testing starts");
@@ -1244,6 +1256,9 @@ public class GraphToQueryTraining {
 
     while (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
       logger.debug("Awaiting completion of threads.");
+    }
+    for (RollingFileAppender appender : appenders) {
+      appender.close();
     }
 
     Double f1FirstBest = 0.0;
