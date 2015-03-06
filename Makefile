@@ -1,29 +1,29 @@
 # Convert GraphParser format to deplambda input format
 convert_graphparser_to_deplambda_format:
-	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.train.txt
-	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.dev.txt
-	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.test.txt
-	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.train.noheuristics.txt
-	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.dev.noheuristics.txt
-	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > working/webquestions.test.noheuristics.txt
-	cat data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt | python scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people.txt
+	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.train.txt
+	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.dev.txt
+	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.test.txt
+	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.train.noheuristics.txt
+	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.dev.noheuristics.txt
+	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.test.noheuristics.txt
+	cat data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people.txt
 
 convert_graphparser_to_deplambda_format_tom:
-	cat data/webquestions/webquestions.train.all.entity_annotated.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.train.json.txt
-	cat data/webquestions/webquestions.test.all.entity_annotated.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.test.json.txt
+	cat data/webquestions/webquestions.train.all.entity_annotated.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.train.json.txt
+	cat data/webquestions/webquestions.test.all.entity_annotated.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.test.json.txt
 
 convert_cai_yates_splits_to_deplambda:
-	mkdir -p working/free917_business_film_people_splits
-	cat data/cai-yates-2013/free917_business_film_people_splits/0.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/0.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/1.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/1.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/2.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/2.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/3.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/3.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/4.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/4.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/5.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/5.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/6.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/6.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/7.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/7.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/8.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/8.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/9.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > working/free917_business_film_people_splits/9.txt
+	mkdir -p ../working/free917_business_film_people_splits
+	cat data/cai-yates-2013/free917_business_film_people_splits/0.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/0.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/1.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/1.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/2.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/2.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/3.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/3.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/4.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/4.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/5.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/5.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/6.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/6.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/7.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/7.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/8.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/8.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/9.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/9.txt
 
 # Converts deplambda documents in json format to graphparsers json format.
 convert_deplambda_output_to_graphparser:
@@ -91,7 +91,7 @@ create_tacl_ccg_grounded_lexicon_and_training_sentences:
 # Deplambda Experiments
 # Baseline to evaluate the accuracy of lexicon
 deplambda_mwg:
-	mkdir -p working/deplambda_mwg
+	mkdir -p ../working/deplambda_mwg
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
@@ -130,14 +130,14 @@ deplambda_mwg:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint stkilda \
+	-endpoint localhost \
 	-devFile data/deplambda/webquestions.dev.graphparser.txt \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
-	-logFile working/deplambda_mwg/business_film_people.log.txt \
-	> working/deplambda_mwg/business_film_people.txt
+	-logFile ../working/deplambda_mwg/business_film_people.log.txt \
+	> ../working/deplambda_mwg/business_film_people.txt
 
 deplambda_mwg_on_training_data:
-	mkdir -p working/deplambda_mwg_on_training
+	mkdir -p ../working/deplambda_mwg_on_training
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
@@ -176,14 +176,14 @@ deplambda_mwg_on_training_data:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint localhost \
 	-devFile data/deplambda/webquestions.train.graphparser.txt \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
-	-logFile working/deplambda_mwg_on_training/business_film_people.log.txt \
-	> working/deplambda_mwg_on_training/business_film_people.txt
+	-logFile ../working/deplambda_mwg_on_training/business_film_people.log.txt \
+	> ../working/deplambda_mwg_on_training/business_film_people.txt
 
 deplambda_mwg_free917:
-	mkdir -p working/deplambda_mwg_free917
+	mkdir -p ../working/deplambda_mwg_free917
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
@@ -222,10 +222,10 @@ deplambda_mwg_free917:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint localhost \
 	-devFile data/deplambda/free917.txt \
-	-logFile working/deplambda_mwg_free917/business_film_people.log.txt \
-	> working/deplambda_mwg_free917/business_film_people.txt
+	-logFile ../working/deplambda_mwg_free917/business_film_people.log.txt \
+	> ../working/deplambda_mwg_free917/business_film_people.txt
 
 # Supervised Expermients
 # Deplambda results without unsupervised lexicon.
@@ -273,7 +273,7 @@ deplambda_supervised:
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint stkilda \
+	-endpoint localhost \
 	-supervisedCorpus data/deplambda/webquestions.train.graphparser.txt \
 	-devFile data/deplambda/webquestions.dev.graphparser.txt \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
@@ -325,7 +325,7 @@ deplambda_supervised_with_unsupervised_lexicon:
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint kinloch \
+	-endpoint localhost \
 	-supervisedCorpus data/deplambda/webquestions.train.graphparser.txt \
 	-devFile data/deplambda/webquestions.dev.graphparser.txt \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
@@ -377,7 +377,7 @@ deplambda_unsupervised:
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint stkilda \
+	-endpoint localhost \
 	-trainingCorpora data/deplambda/sentences_training/deplambda_training_sentences.txt.gz \
 	-devFile data/deplambda/webquestions.dev.graphparser.txt \
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
@@ -387,7 +387,7 @@ deplambda_unsupervised:
 ############################################### TACL Experiments  ################################################
 # TACL MWG Baseline
 tacl_mwg:
-	mkdir -p working/tacl_mwg
+	mkdir -p ../working/tacl_mwg
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -426,14 +426,14 @@ tacl_mwg:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint localhost \
 	-devFile data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-	-logFile working/tacl_mwg/business_film_people.log.txt \
-	> working/tacl_mwg/business_film_people.txt
+	-logFile ../working/tacl_mwg/business_film_people.log.txt \
+	> ../working/tacl_mwg/business_film_people.txt
 
 tacl_mwg_on_training_data:
-	mkdir -p working/tacl_mwg_on_training
+	mkdir -p ../working/tacl_mwg_on_training
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -472,14 +472,14 @@ tacl_mwg_on_training_data:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint stkilda \
+	-endpoint localhost \
 	-devFile data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-	-logFile working/tacl_mwg_on_training/business_film_people.log.txt \
-	> working/tacl_mwg_on_training/business_film_people.txt
+	-logFile ../working/tacl_mwg_on_training/business_film_people.log.txt \
+	> ../working/tacl_mwg_on_training/business_film_people.txt
 
 tacl_mwg_free917:
-	mkdir -p working/tacl_mwg_free917
+	mkdir -p ../working/tacl_mwg_free917
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -518,10 +518,10 @@ tacl_mwg_free917:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint localhost \
 	-devFile data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt \
-	-logFile working/tacl_mwg_free917/business_film_people.log.txt \
-	> working/tacl_mwg_free917/business_film_people.txt
+	-logFile ../working/tacl_mwg_free917/business_film_people.log.txt \
+	> ../working/tacl_mwg_free917/business_film_people.txt
 
 # TACL GraphPaser results
 tacl_unsupervised:
@@ -567,7 +567,7 @@ tacl_unsupervised:
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint localhost \
 	-trainingCorpora data/tacl/sentences_training/tacl_training_sentences.txt.gz \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
@@ -617,7 +617,7 @@ tacl_supervised:
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
+	-endpoint localhost \
 	-supervisedCorpus data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
@@ -667,7 +667,7 @@ tacl_supervised_with_unsupervised_lexicon:
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint kinloch \
+	-endpoint localhost \
 	-supervisedCorpus data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
@@ -716,11 +716,11 @@ tacl_unsupervised_loaded_model:
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint bravas \
-	-loadModelFromFile working/tacl_unsupervised/business_film_people.log.txt.model.bestIteration \
+	-endpoint localhost \
+	-loadModelFromFile ../working/tacl_unsupervised/business_film_people.log.txt.model.bestIteration \
 	-groundInputCorpora data/tacl/sentences_training/business_tacl_training_sentences_small.txt.gz \
-	-logFile working/tacl_unsupervised_loaded_model/business_film_people.log.txt \
-	> working/tacl_unsupervised_loaded_model/business_film_people.txt
+	-logFile ../working/tacl_unsupervised_loaded_model/business_film_people.log.txt \
+	> ../working/tacl_unsupervised_loaded_model/business_film_people.txt
 
 # Spanish Experiments
 
@@ -746,11 +746,11 @@ create_spanish_deplambda_format:
 	zcat data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz \
 		| python scripts/spanish/create-entity-mention-format.py \
 		| gzip \
-		> working/spanish_wikipedia.txt.gz
+		> ../working/spanish_wikipedia.txt.gz
 
 ## Unsupervised Parsing experiments
 unsupervised_first_experiment:
-	mkdir -p working/unsupervised_first_experiment
+	mkdir -p ../working/unsupervised_first_experiment
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
     -schema data/freebase/schema/business_film_people_schema.txt \
     -relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -798,7 +798,7 @@ unsupervised_first_experiment:
     -initialWordWeight 10.00 \
     -stemFeaturesWeight 0.0 \
     -useNbestGraphsFlag true \
-    -endpoint darkstar \
+    -endpoint localhost \
     -trainingCorpora "data/unsupervised/training/unsupervised_parser.json.noDeps.gz" \
-    -logFile working/unsupervised_first_experiment/business_film_people.log.txt \
-    > working/unsupervised_first_experiment/business_film_people.txt
+    -logFile ../working/unsupervised_first_experiment/business_film_people.log.txt \
+    > ../working/unsupervised_first_experiment/business_film_people.txt

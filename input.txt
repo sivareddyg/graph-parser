@@ -17,3 +17,9 @@
 {"sentence" : "Michelle_Obama started with nothing , and is a beautiful mother and distinguished lawyer who went to Harvard_Law_School ."}
 {"sentence" : "Indian_Airlines operates 5 flights a week for Delhi and back ."}
 {"sentence" : "Edinburgh is famous for Arts."}
+{"sentence" : "But mostly he , like many other Republicans , are finally talking like Americans ."}
+{"sentence" : "Jobs himself may be soon stepping down from Apple ."}
+{"sentence" : "Stevie then went on to start Monkeystone_Games with Romero where she was Co-founder and CEO ."}
+{"sentence" : "Karle and his wife continues to work at the Naval Research Laboratory in Washington, DC ."}
+{"sentence" : "West also runs his own record label GOOD_Music ."}
+{"sentence" : "I gave him a pen."}
