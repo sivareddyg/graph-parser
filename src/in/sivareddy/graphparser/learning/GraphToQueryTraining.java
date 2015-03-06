@@ -809,7 +809,7 @@ public class GraphToQueryTraining {
     });
 
     Queue<Logger> deadThredsLogs = new ConcurrentLinkedQueue<>();
-    List<RollingFileAppender>appenders = new ArrayList<>(); 
+    List<RollingFileAppender> appenders = new ArrayList<>();
     for (int i = 0; i < nthreads + 2; i++) {
       Logger threadLogger = Logger.getLogger(logFile + ".thread" + i);
       threadLogger.removeAllAppenders();
@@ -1178,8 +1178,8 @@ public class GraphToQueryTraining {
   }
 
   /**
-   * Returns F1-measure of first best parse of the current model evaluated on the given test
-   * sentences.
+   * Returns F1-measure of first best parse of the current model evaluated on
+   * the given test sentences.
    * 
    * @param testSentences
    * @param logger
