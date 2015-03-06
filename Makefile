@@ -56,7 +56,7 @@ create_deplambda_grounded_lexicon:
 	mkdir -p data/deplambda/grounded_lexicon
 	zcat data/deplambda/unsupervised.graphparser.txt.gz \
 	| python scripts/cleaning/remove_duplicate_sentences.py \
-	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	| java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
 	--relationLexicalIdentifiers lemma \
 	--semanticParseKey dependency_lambda \
 	--argumentLexicalIdentifiers mid \
@@ -73,7 +73,7 @@ create_tacl_ccg_grounded_lexicon_and_training_sentences:
 	mkdir -p data/tacl/grounded_lexicon
 	zcat data/freebase/sentences_filtered/* \
 	| python scripts/cleaning/remove_duplicate_sentences.py \
-	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	| java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
 	--relationLexicalIdentifiers lemma \
 	--semanticParseKey synPars \
 	--argumentLexicalIdentifiers mid \
@@ -92,7 +92,7 @@ create_tacl_ccg_grounded_lexicon_and_training_sentences:
 # Baseline to evaluate the accuracy of lexicon
 deplambda_mwg:
 	mkdir -p working/deplambda_mwg
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -138,7 +138,7 @@ deplambda_mwg:
 
 deplambda_mwg_on_training_data:
 	mkdir -p working/deplambda_mwg_on_training
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -184,7 +184,7 @@ deplambda_mwg_on_training_data:
 
 deplambda_mwg_free917:
 	mkdir -p working/deplambda_mwg_free917
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -231,7 +231,7 @@ deplambda_mwg_free917:
 # Deplambda results without unsupervised lexicon.
 deplambda_supervised:
 	mkdir -p ../working/deplambda_supervised
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -283,7 +283,7 @@ deplambda_supervised:
 # Deplambda results with unsupervised lexicon.
 deplambda_supervised_with_unsupervised_lexicon:
 	mkdir -p ../working/deplambda_supervised_with_unsupervised_lexicon
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -335,7 +335,7 @@ deplambda_supervised_with_unsupervised_lexicon:
 # deplambda with unsupervised training
 deplambda_unsupervised:
 	mkdir -p ../working/deplambda_unsupervised
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -388,7 +388,7 @@ deplambda_unsupervised:
 # TACL MWG Baseline
 tacl_mwg:
 	mkdir -p working/tacl_mwg
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -434,7 +434,7 @@ tacl_mwg:
 
 tacl_mwg_on_training_data:
 	mkdir -p working/tacl_mwg_on_training
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -480,7 +480,7 @@ tacl_mwg_on_training_data:
 
 tacl_mwg_free917:
 	mkdir -p working/tacl_mwg_free917
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -526,7 +526,7 @@ tacl_mwg_free917:
 # TACL GraphPaser results
 tacl_unsupervised:
 	mkdir -p ../working/tacl_unsupervised
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -576,7 +576,7 @@ tacl_unsupervised:
 
 tacl_supervised:
 	mkdir -p ../working/tacl_supervised
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/dummy.txt \
@@ -626,7 +626,7 @@ tacl_supervised:
 
 tacl_supervised_with_unsupervised_lexicon:
 	mkdir -p ../working/tacl_supervised_with_unsupervised_lexicon
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -677,7 +677,7 @@ tacl_supervised_with_unsupervised_lexicon:
 # To load an existing model and to parse and input corpus using it.
 tacl_unsupervised_loaded_model:
 	mkdir -p ../working/tacl_unsupervised_loaded_model
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -726,19 +726,19 @@ tacl_unsupervised_loaded_model:
 
 # Tokenize Entities
 tokenize_spanish_entities:
-	zcat data/freebase/spanish/spanish_business_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_business_entities.tokenized.txt.gz
-	zcat data/freebase/spanish/spanish_film_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_film_entities.tokenized.txt.gz
-	zcat data/freebase/spanish/spanish_people_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_people_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_business_entities.txt.gz | java -cp lib/*:graph-parser.jar others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_business_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_film_entities.txt.gz | java -cp lib/*:graph-parser.jar others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_film_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_people_entities.txt.gz | java -cp lib/*:graph-parser.jar others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_people_entities.tokenized.txt.gz
 	zcat data/freebase/spanish/spanish_business_entities.tokenized.txt.gz data/freebase/spanish/spanish_film_entities.tokenized.txt.gz data/freebase/spanish/spanish_people_entities.tokenized.txt.gz | gzip > data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz
 
 extract_spanish_sentences:
 	bzcat data/bravas/extracted/AA/wiki_00.bz2 \
-		| java -cp lib/*:bin others.SpanishTokenizer                 \
+		| java -cp lib/*:graph-parser.jar others.SpanishTokenizer                 \
 		| perl -pe 's|=LRB=.*?=RRB=||g'                 \
 		| grep -v =LRB= | grep -v =RRB=                 \
 		| python scripts/spanish/select_sentences_with_entities_in_relation.py data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt                 \
 		| python scripts/spanish/select_sentences_with_non_adjacent_main_relation.py data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt \
-		| java -cp lib/*:bin others.SpanishPosAndNer \
+		| java -cp lib/*:graph-parser.jar others.SpanishPosAndNer \
 		| python scripts/spanish/process_named_entities.py \
 		| gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz
 
@@ -751,7 +751,7 @@ create_spanish_deplambda_format:
 ## Unsupervised Parsing experiments
 unsupervised_first_experiment:
 	mkdir -p working/unsupervised_first_experiment
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
     -schema data/freebase/schema/business_film_people_schema.txt \
     -relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
     -lexicon data/dummy.txt \

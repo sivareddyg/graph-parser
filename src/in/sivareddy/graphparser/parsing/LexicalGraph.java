@@ -8,7 +8,6 @@ import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.ml.basic.AbstractFeature;
 import in.sivareddy.ml.basic.Feature;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

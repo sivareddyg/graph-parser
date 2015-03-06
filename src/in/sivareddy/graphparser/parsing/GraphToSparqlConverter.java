@@ -205,12 +205,13 @@ public class GraphToSparqlConverter {
       }
     }
 
-    Preconditions
-        .checkArgument(
-            targetNode == null ? true : targetVar.equals(""),
-            "Target variable and QUESTION property present. Only one of them can be present");
+    if (targetNode != null && !targetVar.equals("")) {
+      System.err
+          .println("Warning: Target variable and QUESTION property both present. Target variable overides QUESTION");
+    }
 
     if (targetNode != null) {
+      // Overiding target variable.
       targetVar = getNodeVariable(targetNode, targetNode);
     }
 
