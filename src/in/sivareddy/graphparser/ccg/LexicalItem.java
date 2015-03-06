@@ -55,7 +55,10 @@ public class LexicalItem extends CcgParseTree implements
    * @return
    */
   public LexicalItem shallowCopy() {
-    Category copyCat = currentCategory.shallowCopy();
+    Category copyCat = null; 
+    if (currentCategory != null) {
+      copyCat = currentCategory.shallowCopy();
+    }
     LexicalItem item =
         new LexicalItem(synCat, word, lemma, pos, neType, copyCat);
     return item;

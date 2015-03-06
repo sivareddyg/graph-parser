@@ -33,11 +33,6 @@ public class GraphToSparqlConverter {
     return convertGroundedGraph(graph, null, schema, kbGraphUri);
   }
 
-  public static String convertGroundedGraph(LexicalGraph graph, Schema schema,
-      List<String> kbGraphUri, boolean ignoreTypes) {
-    return convertGroundedGraph(graph, null, schema, kbGraphUri);
-  }
-
   // convert grounded graph to sparql query
   public static String convertGroundedGraph(LexicalGraph graph,
       LexicalItem targetNode, Schema schema, List<String> graphUris) {

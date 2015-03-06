@@ -1390,7 +1390,7 @@ public class GraphToQueryTraining {
     for (LexicalGraph gGraph : gGraphs) {
       String query =
           GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
-              kbGraphUri, ignoreTypes);
+              kbGraphUri);
       Map<String, LinkedHashSet<String>> predResults =
           rdfGraphTools.runQueryHttp(query);
       gGraphsAndResults.add(Pair.of(gGraph, predResults));
@@ -1452,7 +1452,7 @@ public class GraphToQueryTraining {
 
       String predQuery =
           GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
-              kbGraphUri, ignoreTypes);
+              kbGraphUri);
       logger.info("Predicted Query: " + predQuery);
       logger.info("Gold Query: " + goldQuery);
 

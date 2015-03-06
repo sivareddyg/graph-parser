@@ -113,19 +113,12 @@ def document_to_graphparser_input(document):
         gdoc['ccg_lambda'].append(list(new_lambda))
   return gdoc
 
-def get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, var):
+def get_var_to_word_index(words, old_token_index_to_new, var):
   if re.match("[0-9]+$", var): return int(var)
-  if var in var_to_token_index: return var_to_token_index[var]
-  word = {'word': "", 'pos': ""}
-  words.append(word)
-  var_to_token_index[var] = len(words) - 1
-  old_token_index_to_new[var_to_token_index[var]] = var_to_token_index[var] 
-  return var_to_token_index[var]
+  return var
 
 def process_lambda(words, head_to_freebase_id, old_token_index_to_new, old_lambda, new_lambda):
   if not isinstance(new_lambda, set): return
-  
-  var_to_token_index = {}
   
   basic_expression_pattern = re.compile("\([^\(\)]+\)")
   type_pattern = re.compile("\(([^\s]+) ([^\s]+):s ([^\s]+):n\)")
@@ -141,17 +134,22 @@ def process_lambda(words, head_to_freebase_id, old_token_index_to_new, old_lambd
     m = type_pattern.match(basic_expression)
     if m:
       predicate = m.group(1)
-      arg1 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(2))
-      arg2 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(3))
+      arg1 = get_var_to_word_index(words, old_token_index_to_new, m.group(2))
+      arg2 = get_var_to_word_index(words, old_token_index_to_new, m.group(3))
       
       # Do not have predicates that are named entities.
       if arg1 == arg2 and arg2 in head_to_freebase_id:
         continue
-      arg1 = str(old_token_index_to_new[arg1]) + ":s"
-      if int(arg2) in head_to_freebase_id:
-        arg2 = str(old_token_index_to_new[arg2]) + ":" + head_to_freebase_id[int(arg2)]
+      if type(arg1) == int:
+        arg1 = str(old_token_index_to_new[arg1]) + ":s"
       else:
+        arg1 = arg1 + ":s"
+      if arg2 in head_to_freebase_id:
+        arg2 = str(old_token_index_to_new[arg2]) + ":" + head_to_freebase_id[int(arg2)]
+      elif type(arg2) == int:
         arg2 = str(old_token_index_to_new[arg2]) + ":x"
+      else:
+        arg2 = arg2 + ":x"
       if predicate.lower() not in ['what']:
         new_lambda.add("%s(%s , %s)" %(predicate.lower(), str(arg1), str(arg2)))
       continue
@@ -159,73 +157,99 @@ def process_lambda(words, head_to_freebase_id, old_token_index_to_new, old_lambd
     m = event_entity_pattern.match(basic_expression)
     if m:
       predicate = m.group(1)
-      arg1 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(2))
-      arg2 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(3))
-      
-      arg1 = str(old_token_index_to_new[arg1]) + ":e"
-      if int(arg2) in head_to_freebase_id:
-        arg2 = str(old_token_index_to_new[arg2]) + ":" + head_to_freebase_id[int(arg2)]
+      arg1 = get_var_to_word_index(words, old_token_index_to_new, m.group(2))
+      arg2 = get_var_to_word_index(words, old_token_index_to_new, m.group(3))
+     
+      if type(arg1) == int:
+        arg1 = str(old_token_index_to_new[arg1]) + ":e"
       else:
+        arg1 = arg1 + ":e"
+      if arg2 in head_to_freebase_id:
+        arg2 = str(old_token_index_to_new[arg2]) + ":" + head_to_freebase_id[int(arg2)]
+      elif type(arg2) == int:
         arg2 = str(old_token_index_to_new[arg2]) + ":x"
+      else:
+        arg2 = arg2 + ":x"
       new_lambda.add("%s(%s , %s)" %(predicate.lower(), str(arg1), str(arg2)))
       continue
     
     m = event_event_pattern.match(basic_expression)
     if m:
       predicate = m.group(1)
-      arg1 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(2))
-      arg2 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(3))
+      arg1 = get_var_to_word_index(words, old_token_index_to_new, m.group(2))
+      arg2 = get_var_to_word_index(words, old_token_index_to_new, m.group(3))
       
-      arg1 = str(old_token_index_to_new[arg1]) + ":e"
-      arg2 = str(old_token_index_to_new[arg2]) + ":e"
+      if type(arg1) == int:
+        arg1 = str(old_token_index_to_new[arg1]) + ":e"
+      else:
+        arg1 = arg1 + ":e"
+      if type(arg2) == int:
+        arg2 = str(old_token_index_to_new[arg2]) + ":e"
+      else:
+        arg2 = arg2 + ":e"
       new_lambda.add("%s(%s , %s)" %(predicate.lower(), str(arg1), str(arg2)))
       continue
     
     m = eventmod_pattern.match(basic_expression)
     if m:
       predicate = m.group(1)
-      arg1 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(2))
-      arg2 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(3))
-      
-      arg1 = str(old_token_index_to_new[arg1]) + ":s"
-      arg2 = str(old_token_index_to_new[arg2]) + ":e"
+      arg1 = get_var_to_word_index(words, old_token_index_to_new, m.group(2))
+      arg2 = get_var_to_word_index(words, old_token_index_to_new, m.group(3))
+     
+      if type(arg1) == int:
+        arg1 = str(old_token_index_to_new[arg1]) + ":s"
+      else:
+        arg1 = arg1 + ":s"
+      if type(arg2) == int: 
+        arg2 = str(old_token_index_to_new[arg2]) + ":e"
+      else:
+        arg2 = arg2 + ":e"
       new_lambda.add("%s(%s , %s)" %(predicate.lower(), str(arg1), str(arg2)))
       continue
     
     m = count_pattern.match(basic_expression)
     if m:
       predicate = m.group(1)
-      arg1 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(2))
-      arg2 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(3))
+      arg1 = get_var_to_word_index(words, old_token_index_to_new, m.group(2))
+      arg2 = get_var_to_word_index(words, old_token_index_to_new, m.group(3))
       
       if arg1 in head_to_freebase_id:
         arg1 = str(old_token_index_to_new[arg1]) + ":" + head_to_freebase_id[int(arg1)]
-      else:
+      elif type(arg1) == int:
         arg1 = str(old_token_index_to_new[arg1]) + ":x"
-        
+      else:
+        arg1 = arg1 + ":x"
+     
       if arg2 in head_to_freebase_id:
         arg2 = str(old_token_index_to_new[arg2]) + ":" + head_to_freebase_id[int(arg2)]
-      else:
+      elif type(arg2) == int:
         arg2 = str(old_token_index_to_new[arg2]) + ":x"
+      else:
+        arg2 = arg2 + ":x"
       new_lambda.add("%s(%s , %s)" %(predicate, str(arg1), str(arg2)))
       continue
       
     m = unary_entity_pattern.match(basic_expression)
     if m:
       predicate = m.group(1)
-      arg1 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(2))
+      arg1 = get_var_to_word_index(words, old_token_index_to_new, m.group(2))
       if arg1 in head_to_freebase_id:
         arg1 = str(old_token_index_to_new[arg1]) + ":" + head_to_freebase_id[int(arg1)]
-      else:
+      elif type(arg1) == int:
         arg1 = str(old_token_index_to_new[arg1]) + ":x"
+      else:
+        arg1 = arg1 + ":x"
       new_lambda.add("%s(%s)" %(predicate, str(arg1)))
       continue
       
     m = unary_event_pattern.match(basic_expression)
     if m:
       predicate = m.group(1)
-      arg1 = get_var_to_word_index(words, old_token_index_to_new, var_to_token_index, m.group(2))
-      arg1 = str(old_token_index_to_new[arg1]) + ":e"
+      arg1 = get_var_to_word_index(words, old_token_index_to_new, m.group(2))
+      if type(arg1) == int:
+        arg1 = str(old_token_index_to_new[arg1]) + ":e"
+      else:
+        arg1 = arg1 + ":e"
       new_lambda.add("%s(%s)" %(predicate, str(arg1)))
       continue
 
@@ -241,6 +265,8 @@ if __name__ == "__main__":
       gdoc = document_to_graphparser_input(document)
       sentence = " ".join([word['word'] for word in gdoc['words']])
       if sentence not in cache:
+        if 'sentence' not in gdoc:
+          gdoc['sentence'] = sentence
         print json.dumps(gdoc)
         cache.add(sentence)
     except:

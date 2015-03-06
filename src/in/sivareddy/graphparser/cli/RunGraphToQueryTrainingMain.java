@@ -463,7 +463,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           new RdfGraphTools(String.format("jdbc:virtuoso://%s:1111",
               options.valueOf(endpoint)), String.format(
               "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
-              "dba", 1000);
+              "dba", 2000);
       List<String> kbGraphUri =
           Lists.newArrayList(Splitter.on(";").split(options.valueOf(domain)));
 
@@ -588,8 +588,13 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
               stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
-      if (corupusTrainingFile != null && !corupusTrainingFile.equals(""))
+      
+      if ((corupusTrainingFile != null && !corupusTrainingFile.equals(""))
+          || (supervisedTrainingFile != null && !supervisedTrainingFile
+              .equals(""))) {
         graphToQueryModel.testBestModel(threadCount);
+      }
+      
       if (groundInputCorporaFiles != null
           && !groundInputCorporaFiles.equals("")) {
         graphToQueryModel.groundSentences(threadCount);

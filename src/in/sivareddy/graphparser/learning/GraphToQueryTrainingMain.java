@@ -133,8 +133,8 @@ public class GraphToQueryTrainingMain {
             initialTypeWeight, initialWordWeight, stemFeaturesWeight,
             rdfGraphTools, kbGraphUri);
 
+    supervisedTrainingExamples = new ArrayList<>();
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
-      supervisedTrainingExamples = new ArrayList<>();
       loadExamples(new FileReader(supervisedTrainingFile),
           supervisedTrainingExamples);
     }
@@ -189,8 +189,10 @@ public class GraphToQueryTrainingMain {
   public void train(int iterations, int nthreads) throws IOException,
       InterruptedException {
 
-    if (trainingExamples.size() > 0 && trainingSampleSize > 0) {
+    if ((trainingExamples.size() > 0 && trainingSampleSize > 0)
+        || supervisedTrainingExamples.size() > 0) {
       logger.info("######## Evaluating the model before training ###########");
+      logger.info("######## Development Data ###########");
       highestPerformace =
           graphToQuery.testCurrentModel(devExamples, logger, logFile
               + ".eval.beforeTraining", debugEnabled, testingNbestParsesRange,
@@ -297,8 +299,8 @@ public class GraphToQueryTrainingMain {
         } else if (fileName != null) {
           loadExamples(new FileReader(fileName), groundTheseSentences);
         }
-        graphToQuery.groundSentences(groundTheseSentences, groundingLogger, logFile
-            + ".finalGroundings", nthreads);
+        graphToQuery.groundSentences(groundTheseSentences, groundingLogger,
+            logFile + ".finalGroundings", nthreads);
       }
     }
 
@@ -319,23 +321,21 @@ public class GraphToQueryTrainingMain {
       trainingSample.addAll(trainingSamplePart);
       Collections.shuffle(trainingSample);
     }
-    // number of supervised examples should be at least double the number of
-    // unsupervised examples
-    // Speculative: Adding supervised examples at the end of unsupervised
-    // training is
-    // helpful
-    if (supervisedTrainingExamples != null) {
+
+    // Speculation: Adding supervised examples at the end of unsupervised
+    // training is helpful
+    if (supervisedTrainingExamples != null
+        && supervisedTrainingExamples.size() > 0) {
       List<String> examplesCopy =
           Lists.newArrayList(supervisedTrainingExamples);
       int maxIterations =
           trainingSample.size() > 0 ? trainingSample.size()
               / supervisedTrainingExamples.size() : 0;
-      for (int i = 0; i < 2 * (maxIterations + 1); i++) {
+      for (int i = 0; i < maxIterations + 1; i++) {
         Collections.shuffle(examplesCopy);
         trainingSample.addAll(examplesCopy);
       }
     }
-    // Collections.shuffle(trainingSample);
     return trainingSample;
   }
 

@@ -258,8 +258,8 @@ public class CreateGroundedLexicon {
     Pattern relationPattern = Pattern.compile("(.*)\\(([0-9]+\\:e) , (.*)\\)");
     Pattern typePattern = Pattern.compile("(.*)\\([0-9]+\\:s , (.*)\\)");
     Pattern specialPattern = Pattern.compile("(.*)\\([0-9]+\\:[se][\\)\\ ]");
-    Pattern varPattern = Pattern.compile("[0-9]+\\:x");
-    Pattern eventPattern = Pattern.compile("[0-9]+\\:e");
+    Pattern varPattern = Pattern.compile("[^\\:]+\\:x");
+    Pattern eventPattern = Pattern.compile("[^\\:]+\\:e");
     Set<String> negationTypes = Sets.newHashSet("NEGATION", "COMPLEMENT");
     Set<String> questionTypes = Sets.newHashSet("QUESTION");
 
