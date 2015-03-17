@@ -23,3 +23,6 @@
 {"sentence" : "Karle and his wife continues to work at the Naval Research Laboratory in Washington, DC ."}
 {"sentence" : "West also runs his own record label GOOD_Music ."}
 {"sentence" : "I gave him a pen."}
+{"sentence" : "The contrast of the TV has changed."}
+{"sentence" : "Turn around these two over here."}
+{"sentence" : "change the contrast of the TV"}

@@ -748,6 +748,40 @@ create_spanish_deplambda_format:
 		| gzip \
 		> ../working/spanish_wikipedia.txt.gz
 
+# Spanish WebQuestions Processing
+entity_tag_spanish:
+	python scripts/spanish/combine_wq_entities_spanish_english.py data/spanish_webquestions/webquestions.lexicon.txt data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz > data/spanish_webquestions/webquestions.lexicon.extended.txt
+	cat data/spanish_webquestions/webquestions.examples.test.utterances_es \
+		| java -cp lib/*:graph-parser.jar others.SpanishTokenizerEol \
+		| python scripts/spanish/annotate_entities_maximal_string_matching.py data/spanish_webquestions/webquestions.lexicon.extended.txt \
+		| python scripts/spanish/add_sentences.py data/spanish_webquestions/webquestions.examples.test.utterances data/spanish_webquestions/webquestions.examples.test.utterances_es \
+		| python scripts/spanish/merge_english_annotations.py data/webquestions/webquestions.examples.test.domains.json \
+		| java -cp lib/*:graph-parser.jar others.SpanishPosAndNer \
+		| python scripts/spanish/process_named_entities.py \
+		> data/spanish_webquestions/webquestions.examples.test.es.json
+	cat data/spanish_webquestions/webquestions.examples.train.utterances_es \
+		| java -cp lib/*:graph-parser.jar others.SpanishTokenizerEol \
+		| python scripts/spanish/annotate_entities_maximal_string_matching.py data/spanish_webquestions/webquestions.lexicon.extended.txt \
+		| python scripts/spanish/add_sentences.py data/spanish_webquestions/webquestions.examples.train.utterances data/spanish_webquestions/webquestions.examples.train.utterances_es \
+		| python scripts/spanish/merge_english_annotations.py data/webquestions/webquestions.examples.train.domains.json \
+		| java -cp lib/*:graph-parser.jar others.SpanishPosAndNer \
+		| python scripts/spanish/process_named_entities.py \
+		> data/spanish_webquestions/webquestions.examples.train.es.json
+
+create_spanish_splits:
+	python scripts/spanish/select_splits_from_english.py data/spanish_webquestions/webquestions.examples.train.es.json data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 > data/spanish_webquestions/webquestions.examples.business_film_people.train.json.txt
+	python scripts/spanish/select_splits_from_english.py data/spanish_webquestions/webquestions.examples.train.es.json data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 > data/spanish_webquestions/webquestions.examples.business_film_people.dev.json.txt
+	python scripts/spanish/select_splits_from_english.py data/spanish_webquestions/webquestions.examples.test.es.json data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json > data/spanish_webquestions/webquestions.examples.business_film_people.test.json.txt
+	cat data/spanish_webquestions/webquestions.examples.business_film_people.train.json.txt \
+		| python scripts/spanish/create-entity-mention-format.py \
+		> working/webquestions.es.examples.business_film_people.train.json.txt
+	cat data/spanish_webquestions/webquestions.examples.business_film_people.dev.json.txt \
+		| python scripts/spanish/create-entity-mention-format.py \
+		> working/webquestions.es.examples.business_film_people.dev.json.txt
+	cat data/spanish_webquestions/webquestions.examples.business_film_people.test.json.txt \
+		| python scripts/spanish/create-entity-mention-format.py \
+		> working/webquestions.es.examples.business_film_people.test.json.txt
+
 ## Unsupervised Parsing experiments
 unsupervised_first_experiment:
 	mkdir -p ../working/unsupervised_first_experiment

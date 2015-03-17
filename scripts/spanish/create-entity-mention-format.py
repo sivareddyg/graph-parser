@@ -12,4 +12,12 @@ for line in sys.stdin:
                 entity['ner'] = ner_mapping[entity['ner']]
     if 'words' in sentence:
         del sentence['words']
+        if 'spanish' in sentence:
+            del sentence['spanish']
+        if 'english' in sentence:
+            del sentence['english']
+        if 'targetValue' in sentence:
+            del sentence['targetValue']
+        if 'url' in sentence:
+            del sentence['url']
     print json.dumps(sentence)
