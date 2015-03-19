@@ -49,7 +49,7 @@ public class RdfGraphTools {
   public RdfGraphTools(String jdbcEndPoint, String username, String password,
       int timeOut) {
     // virtGraph = new VirtGraph(jdbcEndPoint, "dba", "dba");
-    virtGraph = new VirtGraph(null, jdbcEndPoint, "dba", "dba", true);
+    virtGraph = new VirtGraph(null, jdbcEndPoint, username, password, true);
     if (timeOut > 0) {
       virtGraph.setQueryTimeout(timeOut);
       this.timeOut = timeOut;
@@ -68,7 +68,7 @@ public class RdfGraphTools {
   public RdfGraphTools(String jdbcUrl, String httpUrl, String username,
       String password, int timeOut) {
     // virtGraph = new VirtGraph(jdbcUrl, "dba", "dba");
-    virtGraph = new VirtGraph(null, jdbcUrl, "dba", "dba", true);
+    virtGraph = new VirtGraph(null, jdbcUrl, username, password, true);
     if (timeOut > 0) {
       virtGraph.setQueryTimeout(timeOut);
       this.timeOut = timeOut;

@@ -18,10 +18,17 @@ public class CcgParseTreeTest {
     // CcgAutoLexicon("./data/candc_markedup.modified",
     // "./data/unary_rules.txt", "./data/binary_rules.txt",
     // "./data/lexicon_specialCases.txt");
+
+    /*-CcgAutoLexicon lexicon =
+    new CcgAutoLexicon("./lib_data/ybisk-mapping.txt",
+        "./lib_data/dummy.txt", "./lib_data/dummy.txt",
+        "./lib_data/dummy.txt");*/
+
     CcgAutoLexicon lexicon =
         new CcgAutoLexicon("./lib_data/candc_markedup.modified",
             "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
             "./lib_data/lexicon_specialCases_questions.txt");
+
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] argumentLexicalIdenfiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
@@ -89,7 +96,7 @@ public class CcgParseTreeTest {
     System.out.println(sent);
     System.out.println(relations);
     System.out.println();
-    
+
     relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);
@@ -107,7 +114,7 @@ public class CcgParseTreeTest {
 
 
     sent = "what is the highest point of the state with largest area ?";
-    ccgParseTrees = 
+    ccgParseTrees =
         ccgParser
             .parseFromString("(<T S[wq] fa 0 2> (<L S[wq]/(S[dcl]\\NP) what what WP O I-NP S[wq]/(S[dcl]\\NP)>) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O I-VP (S[dcl]\\NP)/NP>) (<T NP ba 0 2> (<T NP[nb] fa 1 2> (<L NP[nb]/N the the DT O I-NP NP[nb]/N>) (<T N fa 1 2> (<L N/N highest highest JJS O I-NP N/N>) (<L N point point NN O I-NP N>))) (<T NP\\NP fa 0 2> (<L (NP\\NP)/NP of of IN O I-PP (NP\\NP)/NP>) (<T NP ba 0 2> (<T NP[nb] fa 1 2> (<L NP[nb]/N the the DT O I-NP NP[nb]/N>) (<L N state state NN O I-NP N>)) (<T NP\\NP fa 0 2> (<L (NP\\NP)/NP with with IN O I-PP (NP\\NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N largest largest JJS O I-NP N/N>) (<L N area area NN O I-NP N>)))))))))");
     relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
@@ -233,10 +240,11 @@ public class CcgParseTreeTest {
     System.out.println(sent);
     System.out.println(relations);
     System.out.println();
-    /*relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
-    System.out.println(sent);
-    System.out.println(relations);
-    System.out.println();*/
+    /*
+     * relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
+     * System.out.println(sent); System.out.println(relations);
+     * System.out.println();
+     */
 
     sent =
         "The Bavarian_Illuminati , a rationalist secret society , was founded by Adam_Weishaupt";

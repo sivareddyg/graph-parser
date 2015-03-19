@@ -26,3 +26,4 @@
 {"sentence" : "The contrast of the TV has changed."}
 {"sentence" : "Turn around these two over here."}
 {"sentence" : "change the contrast of the TV"}
+{"sentence" : "Who was Titanic directed by?"}

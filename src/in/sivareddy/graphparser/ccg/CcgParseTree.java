@@ -36,8 +36,8 @@ public class CcgParseTree {
   private static int nodeCount = 1;
   private static int maxNodeCount = 50000;
   public static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "CD",
-      "NNPS", "PRP");
-  private static Set<String> cardinalPosTags = Sets.newHashSet("CD");
+      "NNPS", "PRP", "PRON", "NUM");
+  private static Set<String> cardinalPosTags = Sets.newHashSet("CD", "NUM");
   private static Set<String> dateNerTags = Sets.newHashSet("I-DAT");
 
   // changed these variables from static to dynamic. Should use lower case

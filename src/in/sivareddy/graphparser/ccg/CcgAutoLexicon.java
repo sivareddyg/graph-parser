@@ -21,15 +21,16 @@ import com.google.common.collect.Sets;
 
 public class CcgAutoLexicon {
   public static Set<String> typePosTags = Sets.newHashSet("NN", "NNP", "NNPS",
-      "NNS", "PRP", "PRP$", "CD");
-  public static Set<String> pronounPosTags = Sets.newHashSet("PRP", "PRP$");
-  public static Set<String> typeModPosTags = Sets
-      .newHashSet("JJ", "JJR", "JJS");
+      "NNS", "PRP", "PRP$", "CD", "NOUN", "NUM", "X");
+  public static Set<String> pronounPosTags = Sets.newHashSet("PRP", "PRP$",
+      "PRON");
+  public static Set<String> typeModPosTags = Sets.newHashSet("JJ", "JJR",
+      "JJS", "ADJ");
 
   public static Set<String> eventPosTags = Sets.newHashSet("VB", "VBD", "VBG",
-      "VBN", "VBP", "VBZ", "IN", "POS", "TO");
+      "VBN", "VBP", "VBZ", "IN", "POS", "TO", "ADP", "PRT", "VERB");
   private static Set<String> eventModPosTags = Sets.newHashSet("RB", "RBR",
-      "RBS", "RP");
+      "RBS", "RP", "ADV");
 
   private static Set<String> closedPosTags = Sets.newHashSet("WDT", "WP",
       "WP$", "WRB");
@@ -38,7 +39,7 @@ public class CcgAutoLexicon {
 
   private static Set<String> modalityPosTags = Sets.newHashSet("MD");
 
-  private static Set<String> quantifierPosTags = Sets.newHashSet("DT");
+  private static Set<String> quantifierPosTags = Sets.newHashSet("DT", "DET");
   private static Set<String> negationLemmas = Sets.newHashSet("not", "n't");
   public static Set<String> complementLemmas = Sets.newHashSet("no");
 

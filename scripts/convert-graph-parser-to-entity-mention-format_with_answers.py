@@ -34,6 +34,8 @@ for line in sys.stdin:
         sentence["entities"].append(word_to_mention[word_index])
     if "targetValue" in line:
         sentence['targetValue'] = line['targetValue']
+    if "answer" in line:
+        sentence['answer'] = line['answer']
     #if len(sentence["entities"]) > 0:
     print json.dumps(sentence)
     # print sent, word_to_mention

@@ -183,8 +183,8 @@ public class StructuredPercepton implements Serializable {
 
     List<Entry<Feature, Double>> entries =
         new ArrayList<>(cumulativeWeightVector.entrySet());
-    entries.sort(Comparator.comparing(e -> -1 * e.getValue()
-        / updateFrequency.get(e.getKey())));
+    // entries.sort(Comparator.comparing(e -> -1 * e.getValue()
+    //    / updateFrequency.get(e.getKey())));
     BufferedWriter bw =
         new BufferedWriter(new FileWriter(fileName + ".readable.txt"));
 
