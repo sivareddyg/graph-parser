@@ -1,10 +1,12 @@
 package in.sivareddy.graphparser.parsing;
 
+import in.sivareddy.graphparser.ccg.CategoryIndex;
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.ccg.CcgParseTree;
 import in.sivareddy.graphparser.ccg.CcgParser;
 import in.sivareddy.graphparser.ccg.FunnyCombinatorException;
 import in.sivareddy.graphparser.ccg.LexicalItem;
+import in.sivareddy.graphparser.ccg.SemanticCategory;
 import in.sivareddy.graphparser.ccg.SemanticCategoryType;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
 import in.sivareddy.graphparser.parsing.LexicalGraph.ArgGrelFeature;
@@ -120,12 +122,12 @@ public class GroundedGraphs {
       boolean graphHasEdgeFlag, boolean countNodesFlag,
       boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
-      double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double stemFeaturesWeight) throws IOException {
+      boolean ignorePronouns, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double stemFeaturesWeight) throws IOException {
 
     // ccg parser initialisation
     String[] argumentLexicalIdenfiers = {"mid"};
-    boolean ignorePronouns = true;
     normalCcgParser =
         new CcgParser(normalCcgAutoLexicon, relationLexicalIdentifiers,
             argumentLexicalIdenfiers, relationTypingIdentifiers, ignorePronouns);
@@ -286,6 +288,17 @@ public class GroundedGraphs {
       }
     }
     return graphs;
+  }
+
+  /**
+   * Useful to free memory. Due to bad design, I ended up having static
+   * variables at many places. This should solve the problem partly. Do not call
+   * this function if you are running multiple threads.
+   */
+  public static synchronized void resetAllCounters() {
+    SemanticCategory.resetCounter();
+    CategoryIndex.resetCounter();
+    CcgParser.resetCounter();
   }
 
   static private List<LexicalItem> BuildLexicalItemsFromWords(

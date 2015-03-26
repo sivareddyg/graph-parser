@@ -126,6 +126,7 @@ public class GraphToQueryTraining {
     this.rdfGraphTools = rdfGraphTools;
     this.kbGraphUri = kbGraphUri;
     this.useNbestGraphs = useNbestGraphs;
+    boolean ignorePronouns = true;
 
     this.graphCreator =
         new GroundedGraphs(this.schema, this.kb, this.groundedLexicon,
@@ -138,8 +139,8 @@ public class GraphToQueryTraining {
             argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
             graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
             edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
-            duplicateEdgesFlag, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            duplicateEdgesFlag, ignorePronouns, initialEdgeWeight,
+            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
 
   }
 

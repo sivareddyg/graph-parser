@@ -17,8 +17,11 @@ the	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	UNIQUE
 
 *	IN	N	N{X}	TYPE
 
-# adjectives which act like verbal nouns - e.g. his work was unknown
+# adjectives which act like verbs - e.g. his work was unknown
+*	*	S[adj]\NP	(S[adj]{_}\NP{Y}){_};_ 1 Y	EVENT
 *	*	(S[adj]\NP)/PP	((S[adj]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
+*	*	((S[adj]\NP)/PP)/NP	(((S[adj]{_}\NP{Y}){_}/PP{_}){_}/NP{W}){_};_ 1 y,_ 2 W	EVENT
+*	*	(S[adj]\NP)/(S[to]\NP)	((S[adj]{_}\NP{Y}){_}/(S[to]{Z}\NP{Y}){Z}){_};_ 1 Y,_ 2 Z	EVENT
 
 # passive case
 by	*	((S\NP)\(S\NP))/NP	(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){_}/NP{W}){_};_ 1 Y,_ 2 W	(lambda $f1 $f2 $f3 $Y (exists $W $Z $_ (and (EVENT $Y $Y 1 $W ENTITY) ($f1 $W) (($f2 $Z) $Y) ($f3 $Z))))

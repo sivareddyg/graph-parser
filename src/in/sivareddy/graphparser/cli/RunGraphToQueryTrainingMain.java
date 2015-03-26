@@ -245,7 +245,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
     iterations =
         parser.accepts("iterations", "number of training iterations")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     nBestTrainSyntacticParses =
         parser
@@ -589,11 +589,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
       
-      if ((corupusTrainingFile != null && !corupusTrainingFile.equals(""))
-          || (supervisedTrainingFile != null && !supervisedTrainingFile
-              .equals(""))) {
-        graphToQueryModel.testBestModel(threadCount);
-      }
+      // Run the best model.
+      graphToQueryModel.testBestModel(threadCount);
       
       if (groundInputCorporaFiles != null
           && !groundInputCorporaFiles.equals("")) {

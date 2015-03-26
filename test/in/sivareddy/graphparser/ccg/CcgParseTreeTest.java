@@ -14,20 +14,20 @@ public class CcgParseTreeTest {
   @Test
   public void testParseFromString() throws IOException,
       FunnyCombinatorException, BadParseException {
-    // CcgAutoLexicon lexicon = new
-    // CcgAutoLexicon("./data/candc_markedup.modified",
-    // "./data/unary_rules.txt", "./data/binary_rules.txt",
-    // "./data/lexicon_specialCases.txt");
+     CcgAutoLexicon lexicon = new
+     CcgAutoLexicon("./lib_data/candc_markedup.modified",
+     "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
+     "./lib_data/lexicon_specialCases.txt");
 
     /*-CcgAutoLexicon lexicon =
     new CcgAutoLexicon("./lib_data/ybisk-mapping.txt",
         "./lib_data/dummy.txt", "./lib_data/dummy.txt",
         "./lib_data/dummy.txt");*/
 
-    CcgAutoLexicon lexicon =
+    /*-CcgAutoLexicon lexicon =
         new CcgAutoLexicon("./lib_data/candc_markedup.modified",
             "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
-            "./lib_data/lexicon_specialCases_questions.txt");
+            "./lib_data/lexicon_specialCases_questions.txt");*/
 
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] argumentLexicalIdenfiers = {"lemma"};
@@ -46,6 +46,16 @@ public class CcgParseTreeTest {
     // ccgParser.parseFromString("(<L N Adobe Adobe NNP I-ORG I-NP N>)");
     // assertEquals(ccgParseTree.getLeafNodes().size(), 1);
 
+    sent = "The soldier is not afraid to die .";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[dcl] ba 1 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N The The DT O O NP[nb]/N>) (<L N soldier soldier NN O O N>) ) (<T S[dcl]\\NP fa 0 2> (<T (S[dcl]\\NP)/(S[adj]\\NP) bx 0 2> (<L (S[dcl]\\NP)/(S[adj]\\NP) is be VBZ O O (S[dcl]\\NP)/(S[adj]\\NP)>) (<L (S\\NP)\\(S\\NP) not not RB O O (S\\NP)\\(S\\NP)>) ) (<T S[adj]\\NP fa 0 2> (<L (S[adj]\\NP)/(S[to]\\NP) afraid afraid JJ O O (S[adj]\\NP)/(S[to]\\NP)>) (<T S[to]\\NP fa 0 2> (<L (S[to]\\NP)/(S[b]\\NP) to to TO O O (S[to]\\NP)/(S[b]\\NP)>) (<T S[b]\\NP rp 0 2> (<L S[b]\\NP die die VB O O S[b]\\NP>) (<L . . . . O O .>) ) ) ) ) ) ");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    System.out.println();
+
+    
     sent = "Obama is the president of US";
     ccgParseTrees =
         ccgParser

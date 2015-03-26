@@ -188,6 +188,8 @@ public class GraphToQueryTrainingMain {
 
   public void train(int iterations, int nthreads) throws IOException,
       InterruptedException {
+    if (iterations <= 0)
+      return;
 
     if ((trainingExamples.size() > 0 && trainingSampleSize > 0)
         || supervisedTrainingExamples.size() > 0) {

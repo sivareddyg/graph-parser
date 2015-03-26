@@ -101,7 +101,6 @@ deplambda_mwg:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 10 \
-	-iterations 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
 	-useKB true \
@@ -137,8 +136,52 @@ deplambda_mwg:
 	-logFile ../working/deplambda_mwg/business_film_people.log.txt \
 	> ../working/deplambda_mwg/business_film_people.txt
 
-deplambda_mwg_on_training_data:
-	mkdir -p ../working/deplambda_mwg_on_training
+deplambda_mwg_dev:
+	mkdir -p ../working/deplambda_mwg_dev
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-devFile data/deplambda/webquestions.dev.graphparser.txt \
+	-logFile ../working/deplambda_mwg_dev/business_film_people.log.txt \
+	> ../working/deplambda_mwg_dev/business_film_people.txt
+
+deplambda_mwg_train:
+	mkdir -p ../working/deplambda_mwg_train
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
@@ -147,7 +190,6 @@ deplambda_mwg_on_training_data:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
-	-iterations 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
 	-useKB true \
@@ -179,9 +221,8 @@ deplambda_mwg_on_training_data:
 	-stemFeaturesWeight 0.0 \
 	-endpoint localhost \
 	-devFile data/deplambda/webquestions.train.graphparser.txt \
-	-testFile data/deplambda/webquestions.test.graphparser.txt \
-	-logFile ../working/deplambda_mwg_on_training/business_film_people.log.txt \
-	> ../working/deplambda_mwg_on_training/business_film_people.txt
+	-logFile ../working/deplambda_mwg_train/business_film_people.log.txt \
+	> ../working/deplambda_mwg_train/business_film_people.txt
 
 deplambda_mwg_free917:
 	mkdir -p ../working/deplambda_mwg_free917
@@ -193,7 +234,6 @@ deplambda_mwg_free917:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 10 \
-	-iterations 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
 	-useKB true \
@@ -333,6 +373,102 @@ deplambda_supervised_with_unsupervised_lexicon:
 	-logFile ../working/deplambda_supervised_with_unsupervised_lexicon/business_film_people.log.txt \
 	> ../working/deplambda_supervised_with_unsupervised_lexicon/business_film_people.txt
 
+deplambda_supervised_with_unsupervised_lexicon_loaded_model_dev:
+	mkdir -p ../working/deplambda_supervised_with_unsupervised_lexicon_loaded_model_dev
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-loadModelFromFile ../working/deplambda_supervised_with_unsupervised_lexicon/business_film_people.log.txt.model.bestIteration \
+	-devFile data/deplambda/webquestions.dev.graphparser.txt \
+	-logFile ../working/deplambda_supervised_with_unsupervised_lexicon_loaded_model_dev/business_film_people.log.txt \
+	> ../working/deplambda_supervised_with_unsupervised_lexicon_loaded_model_dev/business_film_people.txt
+
+deplambda_supervised_with_unsupervised_lexicon_loaded_model_train:
+	mkdir -p ../working/deplambda_supervised_with_unsupervised_lexicon_loaded_model_train
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/deplambda/grounded_lexicon/deplambda_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-loadModelFromFile ../working/deplambda_supervised_with_unsupervised_lexicon/business_film_people.log.txt.model.bestIteration \
+	-devFile data/deplambda/webquestions.train.graphparser.txt \
+	-logFile ../working/deplambda_supervised_with_unsupervised_lexicon_loaded_model_train/business_film_people.log.txt \
+	> ../working/deplambda_supervised_with_unsupervised_lexicon_loaded_model_train/business_film_people.txt
+
 # deplambda with unsupervised training
 deplambda_unsupervised:
 	mkdir -p ../working/deplambda_unsupervised
@@ -446,7 +582,6 @@ tacl_mwg:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 10 \
-	-iterations 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
@@ -492,7 +627,6 @@ tacl_mwg_on_training_data:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 10 \
-	-iterations 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
@@ -538,7 +672,6 @@ tacl_mwg_free917:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 10 \
-	-iterations 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
@@ -774,7 +907,7 @@ tacl_supervised_with_unsupervised_lexicon:
 	-logFile ../working/tacl_supervised_with_unsupervised_lexicon/business_film_people.log.txt \
 	> ../working/tacl_supervised_with_unsupervised_lexicon/business_film_people.txt
 
-# To load an existing model and to parse and input corpus using it.
+# To load an existing model and to parse an input corpus using it.
 tacl_unsupervised_loaded_model:
 	mkdir -p ../working/tacl_unsupervised_loaded_model
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \

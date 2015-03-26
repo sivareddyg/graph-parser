@@ -10,6 +10,7 @@ import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,36 +34,51 @@ import com.google.gson.JsonParser;
 public class CcgParseToUngroundedGraphs {
   JsonParser jsonParser;
   Gson gson;
-  EasyCcgCli ccgParser;
-  EasyCcgCli ccgParserQuestions;
+  EasyCcgCli ccgParser = null;
+  EasyCcgCli ccgParserQuestions = null;
   StanfordCoreNlpDemo nlpPipeline;
   GroundedGraphs graphCreator;
   Logger logger;
   int nbestParses;
 
-  public CcgParseToUngroundedGraphs() throws ArgumentValidationException,
+  public CcgParseToUngroundedGraphs(String dataFolder, String languageCode,
+      boolean useQuestionsModel) throws ArgumentValidationException,
       IOException {
     jsonParser = new JsonParser();
     gson = new Gson();
     logger = Logger.getLogger(CcgParseToUngroundedGraphs.class);
 
     nbestParses = 1;
-    String ccgModelDir = "lib_data/easyccg_model/";
-    String ccgModelDirQuestions =
-        "lib_data/easyccg_model_questions/ -s -r S[q] S[qem] S[wq]";
-    ccgParser = new EasyCcgCli(ccgModelDir, nbestParses);
-    ccgParserQuestions = new EasyCcgCli(ccgModelDirQuestions, nbestParses);
-    nlpPipeline = new StanfordCoreNlpDemo("en");
 
-    CcgAutoLexicon questionCcgAutoLexicon =
-        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
-            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
-            "./lib_data/lexicon_specialCases_questions.txt");
+    String ccgModelDir = Paths.get(dataFolder, "easyccg_model").toString();
+
+    ccgParser = new EasyCcgCli(ccgModelDir, nbestParses);
+    if (useQuestionsModel) {
+      String ccgModelDirQuestions =
+          Paths.get(dataFolder, "easyccg_model_questions").toString();
+      ccgParserQuestions =
+          new EasyCcgCli(ccgModelDirQuestions + " -s -r S[q] S[qem] S[wq]",
+              nbestParses);
+    }
+    nlpPipeline = new StanfordCoreNlpDemo(languageCode);
+
+    String markupFile =
+        Paths.get(dataFolder, "candc_markedup.modified").toString();
+    String unaryRulesFile = Paths.get(dataFolder, "unary_rules.txt").toString();
+    String binaryRulesFile =
+        Paths.get(dataFolder, "binary_rules.txt").toString();
+    String specialCasesFile =
+        Paths.get(dataFolder, "lexicon_specialCases.txt").toString();
+    String specialCasesQuestionsFile =
+        Paths.get(dataFolder, "lexicon_specialCases_questions.txt").toString();
 
     CcgAutoLexicon normalCcgAutoLexicon =
-        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
-            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
-            "./lib_data/lexicon_specialCases.txt");
+        new CcgAutoLexicon(markupFile, unaryRulesFile, binaryRulesFile,
+            specialCasesFile);
+
+    CcgAutoLexicon questionCcgAutoLexicon =
+        new CcgAutoLexicon(markupFile, unaryRulesFile, binaryRulesFile,
+            specialCasesQuestionsFile);
 
     String[] relationLexicalIdentifiers = {"word"};
     String[] relationTypingIdentifiers = {};
@@ -75,8 +91,8 @@ public class CcgParseToUngroundedGraphs {
             questionCcgAutoLexicon, relationLexicalIdentifiers,
             relationTypingIdentifiers, null, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, 10.0, 1.0, 0.0,
-            0.0);
+            false, false, false, false, false, false, false, false, 10.0, 1.0,
+            0.0, 0.0);
   }
 
   public List<List<LexicalGraph>> processText(String line)
@@ -91,7 +107,7 @@ public class CcgParseToUngroundedGraphs {
 
     for (String processedSentence : processedText) {
       List<String> ccgParseStrings =
-          processedSentence.endsWith("?|.|O") ? ccgParserQuestions
+          ccgParserQuestions != null && processedSentence.endsWith("?|.|O") ? ccgParserQuestions
               .parse(processedSentence) : ccgParser.parse(processedSentence);
       List<Map<String, String>> ccgParses = new ArrayList<>();
       for (String ccgParseString : ccgParseStrings) {
@@ -115,6 +131,7 @@ public class CcgParseToUngroundedGraphs {
 
       jsonSentence.add("words", jsonParser.parse(gson.toJson(words)));
 
+      GroundedGraphs.resetAllCounters();
       List<LexicalGraph> graphs =
           graphCreator.buildUngroundedGraph(jsonSentence, "synPars",
               nbestParses, logger);
@@ -127,7 +144,8 @@ public class CcgParseToUngroundedGraphs {
       ArgumentValidationException, InterruptedException {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     try {
-      CcgParseToUngroundedGraphs parser = new CcgParseToUngroundedGraphs();
+      CcgParseToUngroundedGraphs parser =
+          new CcgParseToUngroundedGraphs("lib_data", "en", true);
       PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
       Logger logger = Logger.getLogger(CcgParseToUngroundedGraphs.class);
       logger.setLevel(Level.DEBUG);

@@ -23,6 +23,8 @@ public class StanfordCoreNlpDemo {
     Properties props = new Properties();
     if (languageCode.equals("en")) {
       props.put("annotators", "tokenize, ssplit, pos, lemma, ner");
+    } else if (languageCode.equals("en-ner")) {
+      props.put("annotators", "tokenize, ssplit, pos, lemma");
     } else if (languageCode.equals("es")) {
       props.put("annotators", "tokenize, ssplit, pos, lemma, ner");
 
@@ -61,7 +63,9 @@ public class StanfordCoreNlpDemo {
           String pos = token.get(PartOfSpeechAnnotation.class);
 
           // this is the NER label of the token
-          String ne = token.get(NamedEntityTagAnnotation.class);
+          String ne = "O";
+          if (token.containsKey(NamedEntityTagAnnotation.class))
+            ne = token.get(NamedEntityTagAnnotation.class);
 
           if (pos.startsWith("NNP") && prev_pos.startsWith("NNP")) {
             prev_word += "_" + word;
@@ -88,7 +92,7 @@ public class StanfordCoreNlpDemo {
 
   public static void main(String[] args) throws IOException {
 
-    StanfordCoreNlpDemo enlgishPipeline = new StanfordCoreNlpDemo("en");
+    StanfordCoreNlpDemo enlgishPipeline = new StanfordCoreNlpDemo("en-ner");
     System.out.println(enlgishPipeline
         .processText("James Cameron directed Titanic in 1997 for 100$."));
 

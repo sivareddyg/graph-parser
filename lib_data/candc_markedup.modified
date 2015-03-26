@@ -360,8 +360,9 @@ S[ng]\NP
   1 (S[ng]{_}\NP{Y}<1>){_}
   1 ncsubj %l %f _
 
+# modified
 ((S[dcl]\NP)/PP)/NP
-  3 (((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  3 (((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<3>){_}/NP{W}<2>){_}
   1 ncsubj %l %f _
   2 iobj %l %f =PP/NP
   2 xcomp _ %l %f =PP/(S[ng]\NP)
@@ -474,8 +475,9 @@ S[pt]\NP
   1 ncsubj %l %f _
   2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
 
+# modified
 ((S[ng]\NP)/PP)/NP
-  3 (((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  3 (((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<3>){_}/NP{W}<2>){_}
   1 ncsubj %l %f _
   2 iobj %l %f =PP/NP
   2 xcomp _ %l %f =PP/(S[ng]\NP)
@@ -627,8 +629,9 @@ conj/conj
   1 ncsubj %l %f _
   2 xcomp %f %l %k =(S[to]\NP)/(S[b]\NP)
 
+# modified
 ((S[pt]\NP)/PP)/NP
-  3 (((S[pt]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  3 (((S[pt]{_}\NP{Y}<1>){_}/PP{Z}<3>){_}/NP{W}<2>){_}
   1 ncsubj %l %f _
   2 iobj %l %f =PP/NP
   2 xcomp _ %l %f =PP/(S[ng]\NP)
@@ -1164,7 +1167,7 @@ NP/S[dcl]
   2 xcomp _ %l %f
 
 ((S[adj]\NP)/PP)/NP
-  3 (((S[adj]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}
+  3 (((S[adj]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<2>){_}
   1 ignore
   2 ncmod _ %3 %f # "up .. from .." construction
   3 dobj %l %f
@@ -3204,8 +3207,9 @@ PP/(S[dcl]\NP)
   3 iobj _ %l %f
   4 dobj _ %l %f
 
+# modified
 (((S[dcl]\NP)/PP)/NP)/PP
-  4 ((((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}/PP{V}<4>){_}
+  4 ((((S[dcl]{_}\NP{Y}<1>){_}/PP{Z}<3>){_}/NP{W}<2>){_}/PP{V}<4>){_}
   1 ncsubj %l %f _
   2 iobj %l %f =PP/NP
   2 xcomp _ %l %f =PP/(S[ng]\NP)
@@ -3236,8 +3240,9 @@ PP/(S[dcl]\NP)
   3 iobj %l %f =PP/NP
   4 iobj %l %f =PP/NP
 
+# modified
 (((S[ng]\NP)/PP)/NP)/PP
-  4 ((((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<2>){_}/NP{W}<3>){_}/PP{V}<4>){_}
+  4 ((((S[ng]{_}\NP{Y}<1>){_}/PP{Z}<3>){_}/NP{W}<2>){_}/PP{V}<4>){_}
   1 ncsubj %l %f _
   2 iobj %l %f =PP/NP
   2 xcomp _ %l %f =PP/(S[ng]\NP)

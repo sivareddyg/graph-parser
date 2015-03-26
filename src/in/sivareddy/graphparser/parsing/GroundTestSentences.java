@@ -69,6 +69,8 @@ public class GroundTestSentences {
     boolean useLexiconWeightsRel = true;
     boolean useLexiconWeightsType = false;
 
+    boolean ignorePronouns = true;
+
     double initialEdgeWeight = -1.0;
     double initialTypeWeight = -1.0;
     double initialWordWeight = -1.0;
@@ -88,8 +90,8 @@ public class GroundTestSentences {
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            initialEdgeWeight, initialTypeWeight, initialWordWeight,
-            stemFeaturesWeight);
+            ignorePronouns, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));
