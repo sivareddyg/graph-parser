@@ -16,6 +16,8 @@ import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.ml.basic.Feature;
 import in.sivareddy.ml.learning.StructuredPercepton;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +31,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -49,6 +52,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -573,14 +577,7 @@ public class GraphToQueryTraining {
         }
       }
     }
-    Collections.sort(gGraphsAndResults,
-        new Comparator<Pair<LexicalGraph, LinkedHashSet<String>>>() {
-          @Override
-          public int compare(Pair<LexicalGraph, LinkedHashSet<String>> o1,
-              Pair<LexicalGraph, LinkedHashSet<String>> o2) {
-            return o1.getLeft().compareTo(o2.getLeft());
-          }
-        });
+    gGraphsAndResults.sort(Comparator.comparing(x -> x.getLeft()));
 
     // Selecting the gold graphs
     List<Pair<Integer, LexicalGraph>> goldGraphs = Lists.newArrayList();
@@ -1150,6 +1147,7 @@ public class GraphToQueryTraining {
           rdfGraphTools.runQueryHttp(query);
       logger.debug("Predicted Results: " + predResults);
       logger.debug("Gold Results: " + goldResults);
+
       boolean areEqual = RdfGraphTools.equalResults(goldResults, predResults);
       if (areEqual) {
         logger.debug("Sentence: " + sentence);
@@ -1242,14 +1240,20 @@ public class GraphToQueryTraining {
     Map<Integer, Integer> positives = Maps.newConcurrentMap();
     Map<Integer, Integer> negatives = Maps.newConcurrentMap();
     Map<Integer, Integer> firstBestPredictionsMap = Maps.newConcurrentMap();
+    ConcurrentHashMap<Integer, Pair<Set<String>, Set<String>>> results =
+        new ConcurrentHashMap<>();
+    Map<Integer, String> sentenceIndexMap = new HashMap<>();
+
 
     for (String testSentence : testSentences) {
       JsonObject jsonSentence =
           jsonParser.parse(testSentence).getAsJsonObject();
+      sentenceIndexMap.put(sentCount, jsonSentence.get("sentence")
+          .getAsString());
       Runnable worker =
           new testCurrentModelSentenceRunnable(this, jsonSentence, sentCount,
-              deadThredsLogs, positives, negatives, firstBestPredictionsMap,
-              testingNbestParsesRange);
+              deadThredsLogs, results, positives, negatives,
+              firstBestPredictionsMap, testingNbestParsesRange);
       threadPool.execute(worker);
       sentCount += 1;
     }
@@ -1283,6 +1287,17 @@ public class GraphToQueryTraining {
       }
     }
 
+    BufferedWriter bw =
+        new BufferedWriter(new FileWriter(logFile + ".answers.txt"));
+    Gson gson = new Gson();
+    for (int i = 0; i < sentCount; i++) {
+      Pair<Set<String>, Set<String>> currentResults = results.get(i);
+      bw.write(String.format("%s\t%s\t%s\n", sentenceIndexMap.get(i),
+          gson.toJson(currentResults.getLeft()),
+          gson.toJson(currentResults.getRight())));
+    }
+    bw.close();
+
     List<Integer> keys = Lists.newArrayList(firstBestPredictionsMap.keySet());
     Collections.sort(keys);
 
@@ -1303,10 +1318,12 @@ public class GraphToQueryTraining {
     Map<Integer, Integer> positives;
     Map<Integer, Integer> negatives;
     Map<Integer, Integer> firstBestMap;
+    Map<Integer, Pair<Set<String>, Set<String>>> results;
     List<Integer> testingNbestParsesRange;
 
     public testCurrentModelSentenceRunnable(GraphToQueryTraining graphToQuery,
         JsonObject jsonSentence, int sentCount, Queue<Logger> logs,
+        Map<Integer, Pair<Set<String>, Set<String>>> results,
         Map<Integer, Integer> positives, Map<Integer, Integer> negatives,
         Map<Integer, Integer> firstBestMap,
         List<Integer> testingNbestParsesRange) {
@@ -1315,6 +1332,7 @@ public class GraphToQueryTraining {
       this.sentCount = sentCount;
       this.logs = logs;
 
+      this.results = results;
       this.positives = positives;
       this.negatives = negatives;
       this.firstBestMap = firstBestMap;
@@ -1329,15 +1347,15 @@ public class GraphToQueryTraining {
               "Insufficient number of loggers. Loggers should be at the size of blocking queue");
       Logger logger = logs.poll();
       graphToQuery.testCurrentModelSentence(jsonSentence, logger, sentCount,
-          positives, negatives, firstBestMap, testingNbestParsesRange);
+          results, positives, negatives, firstBestMap, testingNbestParsesRange);
       logs.add(logger);
     }
   }
 
   private void testCurrentModelSentence(JsonObject jsonSentence, Logger logger,
-      int sentCount, Map<Integer, Integer> positives,
-      Map<Integer, Integer> negatives, Map<Integer, Integer> firstBestMap,
-      List<Integer> testingNbestParsesRange) {
+      int sentCount, Map<Integer, Pair<Set<String>, Set<String>>> results,
+      Map<Integer, Integer> positives, Map<Integer, Integer> negatives,
+      Map<Integer, Integer> firstBestMap, List<Integer> testingNbestParsesRange) {
     boolean debugEnabled = logger.isDebugEnabled();
     boolean foundAnswer = false;
     Preconditions.checkArgument(
@@ -1353,6 +1371,7 @@ public class GraphToQueryTraining {
       logger.info("Gold Query : " + goldQuery);
       goldResults = rdfGraphTools.runQueryHttp(goldQuery);
       logger.info("Gold Results : " + goldResults);
+
     } else if (jsonSentence.has("targetValue")) {
       String goldAnswersString = jsonSentence.get("targetValue").getAsString();
       Pattern goldAnswerPattern =
@@ -1372,8 +1391,11 @@ public class GraphToQueryTraining {
             nbestTestSyntacticParses, logger);
     if (uGraphs.size() < 1) {
       logger.debug("No uGraphs");
+
       // Syntactic Parser mistakes
       firstBestMap.put(sentCount, -1);
+      results
+          .put(sentCount, RdfGraphTools.getCleanedResults(goldResults, null));
       return;
     }
 
@@ -1438,23 +1460,17 @@ public class GraphToQueryTraining {
       }
     }
 
-    Collections
-        .sort(
-            gGraphsAndResults,
-            new Comparator<Pair<LexicalGraph, Map<String, LinkedHashSet<String>>>>() {
 
-              @Override
-              public int compare(
-                  Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> o1,
-                  Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> o2) {
-                return o1.getLeft().compareTo(o2.getLeft());
-              }
-            });
-
+    gGraphsAndResults.sort(Comparator.comparing(x -> x.getLeft()));
     int count = 0;
+
+    Map<String, LinkedHashSet<String>> firstBestPredictions = null;
     for (Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> gGraphPair : gGraphsAndResults) {
       LexicalGraph gGraph = gGraphPair.getLeft();
       Map<String, LinkedHashSet<String>> predResults = gGraphPair.getRight();
+
+      if (count == 0)
+        firstBestPredictions = predResults;
 
       count += 1;
       /*-if (count > 1) {
@@ -1477,6 +1493,7 @@ public class GraphToQueryTraining {
       }
       logger.info("Predicted Results: " + predResults);
       logger.info("Gold Results: " + goldResults);
+
       boolean areEqual = RdfGraphTools.equalResults(goldResults, predResults);
 
       if (areEqual) {
@@ -1487,6 +1504,11 @@ public class GraphToQueryTraining {
         logger.info("WRONG!!");
       }
     }
+
+
+    // Store the results.
+    results.put(sentCount,
+        RdfGraphTools.getCleanedResults(goldResults, firstBestPredictions));
 
     if (foundAnswer && count == 1) {
       firstBestMap.put(sentCount, 1);

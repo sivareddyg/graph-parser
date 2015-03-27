@@ -7,6 +7,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import virtuoso.jena.driver.VirtGraph;
 import virtuoso.jena.driver.VirtuosoQueryExecution;
 import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
@@ -207,6 +209,84 @@ public class RdfGraphTools {
       return results;
     }
     return results;
+  }
+
+
+  /**
+   * Returns readable outuput of gold and predicted results that can be used for
+   * evaluation with Berant's script.
+   * 
+   * @param goldResults
+   * @param predResults
+   * @return
+   */
+  public static Pair<Set<String>, Set<String>> getCleanedResults(
+      Map<String, LinkedHashSet<String>> goldResults,
+      Map<String, LinkedHashSet<String>> predResults) {
+
+    Preconditions.checkArgument(goldResults != null,
+        "Gold results should not be null");
+    Preconditions.checkArgument(goldResults.keySet().size() <= 2,
+        "Unknown target variable");
+    String goldVar = null;
+    String goldVarName = null;
+    for (String key : goldResults.keySet()) {
+      if (key.equals("targetValue")) {
+        goldVarName = key;
+      } else if (!key.contains("name")) {
+        goldVar = key;
+      }
+    }
+
+    boolean hasDate = false;
+    LinkedHashSet<String> goldAnswers = goldResults.get(goldVarName);
+    if (goldVarName != null && goldVarName.equals("targetValue")) {
+      hasDate =
+          (goldAnswers.size() > 0 && goldAnswers.iterator().next()
+              .contains("XMLSchema#datetime")) ? true : false;
+      if (hasDate) {
+        goldAnswers = convertDatesToYears(goldAnswers);
+      }
+    } else {
+      goldAnswers = goldResults.get(goldVar);
+    }
+
+    if (predResults == null)
+      return Pair.of(goldAnswers, new LinkedHashSet<>());
+
+    Preconditions.checkArgument(predResults.keySet().size() <= 2,
+        "Unknown target variable");
+    String predVar = null;
+    String predVarName = null;
+    for (String key : predResults.keySet()) {
+      if (!key.contains("name")) {
+        predVar = key;
+      } else if (predResults.get(key).size() > 0) {
+        predVarName = key;
+      }
+    }
+
+    LinkedHashSet<String> predAnswersCleaned = new LinkedHashSet<>();
+    if (goldVarName != null && goldVarName.equals("targetValue")) {
+      LinkedHashSet<String> predAnswers =
+          predVarName != null ? predResults.get(predVarName) : predResults
+              .get(predVar);
+
+      for (String predAnswer : predAnswers) {
+        predAnswer = predAnswer.split("\\^\\^")[0];
+        predAnswer = predAnswer.replaceAll("@[a-zA-Z\\-]+$", "");
+        if (hasDate) {
+          Matcher matcher = Pattern.compile("([0-9]{3,4})").matcher(predAnswer);
+          if (matcher.find()) {
+            predAnswer = matcher.group(1);
+          }
+        }
+        predAnswersCleaned.add(predAnswer);
+      }
+    } else {
+      predAnswersCleaned = predResults.get(predVar);
+    }
+    return Pair.of(goldAnswers, predAnswersCleaned);
   }
 
   /**
