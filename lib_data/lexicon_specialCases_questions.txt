@@ -70,3 +70,6 @@ be	*	(S[dcl]\NP)/(S[adj]\NP)	((S[dcl]{Z}\NP{Y}){_}/(S[adj]{Z}\NP{Y*}){Z}){_};_ 1
 # Artificial possessive - Over generation of ungrounded graphs - Comment it for public usage
 's	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))
 's	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+
+# BLANK category
+BLANK	*	N	N{X}	(lambda $X (QUESTION $X))

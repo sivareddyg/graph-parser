@@ -1358,9 +1358,11 @@ public class GraphToQueryTraining {
       Map<Integer, Integer> firstBestMap, List<Integer> testingNbestParsesRange) {
     boolean debugEnabled = logger.isDebugEnabled();
     boolean foundAnswer = false;
-    Preconditions.checkArgument(
-        jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue"),
-        "Test sentence should either have a gold query or targetValue");
+    Preconditions
+        .checkArgument(
+            jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue")
+                || jsonSentence.has("answerSubset") || jsonSentence.has("answer"),
+            "Test sentence should either have a gold query or targetValue or answer values");
     String sentence = jsonSentence.get("sentence").getAsString();
 
     logger.info("Sentence " + sentCount + ": " + sentence);
@@ -1371,7 +1373,6 @@ public class GraphToQueryTraining {
       logger.info("Gold Query : " + goldQuery);
       goldResults = rdfGraphTools.runQueryHttp(goldQuery);
       logger.info("Gold Results : " + goldResults);
-
     } else if (jsonSentence.has("targetValue")) {
       String goldAnswersString = jsonSentence.get("targetValue").getAsString();
       Pattern goldAnswerPattern =
@@ -1383,6 +1384,18 @@ public class GraphToQueryTraining {
       }
       goldResults = new HashMap<>();
       goldResults.put("targetValue", goldAnswers);
+    } else if (jsonSentence.has("answer")) {
+      JsonArray goldAnswersArray = jsonSentence.get("answer").getAsJsonArray();
+      LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
+      goldAnswersArray.forEach(answer -> goldAnswers.add(answer.getAsString()));
+      goldResults = new HashMap<>();
+      goldResults.put("answer", goldAnswers);
+    } else if (jsonSentence.has("answerSubset")) {
+      JsonArray goldAnswersArray = jsonSentence.get("answerSubset").getAsJsonArray();
+      LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
+      goldAnswersArray.forEach(answer -> goldAnswers.add(answer.getAsString()));
+      goldResults = new HashMap<>();
+      goldResults.put("answerSubset", goldAnswers);
     }
 
     // Get ungrounded graphs

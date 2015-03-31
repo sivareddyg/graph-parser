@@ -1,5 +1,6 @@
 package in.sivareddy.graphparser.util;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -283,6 +284,21 @@ public class RdfGraphTools {
         }
         predAnswersCleaned.add(predAnswer);
       }
+    } else if (goldVar.equals("answerSubset") || goldVar.equals("answer")) {
+      LinkedHashSet<String> predAnswers = predResults.get(predVar);
+      for (String predAnswer : predAnswers) {
+        boolean answerIsDate = predAnswer.contains("XMLSchema#datetime");
+        predAnswer = predAnswer.split("\\^\\^")[0];
+        String[] answers = predAnswer.split("/");
+        predAnswer = answers[answers.length - 1];
+        if (answerIsDate) {
+          Matcher matcher = Pattern.compile("([0-9]{3,4})").matcher(predAnswer);
+          if (matcher.find()) {
+            predAnswer = matcher.group(1);
+          }
+        }
+        predAnswersCleaned.add(predAnswer);
+      }
     } else {
       predAnswersCleaned = predResults.get(predVar);
     }
@@ -366,6 +382,27 @@ public class RdfGraphTools {
         return false;
       }
       return predAnswersCleaned.equals(goldAnswers);
+    } else if (goldVar.equals("answerSubset") || goldVar.equals("answer")) {
+      // If the gold answers are subset of the predicted answers, return true.
+      HashSet<String> predAnswersCleaned = new HashSet<>();
+      LinkedHashSet<String> predAnswers = predResults.get(predVar);
+      for (String predAnswer : predAnswers) {
+        boolean answerIsDate = predAnswer.contains("XMLSchema#datetime");
+        predAnswer = predAnswer.split("\\^\\^")[0];
+        String[] answers = predAnswer.split("/");
+        predAnswer = answers[answers.length - 1];
+        if (answerIsDate) {
+          Matcher matcher = Pattern.compile("([0-9]{3,4})").matcher(predAnswer);
+          if (matcher.find()) {
+            predAnswer = matcher.group(1);
+          }
+        }
+        predAnswersCleaned.add(predAnswer);
+      }
+      if (goldVar.equals("answerSubset"))
+        return predAnswersCleaned.containsAll(goldResults.get(goldVar));
+      else
+        return predAnswersCleaned.equals(goldResults.get(goldVar));
     } else {
       return goldResults.get(goldVar).equals(predResults.get(predVar));
     }

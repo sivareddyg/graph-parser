@@ -41,3 +41,6 @@ that	*	S[em]/S[dcl]	(S[em]{Y}/S[dcl]{Y}){_};_ 1 Y	CLOSED
 # Artificial possessive - Over generation of ungrounded graphs - Comment it for public usage
 's	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))
 's	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+
+# BLANK category
+BLANK	*	N	N{X}	(lambda $X (QUESTION $X))

@@ -1,3 +1,6 @@
+make deplambda_mwg_train
+make deplambda_supervised_with_unsupervised_lexicon_loaded_model_dev
+make deplambda_supervised_with_unsupervised_lexicon_loaded_model_train
 make tacl_unsupervised_free917 2> ../working/tacl_unsupervised_free917.errors.txt
 make deplambda_unsupervised_free917 2> ../working/deplambda_unsupervised_free917.errors.txt
 make deplambda_mwg 2> ../working/deplambda_mwg.errors.txt
