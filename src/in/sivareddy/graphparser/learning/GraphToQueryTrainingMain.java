@@ -95,18 +95,19 @@ public class GraphToQueryTrainingMain {
     this.logFile = logFile;
     this.groundInputCorpora = groundInputCorpora;
 
-    if (this.debugEnabled) {
-      this.logger.setLevel(Level.DEBUG);
-      if (logFile != null) {
-        Appender appender = new FileAppender(layout, logFile, false);
-        this.logger.addAppender(appender);
-        // Appender stdoutAppender = new ConsoleAppender(layout);
-        // this.logger.addAppender(stdoutAppender);
-      } else {
-        Appender stdoutAppender = new ConsoleAppender(layout);
-        this.logger.addAppender(stdoutAppender);
-      }
+    if (logFile != null) {
+      Appender appender = new FileAppender(layout, logFile, false);
+      this.logger.addAppender(appender);
+    } else {
+      Appender stdoutAppender = new ConsoleAppender(layout);
+      this.logger.addAppender(stdoutAppender);
     }
+
+    if (this.debugEnabled)
+      this.logger.setLevel(Level.DEBUG);
+    else
+      this.logger.setLevel(Level.INFO);
+
 
     if (loadModelFromFile != null && !loadModelFromFile.equals("")) {
       currentIterationModel = StructuredPercepton.loadModel(loadModelFromFile);
@@ -135,18 +136,34 @@ public class GraphToQueryTrainingMain {
 
     supervisedTrainingExamples = new ArrayList<>();
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
-      loadExamples(new FileReader(supervisedTrainingFile),
-          supervisedTrainingExamples);
+      if (supervisedTrainingFile.endsWith(".gz")) {
+        loadExamples(new InputStreamReader(new GZIPInputStream(
+            new FileInputStream(supervisedTrainingFile)), "UTF-8"),
+            supervisedTrainingExamples);
+      } else {
+        loadExamples(new FileReader(supervisedTrainingFile),
+            supervisedTrainingExamples);
+      }
     }
 
     if (testingFile != null && !testingFile.equals("")) {
       testingExamples = new ArrayList<>();
-      loadExamples(new FileReader(testingFile), testingExamples);
+      if (testingFile.endsWith(".gz")) {
+        loadExamples(new InputStreamReader(new GZIPInputStream(
+            new FileInputStream(testingFile)), "UTF-8"), testingExamples);
+      } else {
+        loadExamples(new FileReader(testingFile), testingExamples);
+      }
     }
 
     if (devFile != null && !devFile.equals("")) {
       devExamples = new ArrayList<>();
-      loadExamples(new FileReader(devFile), devExamples);
+      if (devFile.endsWith(".gz")) {
+        loadExamples(new InputStreamReader(new GZIPInputStream(
+            new FileInputStream(devFile)), "UTF-8"), devExamples);
+      } else {
+        loadExamples(new FileReader(devFile), devExamples);
+      }
     }
 
     // Loading training files from all domains
@@ -193,10 +210,20 @@ public class GraphToQueryTrainingMain {
 
     if ((trainingExamples.size() > 0 && trainingSampleSize > 0)
         || supervisedTrainingExamples.size() > 0) {
-      logger.info("######## Evaluating the model before training ###########");
-      logger.info("######## Development Data ###########");
+      Logger evalLogger =
+          Logger.getLogger(GraphToQueryTraining.class + ".eval.beforeTraining");
+      RollingFileAppender appender =
+          new RollingFileAppender(layout, logFile + ".eval.beforeTraining");
+      appender.setMaxFileSize("100MB");
+      evalLogger.addAppender(appender);
+      if (debugEnabled)
+        evalLogger.setLevel(Level.DEBUG);
+      else
+        evalLogger.setLevel(Level.INFO);
+      evalLogger.info("######## Evaluating the model before training ###########");
+      evalLogger.info("######## Development Data ###########");
       highestPerformace =
-          graphToQuery.testCurrentModel(devExamples, logger, logFile
+          graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
               + ".eval.beforeTraining", debugEnabled, testingNbestParsesRange,
               nthreads);
     }
@@ -215,13 +242,14 @@ public class GraphToQueryTrainingMain {
 
       Logger evalLogger =
           Logger.getLogger(GraphToQueryTraining.class + ".eval.iteration" + i);
-      if (debugEnabled) {
+      RollingFileAppender appender =
+          new RollingFileAppender(layout, logFile + ".eval.iteration" + i);
+      appender.setMaxFileSize("100MB");
+      evalLogger.addAppender(appender);
+      if (debugEnabled)
         evalLogger.setLevel(Level.DEBUG);
-        RollingFileAppender appender =
-            new RollingFileAppender(layout, logFile + ".eval.iteration" + i);
-        appender.setMaxFileSize("100MB");
-        evalLogger.addAppender(appender);
-      }
+      else
+        evalLogger.setLevel(Level.INFO);
 
       evalLogger.info("######## Development Data ###########");
       Double performance =
@@ -236,6 +264,11 @@ public class GraphToQueryTrainingMain {
           bestModelSoFar = currentIterationModel.serialClone();
           currentModelIsTheBestModel = true;
           highestPerformace = performance;
+
+          evalLogger.info("######## Testing Data ###########");
+          graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile
+              + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
+              nthreads);
         } else {
           evalLogger
               .info("Gradient moved in WRONG direction! Ignoring the current training iteration.");
@@ -243,11 +276,6 @@ public class GraphToQueryTrainingMain {
         }
       }
       currentIterationModel.saveModel(logFile + ".model.iteration" + i);
-
-      evalLogger.info("######## Testing Data ###########");
-      graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile
-          + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
-          nthreads);
     }
   }
 

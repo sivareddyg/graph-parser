@@ -1070,15 +1070,17 @@ unsupervised_first_experiment:
     -logFile ../working/unsupervised_first_experiment/business_film_people.log.txt \
     > ../working/unsupervised_first_experiment/business_film_people.txt
 
-tacl_unsupervised_declarative_testing_loaded_model:
-	mkdir -p working/tacl_unsupervised_declarative_testing_loaded_model
+candc_distant_eval:
+	mkdir -p ../working/candc_distant_eval
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
 	-lexicon data/dummy.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
+	-trainingSampleSize 3000 \
+	-iterations 40 \
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
@@ -1111,9 +1113,9 @@ tacl_unsupervised_declarative_testing_loaded_model:
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint kinloch \
-	-loadModelFromFile test_data/tacl_unsupervised.model \
-	-testFile test_data/declarative_evaluation.txt \
-	-logFile working/tacl_unsupervised_declarative_testing_loaded_model/business_film_people.log.txt \
-	> working/tacl_unsupervised_declarative_testing_loaded_model/business_film_people.txt
-
+	-endpoint localhost \
+	-trainingCorpora data/distant_eval/train.json.gz \
+	-devFile data/distant_eval/dev.json.blank.gz \
+	-testFile data/distant_eval/test.json.blank.gz \
+	-logFile ../working/candc_distant_eval/business_film_people.log.txt \
+	> ../working/candc_distant_eval/business_film_people.txt
