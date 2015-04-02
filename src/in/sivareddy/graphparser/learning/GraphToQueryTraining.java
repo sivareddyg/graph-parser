@@ -1292,9 +1292,14 @@ public class GraphToQueryTraining {
     Gson gson = new Gson();
     for (int i = 0; i < sentCount; i++) {
       Pair<Set<String>, Set<String>> currentResults = results.get(i);
-      bw.write(String.format("%s\t%s\t%s\n", sentenceIndexMap.get(i),
-          gson.toJson(currentResults.getLeft()),
-          gson.toJson(currentResults.getRight())));
+      if (currentResults != null) {
+        bw.write(String.format("%s\t%s\t%s\n", sentenceIndexMap.get(i),
+            gson.toJson(currentResults.getLeft()),
+            gson.toJson(currentResults.getRight())));
+      } else {
+        bw.write(String.format("%s\t[\"missing\"]\t[]\n",
+            sentenceIndexMap.get(i)));
+      }
     }
     bw.close();
 
@@ -1361,7 +1366,8 @@ public class GraphToQueryTraining {
     Preconditions
         .checkArgument(
             jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue")
-                || jsonSentence.has("answerSubset") || jsonSentence.has("answer"),
+                || jsonSentence.has("answerSubset")
+                || jsonSentence.has("answer"),
             "Test sentence should either have a gold query or targetValue or answer values");
     String sentence = jsonSentence.get("sentence").getAsString();
 
@@ -1391,7 +1397,8 @@ public class GraphToQueryTraining {
       goldResults = new HashMap<>();
       goldResults.put("answer", goldAnswers);
     } else if (jsonSentence.has("answerSubset")) {
-      JsonArray goldAnswersArray = jsonSentence.get("answerSubset").getAsJsonArray();
+      JsonArray goldAnswersArray =
+          jsonSentence.get("answerSubset").getAsJsonArray();
       LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
       goldAnswersArray.forEach(answer -> goldAnswers.add(answer.getAsString()));
       goldResults = new HashMap<>();

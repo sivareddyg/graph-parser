@@ -226,6 +226,7 @@ public class GraphToQueryTrainingMain {
           graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
               + ".eval.beforeTraining", debugEnabled, testingNbestParsesRange,
               nthreads);
+      appender.close();
     }
 
     for (int i = 0; i < iterations; i++) {
@@ -276,6 +277,7 @@ public class GraphToQueryTrainingMain {
         }
       }
       currentIterationModel.saveModel(logFile + ".model.iteration" + i);
+      appender.close();
     }
   }
 

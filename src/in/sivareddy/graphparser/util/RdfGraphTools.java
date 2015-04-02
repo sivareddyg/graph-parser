@@ -121,7 +121,7 @@ public class RdfGraphTools {
       vqe.addParam("timeout", this.timeOut.toString());
       results = vqe.execSelect();
     } catch (Exception e) {
-      System.err.println("http exception: " + e.getMessage());
+      // Skip.
     }
     return results;
   }
