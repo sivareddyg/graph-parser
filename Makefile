@@ -1079,8 +1079,8 @@ candc_distant_eval:
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
-	-trainingSampleSize 3000 \
-	-iterations 40 \
+	-trainingSampleSize 1000 \
+	-iterations 100 \
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
@@ -1096,10 +1096,10 @@ candc_distant_eval:
 	-wordGrelPartFlag false \
 	-wordBigramGrelPartFlag false \
 	-argGrelPartFlag false \
-	-stemMatchingFlag true \
-	-mediatorStemGrelPartMatchingFlag true \
-	-argumentStemMatchingFlag true \
-	-argumentStemGrelPartMatchingFlag true \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
 	-graphIsConnectedFlag false \
 	-graphHasEdgeFlag true \
 	-countNodesFlag false \
@@ -1116,6 +1116,5 @@ candc_distant_eval:
 	-endpoint localhost \
 	-trainingCorpora data/distant_eval/train.json.gz \
 	-devFile data/distant_eval/dev.json.blank.gz \
-	-testFile data/distant_eval/test.json.blank.gz \
 	-logFile ../working/candc_distant_eval/business_film_people.log.txt \
 	> ../working/candc_distant_eval/business_film_people.txt

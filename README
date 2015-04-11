@@ -2,7 +2,7 @@
 
 ## Ungrounded Parser demo
 
-This allows you to extract semantic parses of natural language sentences. Usage is as follows
+This allows you to extract semantic parses (ungrounded) of natural language sentences. Usage is as follows
 
 cat input.txt | sh run.sh
 
