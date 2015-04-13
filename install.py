@@ -15,6 +15,13 @@ def install_ungrounded_parser():
     os.system("rm easyccg_model_questions.tgz")
     os.system("rm easyccg_model.tgz")
 
+def download_evaluation_data():
+    os.system("wget https://bitbucket.org/sivareddyg/public/downloads/tacl2014_eval_data.tgz")
+    os.system("tar -xvzf tacl2014_eval_data.tgz")
+    os.system("rm tacl2014_eval_data.tgz")
+
 if __name__ == "__main__":
     if sys.argv[1] == "ungrounded":
         install_ungrounded_parser()
+    if sys.argv[1] == "evaluation":
+        download_evaluation_data()
