@@ -22,7 +22,7 @@ If you are interested in evaluation datasets, and the output of GraphParser on t
 
 > ./install.py evaluation
 
-The datasets will be downloaded in the folder data/tacl_splits and data/tacl_ouput. 
+The datasets will be downloaded to the folders data/tacl_splits and data/tacl_ouput. 
 
 ## Grounded Semantic Parser
 To replicate TACL results, you will have to install Freebase SPARQL endpoint. Please email me personally.
