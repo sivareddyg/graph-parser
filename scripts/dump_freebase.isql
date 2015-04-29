@@ -1,0 +1,1 @@
+dump_one_graph('http://rdf.freebase.com', '/disk/scratch/users/s1051585/tools/var/lib/virtuoso/vdb/data_', 100000000000000);

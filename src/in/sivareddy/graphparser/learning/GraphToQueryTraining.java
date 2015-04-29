@@ -1293,12 +1293,16 @@ public class GraphToQueryTraining {
     for (int i = 0; i < sentCount; i++) {
       Pair<Set<String>, Set<String>> currentResults = results.get(i);
       if (currentResults != null) {
-        bw.write(String.format("%s\t%s\t%s\n", sentenceIndexMap.get(i),
-            gson.toJson(currentResults.getLeft()),
-            gson.toJson(currentResults.getRight())));
+        if (currentResults.getLeft().size() != 0) {
+          bw.write(String.format("%s\t%s\t%s\n", sentenceIndexMap.get(i),
+              gson.toJson(currentResults.getLeft()),
+              gson.toJson(currentResults.getRight())));
+        } else {
+          bw.write(String.format("%s\t%s\t%s\n", sentenceIndexMap.get(i),
+              "[\"\"]", gson.toJson(currentResults.getRight())));
+        }
       } else {
-        bw.write(String.format("%s\t[\"missing\"]\t[]\n",
-            sentenceIndexMap.get(i)));
+        bw.write(String.format("%s\t[\"\"]\t[]\n", sentenceIndexMap.get(i)));
       }
     }
     bw.close();

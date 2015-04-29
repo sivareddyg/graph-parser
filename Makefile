@@ -1,3 +1,92 @@
+# English Automatic Entity Annotation
+#
+dump_sempre_db:
+	isql-vt localhost:1111 dba dba < scripts/dump_freebase.isql
+
+create_mid_to_key_dict:
+	zcat ../data/freebase-cleaned.rdf-2013-08-11-00-00.gz | python scripts/entity-annotation/print_entity_to_id.py | gzip > data/freebase/mid_to_key.txt.gz
+
+convert_sempre_to_standard_db:
+	zcat /disk/scratch/users/s1051585/tools/var/lib/virtuoso/vdb/data_000001.ttl.gz \
+	| python scripts/entity-annotation/convert_sempre_freebase_to_standard_freebase.py data/freebase/mid_to_key.txt.gz \
+	| gzip > /disk/scratch/users/s1051585/data/freebase_sempre.ttl.gz
+
+
+extract_sempre_entities_list:
+	zcat /disk/scratch/users/s1051585/data/freebase_sempre.ttl.gz \
+	| python scripts/entity-annotation/extract_entities_from_standard_sempre.py \
+	| gzip > data/freebase/freebase_sempre_entities.gz
+
+create_entity_dict:
+	zcat /disk/scratch/users/s1051585/data/freebase-cleaned.rdf-2013-08-11-00-00.gz | python scripts/entity-annotation/extract_entities_based_on_langcode.py en,en-gb \
+	| java -cp lib/*:bin others.EnglishEntityTokenizer \
+	| sed -e 's/\-LRB\-/\(/g' \
+	| sed -e 's/\-RRB\-/\)/g' \
+	| sed -e 's/\-LSB\-/\[/g' \
+	| sed -e 's/\-RSB\-/\]/g' \
+	| gzip >  data/freebase/en_entity_lexicon_tokenized.gz
+
+tokenize_entity_dict:
+	zcat data/freebase/en_entity_lexicon.gz \
+	| java -cp lib/*:bin others.EnglishEntityTokenizer \
+	| sed -e 's/\-LRB\-/\(/g' \
+	| sed -e 's/\-RRB\-/\)/g' \
+	| sed -e 's/\-LSB\-/\[/g' \
+	| sed -e 's/\-RSB\-/\]/g' \
+	| gzip \
+	> data/freebase/en_entity_lexicon_tokenized.gz
+
+entity_tag_webq_data:
+	cat data/webquestions/webquestions.examples.train.domains.json \
+		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
+	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
+		| java -cp lib/*:bin in.sivareddy.graphparser.util.EntityAnnotator data/freebase/en_entity_lexicon_tokenized.gz \
+		> data/webquestions/webquestions.examples.train.domains.entity.matches.json
+	cat data/webquestions/webquestions.examples.test.domains.json \
+		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
+	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
+		| java -cp lib/*:bin in.sivareddy.graphparser.util.EntityAnnotator data/freebase/en_entity_lexicon_tokenized.gz \
+		> data/webquestions/webquestions.examples.test.domains.entity.matches.json
+
+rank_entity_webq_data:
+	cat data/webquestions/webquestions.examples.train.domains.entity.matches.json \
+	| java -cp lib/*:bin in.sivareddy.graphparser.util.RankMatchedEntities \
+	> data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.json
+	cat data/webquestions/webquestions.examples.test.domains.entity.matches.json \
+	| java -cp lib/*:bin in.sivareddy.graphparser.util.RankMatchedEntities \
+	> data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.json
+
+select_one_best_from_ranked_entity_webq_data:
+	cat data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.json \
+	| java -cp lib/*:bin in.sivareddy.graphparser.util.DisambiguateEntities \
+	> data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.json
+	cat data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.json \
+	| java -cp lib/*:bin in.sivareddy.graphparser.util.DisambiguateEntities \
+	> data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.1best.json
+
+merge_one_best:
+	cat data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.json \
+	| java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity \
+  	> data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.json	
+	cat data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.1best.json \
+	| java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity \
+  	> data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.json	
+
+extract_tacl_subset_one_best:
+	mkdir -p data/tacl/vanilla_one_best/
+	cat data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.json \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json \
+		| java -cp lib/*:bin others.RunEasyCCGJsonSentence \
+		> data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json
+	head -n915 data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json \
+		> data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.915
+	tail -n200 data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json \
+		> data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.200
+	cat data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.json \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+		| java -cp lib/*:bin others.RunEasyCCGJsonSentence \
+		> data/tacl/vanilla_one_best/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.tacl.json
+
 # Convert GraphParser format to deplambda input format
 convert_graphparser_to_deplambda_format:
 	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.train.txt
@@ -12,6 +101,18 @@ convert_graphparser_to_deplambda_format_tom:
 	cat data/webquestions/webquestions.train.all.entity_annotated.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.train.json.txt
 	cat data/webquestions/webquestions.test.all.entity_annotated.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.test.json.txt
 	cat data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt | java -cp lib/*:bin in.sivareddy.graphparser.util.AddAnswerMids | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/tom_free917.txt
+
+convert_wq_vanilla_to_deplambda_format:
+	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.train.full.json.txt
+	cat ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.test.full.json.txt
+	python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json < ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt > data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json
+	python scripts/extract_subset.py data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json < ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt > data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json
+	head -n915 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.vanilla.train.business_film_people.json.txt
+	tail -n200 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.vanilla.dev.business_film_people.json.txt
+	cat data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.vanilla.test.business_film_people.json.txt
+	head -n915 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915
+	tail -n200 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200
+	cat data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json
 
 convert_cai_yates_splits_to_deplambda:
 	mkdir -p ../working/free917_business_film_people_splits
@@ -28,7 +129,7 @@ convert_cai_yates_splits_to_deplambda:
 
 # Converts deplambda documents in json format to graphparsers json format.
 convert_deplambda_output_to_graphparser:
-	#cat data/deplambda/training/* \
+	#cat ../data/clueweb-training-documents/* \
 	#| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
 	#| python scripts/cleaning/remove_duplicate_sentences.py \
 	#| gzip > data/deplambda/unsupervised.graphparser.txt.gz
@@ -44,10 +145,10 @@ convert_deplambda_output_to_graphparser:
 	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
 	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	> data/deplambda/webquestions.test.graphparser.txt
-	cat data/deplambda/free917-documents.json \
-	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
-	| python scripts/dependency_semantic_parser/add_answers.py data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt \
-	> data/deplambda/free917.txt
+	#cat data/deplambda/free917-documents.json \
+	#| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json.py \
+	#| python scripts/dependency_semantic_parser/add_answers.py data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt \
+	#> data/deplambda/free917.txt
 
 # Create dependency based grounded lexicon.
 # Unfortunately, this cannot run parallel version since I have to write
@@ -618,6 +719,51 @@ tacl_mwg:
 	-logFile ../working/tacl_mwg/business_film_people.log.txt \
 	> ../working/tacl_mwg/business_film_people.txt
 
+tacl_mwg_vanilla_gold:
+	mkdir -p ../working/tacl_mwg_vanilla_gold
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	-testFile data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+	-logFile ../working/tacl_mwg_vanilla_gold/business_film_people.log.txt \
+	> ../working/tacl_mwg_vanilla_gold/business_film_people.txt
+
 tacl_mwg_on_training_data:
 	mkdir -p ../working/tacl_mwg_on_training
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
@@ -662,6 +808,98 @@ tacl_mwg_on_training_data:
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	-logFile ../working/tacl_mwg_on_training/business_film_people.log.txt \
 	> ../working/tacl_mwg_on_training/business_film_people.txt
+
+tacl_mwg_on_training_data_vanilla_gold:
+	mkdir -p ../working/tacl_mwg_on_training_data_vanilla_gold
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	-testFile data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+	-logFile ../working/tacl_mwg_on_training_data_vanilla_gold/business_film_people.log.txt \
+	> ../working/tacl_mwg_on_training_data_vanilla_gold/business_film_people.txt
+
+tacl_mwg_on_training_data_vanilla_one_best:
+	mkdir -p ../working/tacl_mwg_on_training_data_vanilla_one_best
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 10 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-devFile data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.915 \
+	-testFile data/tacl/vanilla_one_best/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.tacl.json \
+	-logFile ../working/tacl_mwg_on_training_data_vanilla_one_best/business_film_people.log.txt \
+	> ../working/tacl_mwg_on_training_data_vanilla_one_best/business_film_people.txt
 
 tacl_mwg_free917:
 	mkdir -p ../working/tacl_mwg_free917

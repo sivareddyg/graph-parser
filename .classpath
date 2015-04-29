@@ -21,5 +21,8 @@
 	<classpathentry kind="lib" path="lib/stanford-corenlp-caseless-2014-02-25-models.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-spanish-corenlp-2015-01-08-models.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.17.jar"/>
+	<classpathentry kind="lib" path="lib/iri.jar"/>
+	<classpathentry kind="lib" path="lib/icu4j_3_4.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io-1.3.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

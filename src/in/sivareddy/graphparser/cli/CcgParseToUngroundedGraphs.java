@@ -70,7 +70,7 @@ public class CcgParseToUngroundedGraphs {
     String specialCasesFile =
         Paths.get(dataFolder, "lexicon_specialCases.txt").toString();
     String specialCasesQuestionsFile =
-        Paths.get(dataFolder, "lexicon_specialCases_questions.txt").toString();
+        Paths.get(dataFolder, "lexicon_specialCases_questions_vanilla.txt").toString();
 
     CcgAutoLexicon normalCcgAutoLexicon =
         new CcgAutoLexicon(markupFile, unaryRulesFile, binaryRulesFile,
