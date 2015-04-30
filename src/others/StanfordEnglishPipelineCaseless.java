@@ -156,12 +156,11 @@ public class StanfordEnglishPipelineCaseless {
 
   public static void main(String[] args) throws IOException,
       TransformerException {
+    // Stanford normal pos tagger is better for WebQuestions?
     Map<String, String> options =
         ImmutableMap
             .of("annotators",
                 "tokenize, ssplit, pos, lemma, ner",
-                "pos.model",
-                "edu/stanford/nlp/models/pos-tagger/english-caseless-left3words-distsim.tagger",
                 "ner.model",
                 "edu/stanford/nlp/models/ner/english.all.3class.caseless.distsim.crf.ser.gz,"
                     + "edu/stanford/nlp/models/ner/english.muc.7class.caseless.distsim.crf.ser.gz,"

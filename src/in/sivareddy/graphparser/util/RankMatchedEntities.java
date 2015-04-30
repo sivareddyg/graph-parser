@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,8 +28,8 @@ public class RankMatchedEntities {
   public static String charset = "UTF-8";
   public static JsonParser jsonParser = new JsonParser();
 
-  public static void rankSpansUsingFreebaseAPI(JsonObject jsonSentence)
-      throws IOException {
+  public static void rankSpansUsingFreebaseAPI(JsonObject jsonSentence,
+      boolean useMatchedEntities) throws IOException {
     if (!jsonSentence.has(SentenceKeys.MATCHED_ENTITIES))
       return;
 
@@ -45,8 +44,10 @@ public class RankMatchedEntities {
                   .get(SentenceKeys.END).getAsInt());
 
       Set<String> matchedEntitySet = new HashSet<>();
-      entityObject.get(SentenceKeys.ENTITIES).getAsJsonArray()
-          .forEach(x -> matchedEntitySet.add(x.getAsString()));
+      if (useMatchedEntities) {
+        entityObject.get(SentenceKeys.ENTITIES).getAsJsonArray()
+            .forEach(x -> matchedEntitySet.add(x.getAsString()));
+      }
 
 
       JsonObject response = queryFreebaseAPI(query);
@@ -56,7 +57,13 @@ public class RankMatchedEntities {
         String mid =
             resultObject.get("mid").getAsString().replaceFirst("/", "")
                 .replaceAll("/", ".");
-        if (matchedEntitySet.contains(mid)) {
+        if (useMatchedEntities) {
+          if (matchedEntitySet.contains(mid)) {
+            resultObject.remove("mid");
+            resultObject.addProperty(SentenceKeys.ENTITY, mid);
+            rankedEntities.add(resultObject);
+          }
+        } else {
           resultObject.remove("mid");
           resultObject.addProperty(SentenceKeys.ENTITY, mid);
           rankedEntities.add(resultObject);
@@ -75,7 +82,7 @@ public class RankMatchedEntities {
 
     URL url = new URL(FREEBASE_ENDPOINT + "?" + requestQuery);
     HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-    
+
     connection.setRequestProperty("Accept-Charset", charset);
     InputStream responseRecieved = connection.getInputStream();
     JsonObject response =
@@ -83,7 +90,6 @@ public class RankMatchedEntities {
             .getAsJsonObject();
     return response;
   }
-
 
   public static void main(String[] args) throws IOException {
     JsonParser jsonParser = new JsonParser();
@@ -94,7 +100,7 @@ public class RankMatchedEntities {
       String line = br.readLine();
       while (line != null) {
         JsonObject sentence = jsonParser.parse(line).getAsJsonObject();
-        rankSpansUsingFreebaseAPI(sentence);
+        rankSpansUsingFreebaseAPI(sentence, false);
         System.out.println(gson.toJson(sentence));
         line = br.readLine();
       }

@@ -805,7 +805,6 @@ tacl_mwg_on_training_data:
 	-stemFeaturesWeight 0.0 \
 	-endpoint localhost \
 	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
-	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	-logFile ../working/tacl_mwg_on_training/business_film_people.log.txt \
 	> ../working/tacl_mwg_on_training/business_film_people.txt
 
@@ -851,7 +850,6 @@ tacl_mwg_on_training_data_vanilla_gold:
 	-stemFeaturesWeight 0.0 \
 	-endpoint localhost \
 	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
-	-testFile data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	-logFile ../working/tacl_mwg_on_training_data_vanilla_gold/business_film_people.log.txt \
 	> ../working/tacl_mwg_on_training_data_vanilla_gold/business_film_people.txt
 
@@ -897,7 +895,6 @@ tacl_mwg_on_training_data_vanilla_one_best:
 	-stemFeaturesWeight 0.0 \
 	-endpoint localhost \
 	-devFile data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.915 \
-	-testFile data/tacl/vanilla_one_best/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.tacl.json \
 	-logFile ../working/tacl_mwg_on_training_data_vanilla_one_best/business_film_people.log.txt \
 	> ../working/tacl_mwg_on_training_data_vanilla_one_best/business_film_people.txt
 
