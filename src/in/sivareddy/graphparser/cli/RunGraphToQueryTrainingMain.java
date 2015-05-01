@@ -2,6 +2,7 @@ package in.sivareddy.graphparser.cli;
 
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.learning.GraphToQueryTrainingMain;
+import in.sivareddy.graphparser.parsing.GraphToSparqlConverter;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
@@ -22,7 +23,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
   // Sparql End point and details
   private OptionSpec<String> endpoint;
-
+  
+  // Freebase relation to identity the type of an entity.
+  private OptionSpec<String> typeKey;
+  
   // Schema File
   private OptionSpec<String> schema;
 
@@ -132,6 +136,13 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
     endpoint =
         parser.accepts("endpoint", "SPARQL endpoint").withRequiredArg()
             .ofType(String.class).required();
+
+    typeKey =
+        parser
+            .accepts(
+                "typeKey",
+                "Freebase relation name to identify the type of an entity. e.g. rdf:type or fb:type.object.type")
+            .withRequiredArg().ofType(String.class).defaultsTo("rdf:type");
 
     schema =
         parser.accepts("schema", "File containing schema of the domain")
@@ -464,6 +475,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               options.valueOf(endpoint)), String.format(
               "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
               "dba", 3000);
+      GraphToSparqlConverter.TYPE_KEY = options.valueOf(typeKey);
+      
       List<String> kbGraphUri =
           Lists.newArrayList(Splitter.on(";").split(options.valueOf(domain)));
 

@@ -6,8 +6,9 @@ for line in sys.stdin:
     word_index = 0
     sent = []
     entity_mapping = {}
-    for entity in line['entities']:
-        entity_mapping[entity['index']] = entity
+    if 'entities' in line:
+        for entity in line['entities']:
+            entity_mapping[entity['index']] = entity
     for original_index, word in enumerate(line['words']):
         if ("ner" in word and word['ner'] != "O" and word['ner'] != "0") or (original_index in entity_mapping):
             word_parts = []

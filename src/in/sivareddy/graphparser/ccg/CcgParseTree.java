@@ -70,7 +70,7 @@ public class CcgParseTree {
     String pos = items.get(4);
     String neType = items.get(5);
     List<Category> currentCategories =
-        autoLexicon.getCategory(lemma, pos, synCat);
+        autoLexicon.getCategory(lemma.toLowerCase(), pos, synCat);
     List<LexicalItem> lexItems = new ArrayList<>();
     for (Category cat : currentCategories) {
       LexicalItem lex = new LexicalItem(synCat, word, lemma, pos, neType, cat);

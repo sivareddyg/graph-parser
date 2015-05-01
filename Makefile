@@ -87,15 +87,36 @@ extract_tacl_subset_one_best:
 		| java -cp lib/*:bin others.RunEasyCCGJsonSentence \
 		> data/tacl/vanilla_one_best/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.tacl.json
 
+one_best_deplambda_format:
+	cat data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.json \
+		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
+		> ../working/webquestions.vanilla.1best.train.full.json.txt
+	python scripts/webquestions-preprocessing/training_split.py ../working/webquestions.vanilla.1best.train.full.json.txt 
+	mv ../working/webquestions.vanilla.1best.train.full.json.txt.80 ../working/webquestions.vanilla.1best.train.split.json.txt
+	mv ../working/webquestions.vanilla.1best.train.full.json.txt.20 ../working/webquestions.vanilla.1best.dev.split.json.txt
+	rm ../working/webquestions.vanilla.1best.train.full.json.txt
+	cat data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.json \
+		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
+		> ../working/webquestions.vanilla.1best.test.full.json.txt
+	cat data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.915 \
+		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
+		> ../working/webquestions.vanilla.1best.train.business_film_people.json.txt
+	cat data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.200 \
+		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
+		> ../working/webquestions.vanilla.1best.dev.business_film_people.json.txt
+	cat data/tacl/vanilla_one_best/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.tacl.json \
+		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
+		> ../working/webquestions.vanilla.1best.test.business_film_people.json.txt
+
 # Convert GraphParser format to deplambda input format
 convert_graphparser_to_deplambda_format:
-	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.train.txt
-	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.dev.txt
-	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.test.txt
-	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.train.noheuristics.txt
-	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.dev.noheuristics.txt
-	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.test.noheuristics.txt
-	cat data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people.txt
+	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.train.txt
+	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.dev.txt
+	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.test.txt
+	head -n915 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.train.noheuristics.txt
+	tail -n200 data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.dev.noheuristics.txt
+	cat data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.noheuristics.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.test.noheuristics.txt
+	cat data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people.txt
 
 convert_graphparser_to_deplambda_format_tom:
 	cat data/webquestions/webquestions.train.all.entity_annotated.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.train.json.txt
@@ -104,28 +125,32 @@ convert_graphparser_to_deplambda_format_tom:
 
 convert_wq_vanilla_to_deplambda_format:
 	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.train.full.json.txt
+	python scripts/webquestions-preprocessing/training_split.py ../working/webquestions.vanilla.train.full.json.txt 
+	mv ../working/webquestions.vanilla.train.full.json.txt.80 ../working/webquestions.vanilla.train.split.json.txt
+	mv ../working/webquestions.vanilla.train.full.json.txt.20 ../working/webquestions.vanilla.dev.split.json.txt
+	rm ../working/webquestions.vanilla.train.full.json.txt
 	cat ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.test.full.json.txt
 	python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json < ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt > data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json
 	python scripts/extract_subset.py data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json < ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt > data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json
-	head -n915 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.vanilla.train.business_film_people.json.txt
-	tail -n200 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.vanilla.dev.business_film_people.json.txt
-	cat data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format.py > ../working/webquestions.vanilla.test.business_film_people.json.txt
+	head -n915 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.train.business_film_people.json.txt
+	tail -n200 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.dev.business_film_people.json.txt
+	cat data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.test.business_film_people.json.txt
 	head -n915 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915
 	tail -n200 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200
 	cat data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json
 
 convert_cai_yates_splits_to_deplambda:
 	mkdir -p ../working/free917_business_film_people_splits
-	cat data/cai-yates-2013/free917_business_film_people_splits/0.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/0.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/1.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/1.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/2.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/2.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/3.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/3.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/4.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/4.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/5.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/5.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/6.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/6.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/7.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/7.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/8.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/8.txt
-	cat data/cai-yates-2013/free917_business_film_people_splits/9.txt | python  scripts/convert-graph-parser-to-entity-mention-format.py > ../working/free917_business_film_people_splits/9.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/0.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/0.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/1.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/1.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/2.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/2.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/3.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/3.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/4.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/4.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/5.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/5.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/6.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/6.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/7.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/7.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/8.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/8.txt
+	cat data/cai-yates-2013/free917_business_film_people_splits/9.txt | python  scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/free917_business_film_people_splits/9.txt
 
 # Converts deplambda documents in json format to graphparsers json format.
 convert_deplambda_output_to_graphparser:
@@ -719,51 +744,6 @@ tacl_mwg:
 	-logFile ../working/tacl_mwg/business_film_people.log.txt \
 	> ../working/tacl_mwg/business_film_people.txt
 
-tacl_mwg_vanilla_gold:
-	mkdir -p ../working/tacl_mwg_vanilla_gold
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
-	-schema data/freebase/schema/business_film_people_schema.txt \
-	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
-	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
-	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
-	-nthreads 10 \
-	-nBestTestSyntacticParses 1 \
-	-nbestGraphs 100 \
-	-useSchema true \
-	-useKB true \
-	-groundFreeVariables false \
-	-useEmptyTypes false \
-	-ignoreTypes true \
-	-urelGrelFlag true \
-	-urelPartGrelPartFlag false \
-	-utypeGtypeFlag true \
-	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
-	-argGrelPartFlag true \
-	-stemMatchingFlag true \
-	-mediatorStemGrelPartMatchingFlag true \
-	-argumentStemMatchingFlag true \
-	-argumentStemGrelPartMatchingFlag true \
-	-graphIsConnectedFlag false \
-	-graphHasEdgeFlag true \
-	-countNodesFlag false \
-	-edgeNodeCountFlag false \
-	-duplicateEdgesFlag true \
-	-grelGrelFlag true \
-	-useLexiconWeightsRel true \
-	-useLexiconWeightsType false \
-	-validQueryFlag false \
-	-initialEdgeWeight 1.0 \
-	-initialTypeWeight -1.0 \
-	-initialWordWeight 1.0 \
-	-stemFeaturesWeight 0.0 \
-	-endpoint localhost \
-	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
-	-testFile data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-	-logFile ../working/tacl_mwg_vanilla_gold/business_film_people.log.txt \
-	> ../working/tacl_mwg_vanilla_gold/business_film_people.txt
-
 tacl_mwg_on_training_data:
 	mkdir -p ../working/tacl_mwg_on_training
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
@@ -809,6 +789,7 @@ tacl_mwg_on_training_data:
 	> ../working/tacl_mwg_on_training/business_film_people.txt
 
 tacl_mwg_on_training_data_vanilla_gold:
+	rm -rf ../working/tacl_mwg_on_training_data_vanilla_gold
 	mkdir -p ../working/tacl_mwg_on_training_data_vanilla_gold
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
@@ -816,7 +797,9 @@ tacl_mwg_on_training_data_vanilla_gold:
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
-	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-endpoint localhost \
 	-nthreads 10 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
@@ -848,7 +831,6 @@ tacl_mwg_on_training_data_vanilla_gold:
 	-initialTypeWeight -1.0 \
 	-initialWordWeight 1.0 \
 	-stemFeaturesWeight 0.0 \
-	-endpoint localhost \
 	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
 	-logFile ../working/tacl_mwg_on_training_data_vanilla_gold/business_film_people.log.txt \
 	> ../working/tacl_mwg_on_training_data_vanilla_gold/business_film_people.txt

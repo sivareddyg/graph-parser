@@ -18,6 +18,12 @@ random.seed(1)
 
 data = open(sys.argv[1]).readlines()
 random.shuffle(data)
+random.shuffle(data)
+random.shuffle(data)
+random.shuffle(data)
+random.shuffle(data)
+random.shuffle(data)
+random.shuffle(data)
 
 training_data_size = 80 * len(data) / 100
 

@@ -2,8 +2,21 @@
 
 #lemma	pos	syncat	indexsyncat	semcat/semcattype
 
+# When was Obama born? -> when was Obama born in?
+when	*	S[wq]/S[q]	(S[wq]{X}/S[q]{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X in.2 $_ ENTITY) (QUESTION $_))))
+
 # Where was Obama born?
-*	*	S[wq]/S[q]	(S[wq]{X}/S[q]{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X at.2 $_ ENTITY) (QUESTION $_))))
+where	*	S[wq]/S[q]	(S[wq]{X}/S[q]{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X at.2 $_ ENTITY) (QUESTION $_))))
+
+# How did Franklin die = What did Franklin die of?
+how	*	S[wq]/S[q]	(S[wq]{X}/S[q]{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X of.2 $_ ENTITY) (QUESTION $_))))
+
+# TODO: contextualization of few categories
+# what is the "name of" the president of US? here "of" should ignore name and return "president" to "is".
+# what is the "kind of" cancer did Bob Marley suffer with? here "of" should ignore "kind" and return "cancer" to "suffer".
+# what is the "type of" cancer did Bob Marley suffer with?  here "of" should ignore "type" and return "cancer" to "suffer".
+# what is the US president 's name? here "'s" should ignore name and return "president" to "is".
+# where did Obama go to college? -> this is a tricky case. The semantics of this sentence should be the same as "What college did Obama go to?"
 
 # Hilton hotel -> Hilton 's hotel
 *	NNP	N/N	(N{X}/N{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X 's.1 $X ENTITY) (EVENT $X $X 's.2 $_ ENTITY))))
