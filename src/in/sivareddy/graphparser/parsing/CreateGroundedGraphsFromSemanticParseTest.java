@@ -3,7 +3,7 @@ package in.sivareddy.graphparser.parsing;
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.Schema;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,7 +20,7 @@ import com.google.gson.JsonParser;
 
 public class CreateGroundedGraphsFromSemanticParseTest {
 
-  KnowledgeBase kb;
+  KnowledgeBaseCached kb;
   GroundedLexicon groundedLexicon;
 
   private void load() throws IOException {
@@ -31,7 +31,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     }
     if (kb == null) {
       kb =
-          new KnowledgeBase("data/freebase/domain_facts/film_facts.txt.gz",
+          new KnowledgeBaseCached("data/freebase/domain_facts/film_facts.txt.gz",
               "data/freebase/stats/film_relation_types.txt");
     }
   }
@@ -40,7 +40,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
   public void testGroundedGraphs() throws IOException {
     load();
     Schema schema = new Schema("data/freebase/schema/film_schema.txt");
-    // KnowledgeBase kb = null;
+    // KnowledgeBaseCached kb = null;
     CcgAutoLexicon questionCcgAutoLexicon =
         new CcgAutoLexicon("./data/candc_markedup.modified",
             "./data/unary_rules.txt", "./data/binary_rules.txt",

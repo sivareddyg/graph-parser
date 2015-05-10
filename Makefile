@@ -1,3 +1,7 @@
+# Merge schema
+all_domains_schema:
+	python scripts/freebase/merge_schema_folder.py data/freebase/schema/all-domains/ > data/freebase/schema/all_domains_schema.txt
+
 # English Automatic Entity Annotation
 #
 dump_sempre_db:
@@ -123,7 +127,13 @@ convert_graphparser_to_deplambda_format_tom:
 	cat data/webquestions/webquestions.test.all.entity_annotated.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.test.json.txt
 	cat data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt | java -cp lib/*:bin in.sivareddy.graphparser.util.AddAnswerMids | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/tom_free917.txt
 
+
 convert_wq_vanilla_to_deplambda_format:
+	mkdir -p data/complete/vanilla_gold/
+	python scripts/webquestions-preprocessing/training_split.py ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt 
+	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.80 | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt
+	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt
+	cat ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt
 	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.train.full.json.txt
 	python scripts/webquestions-preprocessing/training_split.py ../working/webquestions.vanilla.train.full.json.txt 
 	mv ../working/webquestions.vanilla.train.full.json.txt.80 ../working/webquestions.vanilla.train.split.json.txt
@@ -138,6 +148,16 @@ convert_wq_vanilla_to_deplambda_format:
 	head -n915 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915
 	tail -n200 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200
 	cat data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json
+
+convert_deplambda_to_wq_format_vanilla:
+	cat data/deplambda/webquestions.vanilla.train.lambdas.txt \
+	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+	| python scripts/dependency_semantic_parser/add_answers.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+	> data/complete/vanilla_gold/webquestions.vanilla.train.full.deplambda.json.txt
+	cat data/deplambda/webquestions.vanilla.dev.lambdas.txt \
+	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+	| python scripts/dependency_semantic_parser/add_answers.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+	> data/complete/vanilla_gold/webquestions.vanilla.dev.full.deplambda.json.txt
 
 convert_cai_yates_splits_to_deplambda:
 	mkdir -p ../working/free917_business_film_people_splits
@@ -446,6 +466,58 @@ deplambda_supervised:
 	-testFile data/deplambda/webquestions.test.graphparser.txt \
 	-logFile ../working/deplambda_supervised/business_film_people.log.txt \
 	> ../working/deplambda_supervised/business_film_people.txt
+
+deplambda_supervised_vanilla_gold_full:
+	rm -rf ../working/deplambda_supervised_vanilla_gold_full
+	mkdir -p ../working/deplambda_supervised_vanilla_gold_full
+	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 500 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 2.0 \
+	-endpoint localhost \
+	-supervisedCorpus  data/complete/vanilla_gold/webquestions.vanilla.train.full.deplambda.json.txt \
+	-devFile data/complete/vanilla_gold/webquestions.vanilla.dev.full.deplambda.json.txt \
+	-testFile data/complete/vanilla_gold/webquestions.vanilla.train.full.deplambda.json.txt \
+	-logFile ../working/deplambda_supervised_vanilla_gold_full/all.log.txt \
+	> ../working/deplambda_supervised_vanilla_gold_full/all.txt
 
 # Deplambda results with unsupervised lexicon.
 deplambda_supervised_with_unsupervised_lexicon:
@@ -791,7 +863,7 @@ tacl_mwg_on_training_data:
 tacl_mwg_on_training_data_vanilla_gold:
 	rm -rf ../working/tacl_mwg_on_training_data_vanilla_gold
 	mkdir -p ../working/tacl_mwg_on_training_data_vanilla_gold
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -834,6 +906,52 @@ tacl_mwg_on_training_data_vanilla_gold:
 	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
 	-logFile ../working/tacl_mwg_on_training_data_vanilla_gold/business_film_people.log.txt \
 	> ../working/tacl_mwg_on_training_data_vanilla_gold/business_film_people.txt
+
+tacl_mwg_on_training_data_vanilla_gold_onlinekb:
+	rm -rf ../working/tacl_mwg_on_training_data_vanilla_gold_onlinekb
+	mkdir -p ../working/tacl_mwg_on_training_data_vanilla_gold_onlinekb
+	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-endpoint localhost \
+	-nthreads 50 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag false \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -1.0 \
+	-initialWordWeight 1.0 \
+	-stemFeaturesWeight 0.0 \
+	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	-logFile ../working/tacl_mwg_on_training_data_vanilla_gold_onlinekb/business_film_people.log.txt \
+	> ../working/tacl_mwg_on_training_data_vanilla_gold_onlinekb/business_film_people.txt
 
 tacl_mwg_on_training_data_vanilla_one_best:
 	mkdir -p ../working/tacl_mwg_on_training_data_vanilla_one_best
@@ -1074,6 +1192,164 @@ tacl_supervised:
 	-logFile ../working/tacl_supervised/business_film_people.log.txt \
 	> ../working/tacl_supervised/business_film_people.txt
 
+tacl_supervised_vanilla_gold:
+	rm -rf ../working/tacl_supervised_vanilla_gold
+	mkdir -p ../working/tacl_supervised_vanilla_gold
+	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/dummy.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-supervisedCorpus data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	-testFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	-logFile ../working/tacl_supervised_vanilla_gold/business_film_people.log.txt \
+	> ../working/tacl_supervised_vanilla_gold/business_film_people.txt
+
+tacl_supervised_vanilla_gold_online_kb:
+	rm -rf ../working/tacl_supervised_vanilla_gold_online_kb
+	mkdir -p ../working/tacl_supervised_vanilla_gold_online_kb
+	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/dummy.txt \
+	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-supervisedCorpus data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	-testFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	-logFile ../working/tacl_supervised_vanilla_gold_online_kb/business_film_people.log.txt \
+	> ../working/tacl_supervised_vanilla_gold_online_kb/business_film_people.txt
+
+tacl_supervised_vanilla_gold_full:
+	rm -rf ../working/tacl_supervised_vanilla_gold_full
+	mkdir -p ../working/tacl_supervised_vanilla_gold_full
+	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 4000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 2.0 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+	-devFile data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+	-testFile data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+	-logFile ../working/tacl_supervised_vanilla_gold_full/all.log.txt \
+	> ../working/tacl_supervised_vanilla_gold_full/all.txt
+
+
 tacl_supervised_with_unsupervised_lexicon:
 	mkdir -p ../working/tacl_supervised_with_unsupervised_lexicon
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
@@ -1123,6 +1399,58 @@ tacl_supervised_with_unsupervised_lexicon:
 	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
 	-logFile ../working/tacl_supervised_with_unsupervised_lexicon/business_film_people.log.txt \
 	> ../working/tacl_supervised_with_unsupervised_lexicon/business_film_people.txt
+
+tacl_supervised_with_unsupervised_lexicon_vanilla_gold_online:
+	rm -rf ../working/tacl_supervised_with_unsupervised_lexicon_vanilla_gold
+	mkdir -p ../working/tacl_supervised_with_unsupervised_lexicon_vanilla_gold
+	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
+	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-supervisedCorpus data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	-devFile data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	-testFile data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+	-logFile ../working/tacl_supervised_with_unsupervised_lexicon_vanilla_gold/business_film_people.log.txt \
+	> ../working/tacl_supervised_with_unsupervised_lexicon_vanilla_gold/business_film_people.txt
 
 # To load an existing model and to parse an input corpus using it.
 tacl_unsupervised_loaded_model:

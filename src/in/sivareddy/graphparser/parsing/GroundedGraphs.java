@@ -680,12 +680,16 @@ public class GroundedGraphs {
 
       // useless edge since the edge contains out of domain entity
       if ((useKB || useEntityTypes) && lexicalPosTags.contains(node1.getPos())
-          && !kb.hasEntity(entity1))
+          && !kb.hasEntity(entity1)) {
+        System.out.println("Hello");
         continue;
+      }
 
       if ((useKB || useEntityTypes) && lexicalPosTags.contains(node2.getPos())
-          && !kb.hasEntity(entity2))
+          && !kb.hasEntity(entity2)) {
+        System.out.println("Hello");
         continue;
+      }
 
       // ground the edge
       groundedGraphs =

@@ -4,7 +4,7 @@ import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 import in.sivareddy.ml.basic.Feature;
 import in.sivareddy.ml.learning.StructuredPercepton;
 
@@ -27,7 +27,7 @@ import com.google.gson.JsonParser;
 
 public class GroundTestSentences {
 
-  public static void run(Schema schema, KnowledgeBase kb,
+  public static void run(Schema schema, KnowledgeBaseCached kb,
       GroundedLexicon groundedLexicon, RdfGraphTools rdfGraphTools)
       throws IOException {
     CcgAutoLexicon normalCcgAutoLexicon =
@@ -313,10 +313,10 @@ public class GroundTestSentences {
     Schema schema =
         new Schema("data/freebase/schema/business_film_people_schema.txt");
     // Schema schema = null;
-    // KnowledgeBase kb = new
-    // KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz");
-    KnowledgeBase kb =
-        new KnowledgeBase(
+    // KnowledgeBaseCached kb = new
+    // KnowledgeBaseCached("data/freebase/domain_facts/business_facts.txt.gz");
+    KnowledgeBaseCached kb =
+        new KnowledgeBaseCached(
             "data/freebase/domain_facts/business_film_people_facts.txt.gz",
             "data/freebase/stats/business_film_people_relation_types.txt");
     // GroundedLexicon groundedLexicon = new
@@ -324,7 +324,7 @@ public class GroundTestSentences {
     GroundedLexicon groundedLexicon =
         new GroundedLexicon(
             "data/freebase/grounded_lexicon/business_film_people_grounded_lexicon.txt");
-    // KnowledgeBase kb = null;
+    // KnowledgeBaseCached kb = null;
 
     // CcgParser CcgParser = new CcgParser(ccgAutoLexicon,
     // relationLexicalIdentifiers, argumentLexicalIdenfiers,

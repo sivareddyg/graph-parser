@@ -5,6 +5,7 @@ import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 import in.sivareddy.ml.learning.StructuredPercepton;
 
 import java.io.BufferedReader;
@@ -224,7 +225,7 @@ public class GraphToQueryTrainingMain {
       evalLogger.info("######## Development Data ###########");
       highestPerformace =
           graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
-              + ".eval.beforeTraining", debugEnabled, testingNbestParsesRange,
+              + ".eval.dev.beforeTraining", debugEnabled, testingNbestParsesRange,
               nthreads);
       appender.close();
     }
@@ -296,12 +297,12 @@ public class GraphToQueryTrainingMain {
 
     evalLogger.info("######## Development Data ###########");
     graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
-        + ".eval.bestIteration", debugEnabled, testingNbestParsesRange,
+        + ".eval.dev.bestIteration", debugEnabled, testingNbestParsesRange,
         nthreads);
 
     evalLogger.info("######## Testing Data ###########");
     graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile
-        + ".eval.bestIteration", debugEnabled, testingNbestParsesRange,
+        + ".eval.test.bestIteration", debugEnabled, testingNbestParsesRange,
         nthreads);
   }
 
@@ -520,7 +521,7 @@ public class GraphToQueryTrainingMain {
     // KnowledgeBase kb = new
     // KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz");
     KnowledgeBase kb =
-        new KnowledgeBase(
+        new KnowledgeBaseCached(
             "data/freebase/domain_facts/business_film_people_facts.txt.gz",
             "data/freebase/stats/business_film_people_relation_types.txt");
 

@@ -5,6 +5,7 @@ import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 import in.sivareddy.ml.learning.StructuredPercepton;
 
 import java.io.BufferedReader;
@@ -352,7 +353,7 @@ public class GraphToQueryTrainingUnsupervised {
     Schema schema = new Schema("data/freebase/schema/business_schema.txt");
 
     KnowledgeBase kb =
-        new KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz",
+        new KnowledgeBaseCached("data/freebase/domain_facts/business_facts.txt.gz",
             "data/freebase/stats/business_relation_types.txt");
 
     GroundedLexicon groundedLexicon = new GroundedLexicon("data/empty.txt");

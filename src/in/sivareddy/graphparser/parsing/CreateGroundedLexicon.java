@@ -7,7 +7,7 @@ import in.sivareddy.graphparser.ccg.FunnyCombinatorException;
 import in.sivareddy.graphparser.ccg.LexicalItem;
 import in.sivareddy.graphparser.ccg.SemanticCategoryType;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
 
 import java.io.BufferedWriter;
@@ -53,10 +53,10 @@ public class CreateGroundedLexicon {
 
   Pattern floatPattern = Pattern.compile(".*[\\.][0-9].*");
 
-  private KnowledgeBase kb;
+  private KnowledgeBaseCached kb;
   private CcgParser ccgParser;
 
-  public CreateGroundedLexicon(KnowledgeBase kb, CcgAutoLexicon ccgAutoLexicon,
+  public CreateGroundedLexicon(KnowledgeBaseCached kb, CcgAutoLexicon ccgAutoLexicon,
       String[] lexicalFields, String[] argIdentifierFields,
       String[] relationTypingFeilds, boolean ignorePronouns) {
     ccgParser =

@@ -26,7 +26,7 @@ for line in sys.stdin:
     if sent_text in sentences:
         org_sent = sentences[sent_text]
         for key in org_sent:
-            if key not in sent:
+            if key not in sent and key != 'synPars':
                 sent[key] = org_sent[key]
         new_sentences[sent_text] = sent
 

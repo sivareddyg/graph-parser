@@ -7,10 +7,15 @@ import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseOnline;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -23,10 +28,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
   // Sparql End point and details
   private OptionSpec<String> endpoint;
-  
+
   // Freebase relation to identity the type of an entity.
   private OptionSpec<String> typeKey;
-  
+
   // Schema File
   private OptionSpec<String> schema;
 
@@ -234,7 +239,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
     cachedKB =
         parser.accepts("cachedKB", "cached version of KB").withRequiredArg()
-            .ofType(String.class).required();
+            .ofType(String.class).defaultsTo("");
 
     testFile =
         parser.accepts("testFile", "test file containinig questions")
@@ -270,12 +275,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .withRequiredArg().ofType(Integer.class).defaultsTo(1);
     nbestGraphs =
         parser.accepts("nbestGraphs", "beam size").withRequiredArg()
-            .ofType(Integer.class).defaultsTo(100);
+            .ofType(Integer.class).defaultsTo(1000);
     nbestEdges =
         parser
             .accepts("nbestEdges",
                 "number of edges/types for each ungrounded edge/types")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(20);
+            .withRequiredArg().ofType(Integer.class).defaultsTo(1000);
 
     debugEnabledFlag =
         parser.accepts("debugEnabledFlag", "Enable debug mode")
@@ -463,20 +468,30 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
   @Override
   public void run(OptionSet options) {
-
     try {
       Schema schemaObj = new Schema(options.valueOf(schema));
       String relationTypesFileName = options.valueOf(relationTypesFile);
-      KnowledgeBase kb =
-          new KnowledgeBase(options.valueOf(cachedKB), relationTypesFileName);
+      KnowledgeBase kb = null;
+
+      if (!options.valueOf(cachedKB).equals("")) {
+        kb =
+            new KnowledgeBaseCached(options.valueOf(cachedKB),
+                relationTypesFileName);
+      } else {
+        kb =
+            new KnowledgeBaseOnline(String.format("jdbc:virtuoso://%s:1111",
+                options.valueOf(endpoint)), String.format(
+                "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
+                "dba", 0, schemaObj);
+      }
 
       RdfGraphTools rdfGraphTools =
           new RdfGraphTools(String.format("jdbc:virtuoso://%s:1111",
               options.valueOf(endpoint)), String.format(
               "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
-              "dba", 3000);
+              "dba", 20000);
       GraphToSparqlConverter.TYPE_KEY = options.valueOf(typeKey);
-      
+
       List<String> kbGraphUri =
           Lists.newArrayList(Splitter.on(";").split(options.valueOf(domain)));
 
@@ -601,10 +616,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
               stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
-      
+
       // Run the best model.
       graphToQueryModel.testBestModel(threadCount);
-      
+
       if (groundInputCorporaFiles != null
           && !groundInputCorporaFiles.equals("")) {
         graphToQueryModel.groundSentences(threadCount);

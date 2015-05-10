@@ -2,7 +2,7 @@ package in.sivareddy.graphparser.cli;
 
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.parsing.CreateGroundedLexicon;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -167,8 +167,8 @@ public class RunPrintDomainLexicon extends AbstractCli {
 
     try {
       String relationTypesFileName = options.valueOf(relationTypesFile);
-      KnowledgeBase kb =
-          new KnowledgeBase(options.valueOf(kbZipFile), relationTypesFileName);
+      KnowledgeBaseCached kb =
+          new KnowledgeBaseCached(options.valueOf(kbZipFile), relationTypesFileName);
 
       CcgAutoLexicon ccgAutoLexicon =
           new CcgAutoLexicon(options.valueOf(candcIndexFile),

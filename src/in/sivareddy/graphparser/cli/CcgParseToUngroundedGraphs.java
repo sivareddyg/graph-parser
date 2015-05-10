@@ -5,7 +5,7 @@ import in.sivareddy.graphparser.parsing.GroundedGraphs;
 import in.sivareddy.graphparser.parsing.LexicalGraph;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.Schema;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -84,7 +84,7 @@ public class CcgParseToUngroundedGraphs {
     String[] relationTypingIdentifiers = {};
 
     Schema schema = null;
-    KnowledgeBase kb = new KnowledgeBase(null, null);
+    KnowledgeBaseCached kb = new KnowledgeBaseCached(null, null);
     GroundedLexicon groundedLexicon = new GroundedLexicon(null);
     graphCreator =
         new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,

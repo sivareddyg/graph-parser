@@ -496,7 +496,7 @@ public class GraphToQueryTraining {
                 schema, kbGraphUri);
 
         Map<String, LinkedHashSet<String>> resultsMap =
-            rdfGraphTools.runQueryHttp(query);
+            rdfGraphTools.runQueryJdbc(query);
         LinkedHashSet<String> results =
             resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
                 .get(targetVar) : null;
@@ -556,7 +556,7 @@ public class GraphToQueryTraining {
       String query =
           GraphToSparqlConverter.convertGroundedGraph(gGraph, targetNode,
               schema, kbGraphUri);
-      resultsMap = rdfGraphTools.runQueryHttp(query);
+      resultsMap = rdfGraphTools.runQueryJdbc(query);
       results =
           resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
               .get(targetVar) : null;
@@ -651,7 +651,7 @@ public class GraphToQueryTraining {
                 schema, kbGraphUri);
         logger.debug("Year query: " + query);
         // resultSet = rdfGraphTools.runQueryJdbc(query);
-        resultsMap = rdfGraphTools.runQueryHttp(query);
+        resultsMap = rdfGraphTools.runQueryJdbc(query);
         logger.debug("Year pred results: " + resultsMap);
         results =
             resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
@@ -1035,7 +1035,7 @@ public class GraphToQueryTraining {
     if (jsonSentence.has("sparqlQuery")) {
       goldQuery = jsonSentence.get("sparqlQuery").getAsString();
       logger.info("Gold Query : " + goldQuery);
-      goldResults = rdfGraphTools.runQueryHttp(goldQuery);
+      goldResults = rdfGraphTools.runQueryJdbc(goldQuery);
     } else if (jsonSentence.has("targetValue")) {
       String goldAnswersString = jsonSentence.get("targetValue").getAsString();
       Pattern goldAnswerPattern =
@@ -1080,7 +1080,7 @@ public class GraphToQueryTraining {
               GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
                   kbGraphUri);
           Map<String, LinkedHashSet<String>> predResults =
-              rdfGraphTools.runQueryHttp(query);
+              rdfGraphTools.runQueryJdbc(query);
 
           String targetVar = null;
           if (predResults != null) {
@@ -1095,7 +1095,8 @@ public class GraphToQueryTraining {
 
           // adding the feature if the query produces any answer
 
-          if ((predResults == null || predResults.get(targetVar).size() == 0)
+          if ((predResults == null || predResults.get(targetVar) == null || predResults
+              .get(targetVar).size() == 0)
               || (predResults.size() == 1 && predResults.get(targetVar)
                   .iterator().next().startsWith("0^^"))) {
             ValidQueryFeature feat = new ValidQueryFeature(false);
@@ -1128,10 +1129,15 @@ public class GraphToQueryTraining {
       	break;
       }*/
       if (debugEnabled) {
-        logger.debug(gGraph);
-        // log.debug("Connected: " + gGraph.isConnected() + "\n");
-        logger.debug("Grounded graph features: ");
-        learningModel.printFeatureWeights(gGraph.getFeatures(), logger);
+        try {
+          logger.debug(gGraph);
+          // log.debug("Connected: " + gGraph.isConnected() + "\n");
+          logger.debug("Grounded graph features: ");
+          learningModel.printFeatureWeights(gGraph.getFeatures(), logger);
+        } catch (Exception e) {
+          System.err.print("Error: ");
+          System.err.println(gGraph);
+        }
       }
 
       if (count == 1) {
@@ -1144,7 +1150,7 @@ public class GraphToQueryTraining {
       logger.debug("Predicted query: " + query);
       logger.debug("Gold query: " + goldQuery);
       Map<String, LinkedHashSet<String>> predResults =
-          rdfGraphTools.runQueryHttp(query);
+          rdfGraphTools.runQueryJdbc(query);
       logger.debug("Predicted Results: " + predResults);
       logger.debug("Gold Results: " + goldResults);
 
@@ -1381,7 +1387,7 @@ public class GraphToQueryTraining {
     if (jsonSentence.has("sparqlQuery")) {
       goldQuery = jsonSentence.get("sparqlQuery").getAsString();
       logger.info("Gold Query : " + goldQuery);
-      goldResults = rdfGraphTools.runQueryHttp(goldQuery);
+      goldResults = rdfGraphTools.runQueryJdbc(goldQuery);
       logger.info("Gold Results : " + goldResults);
     } else if (jsonSentence.has("targetValue")) {
       String goldAnswersString = jsonSentence.get("targetValue").getAsString();
@@ -1454,7 +1460,7 @@ public class GraphToQueryTraining {
           GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
               kbGraphUri);
       Map<String, LinkedHashSet<String>> predResults =
-          rdfGraphTools.runQueryHttp(query);
+          rdfGraphTools.runQueryJdbc(query);
       gGraphsAndResults.add(Pair.of(gGraph, predResults));
 
       String targetVar = null;
@@ -1470,7 +1476,8 @@ public class GraphToQueryTraining {
 
       // adding the feature if the query produces any answer
       if (validQueryFlag) {
-        if ((predResults == null || predResults.get(targetVar).size() == 0)
+        if ((predResults == null || predResults.get(targetVar) == null || predResults
+            .get(targetVar).size() == 0)
             || (predResults.size() == 1 && predResults.get(targetVar)
                 .iterator().next().startsWith("0^^"))) {
           ValidQueryFeature feat = new ValidQueryFeature(false);
