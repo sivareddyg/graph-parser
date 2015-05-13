@@ -19,8 +19,8 @@ public class KnowledgeBaseOnlineTest {
         new Schema("data/freebase/schema/all_domains_schema.txt");
     
     KnowledgeBaseOnline kb =
-        new KnowledgeBaseOnline("kinloch", "http://kinloch:8890/sparql", "dba",
-            "dba", 0, schema);
+        new KnowledgeBaseOnline("stkilda", "http://stkilda:8890/sparql", "dba",
+            "dba", 10000, schema);
 
     System.out.println(kb.getRelations("m.07484"));
     

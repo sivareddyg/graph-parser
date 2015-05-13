@@ -256,7 +256,7 @@ public class GraphToQueryTrainingMain {
       evalLogger.info("######## Development Data ###########");
       Double performance =
           graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
-              + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
+              + ".eval.dev.iteration" + i, debugEnabled, testingNbestParsesRange,
               nthreads);
       if (devExamples != null && devExamples.size() > 0
           && trainingSample.size() > 0) {
@@ -269,7 +269,7 @@ public class GraphToQueryTrainingMain {
 
           evalLogger.info("######## Testing Data ###########");
           graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile
-              + ".eval.iteration" + i, debugEnabled, testingNbestParsesRange,
+              + ".eval.test.iteration" + i, debugEnabled, testingNbestParsesRange,
               nthreads);
         } else {
           evalLogger

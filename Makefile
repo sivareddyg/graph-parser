@@ -158,6 +158,14 @@ convert_deplambda_to_wq_format_vanilla:
 	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
 	| python scripts/dependency_semantic_parser/add_answers.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
 	> data/complete/vanilla_gold/webquestions.vanilla.dev.full.deplambda.json.txt
+	cat data/deplambda/webquestions.vanilla.train.business_film_people.lambdas.txt \
+	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	> data/tacl/vanilla_gold/webquestions.examples.train.domains.deplambda.parse.filtered.json
+	cat data/deplambda/webquestions.vanilla.dev.business_film_people.lambdas.txt \
+	| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+	| python scripts/dependency_semantic_parser/add_answers.py data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	> data/tacl/vanilla_gold/webquestions.examples.dev.domains.deplambda.parse.filtered.json
 
 convert_cai_yates_splits_to_deplambda:
 	mkdir -p ../working/free917_business_film_people_splits
@@ -467,6 +475,58 @@ deplambda_supervised:
 	-logFile ../working/deplambda_supervised/business_film_people.log.txt \
 	> ../working/deplambda_supervised/business_film_people.txt
 
+deplambda_supervised_vanilla_gold:
+	rm -rf ../working/deplambda_supervised_vanilla_gold
+	mkdir -p ../working/deplambda_supervised_vanilla_gold
+	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordBigramGrelPartFlag false \
+	-argGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 1.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 2.0 \
+	-endpoint localhost \
+	-supervisedCorpus  data/tacl/vanilla_gold/webquestions.examples.train.domains.deplambda.parse.filtered.json \
+	-devFile data/tacl/vanilla_gold/webquestions.examples.dev.domains.deplambda.parse.filtered.json \
+	-testFile data/tacl/vanilla_gold/webquestions.examples.train.domains.deplambda.parse.filtered.json \
+	-logFile ../working/deplambda_supervised_vanilla_gold/all.log.txt \
+	> ../working/deplambda_supervised_vanilla_gold/all.txt
+
 deplambda_supervised_vanilla_gold_full:
 	rm -rf ../working/deplambda_supervised_vanilla_gold_full
 	mkdir -p ../working/deplambda_supervised_vanilla_gold_full
@@ -482,7 +542,7 @@ deplambda_supervised_vanilla_gold_full:
 	-iterations 20 \
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
-	-nbestGraphs 500 \
+	-nbestGraphs 100 \
 	-useSchema true \
 	-useKB true \
 	-groundFreeVariables true \

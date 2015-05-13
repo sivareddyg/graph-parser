@@ -14,9 +14,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -479,17 +476,15 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 relationTypesFileName);
       } else {
         kb =
-            new KnowledgeBaseOnline(String.format("jdbc:virtuoso://%s:1111",
-                options.valueOf(endpoint)), String.format(
+            new KnowledgeBaseOnline(options.valueOf(endpoint), String.format(
                 "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
-                "dba", 0, schemaObj);
+                "dba", 50000, schemaObj);
       }
 
       RdfGraphTools rdfGraphTools =
-          new RdfGraphTools(String.format("jdbc:virtuoso://%s:1111",
-              options.valueOf(endpoint)), String.format(
+          new RdfGraphTools(options.valueOf(endpoint), String.format(
               "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
-              "dba", 20000);
+              "dba", 10000);
       GraphToSparqlConverter.TYPE_KEY = options.valueOf(typeKey);
 
       List<String> kbGraphUri =
@@ -619,16 +614,20 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
       // Run the best model.
       graphToQueryModel.testBestModel(threadCount);
-
+      
       if (groundInputCorporaFiles != null
           && !groundInputCorporaFiles.equals("")) {
         graphToQueryModel.groundSentences(threadCount);
       }
+      
+      
+      
     } catch (IOException e) {
       e.printStackTrace();
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+    
   }
 
   /**

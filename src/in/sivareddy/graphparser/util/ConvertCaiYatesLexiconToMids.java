@@ -3,11 +3,9 @@ package in.sivareddy.graphparser.util;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
+import java.util.Map;
 
 public class ConvertCaiYatesLexiconToMids {
   String namespace = "http://rdf.freebase.com/ns/";
@@ -36,10 +34,9 @@ public class ConvertCaiYatesLexiconToMids {
             + "SELECT ?x FROM <%s> WHERE { ?x ns:type.object.key \"%s\" . }",
             domain, entityKey);
     System.err.println("Query = " + query);
-    ResultSet results = rdfGraphTools.runQueryJdbcResultSet(query);
-    List<String> resultStrings = Lists.newArrayList();
-    while (results.hasNext()) {
-      QuerySolution result = results.nextSolution();
+    List<Map<String, String>> results = rdfGraphTools.runQueryHttpSolutions(query);
+    List<String> resultStrings = new ArrayList<>();
+    for (Map<String, String> result : results) {
       String x = result.get("x").toString();
       x = x.replace(namespace, "");
       resultStrings.add(x);

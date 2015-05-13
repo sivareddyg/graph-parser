@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,9 +20,6 @@ import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
 
 public class KnowledgeBaseOnline implements KnowledgeBase {
   static Integer MAX_CACHE_SIZE = 100000;
@@ -63,7 +61,7 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
 
     this.schema = schema;
   }
-  
+
   @Override
   public Set<Relation> getRelations(String entity1, String entity2) {
     if (standardTypes.contains(entity1) && standardTypes.contains(entity2)) {
@@ -98,18 +96,16 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
                   "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { fb:%s ?rel fb:%s . MINUS{?rel fb:type.property.master_property ?master .}}",
                   key.getLeft(), key.getRight());
       // ResultSet results = endPoint.runQueryJdbcResult(query);
-      Pair<ResultSet, QueryExecution> resultsPair =
-          endPoint.runQueryJdbcResultSet(query);
-      ResultSet results = resultsPair.getLeft();
-      while (results != null && results.hasNext()) {
-        String relation = results.next().get("rel").toString();
+      List<Map<String, String>> results =
+          endPoint.runQueryHttpSolutions(query);
+      for (Map<String, String> querySolution : results) {
+        String relation = querySolution.get("rel").toString();
         relation = relation.substring(relation.lastIndexOf("/") + 1);
         if (schema.isDomainRelationAndMaster(relation)
             && !schema.hasMediatorArgument(relation)) {
           relations.add(new Relation(relation + ".1", relation + ".2"));
         }
       }
-      RdfGraphTools.close(resultsPair);
 
       // Inverse relations.
       query =
@@ -117,18 +113,16 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
               .format(
                   "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { fb:%s ?rel fb:%s . MINUS { ?rel fb:type.property.master_property ?master . }}",
                   key.getRight(), key.getLeft());
-      // results = endPoint.runQueryJdbcResultSet(query);
-      resultsPair = endPoint.runQueryJdbcResultSet(query);
-      results = resultsPair.getLeft();
-      while (results != null && results.hasNext()) {
-        String relation = results.next().get("rel").toString();
+      // results = endPoint.runQueryHttpSolutions(query);
+      results = endPoint.runQueryHttpSolutions(query);
+      for (Map<String, String> querySolution : results) {
+        String relation = querySolution.get("rel").toString();
         relation = relation.substring(relation.lastIndexOf("/") + 1);
         if (schema.isDomainRelationAndMaster(relation)
             && !schema.hasMediatorArgument(relation)) {
           relations.add(new Relation(relation + ".2", relation + ".1"));
         }
       }
-      RdfGraphTools.close(resultsPair);
 
       // Mediator relations.
       query =
@@ -136,10 +130,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
               .format(
                   "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { ?m ?rel1 fb:%s . ?m ?rel2 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . }",
                   key.getLeft(), key.getRight());
-      resultsPair = endPoint.runQueryJdbcResultSet(query);
-      results = resultsPair.getLeft();
-      while (results != null && results.hasNext()) {
-        QuerySolution querySolution = results.next();
+      results = endPoint.runQueryHttpSolutions(query);
+      for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
         rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
         String rel2 = querySolution.get("rel2").toString();
@@ -151,17 +143,14 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
           relations.add(new Relation(rel1, rel2));
         }
       }
-      RdfGraphTools.close(resultsPair);
 
       query =
           String
               .format(
                   "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . ?m ?rel2 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . }",
                   key.getLeft(), key.getRight());
-      resultsPair = endPoint.runQueryJdbcResultSet(query);
-      results = resultsPair.getLeft();
-      while (results != null && results.hasNext()) {
-        QuerySolution querySolution = results.next();
+      results = endPoint.runQueryHttpSolutions(query);
+      for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
         rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
         String rel2 = querySolution.get("rel2").toString();
@@ -173,17 +162,14 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
           relations.add(new Relation(rel1_inv, rel2));
         }
       }
-      RdfGraphTools.close(resultsPair);
 
       query =
           String
               .format(
                   "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE {fb:%s ?rel2 ?m . ?m ?rel1 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . }",
                   key.getRight(), key.getLeft());
-      resultsPair = endPoint.runQueryJdbcResultSet(query);
-      results = resultsPair.getLeft();
-      while (results != null && results.hasNext()) {
-        QuerySolution querySolution = results.next();
+      results = endPoint.runQueryHttpSolutions(query);
+      for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
         rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
         String rel2 = querySolution.get("rel2").toString();
@@ -195,17 +181,14 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
           relations.add(new Relation(rel1, rel2_inv));
         }
       }
-      RdfGraphTools.close(resultsPair);
 
       query =
           String
               .format(
                   "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . fb:%s ?rel2 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . }",
                   key.getLeft(), key.getRight());
-      resultsPair = endPoint.runQueryJdbcResultSet(query);
-      results = resultsPair.getLeft();
-      while (results != null && results.hasNext()) {
-        QuerySolution querySolution = results.next();
+      results = endPoint.runQueryHttpSolutions(query);
+      for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
         rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
         String rel2 = querySolution.get("rel2").toString();
@@ -218,7 +201,6 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
           relations.add(new Relation(rel1_inv, rel2_inv));
         }
       }
-      RdfGraphTools.close(resultsPair);
     } else if (standardTypes.contains(key.getRight())) {
       // Master relation.
       String query =
@@ -226,18 +208,16 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
               .format(
                   "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { fb:%s ?rel ?e2 . MINUS{?rel fb:type.property.master_property ?master .} FILTER(datatype(?e2) = %s) .}",
                   key.getLeft(), fbStandardToRDFStandard.get(key.getRight()));
-      Pair<ResultSet, QueryExecution> resultsPair =
-          endPoint.runQueryJdbcResultSet(query);
-      ResultSet results = resultsPair.getLeft();
-      while (results != null && results.hasNext()) {
-        String relation = results.next().get("rel").toString();
+      List<Map<String, String>> results =
+          endPoint.runQueryHttpSolutions(query);
+      for (Map<String, String> querySolution : results) {
+        String relation = querySolution.get("rel").toString();
         relation = relation.substring(relation.lastIndexOf("/") + 1);
         if (schema.isDomainRelationAndMaster(relation)
             && !schema.hasMediatorArgument(relation)) {
           relations.add(new Relation(relation + ".1", relation + ".2"));
         }
       }
-      RdfGraphTools.close(resultsPair);
 
       // Mediator relations.
       query =
@@ -245,10 +225,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
               .format(
                   "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { ?m ?rel1 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER(datatype(?e2) = %s) . }",
                   key.getLeft(), fbStandardToRDFStandard.get(key.getRight()));
-      resultsPair = endPoint.runQueryJdbcResultSet(query);
-      results = resultsPair.getLeft();
-      while (results != null && results.hasNext()) {
-        QuerySolution querySolution = results.next();
+      results = endPoint.runQueryHttpSolutions(query);
+      for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
         rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
         String rel2 = querySolution.get("rel2").toString();
@@ -260,17 +238,14 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
           relations.add(new Relation(rel1, rel2));
         }
       }
-      RdfGraphTools.close(resultsPair);
 
       query =
           String
               .format(
                   "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER(datatype(?e2) = %s) . }",
                   key.getLeft(), fbStandardToRDFStandard.get(key.getRight()));
-      resultsPair = endPoint.runQueryJdbcResultSet(query);
-      results = resultsPair.getLeft();
-      while (results != null && results.hasNext()) {
-        QuerySolution querySolution = results.next();
+      results = endPoint.runQueryHttpSolutions(query);
+      for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
         rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
         String rel2 = querySolution.get("rel2").toString();
@@ -282,7 +257,6 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
           relations.add(new Relation(rel1_inv, rel2));
         }
       }
-      RdfGraphTools.close(resultsPair);
     }
     return relations;
   }
@@ -314,18 +288,15 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
             .format(
                 "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { fb:%s ?rel ?e2 . MINUS{?rel fb:type.property.master_property ?master .}}",
                 entity);
-    Pair<ResultSet, QueryExecution> resultsPair =
-        endPoint.runQueryJdbcResultSet(query);
-    ResultSet results = resultsPair.getLeft();
-    while (results != null && results.hasNext()) {
-      String relation = results.next().get("rel").toString();
+    List<Map<String, String>> results = endPoint.runQueryHttpSolutions(query);
+    for (Map<String, String> querySolution : results) {
+      String relation = querySolution.get("rel").toString();
       relation = relation.substring(relation.lastIndexOf("/") + 1);
       if (schema.isDomainRelationAndMaster(relation)
           && !schema.hasMediatorArgument(relation)) {
         relations.add(new Relation(relation + ".1", relation + ".2"));
       }
     }
-    RdfGraphTools.close(resultsPair);
 
     // Inverse relations.
     query =
@@ -333,17 +304,15 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
             .format(
                 "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { ?e2 ?rel fb:%s . MINUS { ?rel fb:type.property.master_property ?master . }}",
                 entity);
-    resultsPair = endPoint.runQueryJdbcResultSet(query);
-    results = resultsPair.getLeft();
-    while (results != null && results.hasNext()) {
-      String relation = results.next().get("rel").toString();
+    results = endPoint.runQueryHttpSolutions(query);
+    for (Map<String, String> querySolution : results) {
+      String relation = querySolution.get("rel").toString();
       relation = relation.substring(relation.lastIndexOf("/") + 1);
       if (schema.isDomainRelationAndMaster(relation)
           && !schema.hasMediatorArgument(relation)) {
         relations.add(new Relation(relation + ".2", relation + ".1"));
       }
     }
-    RdfGraphTools.close(resultsPair);
 
     // Mediator relations.
     query =
@@ -351,10 +320,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
             .format(
                 "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { ?m ?rel1 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER (?e2 != fb:%s) .}",
                 entity, entity);
-    resultsPair = endPoint.runQueryJdbcResultSet(query);
-    results = resultsPair.getLeft();
-    while (results != null && results.hasNext()) {
-      QuerySolution querySolution = results.next();
+    results = endPoint.runQueryHttpSolutions(query);
+    for (Map<String, String> querySolution : results) {
       String rel1 = querySolution.get("rel1").toString();
       rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
       String rel2 = querySolution.get("rel2").toString();
@@ -365,17 +332,14 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
         relations.add(new Relation(rel1, rel2));
       }
     }
-    RdfGraphTools.close(resultsPair);
 
     query =
         String
             .format(
                 "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER (?e2 != fb:%s) .}",
                 entity, entity);
-    resultsPair = endPoint.runQueryJdbcResultSet(query);
-    results = resultsPair.getLeft();
-    while (results != null && results.hasNext()) {
-      QuerySolution querySolution = results.next();
+    results = endPoint.runQueryHttpSolutions(query);
+    for (Map<String, String> querySolution : results) {
       String rel1 = querySolution.get("rel1").toString();
       rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
       String rel2 = querySolution.get("rel2").toString();
@@ -387,17 +351,14 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
         relations.add(new Relation(rel1_inv, rel2));
       }
     }
-    RdfGraphTools.close(resultsPair);
 
     query =
         String
             .format(
                 "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE {?m ?rel1 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?e2 ?rel2 ?m . FILTER (?e2 != fb:%s) .}",
                 entity, entity);
-    resultsPair = endPoint.runQueryJdbcResultSet(query);
-    results = resultsPair.getLeft();
-    while (results != null && results.hasNext()) {
-      QuerySolution querySolution = results.next();
+    results = endPoint.runQueryHttpSolutions(query);
+    for (Map<String, String> querySolution : results) {
       String rel1 = querySolution.get("rel1").toString();
       rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
       String rel2 = querySolution.get("rel2").toString();
@@ -409,17 +370,14 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
         relations.add(new Relation(rel1, rel2_inv));
       }
     }
-    RdfGraphTools.close(resultsPair);
 
     query =
         String
             .format(
                 "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?e2 ?rel2 ?m . FILTER (?e2 != fb:%s) .}",
                 entity, entity);
-    resultsPair = endPoint.runQueryJdbcResultSet(query);
-    results = resultsPair.getLeft();
-    while (results != null && results.hasNext()) {
-      QuerySolution querySolution = results.next();
+    results = endPoint.runQueryHttpSolutions(query);
+    for (Map<String, String> querySolution : results) {
       String rel1 = querySolution.get("rel1").toString();
       rel1 = rel1.substring(rel1.lastIndexOf("/") + 1);
       String rel2 = querySolution.get("rel2").toString();
@@ -432,7 +390,6 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
         relations.add(new Relation(rel1_inv, rel2_inv));
       }
     }
-    RdfGraphTools.close(resultsPair);
     return relations;
   }
 
@@ -454,17 +411,14 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
             .format(
                 "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?type from <http://rdf.freebase.com> WHERE { fb:%s fb:type.object.type ?type . }",
                 entity);
-    Pair<ResultSet, QueryExecution> resultsPair =
-        endPoint.runQueryJdbcResultSet(query);
-    ResultSet results = resultsPair.getLeft();
-    while (results != null && results.hasNext()) {
-      String type = results.next().get("type").toString();
+    List<Map<String, String>> results = endPoint.runQueryHttpSolutions(query);
+    for (Map<String, String> querySolution : results) {
+      String type = querySolution.get("type").toString();
       type = type.substring(type.lastIndexOf("/") + 1);
       if (schema.isMainType(type)) {
         types.add(type);
       }
     }
-    RdfGraphTools.close(resultsPair);
 
     // TODO(sivareddyg) Relations that are types.
     return types;

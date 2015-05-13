@@ -10,8 +10,6 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
 
 /**
  *
@@ -71,11 +69,11 @@ public class PrintFreebaseDomain {
                         + "?x rdf:type ns:%s . }", domainUri, type);
         System.err.println("Query = " + query);
 
-        ResultSet results = rdfGraphTools.runQueryJdbcResultSet(query);
+        List<Map<String, String>> results =
+            rdfGraphTools.runQueryJdbcSolutions(query);
         int count = 0;
-        while (results.hasNext()) {
+        for (Map<String, String> result : results) {
           count += 1;
-          QuerySolution result = results.nextSolution();
           String x = result.get("x").toString();
           x = x.replace(namespace, "");
 
@@ -116,11 +114,10 @@ public class PrintFreebaseDomain {
                     domainUri, relation);
             System.err.println("Query = " + query);
 
-            results = rdfGraphTools.runQueryJdbcResultSet(query);
+            results = rdfGraphTools.runQueryJdbcSolutions(query);
             count = 0;
-            while (results.hasNext()) {
+            for (Map<String, String> result : results) {
               count += 1;
-              QuerySolution result = results.nextSolution();
               String x = result.get("x").toString();
               String y = result.get("y").toString();
               x = x.replace(namespace, "");
@@ -218,11 +215,11 @@ public class PrintFreebaseDomain {
 
             System.err.println("Query = " + query);
 
-            ResultSet results = rdfGraphTools.runQueryJdbcResultSet(query);
+            List<Map<String, String>> results =
+                rdfGraphTools.runQueryJdbcSolutions(query);
             int count = 0;
-            while (results.hasNext()) {
+            for (Map<String, String> result : results) {
               count += 1;
-              QuerySolution result = results.nextSolution();
               String x = result.get("x").toString();
               String y = result.get("y").toString();
               if (Schema.acceptableCommonTypes.contains(relation1ChildType)) {

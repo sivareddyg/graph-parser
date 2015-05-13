@@ -1,9 +1,9 @@
 package in.sivareddy.scripts;
 
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-
 import in.sivareddy.graphparser.util.RdfGraphTools;
+
+import java.util.List;
+import java.util.Map;
 
 public class PrintAllEntities {
   RdfGraphTools endPoint = null;
@@ -16,10 +16,9 @@ public class PrintAllEntities {
   public void print() {
     String query =
         "SELECT ?s ?o FROM <http://rdf.freebase.com> WHERE { ?s ?p ?o . }";
-    ResultSet results = endPoint.runQueryJdbcResultSet(query);
+    List<Map<String, String>> results = endPoint.runQueryJdbcSolutions(query);
 
-    while (results.hasNext()) {
-      QuerySolution result = results.nextSolution();
+    for (Map<String, String> result : results) {
       System.out.println(result.get("s"));
       System.out.println(result.get("o"));
     }

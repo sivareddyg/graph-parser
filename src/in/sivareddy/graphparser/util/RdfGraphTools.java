@@ -1,20 +1,34 @@
 package in.sivareddy.graphparser.util;
 
-import java.sql.SQLException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.sql.DataSource;
-
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.client.utils.URIBuilder;
 
-import virtuoso.jdbc4.VirtuosoConnectionPoolDataSource;
 import virtuoso.jena.driver.VirtGraph;
 import virtuoso.jena.driver.VirtuosoQueryExecution;
 import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
@@ -25,17 +39,18 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QueryParseException;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.shared.PrefixMapping;
-import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
 
 /**
  * Tools for querying RDF Graphs
@@ -47,15 +62,22 @@ public class RdfGraphTools {
 
   private VirtGraph virtGraph;
   private String httpUrl;
-  private String jdbcUrl;
-  private String username;
-  private String password;
-  private Integer timeOut = 500000; // timeout in milli seconds
+  private Integer timeOut = 0; // timeout in milli seconds
   private static String XSD_PREFIX =
       "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>";
+  // ExecutorService executor = Executors.newFixedThreadPool(200);
+
+  int nthreads = 50;
+  final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
+  ThreadPoolExecutor threadPool = new ThreadPoolExecutor(nthreads, nthreads,
+      100, TimeUnit.SECONDS, queue);
+
 
   // stores query and its results
   private static Cache<String, Map<String, LinkedHashSet<String>>> queryCache =
+      Caffeine.newBuilder().maximumSize(100000).build();
+
+  private static Cache<String, List<Map<String, String>>> querySolutionCache =
       Caffeine.newBuilder().maximumSize(100000).build();
 
   public RdfGraphTools(String jdbcEndPoint, String username, String password) {
@@ -76,93 +98,82 @@ public class RdfGraphTools {
       String password, int timeOut) {
     virtGraph = new VirtGraph(null, jdbcUrl, username, password, true);
 
-    if (timeOut > 0) {
-      virtGraph.setQueryTimeout(timeOut / 1000);
-      this.timeOut = timeOut;
-    }
-
     PrefixMapping prefixMapping = virtGraph.getPrefixMapping();
     prefixMapping.setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#");
     this.httpUrl = httpUrl;
-    this.jdbcUrl = jdbcUrl;
-    this.username = username;
-    this.password = password;
+    this.timeOut = timeOut;
+
+
+    threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
+      @Override
+      public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        // this will block if the queue is full
+        try {
+          executor.getQueue().put(r);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    });
   }
 
-  public Pair<ResultSet, QueryExecution> runQueryJdbcResultSet(String query) {
-    if (query == null) {
-      return Pair.of(null, null);
-    }
+  public List<Map<String, String>> runQueryJdbcSolutions(String query) {
+    List<Map<String, String>> results = querySolutionCache.getIfPresent(query);
+    if (results != null)
+      return results;
 
-    ResultSet results = null;
-    VirtuosoQueryExecution vqe = null;
+    results = new ArrayList<>();
+    QueryExecutionTaskJdbc task =
+        new QueryExecutionTaskJdbc(virtGraph, query, results);
+
+    Future<Void> future = threadPool.submit(task);
+    // executor.submit(task);
     try {
-      // Run Sparql query
-      query = String.format("%s %s", XSD_PREFIX, query);
-      Query sparql = QueryFactory.create(query);
-      vqe = VirtuosoQueryExecutionFactory.create(sparql, virtGraph);
-      results = vqe.execSelect();
-    } catch (QueryParseException e) {
-      // System.err.println("WARNING: query parse exception: " + query);
-      // Skip.
+      if (timeOut > 0) {
+        future.get(timeOut, TimeUnit.MILLISECONDS);
+      } else {
+        future.get();
+      }
+    } catch (TimeoutException ex) {
+      System.err.println("Timeout query: " + timeOut + ": " + query);
     } catch (Exception e) {
-      // System.err.println("query timed out: " + e.getMessage());
+      // System.err.println("Other exception: " + timeOut + ": " + query);
       // Skip.
+    } finally {
+      task.close();
+      querySolutionCache.put(query, results);
     }
-    return Pair.of(results, vqe);
+    return results;
   }
 
-  public static Pair<ResultSet, QueryExecution> runQueryJdbcResultSet(
-      String query, VirtGraph virtGraph) {
-    if (query == null) {
-      return Pair.of(null, null);
-    }
+  public List<Map<String, String>> runQueryHttpSolutions(String query) {
+    List<Map<String, String>> results = querySolutionCache.getIfPresent(query);
+    if (results != null)
+      return results;
 
-    ResultSet results = null;
-    VirtuosoQueryExecution vqe = null;
+    results = new ArrayList<>();
+    QueryExecutionTaskHttp task =
+        new QueryExecutionTaskHttp(httpUrl, query, results);
+
+    Future<Void> future = threadPool.submit(task);
+    // executor.submit(task);
     try {
-      // Run Sparql query
-      query = String.format("%s %s", XSD_PREFIX, query);
-      Query sparql = QueryFactory.create(query);
-      vqe = VirtuosoQueryExecutionFactory.create(sparql, virtGraph);
-      results = vqe.execSelect();
-    } catch (QueryParseException e) {
-      // System.err.println("WARNING: query parse exception: " + query);
-      // Skip.
+      if (timeOut > 0) {
+        future.get(timeOut, TimeUnit.MILLISECONDS);
+      } else {
+        future.get();
+      }
+    } catch (TimeoutException ex) {
+      System.err.println("Timeout query: " + timeOut + ": " + query);
     } catch (Exception e) {
-      // System.err.println("query timed out: " + e.getMessage());
+      // e.printStackTrace();
+      // System.err.println("Other exception: " + timeOut + ": " + query);
       // Skip.
+    } finally {
+      task.close();
+      querySolutionCache.put(query, results);
     }
-    return Pair.of(results, vqe);
-  }
-
-
-  public Pair<ResultSet, QueryExecution> runQueryHttpResultSet(String query) {
-    Preconditions.checkArgument(httpUrl != null, "http endpoint not specified");
-    if (query == null) {
-      return Pair.of(null, null);
-    }
-    query = "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + query;
-
-    ResultSet results = null;
-    QueryEngineHTTP vqe = null;
-    try {
-      vqe = new QueryEngineHTTP(httpUrl, query);
-      vqe.addParam("timeout", this.timeOut.toString());
-      results = vqe.execSelect();
-    } catch (Exception e) {
-      // Skip.
-    }
-    return Pair.of(results, vqe);
-  }
-
-  public static synchronized void cacheResult(String query,
-      Map<String, LinkedHashSet<String>> results) {
-    if (results != null) {
-      queryCache.put(query, results);
-    } else {
-      queryCache.put(query, new HashMap<>());
-    }
+    return results;
   }
 
   public Map<String, LinkedHashSet<String>> runQueryJdbc(String query) {
@@ -174,24 +185,16 @@ public class RdfGraphTools {
     if (results != null)
       return results;
 
-    VirtGraph virtGraph = null;
-    while (virtGraph == null) {
-      try {
-      virtGraph = new VirtGraph(null, jdbcUrl, username, password, true);
-      } catch (Exception e) {
-        e.printStackTrace();
+    List<Map<String, String>> solutions = runQueryJdbcSolutions(query);
+    results = new HashMap<>();
+    for (Map<String, String> solution : solutions) {
+      for (String var : solution.keySet()) {
+        results.putIfAbsent(var, new LinkedHashSet<>());
+        results.get(var).add(solution.get(var).toString());
       }
     }
-    if (timeOut > 0) {
-      virtGraph.setQueryTimeout(timeOut / 1000);
-    }
-    
-    Pair<ResultSet, QueryExecution> resultSetPair =
-        runQueryJdbcResultSet(query, virtGraph);
-    results = getResults(resultSetPair.getLeft());
-    cacheResult(query, results);
-    close(resultSetPair);
-    virtGraph.close();
+
+    queryCache.put(query, results);
     return results;
   }
 
@@ -204,12 +207,16 @@ public class RdfGraphTools {
     if (results != null)
       return results;
 
-    Pair<ResultSet, QueryExecution> resultSetPair =
-        runQueryHttpResultSet(query);
+    List<Map<String, String>> solutions = runQueryHttpSolutions(query);
+    results = new HashMap<>();
+    for (Map<String, String> solution : solutions) {
+      for (String var : solution.keySet()) {
+        results.putIfAbsent(var, new LinkedHashSet<>());
+        results.get(var).add(solution.get(var).toString());
+      }
+    }
 
-    results = getResults(resultSetPair.getLeft());
-    cacheResult(query, results);
-    close(resultSetPair);
+    queryCache.put(query, results);
     return results;
   }
 
@@ -239,12 +246,12 @@ public class RdfGraphTools {
     vur.exec();
   }
 
-  public static Map<String, LinkedHashSet<String>> getResults(
-      ResultSet resultSet) {
+  public static void getResults(ResultSet resultSet,
+      Map<String, LinkedHashSet<String>> results) {
     if (resultSet == null) {
-      return null;
+      return;
     }
-    Map<String, LinkedHashSet<String>> results = Maps.newHashMap();
+
     List<?> vars = resultSet.getResultVars();
     for (Object var : vars) {
       results.put(var.toString(), new LinkedHashSet<String>());
@@ -261,11 +268,10 @@ public class RdfGraphTools {
         }
       }
     } catch (Exception e) {
-      return results;
+      return;
     }
-    return results;
+    return;
   }
-
 
   /**
    * Returns readable outuput of gold and predicted results that can be used for
@@ -462,54 +468,6 @@ public class RdfGraphTools {
     }
   }
 
-  public static void main(String[] args) {
-    String url;
-    if (args.length == 0) {
-      url = "jdbc:virtuoso://kinloch:1111";
-    } else {
-      url = args[0];
-    }
-
-
-
-    for (int i = 0; i < 200; i++) {
-      VirtGraph virtGraph =
-          new VirtGraph(null, "jdbc:virtuoso://bravas:1111", "dba", "dba", true);
-      System.out.println(i);
-      virtGraph.setQueryTimeout(20);
-      String query =
-          "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?x2 from <http://rdf.freebase.com> WHERE { ?x ?y ?x2 .  } LIMIT 100";
-
-      System.out.println(getResults(runQueryJdbcResultSet(query, virtGraph)
-          .getLeft()));
-    }
-
-    String httpUrl = "http://kinloch:8890/sparql";
-
-    String query =
-        "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?x2 from <http://rdf.freebase.com> WHERE { ?m1 fb:business.company_brand_relationship.brand fb:m.04wg3q . ?m1 fb:business.company_brand_relationship.from_date ?x2 .  } LIMIT 10";
-
-    // String query =
-    // "SELECT * FROM <http://film.freebase.com> WHERE { ?s ?p ?o . } limit 100";
-
-    RdfGraphTools rdfGraphTools = new RdfGraphTools(url, httpUrl, "dba", "dba");
-
-    long startTime = System.currentTimeMillis();
-    // ResultSet results = rdfGraphTools.runQueryJdbc(query);
-    Pair<ResultSet, QueryExecution> resultsPair =
-        rdfGraphTools.runQueryHttpResultSet(query);
-    ResultSet results = resultsPair.getLeft();
-    // System.out.println(RdfGraphTools.getResults(results));
-    while (results.hasNext()) {
-      QuerySolution result = results.nextSolution();
-      System.out.println(results.getResultVars());
-      System.out.println(result);
-    }
-    long stopTime = System.currentTimeMillis();
-    long elapsedTime = stopTime - startTime;
-    System.out.println(elapsedTime);
-  }
-
   public static LinkedHashSet<String> convertDatesToYears(Set<String> results) {
     if (results == null) {
       return null;
@@ -526,11 +484,166 @@ public class RdfGraphTools {
     return dates;
   }
 
-  public static boolean close(Pair<ResultSet, QueryExecution> resultSetPair) {
-    if (resultSetPair.getRight() != null) {
-      resultSetPair.getRight().close();
-      return true;
+  private static class QueryExecutionTaskJdbc implements Callable<Void> {
+    private final List<Map<String, String>> results;
+    private final VirtGraph virtgraph;
+    private final String query;
+    private QueryExecution vqe = null;
+
+    public QueryExecutionTaskJdbc(VirtGraph virtGraph, String query,
+        List<Map<String, String>> results) {
+      this.virtgraph = virtGraph;
+      this.results = results;
+      this.query = query;
     }
-    return false;
+
+    @Override
+    public Void call() throws Exception {
+      Query sparql;
+      try {
+        String newQuery = String.format("%s %s", XSD_PREFIX, query);
+        sparql = QueryFactory.create(newQuery);
+      } catch (Exception e) {
+        // Bad query.
+        return null;
+      }
+
+      VirtuosoQueryExecution vqe = null;
+      try {
+        vqe = VirtuosoQueryExecutionFactory.create(sparql, virtgraph);
+        ResultSet resultSet = vqe.execSelect();
+        while (resultSet != null && resultSet.hasNext()) {
+          QuerySolution result = resultSet.next();
+          Iterator<String> it = result.varNames();
+          Map<String, String> varValue = new LinkedHashMap<>();
+          while (it.hasNext()) {
+            String var = it.next();
+            RDFNode value = result.get(var);
+            if (value != null) {
+              varValue.put(var, value.toString());
+            }
+          }
+
+          if (varValue.size() > 0) {
+            results.add(varValue);
+          }
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      } finally {
+        vqe.close();
+      }
+      return null;
+    }
+
+    public void close() {
+      if (vqe != null && !vqe.isClosed()) {
+        vqe.close();
+      }
+    }
+  }
+
+  private static class QueryExecutionTaskHttp implements Callable<Void> {
+    private final List<Map<String, String>> results;
+    private final String httpServer;
+    private final String query;
+    private InputStream responseRecieved = null;
+
+    public QueryExecutionTaskHttp(String httpServer, String query,
+        List<Map<String, String>> results) {
+      this.httpServer = httpServer;
+      this.results = results;
+      this.query = query;
+    }
+
+    @Override
+    public Void call() throws Exception {
+      String charset = "UTF-8";
+
+      URIBuilder builder = new URIBuilder(httpServer);
+      builder.addParameter("query", query);
+      builder.addParameter("format", "application/sparql-results+json");
+      builder.addParameter("timeout", "0");
+
+      URL url = builder.build().toURL();
+      URLConnection connection = url.openConnection();
+
+      responseRecieved = connection.getInputStream();
+      String content = null;
+
+      content = IOUtils.toString(responseRecieved, charset);
+      content = content.trim().replace("\n", " ");
+
+      JsonParser parser = new JsonParser();
+
+      JsonArray resultSet = new JsonArray();
+      try {
+        resultSet =
+            parser.parse(content).getAsJsonObject().get("results")
+                .getAsJsonObject().get("bindings").getAsJsonArray();
+      } catch (Exception e) {
+        return null;
+      }
+
+      for (JsonElement result : resultSet) {
+        JsonObject resultObj = result.getAsJsonObject();
+        Map<String, String> varValue = new LinkedHashMap<>();
+        for (Entry<String, JsonElement> varEntry : resultObj.entrySet()) {
+          String var = varEntry.getKey();
+          JsonObject valueObj = varEntry.getValue().getAsJsonObject();
+          String value = valueObj.get("value").getAsString();
+
+          if (valueObj.has("datatype")) {
+            value += "^^<" + valueObj.get("datatype") + ">";
+          }
+          varValue.put(var, value);
+        }
+        if (varValue.size() > 0) {
+          results.add(varValue);
+        }
+      }
+      return null;
+    }
+
+    public void close() {
+      if (responseRecieved != null) {
+        try {
+          responseRecieved.close();
+        } catch (IOException e) {
+          // Connection is already closed. Do nothing.
+        }
+      }
+    }
+  }
+
+  public static void main(String[] args) {
+    String url;
+    if (args.length == 0) {
+      url = "jdbc:virtuoso://bravas:1111";
+    } else {
+      url = args[0];
+    }
+
+    String httpUrl = "http://bravas:8890/sparql";
+
+    String query =
+        "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:m.017nt ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 fb:m.04sv4 . }";
+
+    // String query =
+    // "SELECT * FROM <http://film.freebase.com> WHERE { ?s ?p ?o . } limit 100";
+
+    RdfGraphTools rdfGraphTools =
+        new RdfGraphTools(url, httpUrl, "dba", "dba", 10);
+
+    long startTime = System.currentTimeMillis();
+    System.out.println(rdfGraphTools.runQueryHttpSolutions(query));
+
+    System.out.println(rdfGraphTools.runQueryJdbc(query));
+    System.out.println(rdfGraphTools.runQueryHttp(query));
+    System.out.println(rdfGraphTools.runQueryJdbcSolutions(query));
+    System.out.println(rdfGraphTools.runQueryJdbcSolutions(query + " "));
+    long stopTime = System.currentTimeMillis();
+    long elapsedTime = stopTime - startTime;
+    System.out.println(elapsedTime);
   }
 }
