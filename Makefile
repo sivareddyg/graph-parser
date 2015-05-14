@@ -478,7 +478,7 @@ deplambda_supervised:
 deplambda_supervised_vanilla_gold:
 	rm -rf ../working/deplambda_supervised_vanilla_gold
 	mkdir -p ../working/deplambda_supervised_vanilla_gold
-	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
@@ -530,7 +530,7 @@ deplambda_supervised_vanilla_gold:
 deplambda_supervised_vanilla_gold_full:
 	rm -rf ../working/deplambda_supervised_vanilla_gold_full
 	mkdir -p ../working/deplambda_supervised_vanilla_gold_full
-	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -agentlib:hprof=cpu=samples,interval=20,depth=3 -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
@@ -970,7 +970,7 @@ tacl_mwg_on_training_data_vanilla_gold:
 tacl_mwg_on_training_data_vanilla_gold_onlinekb:
 	rm -rf ../working/tacl_mwg_on_training_data_vanilla_gold_onlinekb
 	mkdir -p ../working/tacl_mwg_on_training_data_vanilla_gold_onlinekb
-	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -1255,7 +1255,7 @@ tacl_supervised:
 tacl_supervised_vanilla_gold:
 	rm -rf ../working/tacl_supervised_vanilla_gold
 	mkdir -p ../working/tacl_supervised_vanilla_gold
-	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/dummy.txt \
@@ -1308,7 +1308,7 @@ tacl_supervised_vanilla_gold:
 tacl_supervised_vanilla_gold_online_kb:
 	rm -rf ../working/tacl_supervised_vanilla_gold_online_kb
 	mkdir -p ../working/tacl_supervised_vanilla_gold_online_kb
-	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/dummy.txt \
@@ -1360,7 +1360,7 @@ tacl_supervised_vanilla_gold_online_kb:
 tacl_supervised_vanilla_gold_full:
 	rm -rf ../working/tacl_supervised_vanilla_gold_full
 	mkdir -p ../working/tacl_supervised_vanilla_gold_full
-	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
 	-lexicon data/dummy.txt \
@@ -1463,7 +1463,7 @@ tacl_supervised_with_unsupervised_lexicon:
 tacl_supervised_with_unsupervised_lexicon_vanilla_gold_online:
 	rm -rf ../working/tacl_supervised_with_unsupervised_lexicon_vanilla_gold
 	mkdir -p ../working/tacl_supervised_with_unsupervised_lexicon_vanilla_gold
-	java -Xms2048m -cp lib/*:lib/apache-jena/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -1676,6 +1676,7 @@ unsupervised_first_experiment:
     > ../working/unsupervised_first_experiment/business_film_people.txt
 
 candc_distant_eval:
+	rm -rf ../working/candc_distant_eval
 	mkdir -p ../working/candc_distant_eval
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \

@@ -43,4 +43,4 @@ that	*	S[em]/S[dcl]	(S[em]{Y}/S[dcl]{Y}){_};_ 1 Y	CLOSED
 's	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
 
 # BLANK category
-BLANK	*	N	N{X}	(lambda $X (QUESTION $X))
+_blank_	*	N	N{X}	(lambda $X (QUESTION $X))
