@@ -22,6 +22,8 @@ public class KnowledgeBaseOnlineTest {
         new KnowledgeBaseOnline("stkilda", "http://stkilda:8890/sparql", "dba",
             "dba", 10000, schema);
 
+    System.out.println(kb.getRelations("m.01ypc"));
+    
     System.out.println(kb.getRelations("m.07484"));
     
     // true

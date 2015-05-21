@@ -131,10 +131,10 @@ public class LexicalGraph extends Graph<LexicalItem> {
     }
   }
 
-  public static class WordBigramGrelPartFeature extends AbstractFeature {
+  public static class EventTypeGrelPartFeature extends AbstractFeature {
     private static final long serialVersionUID = 7844786020868030663L;
 
-    public WordBigramGrelPartFeature(List<?> key, Double value) {
+    public EventTypeGrelPartFeature(List<?> key, Double value) {
       super(key, value);
     }
   }

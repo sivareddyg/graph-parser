@@ -69,9 +69,9 @@ public class GraphToQueryTrainingUnsupervised {
       boolean edgeNodeCountFlag, boolean duplicateEdgesFlag,
       boolean grelGrelFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean validQueryFlag,
-      boolean useNbestGraphs, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight) throws IOException {
+      boolean useNbestGraphs, boolean addBagOfWordsGraph,
+      double initialEdgeWeight, double initialTypeWeight,
+      double initialWordWeight, double stemFeaturesWeight) throws IOException {
 
     this.semanticParseKey = sematicParseKey;
     this.nBestTestSyntacticParses = nBestTestSyntacticParses;
@@ -111,9 +111,9 @@ public class GraphToQueryTrainingUnsupervised {
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            validQueryFlag, useNbestGraphs, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight,
-            rdfGraphTools, kbGraphUri);
+            validQueryFlag, useNbestGraphs, addBagOfWordsGraph,
+            initialEdgeWeight, initialTypeWeight, initialWordWeight,
+            stemFeaturesWeight, rdfGraphTools, kbGraphUri);
 
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
       supervisedTrainingExamples =
@@ -322,7 +322,9 @@ public class GraphToQueryTrainingUnsupervised {
 
     // Denotation feature
     boolean validQueryFlag = true;
+
     boolean useNbestGraphs = false;
+    boolean addBagOfWordsGraph = false;
 
     GraphToQueryTrainingUnsupervised graphToQueryModel =
         new GraphToQueryTrainingUnsupervised(schema, kb, groundedLexicon,
@@ -340,8 +342,8 @@ public class GraphToQueryTrainingUnsupervised {
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             duplicateEdgesFlag, grelGrelFlag, useLexiconWeightsRel,
             useLexiconWeightsType, validQueryFlag, useNbestGraphs,
-            initialEdgeWeight, initialTypeWeight, initialWordWeight,
-            stemFeaturesWeight);
+            addBagOfWordsGraph, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;
@@ -353,7 +355,8 @@ public class GraphToQueryTrainingUnsupervised {
     Schema schema = new Schema("data/freebase/schema/business_schema.txt");
 
     KnowledgeBase kb =
-        new KnowledgeBaseCached("data/freebase/domain_facts/business_facts.txt.gz",
+        new KnowledgeBaseCached(
+            "data/freebase/domain_facts/business_facts.txt.gz",
             "data/freebase/stats/business_relation_types.txt");
 
     GroundedLexicon groundedLexicon = new GroundedLexicon("data/empty.txt");

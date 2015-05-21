@@ -25,7 +25,7 @@ import in.sivareddy.graphparser.parsing.LexicalGraph.StemMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelGrelFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelPartGrelPartFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UtypeGtypeFeature;
-import in.sivareddy.graphparser.parsing.LexicalGraph.WordBigramGrelPartFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.EventTypeGrelPartFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.WordGrelFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.WordGrelPartFeature;
 import in.sivareddy.graphparser.util.GroundedLexicon;
@@ -38,6 +38,7 @@ import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
 import in.sivareddy.ml.learning.StructuredPercepton;
 import in.sivareddy.util.PorterStemmer;
+import in.sivareddy.util.SentenceKeys;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -85,7 +86,7 @@ public class GroundedGraphs {
   private boolean wordGrelFlag = true;
   private boolean argGrelPartFlag = true;
   private boolean argGrelFlag = true;
-  private boolean wordBigramGrelPartFlag = true;
+  private boolean eventTypeGrelPartFlag = false;
   private boolean stemMatchingFlag = true;
   private boolean mediatorStemGrelPartMatchingFlag = true;
   private boolean argumentStemMatchingFlag = true;
@@ -115,7 +116,7 @@ public class GroundedGraphs {
       boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
       boolean gtypeGrelPartFlag, boolean grelGrelFlag,
       boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
-      boolean argGrelFlag, boolean wordBigramGrelPartFlag,
+      boolean argGrelFlag, boolean eventTypeGrelPartFlag,
       boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean graphIsConnectedFlag,
@@ -150,7 +151,8 @@ public class GroundedGraphs {
     this.wordGrelFlag = wordGrelFlag;
     this.argGrelPartFlag = argGrelPartFlag;
     this.argGrelFlag = argGrelFlag;
-    this.wordBigramGrelPartFlag = wordBigramGrelPartFlag;
+    System.err.println("EventTypeFlag: " + eventTypeGrelPartFlag);
+    this.eventTypeGrelPartFlag = eventTypeGrelPartFlag;
     this.stemMatchingFlag = stemMatchingFlag;
     this.mediatorStemGrelPartMatchingFlag = mediatorStemGrelPartMatchingFlag;
     this.argumentStemMatchingFlag = argumentStemMatchingFlag;
@@ -288,6 +290,73 @@ public class GroundedGraphs {
       }
     }
     return graphs;
+  }
+
+  /**
+   * Returns a bag-of-words based ungrounded graph. Current implementation
+   * returns only one graph, i.e. the return list size is 1.
+   * 
+   * @param jsonSentence
+   * @return
+   */
+  public List<LexicalGraph> getBagOfWordsUngroundedGraph(JsonObject jsonSentence) {
+    List<LexicalGraph> graphs = Lists.newArrayList();
+    Set<String> parse = getBagOfWordsUngroundedSemanticParse(jsonSentence);
+    List<LexicalItem> leaves = BuildLexicalItemsFromWords(jsonSentence);
+    buildUngroundeGraphFromSemanticParse(parse, leaves, 0.0, graphs);
+    return graphs;
+  }
+
+  /**
+   * Returns a bag-of-words styled ungrounded semantic parse.
+   * 
+   * @param jsonSentence
+   * @return
+   */
+  public static Set<String> getBagOfWordsUngroundedSemanticParse(
+      JsonObject jsonSentence) {
+    Set<String> parse = new HashSet<>();
+    if (!jsonSentence.has(SentenceKeys.ENTITIES))
+      return parse;
+    JsonArray entities =
+        jsonSentence.get(SentenceKeys.ENTITIES).getAsJsonArray();
+    if (entities.size() == 0)
+      return parse;
+
+    // Create all the edges.
+    Set<Integer> entityIndices = new HashSet<>();
+    for (JsonElement entity : entities) {
+      JsonObject entityObj = entity.getAsJsonObject();
+      int index = entityObj.get(SentenceKeys.INDEX_KEY).getAsInt();
+      entityIndices.add(index);
+      String fbEntity = entityObj.get(SentenceKeys.ENTITY).getAsString();
+      String edge =
+          String.format("dummy.edge.entity(0:e , %d:%s)", index, fbEntity);
+      parse.add(edge);
+    }
+    parse.add("dummy.edge.question(0:e , 0:x)");
+    parse.add(String.format("QUESTION(0:x)"));
+
+    // Create context.
+    JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+    int index = -1;
+    for (JsonElement word : words) {
+      index++;
+      JsonObject wordObj = word.getAsJsonObject();
+      if (entityIndices.contains(index))
+        continue;
+      String wordString =
+          wordObj.has(SentenceKeys.LEMMA_KEY) ? wordObj
+              .get(SentenceKeys.LEMMA_KEY).getAsString().toLowerCase()
+              : wordObj.get(SentenceKeys.WORD_KEY).getAsString().toLowerCase();
+
+      String posTag = wordObj.get(SentenceKeys.POS_KEY).getAsString();
+      if (!posTag.matches("[NJVR].*")) {
+        continue;
+      }
+      parse.add(String.format("%s(%d:s , 0:e)", wordString, index));
+    }
+    return parse;
   }
 
   /**
@@ -1287,7 +1356,7 @@ public class GroundedGraphs {
             if (useLexiconWeightsRel)
               value =
                   groundedLexicon.getUrelPartGrelPartProb(urelLeft, grelLeft)
-                      * initialEdgeWeight;
+                      + initialEdgeWeight;
             else
               value = initialEdgeWeight;
             learningModel.setWeightIfAbsent(urelPartGrelPartFeature, value);
@@ -1300,7 +1369,7 @@ public class GroundedGraphs {
             if (useLexiconWeightsRel)
               value =
                   groundedLexicon.getUrelPartGrelPartProb(urelRight, grelRight)
-                      * initialEdgeWeight;
+                      + initialEdgeWeight;
             else
               value = initialEdgeWeight;
             learningModel.setWeightIfAbsent(urelPartGrelPartFeature, value);
@@ -1334,7 +1403,7 @@ public class GroundedGraphs {
             if (useLexiconWeightsRel)
               value =
                   groundedLexicon.getUrelGrelProb(ungroundedRelation,
-                      groundedRelation) * initialEdgeWeight;
+                      groundedRelation) + initialEdgeWeight;
             else
               value = initialEdgeWeight;
             learningModel.setWeightIfAbsent(urelGrelFeature, value);
@@ -1727,7 +1796,7 @@ public class GroundedGraphs {
           learningModel.setWeightIfAbsent(wordGrelFeature, initialWordWeight);
         }
 
-        if (wordBigramGrelPartFlag) {
+        if (eventTypeGrelPartFlag) {
           String mediatorWord = mediator.getLemma();
           Set<Type<LexicalItem>> mediatorTypes =
               ungroundedGraph.getTypes(mediator);
@@ -1742,22 +1811,44 @@ public class GroundedGraphs {
                 // (place, place , grelLeft) feature is useless
                 // since (place, grelLeft) is already present
                 continue;
-              key =
-                  Lists
-                      .newArrayList(mediatorWord, modifierNodeString, grelLeft);
-              WordBigramGrelPartFeature wordBigramGrelPartFeature =
-                  new WordBigramGrelPartFeature(key, 1.0);
-              newGraph.addFeature(wordBigramGrelPartFeature);
-              learningModel.setWeightIfAbsent(wordBigramGrelPartFeature,
+              key = Lists.newArrayList(modifierNodeString, grelLeft);
+              EventTypeGrelPartFeature eventTypeGrelPartFeature =
+                  new EventTypeGrelPartFeature(key, 1.0);
+              newGraph.addFeature(eventTypeGrelPartFeature);
+              learningModel.setWeightIfAbsent(eventTypeGrelPartFeature,
                   initialWordWeight);
 
-              key =
-                  Lists.newArrayList(mediatorWord, modifierNodeString,
-                      grelRight);
-              wordBigramGrelPartFeature =
-                  new WordBigramGrelPartFeature(key, 1.0);
-              newGraph.addFeature(wordBigramGrelPartFeature);
-              learningModel.setWeightIfAbsent(wordBigramGrelPartFeature,
+              key = Lists.newArrayList(modifierNodeString, grelRight);
+              eventTypeGrelPartFeature = new EventTypeGrelPartFeature(key, 1.0);
+              newGraph.addFeature(eventTypeGrelPartFeature);
+              learningModel.setWeightIfAbsent(eventTypeGrelPartFeature,
+                  initialWordWeight);
+            }
+          }
+
+          mediatorTypes = ungroundedGraph.getEventTypes(mediator);
+          if (mediatorTypes != null) {
+            // birth place, place of birth (from madeup type
+            // modifiers
+            // in function getUngroundedGraph)
+            for (Type<LexicalItem> type : mediatorTypes) {
+              LexicalItem modifierNode = type.getModifierNode();
+              String modifierNodeString = modifierNode.getLemma();
+              if (modifierNodeString.equals(mediatorWord))
+                // (place, place , grelLeft) feature is useless
+                // since (place, grelLeft) is already present
+                continue;
+              key = Lists.newArrayList(modifierNodeString, grelLeft);
+              EventTypeGrelPartFeature eventTypeGrelPartFeature =
+                  new EventTypeGrelPartFeature(key, 1.0);
+              newGraph.addFeature(eventTypeGrelPartFeature);
+              learningModel.setWeightIfAbsent(eventTypeGrelPartFeature,
+                  initialWordWeight);
+
+              key = Lists.newArrayList(modifierNodeString, grelRight);
+              eventTypeGrelPartFeature = new EventTypeGrelPartFeature(key, 1.0);
+              newGraph.addFeature(eventTypeGrelPartFeature);
+              learningModel.setWeightIfAbsent(eventTypeGrelPartFeature,
                   initialWordWeight);
             }
           }
@@ -1769,22 +1860,17 @@ public class GroundedGraphs {
             for (Type<LexicalItem> type : eventModifierNodes) {
               LexicalItem modifierNode = type.getModifierNode();
               String modifierNodeString = modifierNode.getLemma();
-              key =
-                  Lists
-                      .newArrayList(mediatorWord, modifierNodeString, grelLeft);
-              WordBigramGrelPartFeature wordBigramGrelPartFeature =
-                  new WordBigramGrelPartFeature(key, 1.0);
-              newGraph.addFeature(wordBigramGrelPartFeature);
-              learningModel.setWeightIfAbsent(wordBigramGrelPartFeature,
+              key = Lists.newArrayList(modifierNodeString, grelLeft);
+              EventTypeGrelPartFeature eventTypeGrelPartFeature =
+                  new EventTypeGrelPartFeature(key, 1.0);
+              newGraph.addFeature(eventTypeGrelPartFeature);
+              learningModel.setWeightIfAbsent(eventTypeGrelPartFeature,
                   initialWordWeight);
 
-              key =
-                  Lists.newArrayList(mediatorWord, modifierNodeString,
-                      grelRight);
-              wordBigramGrelPartFeature =
-                  new WordBigramGrelPartFeature(key, 1.0);
-              newGraph.addFeature(wordBigramGrelPartFeature);
-              learningModel.setWeightIfAbsent(wordBigramGrelPartFeature,
+              key = Lists.newArrayList(modifierNodeString, grelRight);
+              eventTypeGrelPartFeature = new EventTypeGrelPartFeature(key, 1.0);
+              newGraph.addFeature(eventTypeGrelPartFeature);
+              learningModel.setWeightIfAbsent(eventTypeGrelPartFeature,
                   initialWordWeight);
             }
           }
@@ -2043,8 +2129,7 @@ public class GroundedGraphs {
   /**
    * 
    * If any of the entities is of standard type, remove relations that do not
-   * contain standard types as arguments. Additionally if the relation has
-   * type.datetime as argument, make sure the entity allows it.
+   * contain standard types as arguments.
    * 
    * @param groundedRelation
    * @param node1
@@ -2062,59 +2147,8 @@ public class GroundedGraphs {
       Set<String> entity2Types =
           standardTypes.contains(mid2) ? Sets.newHashSet(mid2) : null;
       return checkIsValidRelation(groundedRelation, entity1Types, entity2Types);
-    } else {
-      String leftEdge = groundedRelation.getLeft();
-      String rightEdge = groundedRelation.getRight();
-
-      String arg1Type;
-      String arg2Type;
-
-      if (leftEdge.substring(0, leftEdge.length() - 2).equals(
-          rightEdge.substring(0, rightEdge.length() - 2))) {
-        // relation is not of type mediator in the database.
-        int length = leftEdge.length();
-        // System.out.println(relationName);
-
-        if (leftEdge.charAt(length - 1) == '1'
-            && rightEdge.charAt(length - 1) == '2') {
-          String relationName = leftEdge.substring(0, length - 2);
-          List<String> args = schema.getRelationArguments(relationName);
-          arg1Type = args.get(0);
-          arg2Type = args.get(1);
-        } else if (leftEdge.charAt(length - 1) == '2'
-            && rightEdge.charAt(length - 1) == '1') {
-          String relationName = leftEdge.substring(0, length - 2);
-          List<String> args = schema.getRelationArguments(relationName);
-          arg1Type = args.get(1);
-          arg2Type = args.get(0);
-        } else if (leftEdge.equals(rightEdge)) {
-          // symmetric relation
-          String relationName = leftEdge;
-          List<String> args = schema.getRelationArguments(relationName);
-          arg1Type = args.get(1);
-          arg2Type = args.get(0);
-        } else {
-          // relation is of mediator type
-          List<String> args1 = schema.getRelationArguments(leftEdge);
-          List<String> args2 = schema.getRelationArguments(rightEdge);
-
-          arg1Type = args1.get(1);
-          arg2Type = args2.get(1);
-        }
-      } else {
-        // relation is of mediator type
-        List<String> args1 = schema.getRelationArguments(leftEdge);
-        List<String> args2 = schema.getRelationArguments(rightEdge);
-
-        arg1Type = args1.get(1);
-        arg2Type = args2.get(1);
-      }
-      // type.datetime is restricted and allowed to come with only few
-      // words
-      if (arg1Type.equals("type.datetime") || arg2Type.equals("type.datetime"))
-        return false;
-      return true;
     }
+    return true;
   }
 
   private boolean checkIsValidRelation(Relation groundedRelation,

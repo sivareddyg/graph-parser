@@ -71,7 +71,7 @@ public class GraphToQueryTrainingMain {
       boolean useEmtpyTypes, boolean ignoreTypes, boolean urelGrelFlag,
       boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
       boolean gtypeGrelFlag, boolean wordGrelPartFlag, boolean wordGrelFlag,
-      boolean wordBigramGrelPartFlag, boolean argGrelPartFlag,
+      boolean eventTypeGrelPartFlag, boolean argGrelPartFlag,
       boolean argGrelFlag, boolean stemMatchingFlag,
       boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
@@ -80,9 +80,9 @@ public class GraphToQueryTrainingMain {
       boolean edgeNodeCountFlag, boolean duplicateEdgesFlag,
       boolean grelGrelFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean validQueryFlag,
-      boolean useNbestGraphs, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight) throws IOException {
+      boolean useNbestGraphs, boolean addBagOfWordsGraph,
+      double initialEdgeWeight, double initialTypeWeight,
+      double initialWordWeight, double stemFeaturesWeight) throws IOException {
 
     this.semanticParseKey = sematicParseKey;
     this.nBestTestSyntacticParses = nBestTestSyntacticParses;
@@ -126,14 +126,14 @@ public class GraphToQueryTrainingMain {
             useEmtpyTypes, ignoreTypes, currentIterationModel, urelGrelFlag,
             urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
             wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
-            wordBigramGrelPartFlag, stemMatchingFlag,
+            eventTypeGrelPartFlag, stemMatchingFlag,
             mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            validQueryFlag, useNbestGraphs, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight,
-            rdfGraphTools, kbGraphUri);
+            validQueryFlag, useNbestGraphs, addBagOfWordsGraph,
+            initialEdgeWeight, initialTypeWeight, initialWordWeight,
+            stemFeaturesWeight, rdfGraphTools, kbGraphUri);
 
     supervisedTrainingExamples = new ArrayList<>();
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
@@ -221,12 +221,13 @@ public class GraphToQueryTrainingMain {
         evalLogger.setLevel(Level.DEBUG);
       else
         evalLogger.setLevel(Level.INFO);
-      evalLogger.info("######## Evaluating the model before training ###########");
+      evalLogger
+          .info("######## Evaluating the model before training ###########");
       evalLogger.info("######## Development Data ###########");
       highestPerformace =
           graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
-              + ".eval.dev.beforeTraining", debugEnabled, testingNbestParsesRange,
-              nthreads);
+              + ".eval.dev.beforeTraining", debugEnabled,
+              testingNbestParsesRange, nthreads);
       appender.close();
     }
 
@@ -256,8 +257,8 @@ public class GraphToQueryTrainingMain {
       evalLogger.info("######## Development Data ###########");
       Double performance =
           graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
-              + ".eval.dev.iteration" + i, debugEnabled, testingNbestParsesRange,
-              nthreads);
+              + ".eval.dev.iteration" + i, debugEnabled,
+              testingNbestParsesRange, nthreads);
       if (devExamples != null && devExamples.size() > 0
           && trainingSample.size() > 0) {
         if (performance > highestPerformace) {
@@ -269,8 +270,8 @@ public class GraphToQueryTrainingMain {
 
           evalLogger.info("######## Testing Data ###########");
           graphToQuery.testCurrentModel(testingExamples, evalLogger, logFile
-              + ".eval.test.iteration" + i, debugEnabled, testingNbestParsesRange,
-              nthreads);
+              + ".eval.test.iteration" + i, debugEnabled,
+              testingNbestParsesRange, nthreads);
         } else {
           evalLogger
               .info("Gradient moved in WRONG direction! Ignoring the current training iteration.");
@@ -451,7 +452,7 @@ public class GraphToQueryTrainingMain {
     // Contextual Features
     boolean wordGrelPartFlag = true;
     boolean wordGrelFlag = true;
-    boolean wordBigramGrelPartFlag = true;
+    boolean eventTypeGrelPartFlag = true;
     boolean argGrelPartFlag = true;
     boolean argGrelFlag = true;
 
@@ -484,7 +485,10 @@ public class GraphToQueryTrainingMain {
 
     // Denotation feature
     boolean validQueryFlag = true;
+    
+    // Other features.
     boolean useNbestGraphs = false;
+    boolean addBagOfWordsGraph = false;
 
     GraphToQueryTrainingMain graphToQueryModel =
         new GraphToQueryTrainingMain(schema, kb, groundedLexicon,
@@ -496,15 +500,15 @@ public class GraphToQueryTrainingMain {
             nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, useSchema,
             useKB, groundFreeVariables, useEmtpyTypes, ignoreTypes,
             urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
-            wordGrelPartFlag, wordGrelFlag, wordBigramGrelPartFlag,
+            wordGrelPartFlag, wordGrelFlag, eventTypeGrelPartFlag,
             argGrelPartFlag, argGrelFlag, stemMatchingFlag,
             mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             duplicateEdgesFlag, grelGrelFlag, useLexiconWeightsRel,
             useLexiconWeightsType, validQueryFlag, useNbestGraphs,
-            initialEdgeWeight, initialTypeWeight, initialWordWeight,
-            stemFeaturesWeight);
+            addBagOfWordsGraph, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;

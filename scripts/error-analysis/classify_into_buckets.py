@@ -8,6 +8,8 @@ import json
 import sys
 from sempre_evaluation_lib import computeF1, getResults
 
+F1_THRESHOLD = 0.5
+
 one_best_file = sys.argv[1]
 nbest_file = sys.argv[2]
 
@@ -28,9 +30,9 @@ for line in open(one_best_file):
         exit()
     r, p, f = computeF1(gold, predicted)
 
-    if f > 0.99:
+    if f >= 0.99:
         fully_correct.add(sentence)
-    elif f > 0.8:
+    elif f >= F1_THRESHOLD:
         partially_correct.add(sentence)
 
 for line in open(nbest_file):
@@ -67,31 +69,31 @@ print "========================="
 print getResults(nbest_file)
 print
 
-print "Fully Correct Answers: %d (%.2f%%)" % (len(fully_correct), len(fully_correct) / total)
+print "Fully Correct Answers: %d (%.2f%%)" % (len(fully_correct), len(fully_correct) / total * 100)
 print "========================="
 for sentence in fully_correct:
     print sentence
 print
 
-print "Partially Correct Answers: %d (%.2f%%)" % (len(partially_correct), len(partially_correct) / total)
+print "Partially Correct Answers (F1 < %.2f): %d (%.2f%%)" % (F1_THRESHOLD, len(partially_correct), len(partially_correct) / total * 100)
 print "========================="
 for sentence in partially_correct:
     print sentence
 print
 
-print "Correct Only in Beam: %d (%.2f%%)" % (len(correct_only_in_beam), len(correct_only_in_beam) / total)
+print "Correct Only in Beam: %d (%.2f%%)" % (len(correct_only_in_beam), len(correct_only_in_beam) / total * 100)
 print "========================="
 for sentence in correct_only_in_beam:
     print sentence
 print
 
-print "Out of Beam: %d (%.2f%%)" % (len(out_of_beam), len(out_of_beam) / total)
+print "Out of Beam: %d (%.2f%%)" % (len(out_of_beam), len(out_of_beam) / total * 100)
 print "========================="
 for sentence in out_of_beam:
     print sentence
 print
 
-print "No Predictions: %d (%.2f%%)" % (len(no_predictions), len(no_predictions) / total)
+print "No Predictions: %d (%.2f%%)" % (len(no_predictions), len(no_predictions) / total * 100)
 print "========================="
 for sentence in no_predictions:
     print sentence

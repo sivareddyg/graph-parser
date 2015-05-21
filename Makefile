@@ -531,6 +531,7 @@ deplambda_supervised_vanilla_gold_full:
 	rm -rf ../working/deplambda_supervised_vanilla_gold_full
 	mkdir -p ../working/deplambda_supervised_vanilla_gold_full
 	java -agentlib:hprof=cpu=samples,interval=20,depth=3 -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.5 \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
@@ -545,6 +546,7 @@ deplambda_supervised_vanilla_gold_full:
 	-nbestGraphs 100 \
 	-useSchema true \
 	-useKB true \
+	-addBagOfWordsGraph true \
 	-groundFreeVariables true \
 	-useEmptyTypes false \
 	-ignoreTypes false \
@@ -553,8 +555,10 @@ deplambda_supervised_vanilla_gold_full:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
-	-argGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
 	-argumentStemMatchingFlag true \
@@ -568,10 +572,10 @@ deplambda_supervised_vanilla_gold_full:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType true \
 	-validQueryFlag true \
-	-initialEdgeWeight 1.0 \
+	-initialEdgeWeight -0.5 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
-	-stemFeaturesWeight 2.0 \
+	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus  data/complete/vanilla_gold/webquestions.vanilla.train.full.deplambda.json.txt \
 	-devFile data/complete/vanilla_gold/webquestions.vanilla.dev.full.deplambda.json.txt \

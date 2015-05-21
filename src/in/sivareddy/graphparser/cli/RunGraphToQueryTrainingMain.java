@@ -1,6 +1,7 @@
 package in.sivareddy.graphparser.cli;
 
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.learning.GraphToQueryTraining;
 import in.sivareddy.graphparser.learning.GraphToQueryTrainingMain;
 import in.sivareddy.graphparser.parsing.GraphToSparqlConverter;
 import in.sivareddy.graphparser.util.GroundedLexicon;
@@ -94,7 +95,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   // Contextual Features
   private OptionSpec<Boolean> wordGrelPartFlag;
   private OptionSpec<Boolean> wordGrelFlag;
-  private OptionSpec<Boolean> wordBigramGrelPartFlag;
+  private OptionSpec<Boolean> eventTypeGrelPartFlag;
   private OptionSpec<Boolean> argGrelPartFlag;
   private OptionSpec<Boolean> argGrelFlag;
 
@@ -116,6 +117,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> grelGrelFlag;
 
   // Default weights
+  private OptionSpec<Double> pointWiseF1Threshold;
   private OptionSpec<Boolean> useLexiconWeightsRel;
   private OptionSpec<Boolean> useLexiconWeightsType;
 
@@ -127,8 +129,9 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   // Denotation feature
   private OptionSpec<Boolean> validQueryFlag;
 
-  // Denotation feature
+  // Other features
   private OptionSpec<Boolean> useNbestGraphsFlag;
+  private OptionSpec<Boolean> addBagOfWordsGraphFlag;
 
 
   @Override
@@ -344,10 +347,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("wordGrelFlag",
                 "event word and edge feature - a good feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-    wordBigramGrelPartFlag =
+    eventTypeGrelPartFlag =
         parser
-            .accepts("wordBigramGrelPartFlag",
-                "contextual features - a good feature").withRequiredArg()
+            .accepts("eventTypeGrelPartFlag",
+                "contextual features of a mediator node - a good feature").withRequiredArg()
             .ofType(Boolean.class).defaultsTo(false);
     argGrelPartFlag =
         parser
@@ -427,6 +430,14 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "use noisy lexicon to initialise type weights - depends on dataset")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
+
+    pointWiseF1Threshold =
+        parser
+            .accepts(
+                "pointWiseF1Threshold",
+                "update the gradient in supervised training only if predicted answer has F1 >= threshold")
+            .withRequiredArg().ofType(Double.class).defaultsTo(0.90);
+
     initialEdgeWeight =
         parser
             .accepts("initialEdgeWeight",
@@ -461,6 +472,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "use n-best graphs for training. Unless you are in a supervised setting or using an unsupervised syntatic parser, set this to false")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
+    addBagOfWordsGraphFlag =
+        parser
+            .accepts(
+                "addBagOfWordsGraph",
+                "Adds a bag-of-words graph in-addition to the ungrounded graphs obtained from syntactic parse")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
   }
 
   @Override
@@ -543,8 +560,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       // Contextual Features
       boolean wordGrelPartFlagVal = options.valueOf(wordGrelPartFlag);
       boolean wordGrelFlagVal = options.valueOf(wordGrelFlag);
-      boolean wordBigramGrelPartFlagVal =
-          options.valueOf(wordBigramGrelPartFlag);
+      boolean eventTypeGrelPartFlagVal =
+          options.valueOf(eventTypeGrelPartFlag);
       boolean argGrelPartFlagVal = options.valueOf(argGrelPartFlag);
       boolean argGrelFlagVal = options.valueOf(argGrelFlag);
 
@@ -586,8 +603,14 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       // true.
       boolean useNbestGraphsVal = options.valueOf(useNbestGraphsFlag);
 
+      boolean addBagOfWordsGraphVal = options.valueOf(addBagOfWordsGraphFlag);
+
       boolean groundTrainingCorpusInTheEndVal =
           options.valueOf(groundTrainingCorpusInTheEnd);
+
+      // Set pointWiseF1Threshold for learning. IMPORTANT.
+      GraphToQueryTraining.setPointWiseF1Threshold(options
+          .valueOf(pointWiseF1Threshold));
 
       GraphToQueryTrainingMain graphToQueryModel =
           new GraphToQueryTrainingMain(schemaObj, kb, groundedLexicon,
@@ -601,33 +624,33 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               useSchemaVal, useKBVal, groundFreeVariablesVal, useEmptyTypesVal,
               ignoreTypesVal, urelGrelFlagVal, urelPartGrelPartFlagVal,
               utypeGtypeFlagVal, gtypeGrelFlagVal, wordGrelPartFlagVal,
-              wordGrelFlagVal, wordBigramGrelPartFlagVal, argGrelPartFlagVal,
+              wordGrelFlagVal, eventTypeGrelPartFlagVal, argGrelPartFlagVal,
               argGrelFlagVal, stemMatchingFlagVal,
               mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
               argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
               graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
               duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
               useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
-              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
-              stemFeaturesWeightVal);
+              addBagOfWordsGraphVal, initialEdgeWeightVal,
+              initialTypeWeightVal, initialWordWeightVal, stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
 
       // Run the best model.
       graphToQueryModel.testBestModel(threadCount);
-      
+
       if (groundInputCorporaFiles != null
           && !groundInputCorporaFiles.equals("")) {
         graphToQueryModel.groundSentences(threadCount);
       }
-      
-      
-      
+
+
+
     } catch (IOException e) {
       e.printStackTrace();
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    
+
   }
 
   /**

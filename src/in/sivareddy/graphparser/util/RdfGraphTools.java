@@ -1,6 +1,5 @@
 package in.sivareddy.graphparser.util;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -32,6 +31,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -134,9 +134,9 @@ public class RdfGraphTools {
       URIBuilder builder = new URIBuilder(httpUrl);
       builder.addParameter("query", query);
       builder.addParameter("format", "application/sparql-results+json");
-      
+
       // Remove this in case if lot of queries die.
-      builder.addParameter("timeout", timeOut.toString());
+      builder.addParameter("timeout", "0");
 
       URL url = builder.build().toURL();
       try {
@@ -477,6 +477,39 @@ public class RdfGraphTools {
     } else {
       return goldResults.get(goldVar).equals(predResults.get(predVar));
     }
+  }
+
+  public static double getPointWiseF1(
+      Map<String, LinkedHashSet<String>> goldResults,
+      Map<String, LinkedHashSet<String>> predResults) {
+    Pair<Set<String>, Set<String>> answers =
+        getCleanedResults(goldResults, predResults);
+    Set<String> goldAnswersCleaned = answers.getLeft();
+    Set<String> predAnswersCleaned = answers.getRight();
+
+    Preconditions.checkArgument(goldResults.keySet().size() == 1,
+        "Gold answers should have only one key");
+    String goldVar = goldResults.keySet().iterator().next();
+
+    if (goldVar.equals("answerSubset")) {
+      // It is enough if the gold answer list is a subset of predicted answer
+      // set.
+      if (predAnswersCleaned.containsAll(goldAnswersCleaned))
+        return 1.0;
+    } else {
+      Set<String> overlap =
+          new HashSet<>(Collections2.filter(predAnswersCleaned,
+              x -> goldAnswersCleaned.contains(x)));
+      
+      if (overlap.size() == 0) {
+        return 0.0;
+      }
+        
+      double precision = (overlap.size() + 0.0) / predAnswersCleaned.size();
+      double recall = (overlap.size() + 0.0) / goldAnswersCleaned.size();
+      return 2 * precision * recall / (precision + recall);
+    }
+    return 0.0;
   }
 
   public static LinkedHashSet<String> convertDatesToYears(Set<String> results) {
