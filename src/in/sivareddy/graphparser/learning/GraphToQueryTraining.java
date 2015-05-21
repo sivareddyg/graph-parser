@@ -1147,7 +1147,7 @@ public class GraphToQueryTraining {
           logger.debug("Grounded graph features: ");
           learningModel.printFeatureWeights(gGraph.getFeatures(), logger);
         } catch (Exception e) {
-          System.err.print("Error: ");
+          System.err.print("[Warning] logger breaks: ");
           System.err.println(gGraph);
         }
       }

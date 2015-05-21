@@ -151,7 +151,6 @@ public class GroundedGraphs {
     this.wordGrelFlag = wordGrelFlag;
     this.argGrelPartFlag = argGrelPartFlag;
     this.argGrelFlag = argGrelFlag;
-    System.err.println("EventTypeFlag: " + eventTypeGrelPartFlag);
     this.eventTypeGrelPartFlag = eventTypeGrelPartFlag;
     this.stemMatchingFlag = stemMatchingFlag;
     this.mediatorStemGrelPartMatchingFlag = mediatorStemGrelPartMatchingFlag;
