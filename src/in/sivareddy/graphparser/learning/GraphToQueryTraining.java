@@ -81,6 +81,7 @@ public class GraphToQueryTraining {
   boolean validQueryFlag = true;
   boolean useNbestGraphs = false;
   boolean addBagOfWordsGraph = false;
+  boolean addOnlyBagOfWordsGraph = false;
 
   String semanticParseKey;
 
@@ -106,10 +107,10 @@ public class GraphToQueryTraining {
       boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
       boolean validQueryFlag, boolean useNbestGraphs,
-      boolean addBagOfWordsGraph, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight, RdfGraphTools rdfGraphTools,
-      List<String> kbGraphUri) throws IOException {
+      boolean addBagOfWordsGraph, boolean addOnlyBagOfWordsGraph,
+      double initialEdgeWeight, double initialTypeWeight,
+      double initialWordWeight, double stemFeaturesWeight,
+      RdfGraphTools rdfGraphTools, List<String> kbGraphUri) throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
 
@@ -135,7 +136,8 @@ public class GraphToQueryTraining {
     this.rdfGraphTools = rdfGraphTools;
     this.kbGraphUri = kbGraphUri;
     this.useNbestGraphs = useNbestGraphs;
-    this.addBagOfWordsGraph = addBagOfWordsGraph;
+    this.addOnlyBagOfWordsGraph = addOnlyBagOfWordsGraph;
+    this.addBagOfWordsGraph = addBagOfWordsGraph || addOnlyBagOfWordsGraph;
 
     boolean ignorePronouns = true;
 
@@ -265,7 +267,8 @@ public class GraphToQueryTraining {
       Logger log = logs.poll();
       log.info("##### Sentence count: " + sentCount);
       boolean hasGoldQuery =
-          jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue");
+          jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue")
+              || jsonSentence.has("answerSubset") || jsonSentence.has("answer");
       if (hasGoldQuery) {
         // supervised training can make use of more number of syntactic
         // parses
@@ -283,9 +286,20 @@ public class GraphToQueryTraining {
     String sentence = jsonSentence.get("sentence").getAsString();
     logger.debug("######### Sentence: " + sentence);
     // Get ungrounded graphs
-    List<LexicalGraph> uGraphs =
-        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
-            nbestParses, logger);
+    List<LexicalGraph> uGraphs = new ArrayList<>();
+
+    // Add graphs from syntactic parse/already given semantic parses.
+    if (!addOnlyBagOfWordsGraph) {
+      uGraphs.addAll(graphCreator.buildUngroundedGraph(jsonSentence,
+          semanticParseKey, nbestParses, logger));
+    }
+
+    // Add a bag-of-word graph.
+    if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
+      uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(jsonSentence));
+    }
+
+
     if (uGraphs.size() < 1) {
       logger.debug("No uGraphs");
       return;
@@ -852,9 +866,19 @@ public class GraphToQueryTraining {
       JsonObject jsonSentence, Logger logger, int sentCount) {
     String sentence = jsonSentence.get("sentence").getAsString();
     logger.info("Sentence " + sentCount + ": " + sentence);
-    List<LexicalGraph> uGraphs =
-        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
-            nbestTestSyntacticParses, logger);
+    List<LexicalGraph> uGraphs = new ArrayList<>();
+
+    // Add graphs from syntactic parse/already given semantic parses.
+    if (!addOnlyBagOfWordsGraph) {
+      uGraphs.addAll(graphCreator.buildUngroundedGraph(jsonSentence,
+          semanticParseKey, nbestTestSyntacticParses, logger));
+    }
+
+    // Add a bag-of-word graph.
+    if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
+      uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(jsonSentence));
+    }
+
     if (uGraphs.size() < 1) {
       logger.info("No ungrounded graphs found");
       return null;
@@ -1030,7 +1054,8 @@ public class GraphToQueryTraining {
     String sentence = jsonSentence.get("sentence").getAsString();
     logger.debug("Sentence: " + sentence);
     boolean hasGoldQuery =
-        jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue");
+        jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue")
+            || jsonSentence.has("answerSubset") || jsonSentence.has("answer");
     logger.debug("Supervised Example");
     if (!hasGoldQuery) {
       return;
@@ -1053,16 +1078,34 @@ public class GraphToQueryTraining {
       }
       goldResults = new HashMap<>();
       goldResults.put("targetValue", goldAnswers);
-    }
+    } else if (jsonSentence.has("answer")) {
+      JsonArray goldAnswersArray = jsonSentence.get("answer").getAsJsonArray();
+      LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
+      goldAnswersArray.forEach(answer -> goldAnswers.add(answer.getAsString()));
+      goldResults = new HashMap<>();
+      goldResults.put("answer", goldAnswers);
+    } else if (jsonSentence.has("answerSubset")) {
+      JsonArray goldAnswersArray =
+          jsonSentence.get("answerSubset").getAsJsonArray();
+      LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
+      goldAnswersArray.forEach(answer -> goldAnswers.add(answer.getAsString()));
+      goldResults = new HashMap<>();
+      goldResults.put("answerSubset", goldAnswers);
+    } 
+    
     logger.info("Gold Results : " + goldResults);
 
     // Get ungrounded graphs
-    List<LexicalGraph> uGraphs =
-        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
-            nbestParses, logger);
+    List<LexicalGraph> uGraphs = Lists.newArrayList();
+
+    // Add graphs from syntactic parse/already given semantic parses.
+    if (!addOnlyBagOfWordsGraph) {
+      uGraphs.addAll(graphCreator.buildUngroundedGraph(jsonSentence,
+          semanticParseKey, nbestParses, logger));
+    }
 
     // Add a bag-of-word graph.
-    if (addBagOfWordsGraph) {
+    if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
       uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(jsonSentence));
     }
 
@@ -1466,12 +1509,16 @@ public class GraphToQueryTraining {
     }
 
     // Get ungrounded graphs
-    List<LexicalGraph> uGraphs =
-        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
-            nbestTestSyntacticParses, logger);
+    List<LexicalGraph> uGraphs = Lists.newArrayList();
+
+    // Add graphs from syntactic parse/already given semantic parses.
+    if (!addOnlyBagOfWordsGraph) {
+      uGraphs.addAll(graphCreator.buildUngroundedGraph(jsonSentence,
+          semanticParseKey, nbestTestSyntacticParses, logger));
+    }
 
     // Add a bag-of-word graph.
-    if (addBagOfWordsGraph) {
+    if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
       uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(jsonSentence));
     }
 

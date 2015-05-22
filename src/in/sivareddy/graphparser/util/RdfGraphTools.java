@@ -531,12 +531,12 @@ public class RdfGraphTools {
   public static void main(String[] args) {
     String url;
     if (args.length == 0) {
-      url = "jdbc:virtuoso://bravas:1111";
+      url = "jdbc:virtuoso://rockall:1111";
     } else {
       url = args[0];
     }
 
-    String httpUrl = "http://bravas:8890/sparql";
+    String httpUrl = "http://rockall:8890/sparql";
 
     String query =
         "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:m.017nt ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 fb:m.04sv4 . }";
@@ -545,7 +545,7 @@ public class RdfGraphTools {
     // "SELECT * FROM <http://film.freebase.com> WHERE { ?s ?p ?o . } limit 100";
 
     RdfGraphTools rdfGraphTools =
-        new RdfGraphTools(url, httpUrl, "dba", "dba", 10);
+        new RdfGraphTools(url, httpUrl, "dba", "dba", 1000);
 
     long startTime = System.currentTimeMillis();
     System.out.println(rdfGraphTools.runQueryHttpSolutions(query));

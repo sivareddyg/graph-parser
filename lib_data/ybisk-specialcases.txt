@@ -1,0 +1,43 @@
+# Handling special cases where Autolexicon fails/does not produce informative parse.
+
+#lemma	pos	syncat	indexsyncat	semcat/semcattype
+
+# copula
+be	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+is	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+was	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+am	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+'m	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+are	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+were	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+
+# quantifiers
+no	*	N/N	(N{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
+not	*	N/N	(N{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
+the	*	N/N	(N{Y}/N{Y}){_};_ 1 Y	UNIQUE
+
+*	IN	N	N{X}	TYPE
+
+# adjectives which act like verbs - e.g. his work was unknown
+*	JJ	S\N	(S{_}\N{Y}){_};_ 1 Y	EVENT
+*	JJ	(S\N)/PP	((S{_}\N{Y}){_}/PP{_}){_};_ 1 Y	EVENT
+*	JJ	((S\N)/PP)/N	(((S{_}\N{Y}){_}/PP{_}){_}/N{W}){_};_ 1 y,_ 2 W	EVENT
+*	JJ	(S\N)/(S\N)	((S{_}\N{Y}){_}/(S{Z}\N{Y}){Z}){_};_ 1 Y,_ 2 Z	EVENT
+
+# passive case
+by	*	((S\N)\(S\N))/N	(((S[X]{Y}\N{Z}){Y}\(S[X]{Y}\N{Z}){Y}){_}/N{W}){_};_ 1 Y,_ 2 W	(lambda $f1 $f2 $f3 $Y (exists $W $Z $_ (and (EVENT $Y $Y 1 $W ENTITY) ($f1 $W) (($f2 $Z) $Y) ($f3 $Z))))
+
+# Make cardinal number as the head
+*	CD	N/N	(N{Y}/N{Y}){_};_ 1 Y	(lambda $f1 $_ (exists $Y (and (COPULA $Y $_) ($f1 $Y))))
+
+# sometimes that appears as preposition
+that	*	S/S	(S{Y}/S{Y}){_};_ 1 Y	CLOSED
+
+# Gerunds which modify nouns
+*	VBG	N/N	(N{Y}/N{Y}){_};_ 1 Y	TYPEMOD
+
+# Natural possessive
+'s	POS	(N/N)\N	((N{Y}/N{Y}){_}\N{Z}){_};_ 1 Y,_ 2 Z	EVENT
+
+# BLANK category
+_blank_	*	N	N{X}	(lambda $X (QUESTION $X))

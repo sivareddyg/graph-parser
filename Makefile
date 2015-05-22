@@ -211,7 +211,7 @@ create_deplambda_grounded_lexicon:
 	mkdir -p data/deplambda/grounded_lexicon
 	zcat data/deplambda/unsupervised.graphparser.txt.gz \
 	| python scripts/cleaning/remove_duplicate_sentences.py \
-	| java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
 	--relationLexicalIdentifiers lemma \
 	--semanticParseKey dependency_lambda \
 	--argumentLexicalIdentifiers mid \
@@ -228,7 +228,7 @@ create_tacl_ccg_grounded_lexicon_and_training_sentences:
 	mkdir -p data/tacl/grounded_lexicon
 	zcat data/freebase/sentences_filtered/* \
 	| python scripts/cleaning/remove_duplicate_sentences.py \
-	| java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
 	--relationLexicalIdentifiers lemma \
 	--semanticParseKey synPars \
 	--argumentLexicalIdentifiers mid \
@@ -247,7 +247,7 @@ create_tacl_ccg_grounded_lexicon_and_training_sentences:
 # Baseline to evaluate the accuracy of lexicon
 deplambda_mwg:
 	mkdir -p ../working/deplambda_mwg
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -265,7 +265,7 @@ deplambda_mwg:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -292,7 +292,7 @@ deplambda_mwg:
 
 deplambda_mwg_dev:
 	mkdir -p ../working/deplambda_mwg_dev
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -310,7 +310,7 @@ deplambda_mwg_dev:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -336,7 +336,7 @@ deplambda_mwg_dev:
 
 deplambda_mwg_train:
 	mkdir -p ../working/deplambda_mwg_train
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -354,7 +354,7 @@ deplambda_mwg_train:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -380,7 +380,7 @@ deplambda_mwg_train:
 
 deplambda_mwg_free917:
 	mkdir -p ../working/deplambda_mwg_free917
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -398,7 +398,7 @@ deplambda_mwg_free917:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -426,7 +426,7 @@ deplambda_mwg_free917:
 # Deplambda results without unsupervised lexicon.
 deplambda_supervised:
 	mkdir -p ../working/deplambda_supervised
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -449,7 +449,7 @@ deplambda_supervised:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -501,7 +501,7 @@ deplambda_supervised_vanilla_gold:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -583,10 +583,67 @@ deplambda_supervised_vanilla_gold_full:
 	-logFile ../working/deplambda_supervised_vanilla_gold_full/all.log.txt \
 	> ../working/deplambda_supervised_vanilla_gold_full/all.txt
 
+deplambda_supervised_vanilla_gold_bag_of_words:
+	rm -rf ../working/deplambda_supervised_vanilla_gold_bag_of_words
+	mkdir -p ../working/deplambda_supervised_vanilla_gold_bag_of_words
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.5 \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph true \
+	-addOnlyBagOfWordsGraph true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus  data/complete/vanilla_gold/webquestions.vanilla.train.full.deplambda.json.txt \
+	-devFile data/complete/vanilla_gold/webquestions.vanilla.dev.full.deplambda.json.txt \
+	-testFile data/complete/vanilla_gold/webquestions.vanilla.train.full.deplambda.json.txt \
+	-logFile ../working/deplambda_supervised_vanilla_gold_bag_of_words/all.log.txt \
+	> ../working/deplambda_supervised_vanilla_gold_bag_of_words/all.txt
+
 # Deplambda results with unsupervised lexicon.
 deplambda_supervised_with_unsupervised_lexicon:
 	mkdir -p ../working/deplambda_supervised_with_unsupervised_lexicon
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -609,7 +666,7 @@ deplambda_supervised_with_unsupervised_lexicon:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -637,7 +694,7 @@ deplambda_supervised_with_unsupervised_lexicon:
 
 deplambda_supervised_with_unsupervised_lexicon_loaded_model_dev:
 	mkdir -p ../working/deplambda_supervised_with_unsupervised_lexicon_loaded_model_dev
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -658,7 +715,7 @@ deplambda_supervised_with_unsupervised_lexicon_loaded_model_dev:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -685,7 +742,7 @@ deplambda_supervised_with_unsupervised_lexicon_loaded_model_dev:
 
 deplambda_supervised_with_unsupervised_lexicon_loaded_model_train:
 	mkdir -p ../working/deplambda_supervised_with_unsupervised_lexicon_loaded_model_train
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -706,7 +763,7 @@ deplambda_supervised_with_unsupervised_lexicon_loaded_model_train:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -734,7 +791,7 @@ deplambda_supervised_with_unsupervised_lexicon_loaded_model_train:
 # deplambda with unsupervised training
 deplambda_unsupervised:
 	mkdir -p ../working/deplambda_unsupervised
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -757,7 +814,7 @@ deplambda_unsupervised:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -785,7 +842,7 @@ deplambda_unsupervised:
 
 deplambda_unsupervised_free917:
 	mkdir -p ../working/deplambda_unsupervised_free917
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-semanticParseKey dependency_lambda \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -808,7 +865,7 @@ deplambda_unsupervised_free917:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -837,7 +894,7 @@ deplambda_unsupervised_free917:
 # TACL MWG Baseline
 tacl_mwg:
 	mkdir -p ../working/tacl_mwg
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -855,7 +912,7 @@ tacl_mwg:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -882,7 +939,7 @@ tacl_mwg:
 
 tacl_mwg_on_training_data:
 	mkdir -p ../working/tacl_mwg_on_training
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -900,7 +957,7 @@ tacl_mwg_on_training_data:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -948,7 +1005,7 @@ tacl_mwg_on_training_data_vanilla_gold:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -994,7 +1051,7 @@ tacl_mwg_on_training_data_vanilla_gold_onlinekb:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1019,7 +1076,7 @@ tacl_mwg_on_training_data_vanilla_gold_onlinekb:
 
 tacl_mwg_on_training_data_vanilla_one_best:
 	mkdir -p ../working/tacl_mwg_on_training_data_vanilla_one_best
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	--ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
@@ -1038,7 +1095,7 @@ tacl_mwg_on_training_data_vanilla_one_best:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1064,7 +1121,7 @@ tacl_mwg_on_training_data_vanilla_one_best:
 
 tacl_mwg_free917:
 	mkdir -p ../working/tacl_mwg_free917
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -1082,7 +1139,7 @@ tacl_mwg_free917:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1109,7 +1166,7 @@ tacl_mwg_free917:
 # TACL GraphPaser results
 tacl_unsupervised:
 	mkdir -p ../working/tacl_unsupervised
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -1131,7 +1188,7 @@ tacl_unsupervised:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1159,7 +1216,7 @@ tacl_unsupervised:
 
 tacl_unsupervised_free917:
 	mkdir -p ../working/tacl_unsupervised_free917
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -1181,7 +1238,7 @@ tacl_unsupervised_free917:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1208,7 +1265,7 @@ tacl_unsupervised_free917:
 
 tacl_supervised:
 	mkdir -p ../working/tacl_supervised
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/dummy.txt \
@@ -1230,7 +1287,7 @@ tacl_supervised:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1283,7 +1340,7 @@ tacl_supervised_vanilla_gold:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1335,7 +1392,7 @@ tacl_supervised_vanilla_gold_online_kb:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1387,7 +1444,7 @@ tacl_supervised_vanilla_gold_full:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1416,7 +1473,7 @@ tacl_supervised_vanilla_gold_full:
 
 tacl_supervised_with_unsupervised_lexicon:
 	mkdir -p ../working/tacl_supervised_with_unsupervised_lexicon
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -1438,7 +1495,7 @@ tacl_supervised_with_unsupervised_lexicon:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1490,7 +1547,7 @@ tacl_supervised_with_unsupervised_lexicon_vanilla_gold_online:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1519,7 +1576,7 @@ tacl_supervised_with_unsupervised_lexicon_vanilla_gold_online:
 # To load an existing model and to parse an input corpus using it.
 tacl_unsupervised_loaded_model:
 	mkdir -p ../working/tacl_unsupervised_loaded_model
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
@@ -1539,7 +1596,7 @@ tacl_unsupervised_loaded_model:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag false \
 	-stemMatchingFlag true \
 	-mediatorStemGrelPartMatchingFlag true \
@@ -1568,19 +1625,19 @@ tacl_unsupervised_loaded_model:
 
 # Tokenize Entities
 tokenize_spanish_entities:
-	zcat data/freebase/spanish/spanish_business_entities.txt.gz | java -cp lib/*:graph-parser.jar others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_business_entities.tokenized.txt.gz
-	zcat data/freebase/spanish/spanish_film_entities.txt.gz | java -cp lib/*:graph-parser.jar others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_film_entities.tokenized.txt.gz
-	zcat data/freebase/spanish/spanish_people_entities.txt.gz | java -cp lib/*:graph-parser.jar others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_people_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_business_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_business_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_film_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_film_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_people_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_people_entities.tokenized.txt.gz
 	zcat data/freebase/spanish/spanish_business_entities.tokenized.txt.gz data/freebase/spanish/spanish_film_entities.tokenized.txt.gz data/freebase/spanish/spanish_people_entities.tokenized.txt.gz | gzip > data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz
 
 extract_spanish_sentences:
 	bzcat data/bravas/extracted/AA/wiki_00.bz2 \
-		| java -cp lib/*:graph-parser.jar others.SpanishTokenizer                 \
+		| java -cp lib/*:bin others.SpanishTokenizer                 \
 		| perl -pe 's|=LRB=.*?=RRB=||g'                 \
 		| grep -v =LRB= | grep -v =RRB=                 \
 		| python scripts/spanish/select_sentences_with_entities_in_relation.py data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt                 \
 		| python scripts/spanish/select_sentences_with_non_adjacent_main_relation.py data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt \
-		| java -cp lib/*:graph-parser.jar others.SpanishPosAndNer \
+		| java -cp lib/*:bin others.SpanishPosAndNer \
 		| python scripts/spanish/process_named_entities.py \
 		| gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz
 
@@ -1594,19 +1651,19 @@ create_spanish_deplambda_format:
 entity_tag_spanish:
 	python scripts/spanish/combine_wq_entities_spanish_english.py data/spanish_webquestions/webquestions.lexicon.txt data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz > data/spanish_webquestions/webquestions.lexicon.extended.txt
 	cat data/spanish_webquestions/webquestions.examples.test.utterances_es \
-		| java -cp lib/*:graph-parser.jar others.SpanishTokenizerEol \
+		| java -cp lib/*:bin others.SpanishTokenizerEol \
 		| python scripts/spanish/annotate_entities_maximal_string_matching.py data/spanish_webquestions/webquestions.lexicon.extended.txt \
 		| python scripts/spanish/add_sentences.py data/spanish_webquestions/webquestions.examples.test.utterances data/spanish_webquestions/webquestions.examples.test.utterances_es \
 		| python scripts/spanish/merge_english_annotations.py data/webquestions/webquestions.examples.test.domains.json \
-		| java -cp lib/*:graph-parser.jar others.SpanishPosAndNer \
+		| java -cp lib/*:bin others.SpanishPosAndNer \
 		| python scripts/spanish/process_named_entities.py \
 		> data/spanish_webquestions/webquestions.examples.test.es.json
 	cat data/spanish_webquestions/webquestions.examples.train.utterances_es \
-		| java -cp lib/*:graph-parser.jar others.SpanishTokenizerEol \
+		| java -cp lib/*:bin others.SpanishTokenizerEol \
 		| python scripts/spanish/annotate_entities_maximal_string_matching.py data/spanish_webquestions/webquestions.lexicon.extended.txt \
 		| python scripts/spanish/add_sentences.py data/spanish_webquestions/webquestions.examples.train.utterances data/spanish_webquestions/webquestions.examples.train.utterances_es \
 		| python scripts/spanish/merge_english_annotations.py data/webquestions/webquestions.examples.train.domains.json \
-		| java -cp lib/*:graph-parser.jar others.SpanishPosAndNer \
+		| java -cp lib/*:bin others.SpanishPosAndNer \
 		| python scripts/spanish/process_named_entities.py \
 		> data/spanish_webquestions/webquestions.examples.train.es.json
 
@@ -1627,7 +1684,7 @@ create_spanish_splits:
 ## Unsupervised Parsing experiments
 unsupervised_first_experiment:
 	mkdir -p ../working/unsupervised_first_experiment
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
     -schema data/freebase/schema/business_film_people_schema.txt \
     -relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
     -lexicon data/dummy.txt \
@@ -1654,7 +1711,7 @@ unsupervised_first_experiment:
     -utypeGtypeFlag false \
     -gtypeGrelFlag false \
     -wordGrelPartFlag false \
-    -wordBigramGrelPartFlag false \
+    -eventTypeGrelPartFlag false \
     -argGrelPartFlag false \
     -stemMatchingFlag true \
     -mediatorStemGrelPartMatchingFlag false \
@@ -1682,7 +1739,7 @@ unsupervised_first_experiment:
 candc_distant_eval:
 	rm -rf ../working/candc_distant_eval
 	mkdir -p ../working/candc_distant_eval
-	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
 	-lexicon data/dummy.txt \
@@ -1690,12 +1747,13 @@ candc_distant_eval:
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
 	-trainingSampleSize 1000 \
-	-iterations 100 \
+	-iterations 50 \
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
 	-useKB true \
+	-addBagOfWordsGraph true \
 	-groundFreeVariables true \
 	-useEmptyTypes false \
 	-ignoreTypes false \
@@ -1704,8 +1762,10 @@ candc_distant_eval:
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
-	-wordBigramGrelPartFlag false \
-	-argGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
 	-stemMatchingFlag false \
 	-mediatorStemGrelPartMatchingFlag false \
 	-argumentStemMatchingFlag false \
@@ -1719,12 +1779,122 @@ candc_distant_eval:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType true \
 	-validQueryFlag true \
-	-initialEdgeWeight 1.0 \
+	-initialEdgeWeight -0.5 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
-	-stemFeaturesWeight 0.0 \
+	-stemFeaturesWeight 0.00 \
 	-endpoint localhost \
 	-trainingCorpora data/distant_eval/train.json.gz \
 	-devFile data/distant_eval/dev.json.blank.gz \
 	-logFile ../working/candc_distant_eval/business_film_people.log.txt \
 	> ../working/candc_distant_eval/business_film_people.txt
+
+bow_distant_eval:
+	rm -rf ../working/bow_distant_eval
+	mkdir -p ../working/bow_distant_eval
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-lexicon data/dummy.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-trainingSampleSize 1000 \
+	-iterations 100 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-addOnlyBagOfWordsGraph true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.00 \
+	-endpoint localhost \
+	-trainingCorpora data/distant_eval/train.json.blank.gz \
+	-devFile data/distant_eval/dev.json.blank.gz \
+	-logFile ../working/bow_distant_eval/business_film_people.log.txt \
+	> ../working/bow_distant_eval/business_film_people.txt
+
+semisup_specialcases_distant_eval:
+	rm -rf ../working/semisup_specialcases_distant_eval
+	mkdir -p ../working/semisup_specialcases_distant_eval
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-ccgIndexedMapping lib_data/ybisk-semi-mapping.txt \
+	-ccgLexicon lib_data/ybisk-specialcases.txt \
+	-ccgLexiconQuestions lib_data/dummy.txt \
+	-lexicon lib_data/dummy.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-binaryRules lib_data/dummy.txt \
+	-unaryRules lib_data/dummy.txt \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-trainingSampleSize 1000 \
+	-iterations 100 \
+	-nBestTrainSyntacticParses 5 \
+	-nBestTestSyntacticParses 5 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.00 \
+	-endpoint localhost \
+	-trainingCorpora data/distant_eval/semi_supervised_syntax/train.json.gz \
+	-devFile data/distant_eval/semi_supervised_syntax/dev.json.gz \
+	-logFile ../working/semisup_specialcases_distant_eval/business_film_people.log.txt \
+	> ../working/semisup_specialcases_distant_eval/business_film_people.txt

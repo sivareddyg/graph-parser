@@ -132,7 +132,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   // Other features
   private OptionSpec<Boolean> useNbestGraphsFlag;
   private OptionSpec<Boolean> addBagOfWordsGraphFlag;
-
+  private OptionSpec<Boolean> addOnlyBagOfWordsGraphFlag;
 
   @Override
   public void initializeOptions(OptionParser parser) {
@@ -350,8 +350,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
     eventTypeGrelPartFlag =
         parser
             .accepts("eventTypeGrelPartFlag",
-                "contextual features of a mediator node - a good feature").withRequiredArg()
-            .ofType(Boolean.class).defaultsTo(false);
+                "contextual features of a mediator node - a good feature")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
     argGrelPartFlag =
         parser
             .accepts("argGrelPartFlag",
@@ -478,6 +478,13 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "addBagOfWordsGraph",
                 "Adds a bag-of-words graph in-addition to the ungrounded graphs obtained from syntactic parse")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    addOnlyBagOfWordsGraphFlag =
+        parser
+            .accepts(
+                "addOnlyBagOfWordsGraph",
+                "Ignores all the ungrounded graphs from syntactic parses and just adds a bag-of-words graph. Automatically sets addBagOfWordsGraph to true.")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
   }
 
   @Override
@@ -492,6 +499,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             new KnowledgeBaseCached(options.valueOf(cachedKB),
                 relationTypesFileName);
       } else {
+        KnowledgeBaseOnline.TYPE_KEY = options.valueOf(typeKey);
         kb =
             new KnowledgeBaseOnline(options.valueOf(endpoint), String.format(
                 "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
@@ -560,8 +568,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       // Contextual Features
       boolean wordGrelPartFlagVal = options.valueOf(wordGrelPartFlag);
       boolean wordGrelFlagVal = options.valueOf(wordGrelFlag);
-      boolean eventTypeGrelPartFlagVal =
-          options.valueOf(eventTypeGrelPartFlag);
+      boolean eventTypeGrelPartFlagVal = options.valueOf(eventTypeGrelPartFlag);
       boolean argGrelPartFlagVal = options.valueOf(argGrelPartFlag);
       boolean argGrelFlagVal = options.valueOf(argGrelFlag);
 
@@ -604,6 +611,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       boolean useNbestGraphsVal = options.valueOf(useNbestGraphsFlag);
 
       boolean addBagOfWordsGraphVal = options.valueOf(addBagOfWordsGraphFlag);
+      boolean addOnlyBagOfWordsGraphVal =
+          options.valueOf(addOnlyBagOfWordsGraphFlag);
 
       boolean groundTrainingCorpusInTheEndVal =
           options.valueOf(groundTrainingCorpusInTheEnd);
@@ -631,8 +640,9 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
               duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
               useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
-              addBagOfWordsGraphVal, initialEdgeWeightVal,
-              initialTypeWeightVal, initialWordWeightVal, stemFeaturesWeightVal);
+              addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
+              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
+              stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
 
       // Run the best model.

@@ -21,7 +21,18 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+/**
+ * Extracts kb relations of/between entities.
+ * 
+ * Use only the http endpoint. This no longer works with JDBC endpoint. JDBC
+ * requires "from graphUri" in all its queries.
+ * 
+ * @author Siva Reddy
+ *
+ */
 public class KnowledgeBaseOnline implements KnowledgeBase {
+  public static String TYPE_KEY = "fb:type.objec.type";
+
   static Integer MAX_CACHE_SIZE = 100000;
   static String FB_MEDIATIOR = "freebase.type_hints.mediator";
   static String FB_MASTER = "type.property.master_property";
@@ -93,11 +104,9 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
       String query =
           String
               .format(
-                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { fb:%s ?rel fb:%s . MINUS{?rel fb:type.property.master_property ?master .}}",
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel WHERE { fb:%s ?rel fb:%s . MINUS{?rel fb:type.property.master_property ?master .}}",
                   key.getLeft(), key.getRight());
-      // ResultSet results = endPoint.runQueryJdbcResult(query);
-      List<Map<String, String>> results =
-          endPoint.runQueryHttpSolutions(query);
+      List<Map<String, String>> results = endPoint.runQueryHttpSolutions(query);
       for (Map<String, String> querySolution : results) {
         String relation = querySolution.get("rel").toString();
         relation = relation.substring(relation.lastIndexOf("/") + 1);
@@ -111,9 +120,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
       query =
           String
               .format(
-                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { fb:%s ?rel fb:%s . MINUS { ?rel fb:type.property.master_property ?master . }}",
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel WHERE { fb:%s ?rel fb:%s . MINUS { ?rel fb:type.property.master_property ?master . }}",
                   key.getRight(), key.getLeft());
-      // results = endPoint.runQueryHttpSolutions(query);
       results = endPoint.runQueryHttpSolutions(query);
       for (Map<String, String> querySolution : results) {
         String relation = querySolution.get("rel").toString();
@@ -128,8 +136,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
       query =
           String
               .format(
-                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { ?m ?rel1 fb:%s . ?m ?rel2 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . }",
-                  key.getLeft(), key.getRight());
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE { ?m ?rel1 fb:%s . ?m ?rel2 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . }",
+                  key.getLeft(), key.getRight(), TYPE_KEY);
       results = endPoint.runQueryHttpSolutions(query);
       for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
@@ -147,8 +155,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
       query =
           String
               .format(
-                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . ?m ?rel2 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . }",
-                  key.getLeft(), key.getRight());
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE { fb:%s ?rel1 ?m . ?m ?rel2 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . }",
+                  key.getLeft(), key.getRight(), TYPE_KEY);
       results = endPoint.runQueryHttpSolutions(query);
       for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
@@ -166,8 +174,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
       query =
           String
               .format(
-                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE {fb:%s ?rel2 ?m . ?m ?rel1 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . }",
-                  key.getRight(), key.getLeft());
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE {fb:%s ?rel2 ?m . ?m ?rel1 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . }",
+                  key.getRight(), key.getLeft(), TYPE_KEY);
       results = endPoint.runQueryHttpSolutions(query);
       for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
@@ -185,8 +193,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
       query =
           String
               .format(
-                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . fb:%s ?rel2 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . }",
-                  key.getLeft(), key.getRight());
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE { fb:%s ?rel1 ?m . fb:%s ?rel2 ?m . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . }",
+                  key.getLeft(), key.getRight(), TYPE_KEY);
       results = endPoint.runQueryHttpSolutions(query);
       for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
@@ -206,10 +214,9 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
       String query =
           String
               .format(
-                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { fb:%s ?rel ?e2 . MINUS{?rel fb:type.property.master_property ?master .} FILTER(datatype(?e2) = %s) .}",
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel WHERE { fb:%s ?rel ?e2 . MINUS{?rel fb:type.property.master_property ?master .} FILTER(datatype(?e2) = %s) .}",
                   key.getLeft(), fbStandardToRDFStandard.get(key.getRight()));
-      List<Map<String, String>> results =
-          endPoint.runQueryHttpSolutions(query);
+      List<Map<String, String>> results = endPoint.runQueryHttpSolutions(query);
       for (Map<String, String> querySolution : results) {
         String relation = querySolution.get("rel").toString();
         relation = relation.substring(relation.lastIndexOf("/") + 1);
@@ -223,8 +230,9 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
       query =
           String
               .format(
-                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { ?m ?rel1 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER(datatype(?e2) = %s) . }",
-                  key.getLeft(), fbStandardToRDFStandard.get(key.getRight()));
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE { ?m ?rel1 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER(datatype(?e2) = %s) . }",
+                  key.getLeft(), TYPE_KEY,
+                  fbStandardToRDFStandard.get(key.getRight()));
       results = endPoint.runQueryHttpSolutions(query);
       for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
@@ -242,8 +250,9 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
       query =
           String
               .format(
-                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER(datatype(?e2) = %s) . }",
-                  key.getLeft(), fbStandardToRDFStandard.get(key.getRight()));
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE { fb:%s ?rel1 ?m . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER(datatype(?e2) = %s) . }",
+                  key.getLeft(), TYPE_KEY,
+                  fbStandardToRDFStandard.get(key.getRight()));
       results = endPoint.runQueryHttpSolutions(query);
       for (Map<String, String> querySolution : results) {
         String rel1 = querySolution.get("rel1").toString();
@@ -286,7 +295,7 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
     String query =
         String
             .format(
-                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { fb:%s ?rel ?e2 . MINUS{?rel fb:type.property.master_property ?master .}}",
+                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel WHERE { fb:%s ?rel ?e2 . MINUS{?rel fb:type.property.master_property ?master .}}",
                 entity);
     List<Map<String, String>> results = endPoint.runQueryHttpSolutions(query);
     for (Map<String, String> querySolution : results) {
@@ -302,7 +311,7 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
     query =
         String
             .format(
-                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel from <http://rdf.freebase.com> WHERE { ?e2 ?rel fb:%s . MINUS { ?rel fb:type.property.master_property ?master . }}",
+                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel WHERE { ?e2 ?rel fb:%s . MINUS { ?rel fb:type.property.master_property ?master . }}",
                 entity);
     results = endPoint.runQueryHttpSolutions(query);
     for (Map<String, String> querySolution : results) {
@@ -318,8 +327,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
     query =
         String
             .format(
-                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { ?m ?rel1 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER (?e2 != fb:%s) .}",
-                entity, entity);
+                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE { ?m ?rel1 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER (?e2 != fb:%s) .}",
+                entity, TYPE_KEY, entity);
     results = endPoint.runQueryHttpSolutions(query);
     for (Map<String, String> querySolution : results) {
       String rel1 = querySolution.get("rel1").toString();
@@ -336,8 +345,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
     query =
         String
             .format(
-                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER (?e2 != fb:%s) .}",
-                entity, entity);
+                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE { fb:%s ?rel1 ?m . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER (?e2 != fb:%s) .}",
+                entity, TYPE_KEY, entity);
     results = endPoint.runQueryHttpSolutions(query);
     for (Map<String, String> querySolution : results) {
       String rel1 = querySolution.get("rel1").toString();
@@ -355,8 +364,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
     query =
         String
             .format(
-                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE {?m ?rel1 fb:%s . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?e2 ?rel2 ?m . FILTER (?e2 != fb:%s) .}",
-                entity, entity);
+                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE {?m ?rel1 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . ?e2 ?rel2 ?m . FILTER (?e2 != fb:%s) .}",
+                entity, TYPE_KEY, entity);
     results = endPoint.runQueryHttpSolutions(query);
     for (Map<String, String> querySolution : results) {
       String rel1 = querySolution.get("rel1").toString();
@@ -374,8 +383,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
     query =
         String
             .format(
-                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:%s ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?e2 ?rel2 ?m . FILTER (?e2 != fb:%s) .}",
-                entity, entity);
+                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 WHERE { fb:%s ?rel1 ?m . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . ?e2 ?rel2 ?m . FILTER (?e2 != fb:%s) .}",
+                entity, TYPE_KEY, entity);
     results = endPoint.runQueryHttpSolutions(query);
     for (Map<String, String> querySolution : results) {
       String rel1 = querySolution.get("rel1").toString();
@@ -409,8 +418,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
     String query =
         String
             .format(
-                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?type from <http://rdf.freebase.com> WHERE { fb:%s fb:type.object.type ?type . }",
-                entity);
+                "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?type WHERE { fb:%s %s ?type . }",
+                entity, TYPE_KEY);
     List<Map<String, String>> results = endPoint.runQueryHttpSolutions(query);
     for (Map<String, String> querySolution : results) {
       String type = querySolution.get("type").toString();

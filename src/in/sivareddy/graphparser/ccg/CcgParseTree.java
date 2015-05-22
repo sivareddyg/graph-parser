@@ -39,6 +39,7 @@ public class CcgParseTree {
       "NNPS", "PRP", "PRON", "NUM");
   private static Set<String> cardinalPosTags = Sets.newHashSet("CD", "NUM");
   private static Set<String> dateNerTags = Sets.newHashSet("I-DAT");
+  private static String BLANK_WORD = "_blank_";
 
   // changed these variables from static to dynamic. Should use lower case
   // variable names
@@ -66,7 +67,7 @@ public class CcgParseTree {
             .omitEmptyStrings().split(lexicalItemString));
     String synCat = items.get(1);
     String word = items.get(2);
-    String lemma = items.get(3);
+    String lemma = items.get(3).toLowerCase();
     String pos = items.get(4);
     String neType = items.get(5);
     List<Category> currentCategories =
@@ -759,7 +760,8 @@ public class CcgParseTree {
 
               StringBuilder sb = new StringBuilder();
               if (!lexicalPosTags.contains(headNode.pos)
-                  && headNode != lexicalNode) {
+                  && headNode != lexicalNode
+                  && !headNode.getLemma().equals(BLANK_WORD)) {
                 sb.append(headNode.lexicaliseRelationName());
                 sb.append(".");
               } else if (lexicalNode.pos.equals("POS")) {
@@ -849,7 +851,8 @@ public class CcgParseTree {
 
             StringBuilder sb = new StringBuilder();
             if (!lexicalPosTags.contains(headNode.pos)
-                && headNode != lexicalNode) {
+                && headNode != lexicalNode
+                && !headNode.getLemma().equals(BLANK_WORD)) {
               sb.append(headNode.lexicaliseRelationName());
               sb.append(".");
             }
@@ -945,7 +948,8 @@ public class CcgParseTree {
               continue;
 
             StringBuilder sb = new StringBuilder();
-            if (!lexicalPosTags.contains(headNode.pos)) {
+            if (!lexicalPosTags.contains(headNode.pos)
+                && !headNode.getLemma().equals(BLANK_WORD)) {
               sb.append(headNode.lexicaliseRelationName());
             } else {
               break;
@@ -1033,7 +1037,8 @@ public class CcgParseTree {
 
               StringBuilder sb = new StringBuilder();
               if (!lexicalPosTags.contains(headNode.pos)
-                  && headNode != lexicalNode) {
+                  && headNode != lexicalNode
+                  && !headNode.getLemma().equals(BLANK_WORD)) {
                 sb.append(headNode.lexicaliseRelationName());
                 sb.append(".");
               }

@@ -76,6 +76,7 @@ public class GroundedGraphs {
   private CcgParser questionCcgParser;
 
   private static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "NNPS");
+  private static String BLANK_WORD = "_blank_";
 
   private boolean urelGrelFlag = true;
   private boolean urelPartGrelPartFlag = true;
@@ -226,6 +227,8 @@ public class GroundedGraphs {
     logger.debug("Tokenized Sentence: " + Joiner.on(" ").join(words));
 
     if (key.equals("synPars")) {
+      Set<Set<String>> allSemanticParses = new HashSet<>();
+
       if (!jsonSentence.has("synPars"))
         return graphs;
       JsonArray synPars = jsonSentence.get("synPars").getAsJsonArray();
@@ -263,6 +266,14 @@ public class GroundedGraphs {
               ccgParse.getLexicalisedSemanticPredicates();
           List<LexicalItem> leaves = ccgParse.getLeafNodes();
           for (Set<String> semanticParse : semanticParses) {
+            // Check if the semantic parse is already present. Sometimes
+            // different CCG derivations could lead to the same same semantic
+            // parse.
+            if (allSemanticParses.contains(semanticParse)) {
+              continue;
+            }
+            allSemanticParses.add(semanticParse);
+
             int prev_size = graphs.size();
             buildUngroundeGraphFromSemanticParse(semanticParse, leaves, score,
                 graphs);
@@ -277,7 +288,7 @@ public class GroundedGraphs {
     } else { // the semantic parses are already given
       if (!jsonSentence.has(key))
         return graphs;
-      List<LexicalItem> leaves = BuildLexicalItemsFromWords(jsonSentence);
+      List<LexicalItem> leaves = buildLexicalItemsFromWords(jsonSentence);
       JsonArray semPars = jsonSentence.get(key).getAsJsonArray();
       for (JsonElement semPar : semPars) {
         JsonArray predicates = semPar.getAsJsonArray();
@@ -300,8 +311,9 @@ public class GroundedGraphs {
    */
   public List<LexicalGraph> getBagOfWordsUngroundedGraph(JsonObject jsonSentence) {
     List<LexicalGraph> graphs = Lists.newArrayList();
-    Set<String> parse = getBagOfWordsUngroundedSemanticParse(jsonSentence);
-    List<LexicalItem> leaves = BuildLexicalItemsFromWords(jsonSentence);
+    List<LexicalItem> leaves = buildLexicalItemsFromWords(jsonSentence);
+    Set<String> parse =
+        getBagOfWordsUngroundedSemanticParse(jsonSentence, leaves);
     buildUngroundeGraphFromSemanticParse(parse, leaves, 0.0, graphs);
     return graphs;
   }
@@ -313,7 +325,13 @@ public class GroundedGraphs {
    * @return
    */
   public static Set<String> getBagOfWordsUngroundedSemanticParse(
-      JsonObject jsonSentence) {
+      JsonObject jsonSentence, List<LexicalItem> leaves) {
+    LexicalItem dummyNode =
+        new LexicalItem("", "_dummy_", "_dummy_", "WDT", "", null);
+    leaves.add(dummyNode);
+    int questionWordIndex = leaves.size() - 1;
+    dummyNode.setWordPosition(questionWordIndex);
+
     Set<String> parse = new HashSet<>();
     if (!jsonSentence.has(SentenceKeys.ENTITIES))
       return parse;
@@ -321,6 +339,7 @@ public class GroundedGraphs {
         jsonSentence.get(SentenceKeys.ENTITIES).getAsJsonArray();
     if (entities.size() == 0)
       return parse;
+
 
     // Create all the edges.
     Set<Integer> entityIndices = new HashSet<>();
@@ -330,11 +349,13 @@ public class GroundedGraphs {
       entityIndices.add(index);
       String fbEntity = entityObj.get(SentenceKeys.ENTITY).getAsString();
       String edge =
-          String.format("dummy.edge.entity(0:e , %d:%s)", index, fbEntity);
+          String.format("dummy.edge.entity(%d:e , %d:%s)", questionWordIndex,
+              index, fbEntity);
       parse.add(edge);
     }
-    parse.add("dummy.edge.question(0:e , 0:x)");
-    parse.add(String.format("QUESTION(0:x)"));
+    parse.add(String.format("dummy.edge.question(%d:e , %d:x)",
+        questionWordIndex, questionWordIndex));
+    parse.add(String.format("QUESTION(%d:x)", questionWordIndex));
 
     // Create context.
     JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
@@ -350,10 +371,11 @@ public class GroundedGraphs {
               : wordObj.get(SentenceKeys.WORD_KEY).getAsString().toLowerCase();
 
       String posTag = wordObj.get(SentenceKeys.POS_KEY).getAsString();
-      if (!posTag.matches("[NJVR].*")) {
+      if (!posTag.matches("[NJVR].*") || wordString.equals(BLANK_WORD)) {
         continue;
       }
-      parse.add(String.format("%s(%d:s , 0:e)", wordString, index));
+      parse.add(String.format("%s(%d:s , %d:e)", wordString, index,
+          questionWordIndex));
     }
     return parse;
   }
@@ -369,7 +391,7 @@ public class GroundedGraphs {
     CcgParser.resetCounter();
   }
 
-  static private List<LexicalItem> BuildLexicalItemsFromWords(
+  protected static List<LexicalItem> buildLexicalItemsFromWords(
       JsonObject jsonSentence) {
     Preconditions.checkArgument(jsonSentence.has("words"));
     Map<Integer, String> tokenToEntity = new HashMap<>();

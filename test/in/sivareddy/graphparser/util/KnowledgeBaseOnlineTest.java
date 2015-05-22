@@ -15,12 +15,14 @@ public class KnowledgeBaseOnlineTest {
     Logger
         .getLogger(org.apache.jena.riot.system.stream.JenaIOEnvironment.class)
         .setLevel(Level.OFF);
+    KnowledgeBaseOnline.TYPE_KEY = "fb:type.object.type";
+    
     Schema schema =
         new Schema("data/freebase/schema/all_domains_schema.txt");
     
     KnowledgeBaseOnline kb =
-        new KnowledgeBaseOnline("stkilda", "http://stkilda:8890/sparql", "dba",
-            "dba", 10000, schema);
+        new KnowledgeBaseOnline("rockall", "http://rockall:8890/sparql", "dba",
+            "dba", 100000, schema);
 
     System.out.println(kb.getRelations("m.01ypc"));
     

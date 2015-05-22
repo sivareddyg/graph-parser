@@ -81,8 +81,9 @@ public class GraphToQueryTrainingMain {
       boolean grelGrelFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean validQueryFlag,
       boolean useNbestGraphs, boolean addBagOfWordsGraph,
-      double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double stemFeaturesWeight) throws IOException {
+      boolean addOnlyBagOfWordsGraph, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double stemFeaturesWeight) throws IOException {
 
     this.semanticParseKey = sematicParseKey;
     this.nBestTestSyntacticParses = nBestTestSyntacticParses;
@@ -132,8 +133,8 @@ public class GraphToQueryTrainingMain {
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
             validQueryFlag, useNbestGraphs, addBagOfWordsGraph,
-            initialEdgeWeight, initialTypeWeight, initialWordWeight,
-            stemFeaturesWeight, rdfGraphTools, kbGraphUri);
+            addOnlyBagOfWordsGraph, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight, rdfGraphTools, kbGraphUri);
 
     supervisedTrainingExamples = new ArrayList<>();
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
@@ -485,10 +486,11 @@ public class GraphToQueryTrainingMain {
 
     // Denotation feature
     boolean validQueryFlag = true;
-    
+
     // Other features.
     boolean useNbestGraphs = false;
     boolean addBagOfWordsGraph = false;
+    boolean addOnlyBagOfWordsGraph = false;
 
     GraphToQueryTrainingMain graphToQueryModel =
         new GraphToQueryTrainingMain(schema, kb, groundedLexicon,
@@ -507,8 +509,8 @@ public class GraphToQueryTrainingMain {
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             duplicateEdgesFlag, grelGrelFlag, useLexiconWeightsRel,
             useLexiconWeightsType, validQueryFlag, useNbestGraphs,
-            addBagOfWordsGraph, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            addBagOfWordsGraph, addOnlyBagOfWordsGraph, initialEdgeWeight,
+            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;
