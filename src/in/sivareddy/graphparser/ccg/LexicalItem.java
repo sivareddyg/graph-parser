@@ -12,10 +12,10 @@ public class LexicalItem extends CcgParseTree implements
   String word;
   String lemma;
   String pos;
-  
+
   // named entity type
   String neType;
-  
+
   // useful field to set freebase mids or any other
   private String mid;
 
@@ -36,8 +36,12 @@ public class LexicalItem extends CcgParseTree implements
     super();
     this.synCat = synCat;
     this.word = word;
-    this.lemma = lemma;
-    this.mid = lemma;
+    this.lemma = lemma.toLowerCase();
+    if (lemma.equals("_blank_")) {
+      this.mid = "x";
+    } else {
+      this.mid = this.lemma;
+    }
     this.pos = pos;
     this.neType = neType;
     this.currentCategory = cat;
@@ -55,7 +59,7 @@ public class LexicalItem extends CcgParseTree implements
    * @return
    */
   public LexicalItem shallowCopy() {
-    Category copyCat = null; 
+    Category copyCat = null;
     if (currentCategory != null) {
       copyCat = currentCategory.shallowCopy();
     }

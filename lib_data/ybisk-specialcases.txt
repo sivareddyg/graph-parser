@@ -11,10 +11,32 @@ am	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (an
 are	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
 were	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
 
+be	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $X $Y) ($f1 $Y) ($f2 $X))))
+is	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $X $Y) ($f1 $Y) ($f2 $X))))
+was	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $X $Y) ($f1 $Y) ($f2 $X))))
+am	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $X $Y) ($f1 $Y) ($f2 $X))))
+'m	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $X $Y) ($f1 $Y) ($f2 $X))))
+are	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $X $Y) ($f1 $Y) ($f2 $X))))
+were	*	(S\N)/N	((S{Y}\N{X}){Y}/N{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $X $Y) ($f1 $Y) ($f2 $X))))
+
+be	*	(S\N)/N	((S{_}\N{X}){_}/N{Y}){_};_ 1 X,_ 2 Y	EVENT
+is	*	(S\N)/N	((S{_}\N{X}){_}/N{Y}){_};_ 1 X,_ 2 Y	EVENT
+was	*	(S\N)/N	((S{_}\N{X}){_}/N{Y}){_};_ 1 X,_ 2 Y	EVENT
+am	*	(S\N)/N	((S{_}\N{X}){_}/N{Y}){_};_ 1 X,_ 2 Y	EVENT
+'m	*	(S\N)/N	((S{_}\N{X}){_}/N{Y}){_};_ 1 X,_ 2 Y	EVENT
+are	*	(S\N)/N	((S{_}\N{X}){_}/N{Y}){_};_ 1 X,_ 2 Y	EVENT
+were	*	(S\N)/N	((S{_}\N{X}){_}/N{Y}){_};_ 1 X,_ 2 Y	EVENT
+
+# Hilton hotel -> Hilton 's hotel
+*	NNP	N/N	(N{X}/N{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X 's.1 $X ENTITY) (EVENT $X $X 's.2 $_ ENTITY))))
+
+# Hilton hotel -> hotel Hilton
+*	NNP	N/N	(N{_}/N{Y}){_}	(lambda $f1 $_ (exists $Y (and ($f1 $Y) (COPULA $Y $_) (TYPE $_ $_))))
+
 # quantifiers
 no	*	N/N	(N{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
 not	*	N/N	(N{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
-the	*	N/N	(N{Y}/N{Y}){_};_ 1 Y	UNIQUE
+#the	*	N/N	(N{Y}/N{Y}){_};_ 1 Y	UNIQUE
 
 *	IN	N	N{X}	TYPE
 

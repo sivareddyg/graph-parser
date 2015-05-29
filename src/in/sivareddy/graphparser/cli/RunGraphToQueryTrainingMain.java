@@ -68,6 +68,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
   private OptionSpec<Integer> trainingSampleSize;
   private OptionSpec<Integer> nthreads;
+  private OptionSpec<Integer> timeout;
   private OptionSpec<Integer> iterations;
 
   // Try nbest syntactic parses
@@ -93,6 +94,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> gtypeGrelFlag;
 
   // Contextual Features
+  private OptionSpec<Boolean> ngramGrelPartFlag;
   private OptionSpec<Boolean> wordGrelPartFlag;
   private OptionSpec<Boolean> wordGrelFlag;
   private OptionSpec<Boolean> eventTypeGrelPartFlag;
@@ -133,6 +135,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> useNbestGraphsFlag;
   private OptionSpec<Boolean> addBagOfWordsGraphFlag;
   private OptionSpec<Boolean> addOnlyBagOfWordsGraphFlag;
+  private OptionSpec<Boolean> handleNumbersFlag;
+
 
   @Override
   public void initializeOptions(OptionParser parser) {
@@ -253,6 +257,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
         parser.accepts("nthreads", "number of threads").withRequiredArg()
             .ofType(Integer.class).required();
 
+    timeout =
+        parser
+            .accepts("timeout",
+                "timeout for each sparql query in milli seconds")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(10000);
+
     trainingSampleSize =
         parser
             .accepts("trainingSampleSize",
@@ -337,6 +347,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     // Contextual Features
+    ngramGrelPartFlag =
+        parser.accepts("ngramGrelPartFlag", "bag of word features")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
     wordGrelPartFlag =
         parser
             .accepts("wordGrelPartFlag",
@@ -485,6 +499,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "addOnlyBagOfWordsGraph",
                 "Ignores all the ungrounded graphs from syntactic parses and just adds a bag-of-words graph. Automatically sets addBagOfWordsGraph to true.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    handleNumbersFlag =
+        parser
+            .accepts("handleNumbersFlag",
+                "treat numbers specially and introduce COUNT. Suitable for Free917 data.")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
   }
 
   @Override
@@ -509,7 +529,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       RdfGraphTools rdfGraphTools =
           new RdfGraphTools(options.valueOf(endpoint), String.format(
               "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
-              "dba", 10000);
+              "dba", options.valueOf(timeout));
       GraphToSparqlConverter.TYPE_KEY = options.valueOf(typeKey);
 
       List<String> kbGraphUri =
@@ -566,6 +586,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       boolean gtypeGrelFlagVal = options.valueOf(gtypeGrelFlag);
 
       // Contextual Features
+      boolean ngramGrelPartFlagVal = options.valueOf(ngramGrelPartFlag);
       boolean wordGrelPartFlagVal = options.valueOf(wordGrelPartFlag);
       boolean wordGrelFlagVal = options.valueOf(wordGrelFlag);
       boolean eventTypeGrelPartFlagVal = options.valueOf(eventTypeGrelPartFlag);
@@ -613,6 +634,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       boolean addBagOfWordsGraphVal = options.valueOf(addBagOfWordsGraphFlag);
       boolean addOnlyBagOfWordsGraphVal =
           options.valueOf(addOnlyBagOfWordsGraphFlag);
+      boolean handleNumbersFlagVal = options.valueOf(handleNumbersFlag);
 
       boolean groundTrainingCorpusInTheEndVal =
           options.valueOf(groundTrainingCorpusInTheEnd);
@@ -632,17 +654,17 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal,
               useSchemaVal, useKBVal, groundFreeVariablesVal, useEmptyTypesVal,
               ignoreTypesVal, urelGrelFlagVal, urelPartGrelPartFlagVal,
-              utypeGtypeFlagVal, gtypeGrelFlagVal, wordGrelPartFlagVal,
-              wordGrelFlagVal, eventTypeGrelPartFlagVal, argGrelPartFlagVal,
-              argGrelFlagVal, stemMatchingFlagVal,
+              utypeGtypeFlagVal, gtypeGrelFlagVal, ngramGrelPartFlagVal,
+              wordGrelPartFlagVal, wordGrelFlagVal, eventTypeGrelPartFlagVal,
+              argGrelPartFlagVal, argGrelFlagVal, stemMatchingFlagVal,
               mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
               argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
               graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
               duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
               useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
               addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
-              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
-              stemFeaturesWeightVal);
+              handleNumbersFlagVal, initialEdgeWeightVal, initialTypeWeightVal,
+              initialWordWeightVal, stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
 
       // Run the best model.

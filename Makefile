@@ -1682,6 +1682,48 @@ create_spanish_splits:
 		> working/webquestions.es.examples.business_film_people.test.json.txt
 
 ## Unsupervised Parsing experiments
+
+clean_data:
+	zcat data/distant_eval/test.json.blank.gz | python scripts/cleaning/unannonate_named_entities.py > data/distant_eval/test.json.blank
+	gzip data/distant_eval/test.json.blank
+	zcat data/distant_eval/test.json.blank.gz | python scripts/cleaning/remove_sentences_with_consecutive_entities.py > data/distant_eval/test.json.blank
+	gzip data/distant_eval/test.json.blank
+	zcat data/distant_eval/train.json.blank.gz | python scripts/cleaning/remove_sentences_with_consecutive_entities.py > data/distant_eval/train.json.blank
+	gzip data/distant_eval/train.json.blank
+	zcat data/distant_eval/dev.json.blank.gz | python scripts/cleaning/remove_sentences_with_consecutive_entities.py > data/distant_eval/dev.json.blank
+	gzip data/distant_eval/dev.json.blank
+
+clean_unsup_data:
+	zcat data/distant_eval/unsupervised_syntax/dev.json.gz \
+		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		> data/distant_eval/unsupervised_syntax/dev.json.blank
+	gzip data/distant_eval/unsupervised_syntax/dev.json.blank
+
+	zcat data/distant_eval/unsupervised_syntax/train.json.blank.gz \
+		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		> data/distant_eval/unsupervised_syntax/train.json.blank
+	gzip data/distant_eval/unsupervised_syntax/train.json.blank
+
+
+clean_test_data:
+	zcat data/distant_eval/semi_supervised_syntax/test.json.blank.gz \
+		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		> data/distant_eval/semi_supervised_syntax/test.json.blank
+	gzip data/distant_eval/semi_supervised_syntax/test.json.blank
+
+	zcat data/distant_eval/unsupervised_syntax/test.json.blank.gz \
+		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		> data/distant_eval/unsupervised_syntax/test.json.blank
+	gzip data/distant_eval/unsupervised_syntax/test.json.blank
+
 unsupervised_first_experiment:
 	mkdir -p ../working/unsupervised_first_experiment
 	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
@@ -1736,16 +1778,65 @@ unsupervised_first_experiment:
     -logFile ../working/unsupervised_first_experiment/business_film_people.log.txt \
     > ../working/unsupervised_first_experiment/business_film_people.txt
 
+create_candc_grounded_lexicon:
+	mkdir -p data/distant_eval/grounded_lexicon
+	zcat data/distant_eval/train.json.gz \
+	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	--relationLexicalIdentifiers lemma \
+	--semanticParseKey synPars \
+	--argumentLexicalIdentifiers mid \
+	--candcIndexFile lib_data/candc_markedup.modified \
+	--unaryRulesFile lib_data/unary_rules.txt \
+	--binaryRulesFile lib_data/binary_rules.txt \
+	--specialCasesFile lib_data/lexicon_specialCases.txt \
+	--relationTypesFile data/dummy.txt \
+	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	--outputLexiconFile data/distant_eval/grounded_lexicon/candc_grounded_lexicon.txt \
+	> /dev/null
+
+create_semisup_grounded_lexicon:
+	mkdir -p data/distant_eval/grounded_lexicon
+	zcat data/distant_eval/semi_supervised_syntax/train.json.gz \
+	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	--relationLexicalIdentifiers lemma \
+	--semanticParseKey synPars \
+	--argumentLexicalIdentifiers mid \
+	--candcIndexFile lib_data/ybisk-semi-mapping.txt \
+	--unaryRulesFile lib_data/dummy.txt \
+	--binaryRulesFile lib_data/dummy.txt \
+	--specialCasesFile lib_data/ybisk-specialcases.txt \
+	--relationTypesFile data/dummy.txt \
+	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	--outputLexiconFile data/distant_eval/grounded_lexicon/semisup_grounded_lexicon.txt \
+	> /dev/null
+
+create_unsup_grounded_lexicon:
+	mkdir -p data/distant_eval/grounded_lexicon
+	zcat data/distant_eval/unsupervised_syntax/train.json.gz \
+	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	--relationLexicalIdentifiers lemma \
+	--semanticParseKey synPars \
+	--argumentLexicalIdentifiers mid \
+	--candcIndexFile data/distant_eval/unsupervised_syntax/ybisk-mapping.txt \
+	--unaryRulesFile lib_data/dummy.txt \
+	--binaryRulesFile lib_data/dummy.txt \
+	--specialCasesFile lib_data/ybisk-specialcases.txt \
+	--relationTypesFile data/dummy.txt \
+	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	--outputLexiconFile data/distant_eval/grounded_lexicon/unsup_grounded_lexicon.txt \
+	> /dev/null
+
 candc_distant_eval:
 	rm -rf ../working/candc_distant_eval
 	mkdir -p ../working/candc_distant_eval
 	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
-	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-lexicon data/dummy.txt \
+	-relationTypesFile lib_data/dummy.txt \
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-lexicon data/distant_eval/grounded_lexicon/candc_grounded_lexicon.txt \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
+	-timeout 3000 \
 	-trainingSampleSize 1000 \
 	-iterations 50 \
 	-nBestTrainSyntacticParses 1 \
@@ -1753,18 +1844,18 @@ candc_distant_eval:
 	-nbestGraphs 100 \
 	-useSchema true \
 	-useKB true \
-	-addBagOfWordsGraph true \
-	-groundFreeVariables true \
+	-groundFreeVariables false \
 	-useEmptyTypes false \
 	-ignoreTypes false \
 	-urelGrelFlag true \
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
+	-ngramGrelPartFlag false \
 	-wordGrelPartFlag false \
 	-wordGrelFlag false \
-	-eventTypeGrelPartFlag true \
-	-argGrelPartFlag true \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
 	-argGrelFlag false \
 	-stemMatchingFlag false \
 	-mediatorStemGrelPartMatchingFlag false \
@@ -1779,26 +1870,82 @@ candc_distant_eval:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType true \
 	-validQueryFlag true \
-	-initialEdgeWeight -0.5 \
+	-initialEdgeWeight -1.5 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
-	-stemFeaturesWeight 0.00 \
+	-stemFeaturesWeight 0.0 \
 	-endpoint localhost \
-	-trainingCorpora data/distant_eval/train.json.gz \
-	-devFile data/distant_eval/dev.json.blank.gz \
+	-trainingCorpora data/distant_eval/train.json.blank.gz \
+	-devFile data/distant_eval/dev.json.1000.blank.gz \
 	-logFile ../working/candc_distant_eval/business_film_people.log.txt \
 	> ../working/candc_distant_eval/business_film_people.txt
+
+candc_distant_eval_loaded_model:
+	rm -rf ../working/candc_distant_eval_loaded_model
+	mkdir -p ../working/candc_distant_eval_loaded_model
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-lexicon data/distant_eval/grounded_lexicon/candc_grounded_lexicon.txt \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 0 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-ngramGrelPartFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -1.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.0 \
+	-endpoint localhost \
+	-loadModelFromFile ../working/candc_distant_eval.8/business_film_people.log.txt.model.iteration2 \
+	-devFile data/distant_eval/dev.json.blank.gz \
+	-testFile data/distant_eval/test.json.blank.gz \
+	-logFile ../working/candc_distant_eval_loaded_model/business_film_people.log.txt \
+	> ../working/candc_distant_eval_loaded_model/business_film_people.txt
 
 bow_distant_eval:
 	rm -rf ../working/bow_distant_eval
 	mkdir -p ../working/bow_distant_eval
 	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
-	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-lexicon data/dummy.txt \
+	-relationTypesFile lib_data/dummy.txt \
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-lexicon data/dummy.txt \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
+	-timeout 3000 \
 	-trainingSampleSize 1000 \
 	-iterations 100 \
 	-nBestTrainSyntacticParses 1 \
@@ -1807,16 +1954,17 @@ bow_distant_eval:
 	-useSchema true \
 	-useKB true \
 	-addOnlyBagOfWordsGraph true \
-	-groundFreeVariables true \
+	-groundFreeVariables false \
 	-useEmptyTypes false \
 	-ignoreTypes false \
 	-urelGrelFlag true \
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
+	-ngramGrelPartFlag true \
 	-wordGrelPartFlag false \
 	-wordGrelFlag false \
-	-eventTypeGrelPartFlag true \
+	-eventTypeGrelPartFlag false \
 	-argGrelPartFlag true \
 	-argGrelFlag false \
 	-stemMatchingFlag false \
@@ -1828,35 +1976,92 @@ bow_distant_eval:
 	-countNodesFlag false \
 	-edgeNodeCountFlag false \
 	-duplicateEdgesFlag true \
-	-grelGrelFlag true \
+	-grelGrelFlag false \
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType true \
 	-validQueryFlag true \
-	-initialEdgeWeight -0.5 \
+	-initialEdgeWeight 0.0 \
 	-initialTypeWeight -2.0 \
-	-initialWordWeight -0.05 \
+	-initialWordWeight -1.0 \
 	-stemFeaturesWeight 0.00 \
 	-endpoint localhost \
 	-trainingCorpora data/distant_eval/train.json.blank.gz \
-	-devFile data/distant_eval/dev.json.blank.gz \
+	-devFile data/distant_eval/dev.json.1000.blank.gz \
 	-logFile ../working/bow_distant_eval/business_film_people.log.txt \
 	> ../working/bow_distant_eval/business_film_people.txt
+
+bow_distant_eval_loaded_model:
+	rm -rf ../working/bow_distant_eval_loaded_model
+	mkdir -p ../working/bow_distant_eval_loaded_model
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-lexicon data/dummy.txt \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 0 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-addOnlyBagOfWordsGraph true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-ngramGrelPartFlag true \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag false \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 0.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -1.0 \
+	-stemFeaturesWeight 0.00 \
+	-endpoint localhost \
+	-loadModelFromFile ../working/bow_distant_eval/business_film_people.log.txt.eval.iteration6 \
+	-devFile data/distant_eval/dev.json.blank.gz \
+	-testFile data/distant_eval/test.json.blank.gz \
+	-logFile ../working/bow_distant_eval_loaded_model/business_film_people.log.txt \
+	> ../working/bow_distant_eval_loaded_model/business_film_people.txt
 
 semisup_specialcases_distant_eval:
 	rm -rf ../working/semisup_specialcases_distant_eval
 	mkdir -p ../working/semisup_specialcases_distant_eval
 	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
-	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
+	-relationTypesFile lib_data/dummy.txt \
 	-ccgIndexedMapping lib_data/ybisk-semi-mapping.txt \
 	-ccgLexicon lib_data/ybisk-specialcases.txt \
 	-ccgLexiconQuestions lib_data/dummy.txt \
-	-lexicon lib_data/dummy.txt \
+	-lexicon data/distant_eval/grounded_lexicon/semisup_grounded_lexicon.txt \
 	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	-binaryRules lib_data/dummy.txt \
 	-unaryRules lib_data/dummy.txt \
 	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
 	-nthreads 20 \
+	-timeout 3000 \
 	-trainingSampleSize 1000 \
 	-iterations 100 \
 	-nBestTrainSyntacticParses 5 \
@@ -1871,10 +2076,11 @@ semisup_specialcases_distant_eval:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
+	-ngramGrelPartFlag false \
 	-wordGrelPartFlag false \
 	-wordGrelFlag false \
-	-eventTypeGrelPartFlag true \
-	-argGrelPartFlag true \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
 	-argGrelFlag false \
 	-stemMatchingFlag false \
 	-mediatorStemGrelPartMatchingFlag false \
@@ -1889,12 +2095,192 @@ semisup_specialcases_distant_eval:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType true \
 	-validQueryFlag true \
-	-initialEdgeWeight -0.5 \
+	-initialEdgeWeight -1.5 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.00 \
 	-endpoint localhost \
-	-trainingCorpora data/distant_eval/semi_supervised_syntax/train.json.gz \
-	-devFile data/distant_eval/semi_supervised_syntax/dev.json.gz \
+	-trainingCorpora data/distant_eval/semi_supervised_syntax/train.json.blank.gz \
+	-devFile data/distant_eval/semi_supervised_syntax/dev.json.1000.blank.gz \
 	-logFile ../working/semisup_specialcases_distant_eval/business_film_people.log.txt \
 	> ../working/semisup_specialcases_distant_eval/business_film_people.txt
+
+semisup_specialcases_distant_eval_loaded_model:
+	rm -rf ../working/semisup_specialcases_distant_eval_loaded_model
+	mkdir -p ../working/semisup_specialcases_distant_eval_loaded_model
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-ccgIndexedMapping lib_data/ybisk-semi-mapping.txt \
+	-ccgLexicon lib_data/ybisk-specialcases.txt \
+	-ccgLexiconQuestions lib_data/dummy.txt \
+	-lexicon data/distant_eval/grounded_lexicon/semisup_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-binaryRules lib_data/dummy.txt \
+	-unaryRules lib_data/dummy.txt \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 0 \
+	-nBestTrainSyntacticParses 5 \
+	-nBestTestSyntacticParses 5 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-ngramGrelPartFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -1.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.00 \
+	-endpoint localhost \
+	-loadModelFromFile ../working/semisup_specialcases_distant_eval/business_film_people.log.txt.model.iteration38 \
+	-devFile data/distant_eval/semi_supervised_syntax/dev.json.blank.gz \
+	-testFile data/distant_eval/semi_supervised_syntax/test.json.blank.gz \
+	-logFile ../working/semisup_specialcases_distant_eval_loaded_model/business_film_people.log.txt \
+	> ../working/semisup_specialcases_distant_eval_loaded_model/business_film_people.txt
+
+unsup_specialcases_distant_eval:
+	rm -rf ../working/unsup_specialcases_distant_eval
+	mkdir -p ../working/unsup_specialcases_distant_eval
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-ccgIndexedMapping data/distant_eval/unsupervised_syntax/ybisk-mapping.txt \
+	-ccgLexicon lib_data/ybisk-specialcases.txt \
+	-ccgLexiconQuestions lib_data/dummy.txt \
+	-lexicon data/distant_eval/grounded_lexicon/unsup_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-binaryRules lib_data/dummy.txt \
+	-unaryRules lib_data/dummy.txt \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 100 \
+	-nBestTrainSyntacticParses 5 \
+	-nBestTestSyntacticParses 5 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-ngramGrelPartFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -1.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.00 \
+	-endpoint localhost \
+	-trainingCorpora data/distant_eval/unsupervised_syntax/train.json.blank.gz \
+	-devFile data/distant_eval/unsupervised_syntax/dev.json.1000.blank.gz \
+	-logFile ../working/unsup_specialcases_distant_eval/business_film_people.log.txt \
+	> ../working/unsup_specialcases_distant_eval/business_film_people.txt
+
+unsup_specialcases_distant_eval_loaded_model:
+	rm -rf ../working/unsup_specialcases_distant_eval_loaded_model
+	mkdir -p ../working/unsup_specialcases_distant_eval_loaded_model
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-ccgIndexedMapping data/distant_eval/unsupervised_syntax/ybisk-mapping.txt \
+	-ccgLexicon lib_data/ybisk-specialcases.txt \
+	-ccgLexiconQuestions lib_data/dummy.txt \
+	-lexicon data/distant_eval/grounded_lexicon/unsup_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-binaryRules lib_data/dummy.txt \
+	-unaryRules lib_data/dummy.txt \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 0 \
+	-nBestTrainSyntacticParses 5 \
+	-nBestTestSyntacticParses 5 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-ngramGrelPartFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -1.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.00 \
+	-endpoint localhost \
+	-loadModelFromFile ../working/unsup_specialcases_distant_eval/business_film_people.log.txt.model.beforeTraining \
+	-devFile data/distant_eval/unsupervised_syntax/dev.json.blank.gz \
+	-testFile data/distant_eval/unsupervised_syntax/test.json.blank.gz \
+	-logFile ../working/unsup_specialcases_distant_eval_loaded_model/business_film_people.log.txt \
+	> ../working/unsup_specialcases_distant_eval_loaded_model/business_film_people.txt
+

@@ -50,6 +50,7 @@ public class GroundTestSentences {
     boolean utypeGtypeFlag = true;
     boolean gtypeGrelFlag = true;
     boolean grelGrelFlag = false;
+    boolean ngramGrelPartFlag = true;
     boolean wordGrelPartFlag = true;
     boolean wordGrelFlag = true;
     boolean argGrelPartFlag = true;
@@ -70,6 +71,7 @@ public class GroundTestSentences {
     boolean useLexiconWeightsType = false;
 
     boolean ignorePronouns = true;
+    boolean handleNumbers = false;
 
     double initialEdgeWeight = -1.0;
     double initialTypeWeight = -1.0;
@@ -84,14 +86,14 @@ public class GroundTestSentences {
             questionCcgAutoLexicon, relationLexicalIdentifiers,
             relationTypingIdentifiers, learningModel, urelGrelFlag,
             urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
-            wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
-            wordBigramGrelPartFlag, stemMatchingFlag,
+            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
+            argGrelFlag, wordBigramGrelPartFlag, stemMatchingFlag,
             mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            ignorePronouns, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            ignorePronouns, handleNumbers, initialEdgeWeight,
+            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));

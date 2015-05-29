@@ -4,16 +4,23 @@
 
 # copula
 be	*	(S[dcl]\NP)/NP	((S[dcl]{Y}\NP{X}){Y}/NP{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+be	*	(S[dcl]\NP)/NP	((S[dcl]{Y}\NP{X}){Y}/NP{Y}){_};_ 1 X	(lambda $f1 $f2 $Y (exists $X $Y (and (COPULA $X $Y) ($f1 $Y) ($f2 $X))))
 # have	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X	(lambda $f1 $f2 $_ (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
 
 # non-copula
-# be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X,_ 2 Y	EVENT
+be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X,_ 2 Y	EVENT
 # have	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X,_ 2 Y	EVENT
+
+# Hilton hotel -> Hilton 's hotel
+*	NNP	N/N	(N{X}/N{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X 's.1 $X ENTITY) (EVENT $X $X 's.2 $_ ENTITY))))
+
+# Hilton hotel -> hotel Hilton
+*	NNP	N/N	(N{_}/N{Y}){_}	(lambda $f1 $_ (exists $Y (and ($f1 $Y) (COPULA $Y $_) (TYPE $_ $_))))
 
 # quantifiers
 no	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
 not	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
-the	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	UNIQUE
+#the	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	UNIQUE
 
 *	IN	N	N{X}	TYPE
 
@@ -37,6 +44,7 @@ that	*	S[em]/S[dcl]	(S[em]{Y}/S[dcl]{Y}){_};_ 1 Y	CLOSED
 
 # Natural possessive
 's	POS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+'s	POS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))
 
 # Artificial possessive - Over generation of ungrounded graphs - Comment it for public usage
 's	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))

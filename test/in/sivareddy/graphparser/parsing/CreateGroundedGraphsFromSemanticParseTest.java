@@ -61,8 +61,8 @@ public class CreateGroundedGraphsFromSemanticParseTest {
             questionCcgAutoLexicon, relationLexicalIdentifiers,
             relationTypingIdentifiers, null, false, false, false, false, false,
             false, false, false, false, true, false, false, false, false,
-            false, false, false, false, false, false, false, false, 10.0, 1.0,
-            0.0, 0.0);
+            false, false, false, false, false, false, false, false, false,
+            false, 10.0, 1.0, 0.0, 0.0);
 
     JsonParser parser = new JsonParser();
 
@@ -98,7 +98,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
           if (groundedGraph.isConnected()) {
             connectedGraphCount += 1;
           }
-          
+
           System.out.println("# Grounded graph: " + connectedGraphCount);
           System.out.println(groundedGraph);
           System.out.println("Graph Query: "

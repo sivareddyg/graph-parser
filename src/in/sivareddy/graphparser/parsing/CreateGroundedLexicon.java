@@ -56,9 +56,10 @@ public class CreateGroundedLexicon {
   private KnowledgeBaseCached kb;
   private CcgParser ccgParser;
 
-  public CreateGroundedLexicon(KnowledgeBaseCached kb, CcgAutoLexicon ccgAutoLexicon,
-      String[] lexicalFields, String[] argIdentifierFields,
-      String[] relationTypingFeilds, boolean ignorePronouns) {
+  public CreateGroundedLexicon(KnowledgeBaseCached kb,
+      CcgAutoLexicon ccgAutoLexicon, String[] lexicalFields,
+      String[] argIdentifierFields, String[] relationTypingFeilds,
+      boolean ignorePronouns) {
     ccgParser =
         new CcgParser(ccgAutoLexicon, lexicalFields, argIdentifierFields,
             relationTypingFeilds, ignorePronouns);
@@ -169,6 +170,8 @@ public class CreateGroundedLexicon {
     JsonArray entities = jsonSentence.getAsJsonArray("entities");
 
     JsonArray words = jsonSentence.getAsJsonArray("words");
+    if (!jsonSentence.has("synPars"))
+      return allParses;
     JsonArray syntacticParses = jsonSentence.getAsJsonArray("synPars");
     List<String> wordStrings = Lists.newArrayList();
     List<JsonObject> wordObjects = Lists.newArrayList();

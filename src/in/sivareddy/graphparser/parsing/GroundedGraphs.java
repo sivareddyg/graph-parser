@@ -21,6 +21,7 @@ import in.sivareddy.graphparser.parsing.LexicalGraph.GraphNodeCountFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.GrelGrelFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.GtypeGrelPartFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.MediatorStemGrelPartMatchingFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.NgramGrelFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.StemMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelGrelFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelPartGrelPartFeature;
@@ -84,6 +85,7 @@ public class GroundedGraphs {
   private boolean gtypeGrelPartFlag = true;
   private boolean grelGrelFlag = true;
   private boolean wordGrelPartFlag = true;
+  private boolean ngramGrelPartFlag = true;
   private boolean wordGrelFlag = true;
   private boolean argGrelPartFlag = true;
   private boolean argGrelFlag = true;
@@ -99,6 +101,7 @@ public class GroundedGraphs {
   private boolean useLexiconWeightsRel = false;
   private boolean useLexiconWeightsType = false;
   private boolean duplicateEdgesFlag = true;
+  private boolean handleNumbers = false;
 
   private StructuredPercepton learningModel;
   public double initialEdgeWeight;
@@ -115,7 +118,7 @@ public class GroundedGraphs {
       String[] relationLexicalIdentifiers, String[] relationTypingIdentifiers,
       StructuredPercepton learningModel, boolean urelGrelFlag,
       boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
-      boolean gtypeGrelPartFlag, boolean grelGrelFlag,
+      boolean gtypeGrelPartFlag, boolean grelGrelFlag, boolean ngramGrelFlag,
       boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
       boolean argGrelFlag, boolean eventTypeGrelPartFlag,
       boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
@@ -124,7 +127,7 @@ public class GroundedGraphs {
       boolean graphHasEdgeFlag, boolean countNodesFlag,
       boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
-      boolean ignorePronouns, double initialEdgeWeight,
+      boolean ignorePronouns, boolean handleNumbers, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
       double stemFeaturesWeight) throws IOException {
 
@@ -137,6 +140,7 @@ public class GroundedGraphs {
         new CcgParser(questionCcgAutoLexicon, relationLexicalIdentifiers,
             argumentLexicalIdenfiers, relationTypingIdentifiers, ignorePronouns);
 
+    this.handleNumbers = handleNumbers;
     this.groundedLexicon = groundedLexicon;
     this.kb = kb;
     this.schema = schema;
@@ -149,6 +153,7 @@ public class GroundedGraphs {
     this.gtypeGrelPartFlag = gtypeGrelPartFlag;
     this.grelGrelFlag = grelGrelFlag;
     this.wordGrelPartFlag = wordGrelPartFlag;
+    this.ngramGrelPartFlag = ngramGrelFlag;
     this.wordGrelFlag = wordGrelFlag;
     this.argGrelPartFlag = argGrelPartFlag;
     this.argGrelFlag = argGrelFlag;
@@ -226,6 +231,7 @@ public class GroundedGraphs {
     }
     logger.debug("Tokenized Sentence: " + Joiner.on(" ").join(words));
 
+    List<String> contentWords = getContentWords(jsonSentence);
     if (key.equals("synPars")) {
       Set<Set<String>> allSemanticParses = new HashSet<>();
 
@@ -263,7 +269,7 @@ public class GroundedGraphs {
         for (CcgParseTree ccgParse : ccgParses) {
           lexicaliseArgumentsToDomainEntities(ccgParse, jsonSentence);
           Set<Set<String>> semanticParses =
-              ccgParse.getLexicalisedSemanticPredicates();
+              ccgParse.getLexicalisedSemanticPredicates(handleNumbers);
           List<LexicalItem> leaves = ccgParse.getLeafNodes();
           for (Set<String> semanticParse : semanticParses) {
             // Check if the semantic parse is already present. Sometimes
@@ -275,8 +281,8 @@ public class GroundedGraphs {
             allSemanticParses.add(semanticParse);
 
             int prev_size = graphs.size();
-            buildUngroundeGraphFromSemanticParse(semanticParse, leaves, score,
-                graphs);
+            buildUngroundeGraphFromSemanticParse(semanticParse, leaves,
+                contentWords, score, graphs);
 
             // Traceback each graph to its original syntactic parse.
             for (int ithGraph = prev_size; ithGraph < graphs.size(); ithGraph++) {
@@ -296,7 +302,8 @@ public class GroundedGraphs {
         for (JsonElement predicate : predicates) {
           semanticParse.add(predicate.getAsString());
         }
-        buildUngroundeGraphFromSemanticParse(semanticParse, leaves, 0.0, graphs);
+        buildUngroundeGraphFromSemanticParse(semanticParse, leaves,
+            contentWords, 0.0, graphs);
       }
     }
     return graphs;
@@ -314,7 +321,9 @@ public class GroundedGraphs {
     List<LexicalItem> leaves = buildLexicalItemsFromWords(jsonSentence);
     Set<String> parse =
         getBagOfWordsUngroundedSemanticParse(jsonSentence, leaves);
-    buildUngroundeGraphFromSemanticParse(parse, leaves, 0.0, graphs);
+    List<String> contentWords = getContentWords(jsonSentence);
+    buildUngroundeGraphFromSemanticParse(parse, leaves, contentWords, 0.0,
+        graphs);
     return graphs;
   }
 
@@ -327,7 +336,7 @@ public class GroundedGraphs {
   public static Set<String> getBagOfWordsUngroundedSemanticParse(
       JsonObject jsonSentence, List<LexicalItem> leaves) {
     LexicalItem dummyNode =
-        new LexicalItem("", "_dummy_", "_dummy_", "WDT", "", null);
+        new LexicalItem("", BLANK_WORD, BLANK_WORD, "NNP", "", null);
     leaves.add(dummyNode);
     int questionWordIndex = leaves.size() - 1;
     dummyNode.setWordPosition(questionWordIndex);
@@ -342,11 +351,10 @@ public class GroundedGraphs {
 
 
     // Create all the edges.
-    Set<Integer> entityIndices = new HashSet<>();
     for (JsonElement entity : entities) {
       JsonObject entityObj = entity.getAsJsonObject();
       int index = entityObj.get(SentenceKeys.INDEX_KEY).getAsInt();
-      entityIndices.add(index);
+      
       String fbEntity = entityObj.get(SentenceKeys.ENTITY).getAsString();
       String edge =
           String.format("dummy.edge.entity(%d:e , %d:%s)", questionWordIndex,
@@ -356,8 +364,22 @@ public class GroundedGraphs {
     parse.add(String.format("dummy.edge.question(%d:e , %d:x)",
         questionWordIndex, questionWordIndex));
     parse.add(String.format("QUESTION(%d:x)", questionWordIndex));
+    return parse;
+  }
 
-    // Create context.
+  public static List<String> getContentWords(JsonObject jsonSentence) {
+    Set<Integer> entityIndices = new HashSet<>();
+    if (jsonSentence.has(SentenceKeys.ENTITIES)) {
+      JsonArray entities =
+          jsonSentence.get(SentenceKeys.ENTITIES).getAsJsonArray();
+      for (JsonElement entity : entities) {
+        JsonObject entityObj = entity.getAsJsonObject();
+        int index = entityObj.get(SentenceKeys.INDEX_KEY).getAsInt();
+        entityIndices.add(index);
+      }
+    }
+
+    List<String> wordStrings = new ArrayList<>();
     JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
     int index = -1;
     for (JsonElement word : words) {
@@ -374,10 +396,9 @@ public class GroundedGraphs {
       if (!posTag.matches("[NJVR].*") || wordString.equals(BLANK_WORD)) {
         continue;
       }
-      parse.add(String.format("%s(%d:s , %d:e)", wordString, index,
-          questionWordIndex));
+      wordStrings.add(wordString);
     }
-    return parse;
+    return wordStrings;
   }
 
   /**
@@ -423,7 +444,8 @@ public class GroundedGraphs {
   }
 
   private void buildUngroundeGraphFromSemanticParse(Set<String> semanticParse,
-      List<LexicalItem> leaves, double parseScore, List<LexicalGraph> graphs) {
+      List<LexicalItem> leaves, List<String> contentWords, double parseScore,
+      List<LexicalGraph> graphs) {
     Pattern relationPattern =
         Pattern.compile("(.*)\\(([0-9]+)\\:e , ([0-9]+\\:.*)\\)");
     Pattern typePattern =
@@ -535,6 +557,9 @@ public class GroundedGraphs {
     graph.setActualNodes(leaves);
     graph.setScore(parseScore);
 
+    // Add all content words to the graph.
+    graph.getWords().addAll(contentWords);
+
     // Traceback the semantic parse from which the graph is created.
     graph.setSemanticParse(semanticParse);
     graphs.add(graph);
@@ -557,8 +582,8 @@ public class GroundedGraphs {
           String leftEdge = subEdges.get(i).getLeft();
           String rightEdge = subEdges.get(j).getLeft();
 
-          if (leftEdge.equals(rightEdge))
-            continue;
+          // if (leftEdge.equals(rightEdge))
+          //   continue;
 
           int node1Index = subEdges.get(i).getRight();
           int node2Index = subEdges.get(j).getRight();
@@ -770,12 +795,12 @@ public class GroundedGraphs {
 
       // useless edge since the edge contains out of domain entity
       if ((useKB || useEntityTypes) && lexicalPosTags.contains(node1.getPos())
-          && !kb.hasEntity(entity1)) {
+          && !kb.hasEntity(entity1) && !entity1.equals("x")) {
         continue;
       }
 
       if ((useKB || useEntityTypes) && lexicalPosTags.contains(node2.getPos())
-          && !kb.hasEntity(entity2)) {
+          && !kb.hasEntity(entity2) && !entity2.equals("x")) {
         continue;
       }
 
@@ -1792,6 +1817,18 @@ public class GroundedGraphs {
                 newGraph.argumentStemGrelPartMatchedNodes.add(modifierNode);
               }
             }
+          }
+        }
+
+        if (ngramGrelPartFlag) {
+          for (String word : ungroundedGraph.getWords()) {
+            key = Lists.newArrayList(word, grelLeft);
+            NgramGrelFeature ngramGrelFeature = new NgramGrelFeature(key, 1.0);
+            newGraph.addFeature(ngramGrelFeature);
+
+            key = Lists.newArrayList(word, grelRight);
+            ngramGrelFeature = new NgramGrelFeature(key, 1.0);
+            newGraph.addFeature(ngramGrelFeature);
           }
         }
 

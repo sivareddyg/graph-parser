@@ -136,7 +136,7 @@ public class RdfGraphTools {
       builder.addParameter("format", "application/sparql-results+json");
 
       // Remove this in case if lot of queries die.
-      builder.addParameter("timeout", "0");
+      builder.addParameter("timeout", timeOut.toString());
 
       URL url = builder.build().toURL();
       try {

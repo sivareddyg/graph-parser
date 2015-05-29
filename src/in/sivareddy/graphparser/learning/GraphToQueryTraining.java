@@ -97,10 +97,10 @@ public class GraphToQueryTraining {
       boolean groundFreeVariables, boolean useEmtpyTypes, boolean ignoreTypes,
       StructuredPercepton learningModel, boolean urelGrelFlag,
       boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
-      boolean gtypeGrelFlag, boolean grelGrelFlag, boolean wordGrelPartFlag,
-      boolean wordGrelFlag, boolean argGrelPartFlag, boolean argGrelFlag,
-      boolean eventTypeGrelPartFlag, boolean stemMatchingFlag,
-      boolean mediatorStemGrelPartMatchingFlag,
+      boolean gtypeGrelFlag, boolean grelGrelFlag, boolean ngramGrelPartFlag,
+      boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
+      boolean argGrelFlag, boolean eventTypeGrelPartFlag,
+      boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean graphIsConnectedFlag,
       boolean graphHasEdgeFlag, boolean countNodesFlag,
@@ -108,9 +108,10 @@ public class GraphToQueryTraining {
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
       boolean validQueryFlag, boolean useNbestGraphs,
       boolean addBagOfWordsGraph, boolean addOnlyBagOfWordsGraph,
-      double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double stemFeaturesWeight,
-      RdfGraphTools rdfGraphTools, List<String> kbGraphUri) throws IOException {
+      boolean handleNumbers, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double stemFeaturesWeight, RdfGraphTools rdfGraphTools,
+      List<String> kbGraphUri) throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
 
@@ -146,13 +147,14 @@ public class GraphToQueryTraining {
             normalCcgAutoLexicon, questionCcgAutoLexicon,
             relationLexicalIdentifiers, relationTypingIdentifiers,
             this.learningModel, urelGrelFlag, urelPartGrelPartFlag,
-            utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, wordGrelPartFlag,
-            wordGrelFlag, argGrelPartFlag, argGrelFlag, eventTypeGrelPartFlag,
-            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
-            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
-            graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
-            edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
-            duplicateEdgesFlag, ignorePronouns, initialEdgeWeight,
+            utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag,
+            wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
+            eventTypeGrelPartFlag, stemMatchingFlag,
+            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
+            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
+            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
+            useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
+            ignorePronouns, handleNumbers, initialEdgeWeight,
             initialTypeWeight, initialWordWeight, stemFeaturesWeight);
 
   }
@@ -1091,8 +1093,8 @@ public class GraphToQueryTraining {
       goldAnswersArray.forEach(answer -> goldAnswers.add(answer.getAsString()));
       goldResults = new HashMap<>();
       goldResults.put("answerSubset", goldAnswers);
-    } 
-    
+    }
+
     logger.info("Gold Results : " + goldResults);
 
     // Get ungrounded graphs

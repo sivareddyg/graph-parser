@@ -70,7 +70,8 @@ public class GraphToQueryTrainingMain {
       boolean useSchema, boolean useKB, boolean groundFreeVariables,
       boolean useEmtpyTypes, boolean ignoreTypes, boolean urelGrelFlag,
       boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
-      boolean gtypeGrelFlag, boolean wordGrelPartFlag, boolean wordGrelFlag,
+      boolean gtypeGrelFlag, boolean ngramGrelPartFlag,
+      boolean wordGrelPartFlag, boolean wordGrelFlag,
       boolean eventTypeGrelPartFlag, boolean argGrelPartFlag,
       boolean argGrelFlag, boolean stemMatchingFlag,
       boolean mediatorStemGrelPartMatchingFlag,
@@ -81,9 +82,9 @@ public class GraphToQueryTrainingMain {
       boolean grelGrelFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean validQueryFlag,
       boolean useNbestGraphs, boolean addBagOfWordsGraph,
-      boolean addOnlyBagOfWordsGraph, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight) throws IOException {
+      boolean addOnlyBagOfWordsGraph, boolean handleNumbers,
+      double initialEdgeWeight, double initialTypeWeight,
+      double initialWordWeight, double stemFeaturesWeight) throws IOException {
 
     this.semanticParseKey = sematicParseKey;
     this.nBestTestSyntacticParses = nBestTestSyntacticParses;
@@ -126,15 +127,16 @@ public class GraphToQueryTrainingMain {
             nbestBestEdges, nbestGraphs, useSchema, useKB, groundFreeVariables,
             useEmtpyTypes, ignoreTypes, currentIterationModel, urelGrelFlag,
             urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
-            wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
-            eventTypeGrelPartFlag, stemMatchingFlag,
+            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
+            argGrelFlag, eventTypeGrelPartFlag, stemMatchingFlag,
             mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
             validQueryFlag, useNbestGraphs, addBagOfWordsGraph,
-            addOnlyBagOfWordsGraph, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight, rdfGraphTools, kbGraphUri);
+            addOnlyBagOfWordsGraph, handleNumbers, initialEdgeWeight,
+            initialTypeWeight, initialWordWeight, stemFeaturesWeight,
+            rdfGraphTools, kbGraphUri);
 
     supervisedTrainingExamples = new ArrayList<>();
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
@@ -451,6 +453,7 @@ public class GraphToQueryTrainingMain {
     boolean gtypeGrelFlag = true;
 
     // Contextual Features
+    boolean ngramGrelPartFlag = true;
     boolean wordGrelPartFlag = true;
     boolean wordGrelFlag = true;
     boolean eventTypeGrelPartFlag = true;
@@ -491,6 +494,7 @@ public class GraphToQueryTrainingMain {
     boolean useNbestGraphs = false;
     boolean addBagOfWordsGraph = false;
     boolean addOnlyBagOfWordsGraph = false;
+    boolean handleNumbers = true;
 
     GraphToQueryTrainingMain graphToQueryModel =
         new GraphToQueryTrainingMain(schema, kb, groundedLexicon,
@@ -502,15 +506,16 @@ public class GraphToQueryTrainingMain {
             nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, useSchema,
             useKB, groundFreeVariables, useEmtpyTypes, ignoreTypes,
             urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
-            wordGrelPartFlag, wordGrelFlag, eventTypeGrelPartFlag,
-            argGrelPartFlag, argGrelFlag, stemMatchingFlag,
-            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
-            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
-            duplicateEdgesFlag, grelGrelFlag, useLexiconWeightsRel,
-            useLexiconWeightsType, validQueryFlag, useNbestGraphs,
-            addBagOfWordsGraph, addOnlyBagOfWordsGraph, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
+            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag,
+            eventTypeGrelPartFlag, argGrelPartFlag, argGrelFlag,
+            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
+            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
+            graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
+            edgeNodeCountFlag, duplicateEdgesFlag, grelGrelFlag,
+            useLexiconWeightsRel, useLexiconWeightsType, validQueryFlag,
+            useNbestGraphs, addBagOfWordsGraph, addOnlyBagOfWordsGraph,
+            handleNumbers, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;
