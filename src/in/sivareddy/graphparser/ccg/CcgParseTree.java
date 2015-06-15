@@ -249,14 +249,15 @@ public class CcgParseTree {
     Category cat2;
 
     switch (combinator) {
-      case fa:
+      case fa: {
         Preconditions.checkArgument(children.size() == 2,
             "Cannot apply forward application");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.forwardApplication(cat1, cat2);
         break;
-      case ba:
+      }
+      case ba: {
         Preconditions.checkArgument(children.size() == 2,
             "Cannot apply backward application");
         cat1 = children.get(0).currentCategory;
@@ -337,37 +338,42 @@ public class CcgParseTree {
 
         result = Category.backwardApplication(cat1, cat2);
         break;
-      case fc:
+      }
+      case fc: {
         Preconditions.checkArgument(children.size() == 2,
             "Cannot apply composition");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.forwardComposition(cat1, cat2);
         break;
+      }
       case bc:
-      case bx:
+      case bx: {
         Preconditions.checkArgument(children.size() == 2,
             "Cannot apply composition");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.backwardComposition(cat1, cat2);
         break;
-      case gfc:
+      }
+      case gfc: {
         Preconditions.checkArgument(children.size() == 2,
             "Cannot apply generalised composition");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.generalisedForwardComposition(cat1, cat2);
         break;
+      }
       case gbc:
-      case gbx:
+      case gbx: {
         Preconditions.checkArgument(children.size() == 2,
             "Cannot apply generalised composition");
         cat1 = children.get(0).currentCategory;
         cat2 = children.get(1).currentCategory;
         result = Category.generalisedBackwardComposition(cat1, cat2);
         break;
-      case tr:
+      }
+      case tr: {
         Preconditions.checkArgument(children.size() == 1,
             "Cannot apply typeraising");
         cat1 = children.get(0).currentCategory;
@@ -377,6 +383,7 @@ public class CcgParseTree {
             SyntacticCategory.fromString(resultantSynCatString);
         resultSyncat.unify(resultSynCatActual);
         break;
+      }
       case conj:
         Preconditions.checkArgument(children.size() == 2,
             "Cannot apply conjunction");
@@ -391,10 +398,9 @@ public class CcgParseTree {
         		&& !cat2.getSyntacticCategory().isBasic())*/
         if (comb2 == CcgCombinator.conj) {
           result = cat2;
-        }
-
-        else
+        } else {
           result = Category.coordinationApplication(cat2);
+        }
         break;
       case lp:
         Preconditions.checkArgument(children.size() == 2,
@@ -746,6 +752,7 @@ public class CcgParseTree {
 
               if (!CcgAutoLexicon.complementLemmas.contains(childNode.word)
                   && !CcgAutoLexicon.typePosTags.contains(childNode.pos)
+                  && !CcgAutoLexicon.typeModPosTags.contains(childNode.pos)
                   && !(CcgAutoLexicon.eventPosTags.contains(childNode.pos) && !headNode
                       .equals(childNode))
                   && !CcgAutoLexicon.questionPosTags.contains(childNode.pos)) {

@@ -49,15 +49,6 @@ public class CcgParseTreeTest {
     sent = "The soldier is not afraid to die .";
     ccgParseTrees =
         ccgParser
-            .parseFromString("(<T S[dcl] rp 0 2> (<T S[dcl] ba 1 2> (<T NP ba 0 2> (<T NP lex 0 1> (<L N _blank_ _blank_ NNP O I-NP N>)) (<T NP[conj] conj 0 2> (<L conj and and CC O I-NP conj>) (<T NP lex 0 1> (<L N Barbara_Eden Barbara_Eden NNP I-LOC I-NP N>)))) (<T S[dcl]\\NP ba 0 2> (<L S[dcl]\\NP divorced divorce VBD O I-VP S[dcl]\\NP>) (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/NP in in IN O I-PP ((S[X]\\NP)\\(S[X]\\NP))/NP>) (<T NP lex 0 1> (<L N 1974 1974 CD I-DAT I-NP N>))))) (<L . . . . O O .>))");
-    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates(false);
-    System.out.println(sent);
-    System.out.println(relations);
-    System.out.println();
-    
-    sent = "The soldier is not afraid to die .";
-    ccgParseTrees =
-        ccgParser
             .parseFromString("(<T S[dcl] ba 1 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N The The DT O O NP[nb]/N>) (<L N soldier soldier NN O O N>) ) (<T S[dcl]\\NP fa 0 2> (<T (S[dcl]\\NP)/(S[adj]\\NP) bx 0 2> (<L (S[dcl]\\NP)/(S[adj]\\NP) is be VBZ O O (S[dcl]\\NP)/(S[adj]\\NP)>) (<L (S\\NP)\\(S\\NP) not not RB O O (S\\NP)\\(S\\NP)>) ) (<T S[adj]\\NP fa 0 2> (<L (S[adj]\\NP)/(S[to]\\NP) afraid afraid JJ O O (S[adj]\\NP)/(S[to]\\NP)>) (<T S[to]\\NP fa 0 2> (<L (S[to]\\NP)/(S[b]\\NP) to to TO O O (S[to]\\NP)/(S[b]\\NP)>) (<T S[b]\\NP rp 0 2> (<L S[b]\\NP die die VB O O S[b]\\NP>) (<L . . . . O O .>) ) ) ) ) ) ");
     relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
     System.out.println(sent);

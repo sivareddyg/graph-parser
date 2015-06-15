@@ -1929,7 +1929,7 @@ candc_distant_eval_loaded_model:
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.0 \
 	-endpoint localhost \
-	-loadModelFromFile ../working/candc_distant_eval.8/business_film_people.log.txt.model.iteration2 \
+	-loadModelFromFile ../working/candc_distant_eval.9/business_film_people.log.txt.model.iteration45 \
 	-devFile data/distant_eval/dev.json.blank.gz \
 	-testFile data/distant_eval/test.json.blank.gz \
 	-logFile ../working/candc_distant_eval_loaded_model/business_film_people.log.txt \
@@ -2040,7 +2040,7 @@ bow_distant_eval_loaded_model:
 	-initialWordWeight -1.0 \
 	-stemFeaturesWeight 0.00 \
 	-endpoint localhost \
-	-loadModelFromFile ../working/bow_distant_eval/business_film_people.log.txt.eval.iteration6 \
+	-loadModelFromFile ../working/bow_distant_eval.4/business_film_people.log.txt.model.iteration6 \
 	-devFile data/distant_eval/dev.json.blank.gz \
 	-testFile data/distant_eval/test.json.blank.gz \
 	-logFile ../working/bow_distant_eval_loaded_model/business_film_people.log.txt \
@@ -2159,7 +2159,7 @@ semisup_specialcases_distant_eval_loaded_model:
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.00 \
 	-endpoint localhost \
-	-loadModelFromFile ../working/semisup_specialcases_distant_eval/business_film_people.log.txt.model.iteration38 \
+	-loadModelFromFile ../working/semisup_specialcases_distant_eval/business_film_people.log.txt.model.iteration82 \
 	-devFile data/distant_eval/semi_supervised_syntax/dev.json.blank.gz \
 	-testFile data/distant_eval/semi_supervised_syntax/test.json.blank.gz \
 	-logFile ../working/semisup_specialcases_distant_eval_loaded_model/business_film_people.log.txt \
@@ -2278,7 +2278,7 @@ unsup_specialcases_distant_eval_loaded_model:
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.00 \
 	-endpoint localhost \
-	-loadModelFromFile ../working/unsup_specialcases_distant_eval/business_film_people.log.txt.model.beforeTraining \
+	-loadModelFromFile ../working/unsup_specialcases_distant_eval/business_film_people.log.txt.model.iteration74 \
 	-devFile data/distant_eval/unsupervised_syntax/dev.json.blank.gz \
 	-testFile data/distant_eval/unsupervised_syntax/test.json.blank.gz \
 	-logFile ../working/unsup_specialcases_distant_eval_loaded_model/business_film_people.log.txt \
