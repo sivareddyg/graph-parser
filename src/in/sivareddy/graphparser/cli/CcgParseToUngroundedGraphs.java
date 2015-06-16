@@ -5,7 +5,7 @@ import in.sivareddy.graphparser.parsing.GroundedGraphs;
 import in.sivareddy.graphparser.parsing.LexicalGraph;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.Schema;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,8 +47,7 @@ public class CcgParseToUngroundedGraphs {
     jsonParser = new JsonParser();
     gson = new Gson();
     logger = Logger.getLogger(CcgParseToUngroundedGraphs.class);
-
-    nbestParses = 1;
+    nbestParses = 10;
 
     String ccgModelDir = Paths.get(dataFolder, "easyccg_model").toString();
 
@@ -70,7 +69,8 @@ public class CcgParseToUngroundedGraphs {
     String specialCasesFile =
         Paths.get(dataFolder, "lexicon_specialCases.txt").toString();
     String specialCasesQuestionsFile =
-        Paths.get(dataFolder, "lexicon_specialCases_questions.txt").toString();
+        Paths.get(dataFolder, "lexicon_specialCases_questions_vanilla.txt")
+            .toString();
 
     CcgAutoLexicon normalCcgAutoLexicon =
         new CcgAutoLexicon(markupFile, unaryRulesFile, binaryRulesFile,
@@ -84,15 +84,15 @@ public class CcgParseToUngroundedGraphs {
     String[] relationTypingIdentifiers = {};
 
     Schema schema = null;
-    KnowledgeBase kb = new KnowledgeBase(null, null);
+    KnowledgeBaseCached kb = new KnowledgeBaseCached(null, null);
     GroundedLexicon groundedLexicon = new GroundedLexicon(null);
     graphCreator =
         new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
             questionCcgAutoLexicon, relationLexicalIdentifiers,
             relationTypingIdentifiers, null, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false, 10.0, 1.0,
-            0.0, 0.0);
+            false, false, false, false, false, false, false, false, false,
+            false, 10.0, 1.0, 0.0, 0.0);
   }
 
   public List<List<LexicalGraph>> processText(String line)

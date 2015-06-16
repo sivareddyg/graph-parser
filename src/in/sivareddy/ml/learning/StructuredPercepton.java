@@ -33,6 +33,7 @@ public class StructuredPercepton implements Serializable {
   private Map<Feature, Double> weightVector;
   private Map<Feature, Double> cumulativeWeightVector;
   private Map<Feature, Integer> updateFrequency;
+  public static int drag = 3;
 
   public StructuredPercepton() {
     weightVector = Maps.newHashMap();
@@ -43,8 +44,8 @@ public class StructuredPercepton implements Serializable {
   public synchronized void setWeightIfAbsent(Feature feature, Double weight) {
     if (!weightVector.containsKey(feature)) {
       weightVector.put(feature, weight);
-      cumulativeWeightVector.put(feature, weight);
-      updateFrequency.put(feature, 1);
+      cumulativeWeightVector.put(feature, drag * weight);
+      updateFrequency.put(feature, drag * 1);
     }
   }
 

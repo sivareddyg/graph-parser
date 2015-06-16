@@ -166,6 +166,17 @@ public class Schema {
     return mainTypes;
   }
 
+
+  /**
+   * Returns true if the given type belongs to the domain.
+   * 
+   * @param type
+   * @return
+   */
+  public boolean isMainType(String type) {
+    return mainTypes.contains(type);
+  }
+
   /**
    * Get all the relations in the current schema
    *
@@ -252,6 +263,18 @@ public class Schema {
   }
 
   /**
+   * Checks if the relation belongs to the domain, and is a master relation.
+   * Similar to {@code #getRelationIsMaster(String)} but returns false instead
+   * of null.
+   * 
+   * @param key
+   * @return
+   */
+  public Boolean isDomainRelationAndMaster(String key) {
+    return relationIsMaster.containsKey(key);
+  }
+
+  /**
    *
    * Returns the parent, child entity types of the relation
    *
@@ -323,5 +346,11 @@ public class Schema {
       }
     }
     return false;
+  }
+
+  public boolean firstArgIsMediator(String relation) {
+    List<String> args = getRelationArguments(relation);
+    Boolean type = typeIsMediator(args.get(0));
+    return (type != null && type);
   }
 }

@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.parsing.CreateGroundedLexicon.CreateGroundedLexiconRunnable;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 
 import org.junit.Test;
 
@@ -23,10 +23,10 @@ public class CreateGroundedLexiconTest {
     // String[] relationTypingFeilds = { "neType" };
     String[] relationTypingFeilds = {};
 
-    KnowledgeBase kb =
-        new KnowledgeBase("data/freebase/domain_facts/business_facts.txt.gz",
+    KnowledgeBaseCached kb =
+        new KnowledgeBaseCached("data/freebase/domain_facts/business_facts.txt.gz",
             "data/freebase/stats/business_relation_types.txt");
-    // KnowledgeBase kb = null;
+    // KnowledgeBaseCached kb = null;
     CcgAutoLexicon ccgAutoLexicon =
         new CcgAutoLexicon("./lib_data/candc_markedup.modified",
             "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",

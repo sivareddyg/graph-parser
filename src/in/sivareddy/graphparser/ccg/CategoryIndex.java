@@ -2,6 +2,8 @@ package in.sivareddy.graphparser.ccg;
 
 import in.sivareddy.util.IntegerObject;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -126,7 +128,24 @@ public class CategoryIndex {
   }
 
   public Set<CategoryIndex> getCCvars() {
-    return coordinatedVars;
+    return getCCvars(new HashSet<>());
+  }
+
+  public Set<CategoryIndex> getCCvars(Set<CategoryIndex> visitedVars) {
+    Set<CategoryIndex> ccVars = new HashSet<>();
+    for (CategoryIndex var : coordinatedVars) {
+      // Make sure there are no cyclic dependencies between cc variables.
+      if (visitedVars.contains(var))
+        continue;
+      visitedVars.add(var);
+
+      if (var.isCC()) {
+        ccVars.addAll(var.getCCvars());
+      } else {
+        ccVars.add(var);
+      }
+    }
+    return ccVars;
   }
 
   public static CategoryIndex ccCategoryIndex() {

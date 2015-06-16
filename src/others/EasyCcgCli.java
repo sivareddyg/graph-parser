@@ -89,6 +89,7 @@ public class EasyCcgCli {
     List<String> parseStrings = Lists.newArrayList();
     final SuperTaggingResults supertaggingResults = new SuperTaggingResults();
     List<SyntaxTreeNode> parses = parser.parse(supertaggingResults, line);
+    if (parses == null) return parseStrings;
     for (SyntaxTreeNode parse : parses) {
       parseStrings.add(printer.print(parse, -1));
     }

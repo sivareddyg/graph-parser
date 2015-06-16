@@ -8,6 +8,8 @@ import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.ml.basic.AbstractFeature;
 import in.sivareddy.ml.basic.Feature;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,12 +17,14 @@ import java.util.TreeSet;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
  * Created by bisk1 on 1/26/15.
  */
 public class LexicalGraph extends Graph<LexicalItem> {
+  private List<String> words;
   private Set<Feature> features;
   private String syntacticParse;
   private Set<String> semanticParse;
@@ -38,6 +42,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public LexicalGraph() {
     super();
+    words = new ArrayList<>();
     features = Sets.newHashSet();
 
     stemMatchingFeature = new StemMatchingFeature(0.0);
@@ -106,6 +111,14 @@ public class LexicalGraph extends Graph<LexicalItem> {
     }
   }
 
+  public static class NgramGrelFeature extends AbstractFeature {
+    private static final long serialVersionUID = 3250492736860001834L;
+
+    public NgramGrelFeature(List<?> key, Double value) {
+      super(key, value);
+    }
+  }
+
   public static class WordGrelFeature extends AbstractFeature {
     private static final long serialVersionUID = 6481934970173246526L;
 
@@ -131,10 +144,10 @@ public class LexicalGraph extends Graph<LexicalItem> {
     }
   }
 
-  public static class WordBigramGrelPartFeature extends AbstractFeature {
+  public static class EventTypeGrelPartFeature extends AbstractFeature {
     private static final long serialVersionUID = 7844786020868030663L;
 
-    public WordBigramGrelPartFeature(List<?> key, Double value) {
+    public EventTypeGrelPartFeature(List<?> key, Double value) {
       super(key, value);
     }
   }
@@ -261,13 +274,21 @@ public class LexicalGraph extends Graph<LexicalItem> {
       if (features.contains(feature))
         features.remove(feature);
     }
-    features.add(feature);
+    if (features.contains(feature)) {
+      features.remove(feature);
+      feature.setFeatureValue(feature.getFeatureValue() + 1.0);
+      features.add(feature);
+    } else {
+      features.add(feature);
+    }
   }
 
   public LexicalGraph copy() {
     LexicalGraph newGraph = new LexicalGraph();
     copyTo(newGraph);
+    newGraph.words.addAll(words);
     newGraph.features = Sets.newHashSet(features);
+
     newGraph.syntacticParse = syntacticParse;
     newGraph.semanticParse = semanticParse;
 
@@ -318,6 +339,10 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public void setSemanticParse(Set<String> semanticParse) {
     this.semanticParse = semanticParse;
+  }
+
+  public List<String> getWords() {
+    return words;
   }
 
   @Override

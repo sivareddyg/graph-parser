@@ -2,3 +2,43 @@
 {"sentence" : "Who was Titanic directed by?"}
 {"sentence" : "Cameron is the director of the movie which DiCaprio acted in."}
 {"sentence" : "Obama's birthplace is Kenya."}
+{"sentence" : "John and Mary married in 1998."}
+{"sentence" : "BLANK is one of the founders of Microsoft."}
+{"sentence" : "Gates was born in NY, BLANK."}
+{"sentence" : "Gates is the BLANK of Microsoft."}
+{"sentence" : "Miyagi is a pulp culture icon who was brilliantly played by Pat Morita."}
+{"sentence" : "Cameron is the director of the movie which DiCaprio acted in."}
+{"sentence" : "Obama's birthplace is Kenya."}
+{"sentence" : "Obama birthplace is Kenya."}
+{"sentence" : "I went to Hilton hotel."}
+{"sentence" : "The movie is amazing."}
+{"sentence" : "John saw hundred and forty four monkeys."}
+{"sentence" : "I saw a good movie director"}
+{"sentence" : "Three interesting dates are 18 Feb 1997, the 20th of july and 4 days from today."}
+{"sentence" : "Cameron directed 30 movies."}
+{"sentence" : "Cameron, the director of Titanic, won Oscar."}
+{"sentence" : "Obama did not win the election."}
+{"sentence" : "He said Obama is not the president of US."}
+{"sentence" : "James Cameron wanted to direct Titanic."}
+{"sentence" : "James Cameron was asked to produce Titanic."}
+{"sentence" : "James Cameron was asked by Sony Pictures to produce Titanic in 1997."}
+{"sentence" : "Michelle_Obama started with nothing , and is a beautiful mother and distinguished lawyer who went to Harvard_Law_School ."}
+{"sentence" : "Indian_Airlines operates 5 flights a week for Delhi and back ."}
+{"sentence" : "Edinburgh is famous for Arts."}
+{"sentence" : "But mostly he , like many other Republicans , are finally talking like Americans ."}
+{"sentence" : "Jobs himself may be soon stepping down from Apple ."}
+{"sentence" : "Stevie then went on to start Monkeystone_Games with Romero where she was Co-founder and CEO ."}
+{"sentence" : "Karle and his wife continues to work at the Naval Research Laboratory in Washington, DC ."}
+{"sentence" : "West also runs his own record label GOOD_Music ."}
+{"sentence" : "I gave him a pen."}
+{"sentence" : "The contrast of the TV has changed."}
+{"sentence" : "Turn around these two over here."}
+{"sentence" : "change the contrast of the TV"}
+{"sentence" : "Who was Titanic directed by?"}
+{"sentence" : "China pulled out of the program."}
+{"sentence" : "The cat is fat, sleepy and happy but the dog is angry ."}
+{"sentence" : "The man is sad therefore eats chocolate ."}
+{"sentence" : "The man is sad therefore goes home ."}
+{"sentence" : "The man runs slowly because he is unfit"}
+{"sentence" : "The man runs slowly because he ate cheese."}
+{"sentence" : "The cat is thinking of sitting."}

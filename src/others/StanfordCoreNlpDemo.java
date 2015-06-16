@@ -75,9 +75,9 @@ public class StanfordCoreNlpDemo {
             if (!prev_word.equals(""))
               sb.append(String.format("%s|%s|%s ", prev_word, prev_pos,
                   prev_ner));
-            if (prev_pos.startsWith("NNP")
-                && (pos.equals("NN") || pos.equals("NNS")))
-              sb.append("'s|IPOS|O ");
+            // if (prev_pos.startsWith("NNP")
+            //    && (pos.equals("NN") || pos.equals("NNS")))
+            //  sb.append("'s|IPOS|O ");
             prev_word = word;
           }
           prev_ner = ne;

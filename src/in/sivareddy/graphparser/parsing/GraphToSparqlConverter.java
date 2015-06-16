@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class GraphToSparqlConverter {
+  public static String TYPE_KEY = "rdf:type";
 
   public static String convertGroundedGraph(LexicalGraph graph, Schema schema) {
     return convertGroundedGraph(graph, null, schema, null);
@@ -84,7 +85,7 @@ public class GraphToSparqlConverter {
         edges.add(edge);
       } else {
         tripleName =
-            String.format("%s rdf:type fb:%s . ", parentVarName, typeName);
+            String.format("%s %s fb:%s . ", parentVarName, TYPE_KEY, typeName);
         queryTriples.add(tripleName);
       }
     }
