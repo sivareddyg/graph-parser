@@ -140,7 +140,7 @@ public class CategoryIndex {
       visitedVars.add(var);
 
       if (var.isCC()) {
-        ccVars.addAll(var.getCCvars());
+        ccVars.addAll(var.getCCvars(visitedVars));
       } else {
         ccVars.add(var);
       }
