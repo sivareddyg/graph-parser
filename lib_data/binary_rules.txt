@@ -1,0 +1,23 @@
+# anyone could (view the material (,) (not just politicians)) 
+# though politicians should be connected to view, this connection is lost. So we do nothing here
+,	NP	(S\NP)\(S\NP)
+NP	,	S/S
+
+# (the attorney general alleged) (,) the company shoved unwary customers
+S[dcl]{Y}/S[dcl]{X}	,	S{Y}/S{X}
+
+# 00/wsj_0082 is likely to take time (,) (the Japanese say) 
+S[dcl]/S[dcl]{X}	,	(S{X}\NP)\(S{X}\NP)
+
+# The bids , ((he said) (,) were contrary to common sense)
+S[dcl]/S[dcl]{X}	,	(S{X}\NP)/(S{X}\NP)
+
+# the first and second issues sold out (,) (she says) 
+S[dcl]{Y}/S[dcl]{X}	,	S{Y}\S{X}
+S[dcl]{Y}\S[dcl]{X}	,	S{Y}/S{X}
+
+# "the movie" "Titanic"
+NP[nb]{X}	NP{Y}	NP[nb]{Y}	(lambda $f1 $f2 $Y (exists $X (and (TYPEMOD $Y $X 1 $Y) ($f2 $Y))))
+#NP{X}	NP{Y}	NP{Y}	(lambda $f1 $f2 $Y (exists $X (and (TYPEMOD $Y $X 1 $Y) ($f2 $Y))))
+
+conj	N{Y}	N{Y}	(lambda $f1 $f2 $Y ($f2 $Y))

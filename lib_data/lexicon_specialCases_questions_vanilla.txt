@@ -1,0 +1,97 @@
+# Handling special cases where Autolexicon fails/does not produce informative parse.
+
+#lemma	pos	syncat	indexsyncat	semcat/semcattype
+
+# When was Obama born? -> when was Obama born in?
+when	*	S[wq]/S[q]	(S[wq]{X}/S[q]{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X in.2 $_ ENTITY) (QUESTION $_))))
+
+# Where was Obama born?
+where	*	S[wq]/S[q]	(S[wq]{X}/S[q]{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X at.2 $_ ENTITY) (QUESTION $_))))
+
+# How did Franklin die = What did Franklin die of?
+how	*	S[wq]/S[q]	(S[wq]{X}/S[q]{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X of.2 $_ ENTITY) (QUESTION $_))))
+
+# TODO: contextualization of few categories
+# what is the "name of" the president of US? here "of" should ignore name and return "president" to "is".
+# what is the "kind of" cancer did Bob Marley suffer with? here "of" should ignore "kind" and return "cancer" to "suffer".
+# what is the "type of" cancer did Bob Marley suffer with?  here "of" should ignore "type" and return "cancer" to "suffer".
+# what is the US president 's name? here "'s" should ignore name and return "president" to "is".
+# where did Obama go to college? -> this is a tricky case. The semantics of this sentence should be the same as "What college did Obama go to?"
+
+# Hilton hotel -> Hilton 's hotel
+*	NNP	N/N	(N{X}/N{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X 's.1 $X ENTITY) (EVENT $X $X 's.2 $_ ENTITY))))
+
+# Hilton hotel -> hotel Hilton
+*	NNP	N/N	(N{_}/N{Y}){_}	(lambda $f1 $_ (exists $Y (and ($f1 $Y) (COPULA $Y $_) (TYPE $_ $_))))
+
+# copula
+be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X	(lambda $f1 $f2 $_ (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+be	*	(S[q]/NP)/NP	((S[q]{_}/NP{X}){_}/NP{Y}){_};_ 1 X	(lambda $f1 $f2 $_ (exists $X $Y (and (COPULA $Y $X) ($f1 $Y) ($f2 $X))))
+
+# non-copula
+#be	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{X}){_}/NP{Y}){_};_ 1 X,_ 2 Y	EVENT 
+#be	*	(S[q]/NP)/NP	((S[q]{_}/NP{X}){_}/NP{Y}){_};_ 1 Y,_ 2 X	EVENT
+
+# quantifiers
+no	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
+not	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
+the	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	UNIQUE
+
+*	IN	N	N{X}	TYPE
+
+# adjectives which act like verbs - e.g. his work was unknown
+*	*	S[adj]\NP	(S[adj]{_}\NP{Y}){_};_ 1 Y	EVENT
+*	*	S[ng]\NP	(S[ng]{_}\NP{Y}){_};_ 1 Y	EVENT
+*	*	(S[adj]\NP)/PP	((S[adj]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
+*	*	(S[ng]\NP)/PP	((S[ng]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
+*	*	((S[adj]\NP)/PP)/NP	(((S[adj]{_}\NP{Y}){_}/PP{_}){_}/NP{W}){_};_ 1 y,_ 2 W	EVENT
+*	*	((S[ng]\NP)/PP)/NP	(((S[ng]{_}\NP{Y}){_}/PP{_}){_}/NP{W}){_};_ 1 y,_ 2 W	EVENT
+*	*	(S[adj]\NP)/(S[to]\NP)	((S[adj]{_}\NP{Y}){_}/(S[to]{Z}\NP{Y}){Z}){_};_ 1 Y,_ 2 Z	EVENT
+*	*	(S[ng]\NP)/(S[to]\NP)	((S[ng]{_}\NP{Y}){_}/(S[to]{Z}\NP{Y}){Z}){_};_ 1 Y,_ 2 Z	EVENT
+
+# passive case
+by	*	((S\NP)\(S\NP))/NP	(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){_}/NP{W}){_};_ 1 Y,_ 2 W	(lambda $f1 $f2 $f3 $Y (exists $W $Z $_ (and (EVENT $Y $Y 1 $W ENTITY) ($f1 $W) (($f2 $Z) $Y) ($f3 $Z))))
+# in questions "who was the movie produced by"
+by	*	PP/NP	(PP{X}/NP{Y}){_};X 1 Y	(lambda $f1 $X (exists $Y (and (EVENT $X $X 1 $Y ENTITY) ($f1 $Y))))
+
+
+# Make cardinal number as the head
+*	CD	N/N	(N{Y}/N{Y}){_};_ 1 Y	(lambda $f1 $_ (exists $Y (and (COPULA $Y $_) ($f1 $Y))))
+
+# "that" appears as preposition
+that	*	S[em]/S[dcl]	(S[em]{Y}/S[dcl]{Y}){_};_ 1 Y	CLOSED
+
+# Gerunds which modify nouns
+*	VBG	N/N	(N{Y}/N{Y}){_};_ 1 Y	TYPEMOD
+
+# "in" which year 
+*	*	(S[wq]/(S[q]/PP))/(S[wq]/(S[q]/NP))	((S[wq]{Y}/(S[q]{Y}/PP{Y}){Y}){_}/(S[wq]{Y}/(S[q]{Y}/NP{U}){Y}){Y}){_};_ 2 U	EVENT
+
+# lexicalising the arguments
+# what did Bertand_Russell die of
+*	*	S[wq]/(S[dcl]\NP)	(S[wq]{Y}/(S[dcl]{Y}\NP{_}){Y}){_};_ 1 Y	QUESTION
+*	*	S[wq]/(S[q]/NP)	(S[wq]{Y}/(S[q]{Y}/NP{_}){Y}){_};_ 1 Y	QUESTION
+
+# how-many / how-much
+*	CD	(S[wq]/(S[dcl]\NP))/N	((S[wq]{Y}/(S[dcl]{Y}\NP{Z*}){Y}){Y}/N{Z}){_};_ 1 Y	(lambda $f1 $f2 $Y (exists $Z $_ (and ($f1 $Z) (($f2 $Z) $Y) (QUESTION $Z) (COPULA $Z $_))))
+*	CD	(S[wq]/(S[q]\NP))/N	((S[wq]{Y}/(S[q]{Y}\NP{Z*}){Y}){Y}/N{Z}){_};_ 1 Y	(lambda $f1 $f2 $Y (exists $Z $_ (and ($f1 $Z) (($f2 $Z) $Y) (QUESTION $Z) (COPULA $Z $_))))
+*	CD	(S[wq]/(S[q]/NP))/N	((S[wq]{Y}/(S[q]{Y}/NP{Z*}){Y}){Y}/N{Z}){_};_ 1 Y	(lambda $f1 $f2 $Y (exists $Z $_ (and ($f1 $Z) (($f2 $Z) $Y) (QUESTION $Z) (COPULA $Z $_))))
+*	CD	(S[wq]/(S[dcl]\NP))/NP	((S[wq]{Y}/(S[dcl]{Y}\NP{Z*}){Y}){Y}/NP{Z}){_};_ 1 Y	(lambda $f1 $f2 $Y (exists $Z $_ (and ($f1 $Z) (($f2 $Z) $Y) (QUESTION $Z) (COPULA $Z $_))))
+*	CD	(S[wq]/(S[q]\NP))/NP	((S[wq]{Y}/(S[q]{Y}\NP{Z*}){Y}){Y}/NP{Z}){_};_ 1 Y	(lambda $f1 $f2 $Y (exists $Z $_ (and ($f1 $Z) (($f2 $Z) $Y) (QUESTION $Z) (COPULA $Z $_))))
+*	CD	(S[wq]/(S[q]/NP))/NP	((S[wq]{Y}/(S[q]{Y}/NP{Z*}){Y}){Y}/NP{Z}){_};_ 1 Y	(lambda $f1 $f2 $Y (exists $Z $_ (and ($f1 $Z) (($f2 $Z) $Y) (QUESTION $Z) (COPULA $Z $_))))
+
+# how many different industries "are" there in Walmart ?
+be	*	(S[dcl]\NP)/(S[adj]\NP)	((S[dcl]{Z}\NP{Y}){_}/(S[adj]{Z}\NP{Y*}){Z}){_};_ 1 Y	EVENT
+
+# "how" tall is Jerry ?
+*	*	(S[wq]/(S[q]/(S[adj]\NP)))/(S[adj]\NP)	((S[wq]{_}/(S[q]{Y}/(S[adj]{Z}\NP{_}){Z}){V}){_}/(S[adj]{Z}\NP{_}){Z}){_}	QUESTION
+
+# how tall "is" Jerry ?
+*	*	(S[q]/(S[adj]\NP))/NP	((S[q]{_}/(S[adj]{Y}\NP{Z}){Y}){Y}/NP{W}){_};_ 1 W,_ 2 Z	EVENT
+
+# Natural possessive
+'s	POS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+# 's	POS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))
+
+# BLANK category
+_blank_	*	N	N{X}	(lambda $X (QUESTION $X))
