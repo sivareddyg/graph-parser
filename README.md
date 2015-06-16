@@ -15,7 +15,7 @@ GraphParser can parse natural language sentences to logical parses and graphs. R
 > cat input.txt | sh run.sh
 
 ## Online demo
-Online demo of GraphParser can be accessed at http://54.148.203.81/graph-parser-app/UngroundedSemanticParserServlet
+Online demo of GraphParser can be accessed at http://sivareddy.in/graphparser.html
 
 ## Evaluation datasets
 If you are interested in evaluation datasets, and the output of GraphParser on the test datasets, you can download them using
