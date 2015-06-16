@@ -1724,6 +1724,12 @@ clean_test_data:
 		> data/distant_eval/unsupervised_syntax/test.json.blank
 	gzip data/distant_eval/unsupervised_syntax/test.json.blank
 
+
+clean_spanish_data:
+	zcat data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities_spanish.py \
+		| gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.filtered.txt.gz
+
 unsupervised_first_experiment:
 	mkdir -p ../working/unsupervised_first_experiment
 	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
