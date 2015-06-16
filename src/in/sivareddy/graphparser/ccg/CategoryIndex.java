@@ -3,7 +3,6 @@ package in.sivareddy.graphparser.ccg;
 import in.sivareddy.util.IntegerObject;
 
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -140,7 +139,7 @@ public class CategoryIndex {
       visitedVars.add(var);
 
       if (var.isCC()) {
-        ccVars.addAll(var.getCCvars());
+        ccVars.addAll(var.getCCvars(visitedVars));
       } else {
         ccVars.add(var);
       }
