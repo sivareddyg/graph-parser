@@ -1727,6 +1727,8 @@ clean_test_data:
 
 clean_spanish_data:
 	zcat data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz \
+		| python scripts/spanish/merge_entity_words_to_one_entity.py \
+		| python scripts/spanish/filter_sentences_with_less_than_two_entities.py \
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities_spanish.py \
 		| gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.filtered.txt.gz
 
