@@ -3,15 +3,15 @@ import sys
 import os
 
 def install_ungrounded_parser():
-    os.system("wget https://bitbucket.org/sivareddyg/public/downloads/graph-parser-lib-2.0.tgz")
-    os.system("tar -xvzf graph-parser-lib-2.0.tgz")
+    os.system("wget https://bitbucket.org/sivareddyg/public/downloads/graph-parser-lib-2.0.1.tgz")
+    os.system("tar -xvzf graph-parser-lib-2.0.1.tgz")
 
     os.system("wget https://bitbucket.org/sivareddyg/public/downloads/easyccg_model_questions.tgz")
     os.system("wget https://bitbucket.org/sivareddyg/public/downloads/easyccg_model.tgz")
     os.system("tar -xvzf easyccg_model_questions.tgz -C lib_data")
     os.system("tar -xvzf easyccg_model.tgz -C lib_data")
 
-    os.system("rm graph-parser-lib-2.0.tgz")
+    os.system("rm graph-parser-lib-2.0.1.tgz")
     os.system("rm easyccg_model_questions.tgz")
     os.system("rm easyccg_model.tgz")
 
