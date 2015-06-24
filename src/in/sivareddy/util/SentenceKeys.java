@@ -21,6 +21,7 @@ public class SentenceKeys {
   public static String PHRASE = "phrase";
   public static String START = "start";
   public static String END = "end";
+  public static String SCORE = "score";
   
 }
 

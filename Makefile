@@ -44,12 +44,12 @@ entity_tag_webq_data:
 	cat data/webquestions/webquestions.examples.train.domains.json \
 		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
 	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
-		| java -cp lib/*:bin in.sivareddy.graphparser.util.EntityAnnotator data/freebase/en_entity_lexicon_tokenized.gz \
+		| java -cp lib/*:bin in.sivareddy.scripts.NounPhraseAnnotator EN_PTB \
 		> data/webquestions/webquestions.examples.train.domains.entity.matches.json
 	cat data/webquestions/webquestions.examples.test.domains.json \
 		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
 	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
-		| java -cp lib/*:bin in.sivareddy.graphparser.util.EntityAnnotator data/freebase/en_entity_lexicon_tokenized.gz \
+		| java -cp lib/*:bin in.sivareddy.scripts.NounPhraseAnnotator EN_PTB \
 		> data/webquestions/webquestions.examples.test.domains.entity.matches.json
 
 rank_entity_webq_data:
@@ -59,6 +59,28 @@ rank_entity_webq_data:
 	cat data/webquestions/webquestions.examples.test.domains.entity.matches.json \
 	| java -cp lib/*:bin in.sivareddy.graphparser.util.RankMatchedEntities \
 	> data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.json
+
+disambiguate_entities_webq_data:
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+		-endpoint localhost \
+		-typeKey "fb:type.object.type" \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-initialNbest 5 \
+		-intermediateNbest 10 \
+		-finalNbest 5 \
+		-nthreads 10 \
+		-inputFile data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.json \
+		-outputFile data/webquestions/webquestions.examples.train.domains.entity.disambiguated.json
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+		-endpoint localhost \
+		-typeKey "fb:type.object.type" \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-initialNbest 5 \
+		-intermediateNbest 10 \
+		-finalNbest 5 \
+		-nthreads 10 \
+		-inputFile data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.json \
+		-outputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.json
 
 select_one_best_from_ranked_entity_webq_data:
 	cat data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.json \
