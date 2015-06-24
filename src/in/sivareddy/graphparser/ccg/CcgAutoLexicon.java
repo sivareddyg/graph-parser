@@ -21,7 +21,7 @@ import com.google.common.collect.Sets;
 
 public class CcgAutoLexicon {
   public static Set<String> typePosTags = Sets.newHashSet("NN", "NNP", "NNPS",
-      "NNS", "PRP", "PRP$", "CD", "NOUN", "NUM", "X");
+      "NNS", "PRP", "PRP$", "CD", "NOUN", "NUM", "X", "PRON");
   public static Set<String> pronounPosTags = Sets.newHashSet("PRP", "PRP$",
       "PRON");
   public static Set<String> typeModPosTags = Sets.newHashSet("JJ", "JJR",
@@ -33,7 +33,7 @@ public class CcgAutoLexicon {
       "RBS", "RP", "ADV");
 
   private static Set<String> closedPosTags = Sets.newHashSet("WDT", "WP",
-      "WP$", "WRB");
+      "WP$", "WRB", "SCONJ", "WPRON");
   public static Set<String> questionPosTags = Sets.newHashSet("WP", "WP$",
       "WDT", "WRB");
 

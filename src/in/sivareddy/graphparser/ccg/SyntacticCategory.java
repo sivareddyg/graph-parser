@@ -390,25 +390,23 @@ public class SyntacticCategory {
    *
    */
   public static SyntacticCategory fromString(String categoryString) {
-
+    if (categoryString.startsWith(";"))
+      categoryString = ".";
+    
     List<String> parts =
         Lists.newArrayList(Splitter.on(";").omitEmptyStrings().trimResults()
             .split(categoryString));
     Preconditions.checkArgument(parts.size() > 0, "Malformed category: "
         + categoryString);
-
+    
     Map<String, CategoryIndex> varCache = Maps.newHashMap();
     Map<String, StringObject> featureCache = Maps.newHashMap();
     SyntacticCategory category =
         fromStringHidden(parts.get(0), varCache, featureCache);
-    /*-if (category.index.getVariableName()
-    		.startsWith(CategoryIndex.varPrefix))
-    	category.index.setVariableName("_");*/
-
+    
     if (parts.size() > 1) {
       category.processDependencies(parts.get(1), varCache);
     }
-
     return category;
   }
 

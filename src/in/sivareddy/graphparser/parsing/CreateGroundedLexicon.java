@@ -9,6 +9,7 @@ import in.sivareddy.graphparser.ccg.SemanticCategoryType;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
+import in.sivareddy.util.SentenceKeys;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -199,7 +200,11 @@ public class CreateGroundedLexicon {
         for (CcgParseTree tree : trees) {
           List<LexicalItem> leaves = tree.getLeafNodes();
           for (int i = 0; i < leaves.size(); i++) {
-            String stanfordNer = wordObjects.get(i).get("ner").getAsString();
+            String stanfordNer = "";
+            if (wordObjects.get(i).has(SentenceKeys.NER_KEY)) {
+              stanfordNer =
+                  wordObjects.get(i).get(SentenceKeys.NER_KEY).getAsString();
+            }
             LexicalItem leaf = leaves.get(i);
             String candcNer = leaf.getNeType();
             String posTag = leaf.getPos();
@@ -228,6 +233,7 @@ public class CreateGroundedLexicon {
             int index = entityObject.get("index").getAsInt();
             String mid = entityObject.get("entity").getAsString();
             leaves.get(index).setMID(mid);
+            leaves.get(index).setIsEntity(true);
           }
 
           // do not handle the numbers specially for lexicon

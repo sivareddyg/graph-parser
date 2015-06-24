@@ -133,35 +133,44 @@ public class StructuredPercepton implements Serializable {
 
   public synchronized void printFeatureWeights(Collection<Feature> featVec,
       Logger logger) {
-    List<Pair<Double, Feature>> feats = Lists.newArrayList();
-    for (Feature feature : featVec) {
-      Double weight =
-          weightVector.containsKey(feature) ? weightVector.get(feature) : 0.0;
-      feats.add(Pair.of(weight, feature));
+    try {
+      List<Pair<Double, Feature>> feats = Lists.newArrayList();
+      for (Feature feature : featVec) {
+        Double weight =
+            weightVector.containsKey(feature) ? weightVector.get(feature) : 0.0;
+        feats.add(Pair.of(weight, feature));
+      }
+      Collections.sort(feats, Collections.reverseOrder());
+      logger.debug("Features ==== ");
+      for (Pair<Double, Feature> featPair : feats) {
+        logger.debug(featPair.getRight() + ":" + featPair.getLeft());
+      }
+      logger.debug("====");
+    } catch (Exception e) {
+      // pass
     }
-    Collections.sort(feats, Collections.reverseOrder());
-    logger.debug("Features ==== ");
-    for (Pair<Double, Feature> featPair : feats) {
-      logger.debug(featPair.getRight() + ":" + featPair.getLeft());
-    }
-    logger.debug("====");
   }
 
   public synchronized void printFeatureWeightsTesting(Set<Feature> featVec,
       Logger logger) {
-    List<Pair<Double, Feature>> feats = Lists.newArrayList();
-    for (Feature feature : featVec) {
-      Double weight =
-          cumulativeWeightVector.containsKey(feature) ? cumulativeWeightVector
-              .get(feature) / updateFrequency.get(feature) : 0.0;
-      feats.add(Pair.of(weight, feature));
+    try {
+      List<Pair<Double, Feature>> feats = Lists.newArrayList();
+      for (Feature feature : featVec) {
+        Double weight =
+            cumulativeWeightVector.containsKey(feature) ? cumulativeWeightVector
+                .get(feature) / updateFrequency.get(feature)
+                : 0.0;
+        feats.add(Pair.of(weight, feature));
+      }
+      Collections.sort(feats, Collections.reverseOrder());
+      logger.debug("Features ==== ");
+      for (Pair<Double, Feature> featPair : feats) {
+        logger.debug(featPair.getRight() + ":" + featPair.getLeft());
+      }
+      logger.debug("====");
+    } catch (Exception e) {
+      // pass.
     }
-    Collections.sort(feats, Collections.reverseOrder());
-    logger.debug("Features ==== ");
-    for (Pair<Double, Feature> featPair : feats) {
-      logger.debug(featPair.getRight() + ":" + featPair.getLeft());
-    }
-    logger.debug("====");
   }
 
   public synchronized boolean containsFeature(Feature feature) {

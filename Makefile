@@ -1754,6 +1754,12 @@ clean_spanish_data:
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities_spanish.py \
 		| gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.filtered.txt.gz
 
+create_blank_spanish:
+	zcat data/distant_eval/spanish/semisup/train.json.gz \
+		| python scripts/createBLANK.py \
+		| gzip > data/distant_eval/spanish/semisup/train.json.blank.gz
+	
+
 unsupervised_first_experiment:
 	mkdir -p ../working/unsupervised_first_experiment
 	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
@@ -1838,6 +1844,22 @@ create_semisup_grounded_lexicon:
 	--relationTypesFile data/dummy.txt \
 	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	--outputLexiconFile data/distant_eval/grounded_lexicon/semisup_grounded_lexicon.txt \
+	> /dev/null
+
+create_spanish_semisup_grounded_lexicon:
+	mkdir -p data/distant_eval/grounded_lexicon
+	zcat data/distant_eval/spanish/semisup/train.json.gz \
+	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	--relationLexicalIdentifiers word \
+	--semanticParseKey synPars \
+	--argumentLexicalIdentifiers mid \
+	--candcIndexFile lib_data/ybisk-semi-mapping.txt \
+	--unaryRulesFile lib_data/dummy.txt \
+	--binaryRulesFile lib_data/dummy.txt \
+	--specialCasesFile data/distant_eval/spanish/semisup/lexicon_fullSpecialCases.txt \
+	--relationTypesFile data/dummy.txt \
+	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	--outputLexiconFile data/distant_eval/grounded_lexicon/spanish_semisup_grounded_lexicon.txt \
 	> /dev/null
 
 create_unsup_grounded_lexicon:
@@ -2313,4 +2335,118 @@ unsup_specialcases_distant_eval_loaded_model:
 	-testFile data/distant_eval/unsupervised_syntax/test.json.blank.gz \
 	-logFile ../working/unsup_specialcases_distant_eval_loaded_model/business_film_people.log.txt \
 	> ../working/unsup_specialcases_distant_eval_loaded_model/business_film_people.txt
+
+spanish_bow_distant_eval:
+	rm -rf ../working/spanish_bow_distant_eval
+	mkdir -p ../working/spanish_bow_distant_eval
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-lexicon data/dummy.txt \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 100 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-addOnlyBagOfWordsGraph true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-ngramGrelPartFlag true \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag false \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight 0.0 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -1.0 \
+	-stemFeaturesWeight 0.00 \
+	-endpoint localhost \
+	-trainingCorpora data/distant_eval/spanish/bow/train.json.blank.gz \
+	-devFile data/distant_eval/spanish/bow/dev.json.1000.blank.gz \
+	-logFile ../working/spanish_bow_distant_eval/business_film_people.log.txt \
+	> ../working/spanish_bow_distant_eval/business_film_people.txt
+
+spanish_semisup_specialcases_distant_eval:
+	rm -rf ../working/spanish_semisup_specialcases_distant_eval
+	mkdir -p ../working/spanish_semisup_specialcases_distant_eval
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-ccgIndexedMapping lib_data/ybisk-semi-mapping.txt \
+	-ccgLexicon data/distant_eval/spanish/semisup/lexicon_fullSpecialCases.txt \
+	-ccgLexiconQuestions lib_data/dummy.txt \
+	-lexicon data/distant_eval/grounded_lexicon/spanish_semisup_grounded_lexicon.txt \
+	-cachedKB data/freebase/domain_facts/business_facts.txt.gz \
+	-binaryRules lib_data/dummy.txt \
+	-unaryRules lib_data/dummy.txt \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 100 \
+	-nBestTrainSyntacticParses 5 \
+	-nBestTestSyntacticParses 5 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-ngramGrelPartFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -1.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.00 \
+	-endpoint localhost \
+	-trainingCorpora data/distant_eval/spanish/semisup/train.json.blank.gz \
+	-devFile data/distant_eval/spanish/semisup/dev.json.1000.blank.gz \
+	-logFile ../working/spanish_semisup_specialcases_distant_eval/business_film_people.log.txt \
+	> ../working/spanish_semisup_specialcases_distant_eval/business_film_people.txt
 
