@@ -15,6 +15,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.commons.io.IOUtils;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -28,6 +30,19 @@ public class RankMatchedEntities {
   public static String charset = "UTF-8";
   public static JsonParser jsonParser = new JsonParser();
 
+  public static LoadingCache<String, String> queryToResults = Caffeine
+      .newBuilder().maximumSize(100000).build(x -> queryFreebaseAPIPrivate(x));
+
+  /**
+   * Annotate each span using Freebase API. Additional information from the API
+   * call is also stored.
+   * 
+   * @param jsonSentence
+   * @param useMatchedEntities if set true, only the entities that are chosen
+   *        both by API and already matched entities, are used for final
+   *        ranking.
+   * @throws IOException
+   */
   public static void rankSpansUsingFreebaseAPI(JsonObject jsonSentence,
       boolean useMatchedEntities) throws IOException {
     if (!jsonSentence.has(SentenceKeys.MATCHED_ENTITIES))
@@ -70,25 +85,34 @@ public class RankMatchedEntities {
         }
       }
       if (rankedEntities.size() > 0) {
-        entityObject.add("rankedEntities", rankedEntities);
+        entityObject.add(SentenceKeys.RANKED_ENTITIES, rankedEntities);
       }
     }
   }
 
-  private static JsonObject queryFreebaseAPI(String query) throws IOException {
-    String requestQuery =
-        String.format("query=%s&key=%s", URLEncoder.encode(query, charset),
-            API_KEY);
+  private static JsonObject queryFreebaseAPI(String query) {
+    String result = queryToResults.get(query);
+    if (result != null)
+      return jsonParser.parse(result).getAsJsonObject();
+    return null;
+  }
 
-    URL url = new URL(FREEBASE_ENDPOINT + "?" + requestQuery);
-    HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+  private static String queryFreebaseAPIPrivate(String query) {
+    try {
+      String requestQuery =
+          String.format("query=%s&key=%s", URLEncoder.encode(query, charset),
+              API_KEY);
 
-    connection.setRequestProperty("Accept-Charset", charset);
-    InputStream responseRecieved = connection.getInputStream();
-    JsonObject response =
-        jsonParser.parse(IOUtils.toString(responseRecieved, charset))
-            .getAsJsonObject();
-    return response;
+      URL url = new URL(FREEBASE_ENDPOINT + "?" + requestQuery);
+      HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+
+      connection.setRequestProperty("Accept-Charset", charset);
+      InputStream responseRecieved = connection.getInputStream();
+      return IOUtils.toString(responseRecieved, charset);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   public static void main(String[] args) throws IOException {

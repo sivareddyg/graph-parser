@@ -31,7 +31,7 @@ import com.google.gson.JsonParser;
  *
  */
 public class KnowledgeBaseOnline implements KnowledgeBase {
-  public static String TYPE_KEY = "fb:type.objec.type";
+  public static String TYPE_KEY = "fb:type.object.type";
 
   static Integer MAX_CACHE_SIZE = 100000;
   static String FB_MEDIATIOR = "freebase.type_hints.mediator";
@@ -47,6 +47,7 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
   private Schema schema;
 
   LoadingCache<Pair<String, String>, Set<Relation>> entitiesToRelations;
+  LoadingCache<Pair<String, String>, Boolean> entitiesToHasRelation;
   LoadingCache<String, Set<Relation>> entityToRelations;
   LoadingCache<String, Set<String>> entityToTypes;
   Set<Relation> relationsThatAreTypes = new HashSet<>();
@@ -61,6 +62,10 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
     entitiesToRelations =
         Caffeine.newBuilder().maximumSize(100000)
             .build(x -> getRelationsPrivate(x));
+
+    entitiesToHasRelation =
+        Caffeine.newBuilder().maximumSize(100000)
+            .build(x -> hasRelationPrivate(x));
 
     entityToRelations =
         Caffeine.newBuilder().maximumSize(100000)
@@ -404,8 +409,104 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
 
   @Override
   public boolean hasRelation(String entity1, String entity2) {
-    return getRelations(entity1, entity2).size() > 0;
+    if (standardTypes.contains(entity1) && standardTypes.contains(entity2)) {
+      return false;
+    }
+
+    boolean order = inOrder(entity1, entity2);
+    Pair<String, String> key =
+        order ? Pair.of(entity1, entity2) : Pair.of(entity2, entity1);
+
+    return entitiesToHasRelation.get(key);
   }
+
+  public boolean hasRelationPrivate(Pair<String, String> key) {
+    if (!standardTypes.contains(key.getRight())) {
+      // Master relations.
+      String query =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK { fb:%s ?rel fb:%s . MINUS{?rel fb:type.property.master_property ?master .}}",
+                  key.getLeft(), key.getRight());
+      if (endPoint.runHttpAsk(query))
+        return true;
+
+      // Inverse relations.
+      query =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK { fb:%s ?rel fb:%s . MINUS { ?rel fb:type.property.master_property ?master . }}",
+                  key.getRight(), key.getLeft());
+      if (endPoint.runHttpAsk(query))
+        return true;
+
+
+      // Mediator relations.
+      query =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK { ?m ?rel1 fb:%s . ?m ?rel2 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . }",
+                  key.getLeft(), key.getRight(), TYPE_KEY);
+      if (endPoint.runHttpAsk(query))
+        return true;
+
+
+
+      query =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK { fb:%s ?rel1 ?m . ?m ?rel2 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . }",
+                  key.getLeft(), key.getRight(), TYPE_KEY);
+      if (endPoint.runHttpAsk(query))
+        return true;
+
+      query =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK {fb:%s ?rel2 ?m . ?m ?rel1 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . }",
+                  key.getRight(), key.getLeft(), TYPE_KEY);
+      if (endPoint.runHttpAsk(query))
+        return true;
+
+      query =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK { fb:%s ?rel1 ?m . fb:%s ?rel2 ?m . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . }",
+                  key.getLeft(), key.getRight(), TYPE_KEY);
+      if (endPoint.runHttpAsk(query))
+        return true;
+    } else if (standardTypes.contains(key.getRight())) {
+      // Master relation.
+      String query =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK { fb:%s ?rel ?e2 . MINUS{?rel fb:type.property.master_property ?master .} FILTER(datatype(?e2) = %s) .}",
+                  key.getLeft(), fbStandardToRDFStandard.get(key.getRight()));
+      if (endPoint.runHttpAsk(query))
+        return true;
+
+      // Mediator relations.
+      query =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK { ?m ?rel1 fb:%s . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER(datatype(?e2) = %s) . }",
+                  key.getLeft(), TYPE_KEY,
+                  fbStandardToRDFStandard.get(key.getRight()));
+      if (endPoint.runHttpAsk(query))
+        return true;
+
+      query =
+          String
+              .format(
+                  "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK { fb:%s ?rel1 ?m . ?m %s ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 ?e2 . FILTER(datatype(?e2) = %s) . }",
+                  key.getLeft(), TYPE_KEY,
+                  fbStandardToRDFStandard.get(key.getRight()));
+      if (endPoint.runHttpAsk(query))
+        return true;
+    }
+    return false;
+  }
+
 
   @Override
   public Set<String> getTypes(String entity) {

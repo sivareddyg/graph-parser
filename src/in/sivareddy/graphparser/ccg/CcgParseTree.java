@@ -678,7 +678,8 @@ public class CcgParseTree {
           LexicalItem lexicalNode =
               nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
           // System.out.println(lexicalNode);
-          if (lexicalPosTags.contains(lexicalNode.pos))
+          if (lexicalPosTags.contains(lexicalNode.pos)
+              || lexicalNode.isEntity())
             headNode.copula = lexicalNode;
           else
             lexicalNode.copula = headNode;
@@ -766,7 +767,7 @@ public class CcgParseTree {
 
               StringBuilder sb = new StringBuilder();
               if (!lexicalPosTags.contains(headNode.pos)
-                  && headNode != lexicalNode) {
+                  && headNode != lexicalNode && !headNode.isEntity()) {
                 sb.append(headNode.lexicaliseRelationName());
                 sb.append(".");
               }
@@ -782,7 +783,8 @@ public class CcgParseTree {
               sb.append(headNode.wordPosition + ":" + "e");
               sb.append(" , ");
               if (argType.equals("ENTITY")) {
-                if (lexicalPosTags.contains(childNode.copula.pos))
+                if (lexicalPosTags.contains(childNode.copula.pos)
+                    || childNode.isEntity())
                   sb.append(childNode.copula.lexicaliseArgument());
                 else
                   sb.append(childNode.copula.wordPosition + ":" + "x");
@@ -842,7 +844,7 @@ public class CcgParseTree {
 
             StringBuilder sb = new StringBuilder();
             if (!lexicalPosTags.contains(headNode.pos)
-                && headNode != lexicalNode) {
+                && headNode != lexicalNode && !headNode.isEntity()) {
               sb.append(headNode.lexicaliseRelationName());
               sb.append(".");
             }
@@ -938,7 +940,7 @@ public class CcgParseTree {
               continue;
 
             StringBuilder sb = new StringBuilder();
-            if (!lexicalPosTags.contains(headNode.pos)) {
+            if (!lexicalPosTags.contains(headNode.pos) && !headNode.isEntity()) {
               sb.append(headNode.lexicaliseRelationName());
             } else {
               break;
@@ -954,7 +956,7 @@ public class CcgParseTree {
             sb.append(headNode.wordPosition + ":s");
             sb.append(" , ");
 
-            if (lexicalPosTags.contains(childNode.pos)) {
+            if (lexicalPosTags.contains(childNode.pos) || childNode.isEntity()) {
               sb.append(childNode.lexicaliseArgument());
             } else {
               sb.append(childNode.wordPosition + ":" + "x");
@@ -1026,7 +1028,7 @@ public class CcgParseTree {
 
               StringBuilder sb = new StringBuilder();
               if (!lexicalPosTags.contains(headNode.pos)
-                  && headNode != lexicalNode) {
+                  && headNode != lexicalNode && !headNode.isEntity()) {
                 sb.append(headNode.lexicaliseRelationName());
                 sb.append(".");
               }
@@ -1046,7 +1048,7 @@ public class CcgParseTree {
               sb.append(lexicalNode.wordPosition + ":s");
               sb.append(" , ");
 
-              if (lexicalPosTags.contains(childNode.pos)) {
+              if (lexicalPosTags.contains(childNode.pos) || childNode.isEntity()) {
                 sb.append(childNode.lexicaliseArgument());
               } else {
                 sb.append(childNode.wordPosition + ":" + "x");
@@ -1149,7 +1151,7 @@ public class CcgParseTree {
           StringBuilder sb = new StringBuilder();
           sb.append("UNIQUE");
           sb.append("(");
-          if (lexicalPosTags.contains(headNode.pos)) {
+          if (lexicalPosTags.contains(headNode.pos) || headNode.isEntity()) {
             sb.append(headNode.lexicaliseArgument());
           } else {
             sb.append(headNode.wordPosition + ":" + "x");
@@ -1191,7 +1193,7 @@ public class CcgParseTree {
           StringBuilder sb = new StringBuilder();
           sb.append("QUESTION");
           sb.append("(");
-          if (lexicalPosTags.contains(headNode.pos)) {
+          if (lexicalPosTags.contains(headNode.pos) || headNode.isEntity()) {
             sb.append(headNode.lexicaliseArgument());
           } else {
             sb.append(headNode.wordPosition + ":" + "x");

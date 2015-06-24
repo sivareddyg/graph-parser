@@ -16,12 +16,18 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class EntityAnnotator {
+
+  public static enum PosTagCode {
+    EN_PTB,
+  };
+
   private Map<String, Object> nameToEntityMap = new HashMap<>();
   public static Pattern NUMBERS_OR_PUNC = Pattern.compile("[\\p{Punct}0-9]+");
   public static Pattern PUNCTUATION = Pattern.compile("[\\p{Punct}]+");
@@ -36,8 +42,6 @@ public class EntityAnnotator {
 
   private Gson gson = new Gson();
   private JsonParser jsonParser = new JsonParser();
-
-
 
   @SuppressWarnings("unchecked")
   public EntityAnnotator(Reader inputReader) throws IOException {
@@ -134,10 +138,15 @@ public class EntityAnnotator {
    * pattern - Each span should not be associated with more than MAX_NUMBER
    * entities
    * 
-   * @param sentence
+   * @param sentence input sentence containing tokenised words
+   * @param checkSpanIsNP set to true if the span's pos tag sequenc should match
+   *        NP pattern
+   * @param getMatchedEntities set to true to retrieve all the Freebase entities
+   *        that match
    */
   @SuppressWarnings("unchecked")
-  public void getAllEntitySpans(JsonObject sentence) {
+  public void getAllEntitySpans(JsonObject sentence, boolean checkSpanIsNP,
+      boolean getMatchedEntities) {
     if (!sentence.has(SentenceKeys.WORDS_KEY))
       return;
     JsonArray words = sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
@@ -165,17 +174,23 @@ public class EntityAnnotator {
           curMap = (Map<String, Object>) curMap.get(wordKey);
           if (curMap.containsKey(ENTITIES)) {
             entityEndIndex = j;
-            String posSequence =
-                getPosSequence(words, entityStartIndex, entityEndIndex);
+
             Set<String> possibleEntities = (Set<String>) curMap.get(ENTITIES);
+
+            // Target potential entities should be less than max number of
+            // entities, and if the checkSpanIsNp flag is on, make sure the pos
+            // tag sequence matches NP pattern.
             if (possibleEntities.size() < MAX_NUMBER_ENTITIES
-                && matchesNPPattern(posSequence)) {
+                && (!checkSpanIsNP || matchesNPPattern(getPosSequence(words,
+                    entityStartIndex, entityEndIndex)))) {
               Map<String, Object> matchedEntity = new HashMap<>();
               matchedEntity.put(SentenceKeys.START, entityStartIndex);
               matchedEntity.put(SentenceKeys.END, entityEndIndex);
-              matchedEntity.put(SentenceKeys.ENTITIES, possibleEntities);
               matchedEntity.put(SentenceKeys.PHRASE,
                   getPhrase(words, entityStartIndex, entityEndIndex));
+              if (getMatchedEntities) {
+                matchedEntity.put(SentenceKeys.ENTITIES, possibleEntities);
+              }
               matchedEntities.add(matchedEntity);
             }
           }
@@ -246,6 +261,114 @@ public class EntityAnnotator {
     return false;
   }
 
+  public static void getAllNounPhrases(JsonObject sentence, PosTagCode code) {
+    if (!sentence.has(SentenceKeys.WORDS_KEY))
+      return;
+    List<JsonObject> words = new ArrayList<>();
+    sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray()
+        .forEach(x -> words.add(x.getAsJsonObject()));
+
+    JsonArray matchedEntities = new JsonArray();
+    for (int i = 0; i < words.size(); i++) {
+      if (words.get(i).get(SentenceKeys.WORD_KEY).getAsString()
+          .matches("[\\p{Punct}]*")) {
+        continue;
+      }
+
+      for (int j = i; j < words.size(); j++) {
+        if (words.get(j).get(SentenceKeys.WORD_KEY).getAsString()
+            .matches("[\\p{Punct}]*")) {
+          continue;
+        }
+
+        if (spanIsNP(words, i, j, code)) {
+          JsonObject span = new JsonObject();
+          span.addProperty(SentenceKeys.START, i);
+          span.addProperty(SentenceKeys.END, j);
+          span.addProperty(
+              "phrase",
+              Joiner.on(" ").join(
+                  words.subList(i, j + 1).stream()
+                      .map(x -> x.get(SentenceKeys.WORD_KEY).getAsString())
+                      .iterator()));
+          span.addProperty(
+              "pattern",
+              Joiner.on(" ").join(
+                  words
+                      .subList(i, j + 1)
+                      .stream()
+                      .filter(
+                          x -> !x.get(SentenceKeys.WORD_KEY).getAsString()
+                              .matches("[\\p{Punct}]*"))
+                      .map(x -> x.get(SentenceKeys.POS_KEY).getAsString())
+                      .iterator()));
+          matchedEntities.add(span);
+        }
+      }
+    }
+    if (matchedEntities.size() > 0) {
+      sentence.add(SentenceKeys.MATCHED_ENTITIES, matchedEntities);
+    }
+  }
+
+  private static boolean spanIsNP(List<JsonObject> words, int spanStart,
+      int spanEnd, PosTagCode code) {
+
+    // Sequence of non-punc pos tags
+    String posSequence =
+        Joiner.on(" ")
+            .join(
+                words
+                    .subList(spanStart, spanEnd + 1)
+                    .stream()
+                    .filter(
+                        x -> !x.get(SentenceKeys.WORD_KEY).getAsString()
+                            .matches("[\\p{Punct}]*"))
+                    .map(x -> x.get(SentenceKeys.POS_KEY).getAsString())
+                    .iterator());
+
+    if (code.equals(PosTagCode.EN_PTB)) {
+      // If the list is single word, it should be a proper noun.
+      if (spanEnd - spanStart == 0)
+        return posSequence.matches("NNP.*");
+
+      // e.g. DT|IN NN|JJ NN|CD; DT JJ NN; CD
+      // the big lebowski
+      // james bond
+      // olympics 2012
+      // obama's country
+      if (posSequence
+          .matches("(D[^ ]* )?([JN][^ ]* |CD |VBG |POS ){1,3}(N[^ ]*|CD)"))
+        return true;
+
+      // the movie
+      if (posSequence.matches("DT [JN][^ ]*"))
+        return true;
+
+      // lord of the rings
+      if (posSequence
+          .matches("(D[^ ]* )?([JN][^ ]* |CD |VBG |POS ){1,3}(IN )(D[^ ]* )?([JN][^ ]*|CD){1,3}"))
+        return true;
+
+      // bold and brave
+      if (posSequence
+          .matches("(D[^ ]* )?([JN][^ ]* |CD |VBG |POS ){1,3}(CC )(D[^ ]* )?([JN][^ ]*|CD){1,3}"))
+        return true;
+
+
+      // star trek the next genreation
+      if (posSequence
+          .matches("(D[^ ]* )?([JN][^ ]* |CD |VBG |POS ){1,3}(D[^ ]* )?([JN][^ ]*|CD){1,3}"))
+        return true;
+
+      // to kill a mocking bird
+      if (posSequence
+          .matches("(I[^ ]* )(V[^ ]* )(D[^ ]* )?([JN][^ ]* |CD |VBG |POS ){1,3}(N[^ ]*|CD)"))
+        return true;
+    }
+    return false;
+  }
+
   public static void main(String[] args) throws IOException {
     System.err.println(args[0]);
     EntityAnnotator entityAnnotator =
@@ -261,7 +384,7 @@ public class EntityAnnotator {
       String line = br.readLine();
       while (line != null) {
         JsonObject sentence = jsonParser.parse(line).getAsJsonObject();
-        entityAnnotator.getAllEntitySpans(sentence);
+        entityAnnotator.getAllEntitySpans(sentence, false, false);
         System.out.println(gson.toJson(sentence));
         line = br.readLine();
       }

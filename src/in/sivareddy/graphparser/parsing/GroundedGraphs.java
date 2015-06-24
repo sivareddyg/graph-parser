@@ -354,7 +354,7 @@ public class GroundedGraphs {
     for (JsonElement entity : entities) {
       JsonObject entityObj = entity.getAsJsonObject();
       int index = entityObj.get(SentenceKeys.INDEX_KEY).getAsInt();
-      
+
       String fbEntity = entityObj.get(SentenceKeys.ENTITY).getAsString();
       String edge =
           String.format("dummy.edge.entity(%d:e , %d:%s)", questionWordIndex,
@@ -583,7 +583,7 @@ public class GroundedGraphs {
           String rightEdge = subEdges.get(j).getLeft();
 
           // if (leftEdge.equals(rightEdge))
-          //   continue;
+          // continue;
 
           int node1Index = subEdges.get(i).getRight();
           int node2Index = subEdges.get(j).getRight();
@@ -724,7 +724,10 @@ public class GroundedGraphs {
     }
 
     for (int i = 0; i < leaves.size(); i++) {
-      String stanfordNer = wordObjects.get(i).get("ner").getAsString();
+      String stanfordNer = "";
+      if (wordObjects.get(i).has("ner")) {
+        stanfordNer = wordObjects.get(i).get("ner").getAsString();
+      }
       LexicalItem leaf = leaves.get(i);
       String candcNer = leaf.getNeType();
       String posTag = leaf.getPos();
@@ -751,6 +754,7 @@ public class GroundedGraphs {
       int index = entityObject.get("index").getAsInt();
       String mid = entityObject.get("entity").getAsString();
       leaves.get(index).setMID(mid);
+      leaves.get(index).setIsEntity(true);
     }
   }
 

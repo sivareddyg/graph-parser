@@ -125,6 +125,49 @@ public class RdfGraphTools {
     return results;
   }
 
+  public boolean runHttpAsk(String query) {
+    HttpURLConnection connection = null;
+    InputStream responseRecieved = null;
+    try {
+      String charset = "UTF-8";
+      URIBuilder builder = new URIBuilder(httpUrl);
+      builder.addParameter("query", query);
+      builder.addParameter("format", "application/sparql-results+json");
+
+      // Remove this in case if lot of queries die.
+      builder.addParameter("timeout", timeOut.toString());
+
+      URL url = builder.build().toURL();
+      try {
+        connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(timeOut);
+        connection.setReadTimeout(timeOut);
+        connection.setRequestProperty("connection", "close");
+      } catch (Exception e) {
+        // Bad url.
+        System.err.println("Could not connect to " + httpUrl);
+        throw e;
+      }
+
+      responseRecieved = connection.getInputStream();
+      String content = IOUtils.toString(responseRecieved, charset);
+
+
+      JsonObject result = parser.parse(content).getAsJsonObject();
+
+      return result.has("boolean") && result.get("boolean").getAsBoolean();
+    } catch (SocketTimeoutException e) {
+      // System.err.println("http timeout query: " + timeOut + ": " + query);
+    } catch (Exception e) {
+      // Bad query. Skip.
+    } finally {
+      if (responseRecieved != null)
+        IOUtils.closeQuietly(responseRecieved);
+      connection.disconnect();
+    }
+    return false;
+  }
+
   public List<Map<String, String>> runQueryHttpSolutions(String query) {
     List<Map<String, String>> results = new ArrayList<>();
     HttpURLConnection connection = null;
@@ -500,11 +543,11 @@ public class RdfGraphTools {
       Set<String> overlap =
           new HashSet<>(Collections2.filter(predAnswersCleaned,
               x -> goldAnswersCleaned.contains(x)));
-      
+
       if (overlap.size() == 0) {
         return 0.0;
       }
-        
+
       double precision = (overlap.size() + 0.0) / predAnswersCleaned.size();
       double recall = (overlap.size() + 0.0) / goldAnswersCleaned.size();
       return 2 * precision * recall / (precision + recall);
@@ -557,5 +600,9 @@ public class RdfGraphTools {
     long stopTime = System.currentTimeMillis();
     long elapsedTime = stopTime - startTime;
     System.out.println(elapsedTime);
+
+    query =
+        "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ASK { fb:m.017nt ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 fb:m.04sv4 . }";
+    System.out.println(rdfGraphTools.runHttpAsk(query));
   }
 }

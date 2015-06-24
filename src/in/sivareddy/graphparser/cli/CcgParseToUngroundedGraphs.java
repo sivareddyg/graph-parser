@@ -145,7 +145,7 @@ public class CcgParseToUngroundedGraphs {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     try {
       CcgParseToUngroundedGraphs parser =
-          new CcgParseToUngroundedGraphs("lib_data", "en", true);
+          new CcgParseToUngroundedGraphs("lib_data", "en-ner", true);
       PatternLayout layout = new PatternLayout("%r [%t] %-5p: %m%n");
       Logger logger = Logger.getLogger(CcgParseToUngroundedGraphs.class);
       logger.setLevel(Level.DEBUG);
