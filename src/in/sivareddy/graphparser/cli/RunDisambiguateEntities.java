@@ -50,6 +50,7 @@ public class RunDisambiguateEntities extends AbstractCli {
   private OptionSpec<Integer> initialNbest;
   private OptionSpec<Integer> intermediateNbest;
   private OptionSpec<Integer> finalNbest;
+  private OptionSpec<Boolean> entityHasReadableId;
 
 
   @Override
@@ -107,6 +108,11 @@ public class RunDisambiguateEntities extends AbstractCli {
                 "Output file where entity tagged should be written")
             .withRequiredArg().ofType(String.class).required();
 
+    entityHasReadableId =
+        parser
+            .accepts("entityHasReadableId",
+                "consider an entity as valid only if it has a readble Freebase id")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
   }
 
   @Override
@@ -122,7 +128,8 @@ public class RunDisambiguateEntities extends AbstractCli {
       RunDisambiguateEntitiesMain runner =
           new RunDisambiguateEntitiesMain(kb, options.valueOf(nthreads),
               options.valueOf(initialNbest),
-              options.valueOf(intermediateNbest), options.valueOf(finalNbest));
+              options.valueOf(intermediateNbest), options.valueOf(finalNbest),
+              options.valueOf(entityHasReadableId));
 
       String inputFileString = options.valueOf(inputFile);
       InputStream in = null;
@@ -156,15 +163,18 @@ public class RunDisambiguateEntities extends AbstractCli {
     int initalNbest;
     int intermediateNbest;
     int finalNbest;
+    boolean entityHasReadableId;
     KnowledgeBase kb;
 
     public RunDisambiguateEntitiesMain(KnowledgeBase kb, int nthreads,
-        int initalNbest, int intermediateNbest, int finalNbest) {
+        int initalNbest, int intermediateNbest, int finalNbest,
+        boolean entityHasReadableId) {
       this.kb = kb;
       this.nthreads = nthreads;
       this.initalNbest = initalNbest;
       this.intermediateNbest = intermediateNbest;
       this.finalNbest = finalNbest;
+      this.entityHasReadableId = entityHasReadableId;
     }
 
     public void disambiguate(InputStream stream, PrintStream out)
@@ -191,14 +201,14 @@ public class RunDisambiguateEntities extends AbstractCli {
       try {
         String line = br.readLine();
         while (line != null) {
-          line = br.readLine();
           JsonObject jsonSentence = jsonParser.parse(line).getAsJsonObject();
           jsonSentence.addProperty(SentenceKeys.INDEX_KEY, sentCount);
           Runnable worker =
               new DisambiguateSentenceRunnable(this, jsonSentence, initalNbest,
-                  intermediateNbest, finalNbest, kb, out);
+                  intermediateNbest, finalNbest, entityHasReadableId, kb, out);
           threadPool.execute(worker);
           sentCount += 1;
+          line = br.readLine();
         }
       } finally {
         br.close();
@@ -225,18 +235,21 @@ public class RunDisambiguateEntities extends AbstractCli {
     int initialNbest;
     int intermediateNbest;
     int finalNbest;
+    boolean entityHasReadableId;
     KnowledgeBase kb;
     RunDisambiguateEntitiesMain engine;
     PrintStream out;
 
     public DisambiguateSentenceRunnable(RunDisambiguateEntitiesMain engine,
         JsonObject jsonSentence, int initialNbest, int intermediateNbest,
-        int finalNbest, KnowledgeBase kb, PrintStream out) {
+        int finalNbest, boolean entityHasReadableId, KnowledgeBase kb,
+        PrintStream out) {
       this.engine = engine;
       this.jsonSentence = jsonSentence;
       this.initialNbest = initialNbest;
       this.intermediateNbest = intermediateNbest;
       this.finalNbest = finalNbest;
+      this.entityHasReadableId = entityHasReadableId;
       this.kb = kb;
       this.out = out;
     }
@@ -245,7 +258,8 @@ public class RunDisambiguateEntities extends AbstractCli {
     public void run() {
       List<JsonObject> taggedSentences =
           DisambiguateEntities.cykStyledDisambiguation(jsonSentence,
-              initialNbest, intermediateNbest, finalNbest, kb);
+              initialNbest, intermediateNbest, finalNbest, entityHasReadableId,
+              kb);
       engine.printSentences(taggedSentences, out);
     }
   }

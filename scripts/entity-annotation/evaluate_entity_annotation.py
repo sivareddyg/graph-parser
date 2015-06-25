@@ -40,14 +40,10 @@ for line in sys.stdin:
         sentence_position_to_accuracy[index_count] += 1
     prev_index = sentence_id
 
+print "total =", len(sentence_ids)
 print "nthBest\tcount\ttotalAccuracy"
-print "1\t%d\t%.3f" % (sentence_position_to_accuracy[1], (sentence_position_to_accuracy[1] + 0.0) / len(sentence_ids))
-print "2\t%d\t%.3f" % (sentence_position_to_accuracy[2], (sentence_position_to_accuracy[1] + sentence_position_to_accuracy[2] + 0.0) / len(sentence_ids))
-print "3\t%d\t%.3f" % (sentence_position_to_accuracy[3], (sentence_position_to_accuracy[1] + sentence_position_to_accuracy[2] + sentence_position_to_accuracy[3] + 0.0) / len(sentence_ids))
-print "4\t%d\t%.3f" % (sentence_position_to_accuracy[4], (sentence_position_to_accuracy[1] + sentence_position_to_accuracy[2] + sentence_position_to_accuracy[3] + sentence_position_to_accuracy[4] + 0.0) / len(sentence_ids))
-print "5\t%d\t%.3f" % (sentence_position_to_accuracy[5], (sentence_position_to_accuracy[1] + sentence_position_to_accuracy[2] + sentence_position_to_accuracy[3] + sentence_position_to_accuracy[4] + sentence_position_to_accuracy[5] + 0.0) / len(sentence_ids))
-print "6\t%d\t%.3f" % (sentence_position_to_accuracy[6], (sentence_position_to_accuracy[1] + sentence_position_to_accuracy[2] + sentence_position_to_accuracy[3] + sentence_position_to_accuracy[4] + sentence_position_to_accuracy[5] + sentence_position_to_accuracy[6] + 0.0) / len(sentence_ids))
-print "7\t%d\t%.3f" % (sentence_position_to_accuracy[7], (sentence_position_to_accuracy[1] + sentence_position_to_accuracy[2] + sentence_position_to_accuracy[3] + sentence_position_to_accuracy[4] + sentence_position_to_accuracy[5] + sentence_position_to_accuracy[6] + sentence_position_to_accuracy[7] + 0.0) / len(sentence_ids))
-print "8\t%d\t%.3f" % (sentence_position_to_accuracy[8], (sentence_position_to_accuracy[1] + sentence_position_to_accuracy[2] + sentence_position_to_accuracy[3] + sentence_position_to_accuracy[4] + sentence_position_to_accuracy[5] + sentence_position_to_accuracy[6] + sentence_position_to_accuracy[7] + sentence_position_to_accuracy[8] + 0.0) / len(sentence_ids))
-print "9\t%d\t%.3f" % (sentence_position_to_accuracy[9], (sentence_position_to_accuracy[1] + sentence_position_to_accuracy[2] + sentence_position_to_accuracy[3] + sentence_position_to_accuracy[4] + sentence_position_to_accuracy[5] + sentence_position_to_accuracy[6] + sentence_position_to_accuracy[7] + sentence_position_to_accuracy[8] + sentence_position_to_accuracy[9] + 0.0) / len(sentence_ids))
-print "10\t%d\t%.3f" % (sentence_position_to_accuracy[10], (sentence_position_to_accuracy[1] + sentence_position_to_accuracy[2] + sentence_position_to_accuracy[3] + sentence_position_to_accuracy[4] + sentence_position_to_accuracy[5] + sentence_position_to_accuracy[6] + sentence_position_to_accuracy[7] + sentence_position_to_accuracy[8] + sentence_position_to_accuracy[9] + sentence_position_to_accuracy[10] + 0.0) / len(sentence_ids))
+
+positives = 0.0
+for i in range(1,11):
+    positives += sentence_position_to_accuracy.get(i, 0);
+    print "%d\t%d\t%.3f" % (i, sentence_position_to_accuracy.get(i, 0), positives/ len(sentence_ids))

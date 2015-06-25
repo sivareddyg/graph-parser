@@ -65,9 +65,10 @@ disambiguate_entities_webq_data:
 		-endpoint localhost \
 		-typeKey "fb:type.object.type" \
 		-schema data/freebase/schema/all_domains_schema.txt \
-		-initialNbest 5 \
+		-initialNbest 3 \
 		-intermediateNbest 10 \
-		-finalNbest 5 \
+		-finalNbest 10 \
+		-entityHasReadableId true \
 		-nthreads 10 \
 		-inputFile data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.json \
 		-outputFile data/webquestions/webquestions.examples.train.domains.entity.disambiguated.json
@@ -75,9 +76,10 @@ disambiguate_entities_webq_data:
 		-endpoint localhost \
 		-typeKey "fb:type.object.type" \
 		-schema data/freebase/schema/all_domains_schema.txt \
-		-initialNbest 5 \
+		-initialNbest 3 \
 		-intermediateNbest 10 \
-		-finalNbest 5 \
+		-finalNbest 10 \
+		-entityHasReadableId true \
 		-nthreads 10 \
 		-inputFile data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.json \
 		-outputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.json
