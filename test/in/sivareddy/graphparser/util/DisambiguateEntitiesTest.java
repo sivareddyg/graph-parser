@@ -1,15 +1,11 @@
 package in.sivareddy.graphparser.util;
 
-import static org.junit.Assert.*;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseOnline;
 
 import java.io.IOException;
 
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseOnline;
-
 import org.junit.Test;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 

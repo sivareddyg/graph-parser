@@ -1,7 +1,5 @@
 package in.sivareddy.graphparser.util;
 
-import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
-import in.sivareddy.graphparser.ccg.CcgParseTree;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.util.SentenceKeys;
 
@@ -11,7 +9,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -162,14 +159,15 @@ public class DisambiguateEntities {
       return returnSentences;
     }
 
+
+    List<JsonObject> words = new ArrayList<>();
+    sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray()
+        .forEach(x -> words.add(x.getAsJsonObject()));
+
     Map<Pair<Integer, Integer>, List<ChartEntry>> spanToEntities =
         new HashMap<>();
     Map<Integer, List<ChartEntry>> spanStartToEntities = new HashMap<>();
 
-    List<JsonObject> words = new ArrayList<>();
-
-    sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray()
-        .forEach(x -> words.add(x.getAsJsonObject()));
     for (JsonElement matchedEntity : sentence
         .get(SentenceKeys.MATCHED_ENTITIES).getAsJsonArray()) {
       JsonObject matchedEntityObj = matchedEntity.getAsJsonObject();
@@ -180,19 +178,35 @@ public class DisambiguateEntities {
       int spanEnd = matchedEntityObj.get(SentenceKeys.END).getAsInt();
       Pair<Integer, Integer> span = Pair.of(spanStart, spanEnd);
 
-      boolean isValid = false;
-      for (int i = spanStart; i <= spanEnd; i++) {
-        String curNer =
-            words.get(spanStart).get(SentenceKeys.NER_KEY).getAsString();
-        String curTag =
-            words.get(spanStart).get(SentenceKeys.POS_KEY).getAsString();
-        if (!curNer.equals("O") || PROPER_NOUNS.contains(curTag)) {
-          isValid = true;
-          break;
-        }
-      }
-      if (!isValid)
+      // Entity span should start with a named entity.
+      String startNer =
+          words.get(spanStart).get(SentenceKeys.NER_KEY).getAsString();
+      String startTag =
+          words.get(spanStart).get(SentenceKeys.POS_KEY).getAsString();
+      if (startNer.equals("O") && !PROPER_NOUNS.contains(startTag))
         continue;
+
+
+      String endNer =
+          words.get(spanEnd).get(SentenceKeys.NER_KEY).getAsString();
+      String endTag =
+          words.get(spanEnd).get(SentenceKeys.POS_KEY).getAsString();
+
+      // Entity end should not contain a weird word. - strange rule. Don't know
+      // why this works.
+      if (endNer.equals("O") && PROPER_NOUNS.contains(endTag))
+        continue;
+
+      // Entity span should not be preceded by an entity that has the same ner tag.
+      if (spanStart > 0) {
+        String prevNer =
+            words.get(spanStart - 1).get(SentenceKeys.NER_KEY).getAsString();
+        String prevTag =
+            words.get(spanStart - 1).get(SentenceKeys.POS_KEY).getAsString();
+        if ((!prevNer.equals("O") && prevNer.equals(startNer))
+            || PROPER_NOUNS.contains(prevTag))
+          continue;
+      }
 
       spanToEntities.put(span, new ArrayList<>());
       if (!spanStartToEntities.containsKey(spanStart))
@@ -202,17 +216,17 @@ public class DisambiguateEntities {
       int count = 0;
       for (JsonElement rankedEntity : rankedEntities) {
         JsonObject rankedEntityObj = rankedEntity.getAsJsonObject();
-        // If the entity does not have a readable freebase id, ignore it.
+        // If the entity does not have a readable Freebase id, ignore it.
         if (entityHasReadableId
             && (!rankedEntityObj.has("id") || !rankedEntityObj.get("id")
                 .getAsString().startsWith("/en/")))
           continue;
 
+        double curScore = rankedEntityObj.get(SentenceKeys.SCORE).getAsDouble();
         ChartEntry chartEntry = new ChartEntry();
         chartEntry.getEntities().add(rankedEntityObj);
         chartEntry.getEntitySpans().add(span);
-        chartEntry.setScore(rankedEntityObj.get(SentenceKeys.SCORE)
-            .getAsDouble());
+        chartEntry.setScore(curScore);
 
         spanToEntities.get(span).add(chartEntry);
         spanStartToEntities.get(spanStart).add(chartEntry);

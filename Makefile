@@ -65,7 +65,7 @@ disambiguate_entities_webq_data:
 		-endpoint localhost \
 		-typeKey "fb:type.object.type" \
 		-schema data/freebase/schema/all_domains_schema.txt \
-		-initialNbest 3 \
+		-initialNbest 10 \
 		-intermediateNbest 10 \
 		-finalNbest 10 \
 		-entityHasReadableId true \
@@ -76,7 +76,7 @@ disambiguate_entities_webq_data:
 		-endpoint localhost \
 		-typeKey "fb:type.object.type" \
 		-schema data/freebase/schema/all_domains_schema.txt \
-		-initialNbest 3 \
+		-initialNbest 10 \
 		-intermediateNbest 10 \
 		-finalNbest 10 \
 		-entityHasReadableId true \
