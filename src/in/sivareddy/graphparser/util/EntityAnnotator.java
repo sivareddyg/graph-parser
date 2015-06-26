@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -35,6 +36,8 @@ public class EntityAnnotator {
   public static String SUFFIX_PUNCTUATION = "[\\p{Punct}]+$";
   private static String WORD_PREFIX = "w:";
   private static String ENTITIES = SentenceKeys.ENTITIES;
+  public static Set<String> STANFORD_NER_NON_ENTITY = Sets.newHashSet("Time",
+      "Money", "Percent", "Date", "O", "DURATION", "ORDINAL");
 
   public static int MAX_NUMBER_ENTITIES = 1000;
 
@@ -328,9 +331,17 @@ public class EntityAnnotator {
                     .iterator());
 
     if (code.equals(PosTagCode.EN_PTB)) {
-      // If the list is single word, it should be a proper noun.
-      if (spanEnd - spanStart == 0)
+
+      // If the list is single word, it should be a proper noun or a named
+      // entity.
+      if (spanEnd - spanStart == 0) {
+        if (words.get(spanStart).has(SentenceKeys.NER_KEY)
+            && !STANFORD_NER_NON_ENTITY.contains(words.get(spanStart)
+                .get(SentenceKeys.NER_KEY).getAsString())) {
+          return true;
+        }
         return posSequence.matches("NNP.*");
+      }
 
       // e.g. DT|IN NN|JJ NN|CD; DT JJ NN; CD
       // the big lebowski

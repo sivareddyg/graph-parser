@@ -40,14 +40,16 @@ tokenize_entity_dict:
 	| gzip \
 	> data/freebase/en_entity_lexicon_tokenized.gz
 
-entity_tag_webq_data:
+entity_span_tag_webq_data:
 	cat data/webquestions/webquestions.examples.train.domains.json \
 		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
+		| python scripts/webquestions-preprocessing/add_gold_mid_using_gold_url.py data/freebase/mid_to_key.txt.gz \
 	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
 		| java -cp lib/*:bin in.sivareddy.scripts.NounPhraseAnnotator EN_PTB \
 		> data/webquestions/webquestions.examples.train.domains.entity.matches.json
 	cat data/webquestions/webquestions.examples.test.domains.json \
 		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
+		| python scripts/webquestions-preprocessing/add_gold_mid_using_gold_url.py data/freebase/mid_to_key.txt.gz \
 	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
 		| java -cp lib/*:bin in.sivareddy.scripts.NounPhraseAnnotator EN_PTB \
 		> data/webquestions/webquestions.examples.test.domains.entity.matches.json

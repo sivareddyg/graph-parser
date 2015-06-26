@@ -186,27 +186,53 @@ public class DisambiguateEntities {
       if (startNer.equals("O") && !PROPER_NOUNS.contains(startTag))
         continue;
 
+      // If the entity is a single word, it should either be a noun or
+      // adjective.
+      if (spanEnd - spanStart == 0 && !startTag.startsWith("N")
+          && !startTag.startsWith("J"))
+        continue;
 
       String endNer =
           words.get(spanEnd).get(SentenceKeys.NER_KEY).getAsString();
       String endTag =
           words.get(spanEnd).get(SentenceKeys.POS_KEY).getAsString();
 
-      // Entity end should not contain a weird word. - strange rule. Don't know
-      // why this works.
-      if (endNer.equals("O") && PROPER_NOUNS.contains(endTag))
+      boolean hasNamedEntity = false;
+      for (int i = spanStart; i <= spanEnd; i++) {
+        String contextNer =
+            words.get(i).get(SentenceKeys.NER_KEY).getAsString();
+        if (!EntityAnnotator.STANFORD_NER_NON_ENTITY.contains(contextNer)) {
+          hasNamedEntity = true;
+          break;
+        }
+      }
+      if (!hasNamedEntity)
         continue;
 
-      // Entity span should not be preceded by an entity that has the same ner tag.
+      // Entity span should not be preceded by an entity that has the same ner
+      // tag.
       if (spanStart > 0) {
         String prevNer =
             words.get(spanStart - 1).get(SentenceKeys.NER_KEY).getAsString();
         String prevTag =
             words.get(spanStart - 1).get(SentenceKeys.POS_KEY).getAsString();
-        if ((!prevNer.equals("O") && prevNer.equals(startNer))
-            || PROPER_NOUNS.contains(prevTag))
+        if (!prevNer.equals("O") && prevNer.equals(startNer)
+            && (prevTag.startsWith("N") || prevTag.startsWith("J")))
           continue;
       }
+
+      // Entity span should not be succeeded by an entity that has the same ner
+      // tag.
+      if (spanEnd < words.size() - 1) {
+        String nextNer =
+            words.get(spanEnd + 1).get(SentenceKeys.NER_KEY).getAsString();
+        String nextTag =
+            words.get(spanEnd + 1).get(SentenceKeys.POS_KEY).getAsString();
+        if (!nextNer.equals("O") && nextNer.equals(endNer)
+            && (nextTag.startsWith("N") || nextTag.startsWith("J")))
+          continue;
+      }
+
 
       spanToEntities.put(span, new ArrayList<>());
       if (!spanStartToEntities.containsKey(spanStart))
