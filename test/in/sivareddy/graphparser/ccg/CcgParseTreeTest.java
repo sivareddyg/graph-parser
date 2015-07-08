@@ -46,6 +46,15 @@ public class CcgParseTreeTest {
     // ccgParser.parseFromString("(<L N Adobe Adobe NNP I-ORG I-NP N>)");
     // assertEquals(ccgParseTree.getLeafNodes().size(), 1);
 
+    sent = "Woman in swim suit holding parasol on sunny day.";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T NP ba 0 2> (<T NP lex 0 1> (<L N Woman Woman NNP O O N>) ) (<T NP\\NP fa 0 2> (<L (NP\\NP)/NP in in IN O O (NP\\NP)/NP>) (<T NP ba 0 2> (<T NP lex 0 1> (<T N fa 1 2> (<L N/N swim swim VBP O O N/N>) (<L N suit suit NN O O N>) ) ) (<T NP\\NP lex 0 1> (<T S[ng]\\NP fa 0 2> (<T (S[ng]\\NP)/PP fa 0 2> (<L ((S[ng]\\NP)/PP)/NP holding hold VBG O O ((S[ng]\\NP)/PP)/NP>) (<T NP lex 0 1> (<L N parasol parasol NN O O N>) ) ) (<T PP fa 0 2> (<L PP/NP on on IN O O PP/NP>) (<T NP rp 0 2> (<T NP lex 0 1> (<T N fa 1 2> (<L N/N sunny sunny JJ O O N/N>) (<L N day day NN O O N>) ) ) (<L . . . . O O .>) ) ) ) ) ) ) )");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    System.out.println();
+    
     sent = "The soldier is not afraid to die .";
     ccgParseTrees =
         ccgParser

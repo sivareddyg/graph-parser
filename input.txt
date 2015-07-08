@@ -1,3 +1,4 @@
+{"sentence" : "Woman in swim suit holding parasol on sunny day."}
 {"sentence" : " I eat bananas ; apples ."}
 {"sentence" : "John and Mary married in 1998."}
 {"sentence" : "BLANK is one of the founders of Microsoft."}
