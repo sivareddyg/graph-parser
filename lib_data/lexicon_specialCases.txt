@@ -29,8 +29,8 @@ the	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	UNIQUE
 *	*	S[ng]\NP	(S[ng]{_}\NP{Y}){_};_ 1 Y	EVENT
 *	*	(S[adj]\NP)/PP	((S[adj]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
 *	*	(S[ng]\NP)/PP	((S[ng]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
-*	*	((S[adj]\NP)/PP)/NP	(((S[adj]{_}\NP{Y}){_}/PP{_}){_}/NP{W}){_};_ 1 y,_ 2 W	EVENT
-*	*	((S[ng]\NP)/PP)/NP	(((S[ng]{_}\NP{Y}){_}/PP{_}){_}/NP{W}){_};_ 1 y,_ 2 W	EVENT
+*	*	((S[adj]\NP)/PP)/NP	(((S[adj]{_}\NP{Y}){_}/PP{_}){_}/NP{W}){_};_ 1 Y,_ 2 W	EVENT
+*	*	((S[ng]\NP)/PP)/NP	(((S[ng]{_}\NP{Y}){_}/PP{_}){_}/NP{W}){_};_ 1 Y,_ 2 W	EVENT
 *	*	(S[adj]\NP)/(S[to]\NP)	((S[adj]{_}\NP{Y}){_}/(S[to]{Z}\NP{Y}){Z}){_};_ 1 Y,_ 2 Z	EVENT
 *	*	(S[ng]\NP)/(S[to]\NP)	((S[ng]{_}\NP{Y}){_}/(S[to]{Z}\NP{Y}){Z}){_};_ 1 Y,_ 2 Z	EVENT
 
