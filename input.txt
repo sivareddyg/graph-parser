@@ -1,5 +1,7 @@
-{"sentence" : "Woman in swim suit holding parasol on sunny day."}
-{"sentence" : " I eat bananas ; apples ."}
+{"sentence": "Google is the company which Larry Page co-founded with  Sergey Bin."}
+{"sentence" : "Who was Titanic directed by?"}
+{"sentence" : "Cameron is the director of the movie which DiCaprio acted in."}
+{"sentence" : "Obama's birthplace is Kenya."}
 {"sentence" : "John and Mary married in 1998."}
 {"sentence" : "BLANK is one of the founders of Microsoft."}
 {"sentence" : "Gates was born in NY, BLANK."}
