@@ -11,12 +11,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -27,6 +29,7 @@ public class DisambiguateEntities {
 
   private static Gson gson = new Gson();
   private static JsonParser jsonParser = new JsonParser();
+  public static final Set<String> PROPER_NOUNS = Sets.newHashSet("NNP", "NNPS");
 
   public DisambiguateEntities() {
 
@@ -146,7 +149,8 @@ public class DisambiguateEntities {
   }
 
   public static List<JsonObject> cykStyledDisambiguation(JsonObject sentence,
-      int initialNbest, int intermediateNbest, int finalNbest, KnowledgeBase kb) {
+      int initialNbest, int intermediateNbest, int finalNbest,
+      boolean entityHasReadableId, KnowledgeBase kb) {
     List<JsonObject> returnSentences = new ArrayList<>();
     if (!sentence.has(SentenceKeys.MATCHED_ENTITIES)) {
       returnSentences.add(jsonParser.parse(gson.toJson(sentence))
@@ -154,14 +158,16 @@ public class DisambiguateEntities {
       returnSentences.get(0).add(SentenceKeys.ENTITIES, new JsonArray());
       return returnSentences;
     }
+
+
+    List<JsonObject> words = new ArrayList<>();
+    sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray()
+        .forEach(x -> words.add(x.getAsJsonObject()));
+
     Map<Pair<Integer, Integer>, List<ChartEntry>> spanToEntities =
         new HashMap<>();
     Map<Integer, List<ChartEntry>> spanStartToEntities = new HashMap<>();
 
-    List<JsonObject> words = new ArrayList<>();
-
-    sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray()
-        .forEach(x -> words.add(x.getAsJsonObject()));
     for (JsonElement matchedEntity : sentence
         .get(SentenceKeys.MATCHED_ENTITIES).getAsJsonArray()) {
       JsonObject matchedEntityObj = matchedEntity.getAsJsonObject();
@@ -172,6 +178,62 @@ public class DisambiguateEntities {
       int spanEnd = matchedEntityObj.get(SentenceKeys.END).getAsInt();
       Pair<Integer, Integer> span = Pair.of(spanStart, spanEnd);
 
+      // Entity span should start with a named entity or with a proper noun.
+      String startNer =
+          words.get(spanStart).get(SentenceKeys.NER_KEY).getAsString();
+      String startTag =
+          words.get(spanStart).get(SentenceKeys.POS_KEY).getAsString();
+      if (startNer.equals("O") && !PROPER_NOUNS.contains(startTag))
+        continue;
+
+      // If the entity is a single word, it should either be a noun or
+      // adjective.
+      if (spanEnd - spanStart == 0 && !startTag.startsWith("N")
+          && !startTag.startsWith("J"))
+        continue;
+
+      String endNer =
+          words.get(spanEnd).get(SentenceKeys.NER_KEY).getAsString();
+      String endTag =
+          words.get(spanEnd).get(SentenceKeys.POS_KEY).getAsString();
+
+      boolean hasNamedEntity = false;
+      for (int i = spanStart; i <= spanEnd; i++) {
+        String contextNer =
+            words.get(i).get(SentenceKeys.NER_KEY).getAsString();
+        if (!EntityAnnotator.STANFORD_NER_NON_ENTITY.contains(contextNer)) {
+          hasNamedEntity = true;
+          break;
+        }
+      }
+      if (!hasNamedEntity)
+        continue;
+
+      // Entity span should not be preceded by an entity that has the same ner
+      // tag.
+      if (spanStart > 0) {
+        String prevNer =
+            words.get(spanStart - 1).get(SentenceKeys.NER_KEY).getAsString();
+        String prevTag =
+            words.get(spanStart - 1).get(SentenceKeys.POS_KEY).getAsString();
+        if (!prevNer.equals("O") && prevNer.equals(startNer)
+            && (prevTag.startsWith("N") || prevTag.startsWith("J")))
+          continue;
+      }
+
+      // Entity span should not be succeeded by an entity that has the same ner
+      // tag.
+      if (spanEnd < words.size() - 1) {
+        String nextNer =
+            words.get(spanEnd + 1).get(SentenceKeys.NER_KEY).getAsString();
+        String nextTag =
+            words.get(spanEnd + 1).get(SentenceKeys.POS_KEY).getAsString();
+        if (!nextNer.equals("O") && nextNer.equals(endNer)
+            && (nextTag.startsWith("N") || nextTag.startsWith("J")))
+          continue;
+      }
+
+
       spanToEntities.put(span, new ArrayList<>());
       if (!spanStartToEntities.containsKey(spanStart))
         spanStartToEntities.put(spanStart, new ArrayList<>());
@@ -179,19 +241,24 @@ public class DisambiguateEntities {
           matchedEntityObj.get(SentenceKeys.RANKED_ENTITIES).getAsJsonArray();
       int count = 0;
       for (JsonElement rankedEntity : rankedEntities) {
-        count++;
-        if (count > initialNbest)
-          break;
-
-        ChartEntry chartEntry = new ChartEntry();
         JsonObject rankedEntityObj = rankedEntity.getAsJsonObject();
+        // If the entity does not have a readable Freebase id, ignore it.
+        if (entityHasReadableId
+            && (!rankedEntityObj.has("id") || !rankedEntityObj.get("id")
+                .getAsString().startsWith("/en/")))
+          continue;
+
+        double curScore = rankedEntityObj.get(SentenceKeys.SCORE).getAsDouble();
+        ChartEntry chartEntry = new ChartEntry();
         chartEntry.getEntities().add(rankedEntityObj);
         chartEntry.getEntitySpans().add(span);
-        chartEntry.setScore(rankedEntityObj.get(SentenceKeys.SCORE)
-            .getAsDouble());
+        chartEntry.setScore(curScore);
 
         spanToEntities.get(span).add(chartEntry);
         spanStartToEntities.get(spanStart).add(chartEntry);
+        count++;
+        if (count > initialNbest)
+          break;
       }
     }
 
@@ -276,6 +343,7 @@ public class DisambiguateEntities {
       prevSpanEntities = curSpanEntities;
     }
 
+    int numberOfEntityPaths = 1;
     for (ChartEntry chartEntry : prevSpanEntities) {
       JsonObject newSentence =
           jsonParser.parse(gson.toJson(sentence)).getAsJsonObject();
@@ -315,6 +383,16 @@ public class DisambiguateEntities {
       }
       newSentence.add(SentenceKeys.ENTITIES, entities);
       returnSentences.add(newSentence);
+
+      numberOfEntityPaths++;
+      if (numberOfEntityPaths > finalNbest)
+        break;
+    }
+
+    if (returnSentences.size() == 0) {
+      returnSentences.add(jsonParser.parse(gson.toJson(sentence))
+          .getAsJsonObject());
+      returnSentences.get(0).add(SentenceKeys.ENTITIES, new JsonArray());
     }
     return returnSentences;
   }

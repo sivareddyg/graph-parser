@@ -474,9 +474,13 @@ public class GroundedGraphs {
       if (matcher.find()) {
         isMatchedAlready = true;
         String relationName = matcher.group(1);
-        Preconditions.checkArgument(
+
+        // Removing this constraint since there might be cases with completely
+        // capitalised predicates, and fall in Semantic Category types. Check if
+        // this has any side effects in future.
+        /*-Preconditions.checkArgument(
             !SemanticCategoryType.types.contains(relationName),
-            "relation pattern should not match special types");
+            "relation pattern should not match special types");*/
 
         Integer eventIndex = Integer.valueOf(matcher.group(2));
         String argumentName = matcher.group(3);
@@ -504,9 +508,13 @@ public class GroundedGraphs {
       if (matcher.find()) {
         isMatchedAlready = true;
         String typeName = matcher.group(1);
-        Preconditions.checkArgument(
+
+        // Removing this constraint since there might be cases with completely
+        // capitalised predicates, and fall in Semantic Category types. Check if
+        // this has any side effects in future.
+        /*-Preconditions.checkArgument(
             !SemanticCategoryType.types.contains(typeName),
-            "type pattern should not match special types");
+            "type pattern should not match special types");*/
 
         Integer stateIndex = Integer.valueOf(matcher.group(2));
         String argumentName = matcher.group(3);
