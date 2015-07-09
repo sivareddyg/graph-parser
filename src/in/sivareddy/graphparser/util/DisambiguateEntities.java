@@ -178,7 +178,7 @@ public class DisambiguateEntities {
       int spanEnd = matchedEntityObj.get(SentenceKeys.END).getAsInt();
       Pair<Integer, Integer> span = Pair.of(spanStart, spanEnd);
 
-      // Entity span should start with a named entity.
+      // Entity span should start with a named entity or with a proper noun.
       String startNer =
           words.get(spanStart).get(SentenceKeys.NER_KEY).getAsString();
       String startTag =
