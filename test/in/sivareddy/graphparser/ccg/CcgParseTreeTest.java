@@ -46,10 +46,20 @@ public class CcgParseTreeTest {
     // ccgParser.parseFromString("(<L N Adobe Adobe NNP I-ORG I-NP N>)");
     // assertEquals(ccgParseTree.getLeafNodes().size(), 1);
 
-    sent = "Woman in swim suit holding parasol on sunny day.";
+    sent = "He ate and drank soup.";
     ccgParseTrees =
         ccgParser
-            .parseFromString("(<T NP ba 0 2> (<T NP lex 0 1> (<L N Woman Woman NNP O O N>) ) (<T NP\\NP fa 0 2> (<L (NP\\NP)/NP in in IN O O (NP\\NP)/NP>) (<T NP ba 0 2> (<T NP lex 0 1> (<T N fa 1 2> (<L N/N swim swim VBP O O N/N>) (<L N suit suit NN O O N>) ) ) (<T NP\\NP lex 0 1> (<T S[ng]\\NP fa 0 2> (<T (S[ng]\\NP)/PP fa 0 2> (<L ((S[ng]\\NP)/PP)/NP holding hold VBG O O ((S[ng]\\NP)/PP)/NP>) (<T NP lex 0 1> (<L N parasol parasol NN O O N>) ) ) (<T PP fa 0 2> (<L PP/NP on on IN O O PP/NP>) (<T NP rp 0 2> (<T NP lex 0 1> (<T N fa 1 2> (<L N/N sunny sunny JJ O O N/N>) (<L N day day NN O O N>) ) ) (<L . . . . O O .>) ) ) ) ) ) ) )");
+            .parseFromString("(<T S[dcl] ba 1 2> (<L NP He He PRP O O NP>) (<T S[dcl]\\NP fa 0 2> (<T (S[dcl]\\NP)/NP ba 0 2> (<L (S[dcl]\\NP)/NP ate eat VBD O O (S[dcl]\\NP)/NP>) (<T ((S[dcl]\\NP)/NP)\\((S[dcl]\\NP)/NP) conj 1 2> (<L conj and and CC O O conj>) (<L (S[dcl]\\NP)/NP drank drink VBD O O (S[dcl]\\NP)/NP>) ) ) (<T NP rp 0 2> (<T NP lex 0 1> (<L N soup soup NN O O N>) ) (<L . . . . O O .>) ) ) ) ");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    System.out.println();
+    
+    
+    sent = "Jim offered and Kim accepted sandwich.";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[dcl] fa 0 2> (<T S[dcl]/NP ba 0 2> (<T S[dcl]/NP fc 1 2> (<T S[X]/(S[X]\\NP) tr 0 1> (<T NP lex 0 1> (<L N Jim Jim NNP PERSON O N>) ) ) (<L (S[dcl]\\NP)/NP offered offer VBD O O (S[dcl]\\NP)/NP>) ) (<T (S[dcl]/NP)\\(S[dcl]/NP) conj 1 2> (<L conj and and CC O O conj>) (<T S[dcl]/NP fc 1 2> (<T S[X]/(S[X]\\NP) tr 0 1> (<T NP lex 0 1> (<L N Kim Kim NNP PERSON O N>) ) ) (<L (S[dcl]\\NP)/NP accepted accept VBD O O (S[dcl]\\NP)/NP>) ) ) ) (<T NP rp 0 2> (<T NP lex 0 1> (<L N sandwich sandwich NN O O N>) ) (<L . . . . O O .>) ) )");
     relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);

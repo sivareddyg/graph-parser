@@ -300,4 +300,13 @@ public class CategoryIndex {
   public String toSimpleIndexString() {
     return variableName;
   }
+
+  /**
+   * Returns the same string for all unified variables.
+   * 
+   * @return
+   */
+  public String toUnifiedString() {
+    return unifiedVariables.iterator().next().variableName;
+  }
 }

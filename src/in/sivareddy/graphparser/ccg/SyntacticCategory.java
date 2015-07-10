@@ -250,11 +250,13 @@ public class SyntacticCategory {
       isVar = synCat.isVar;
       this.basicCategory = synCat.basicCategory;
       this.feature = synCat.feature;
+      this.index.unify(synCat.index);
     } else {
       isVar = synCat.isVar;
       this.parent = synCat.parent;
       this.argument = synCat.argument;
       this.direction = synCat.direction;
+      this.index.unify(synCat.index);
     }
   }
 
@@ -392,18 +394,18 @@ public class SyntacticCategory {
   public static SyntacticCategory fromString(String categoryString) {
     if (categoryString.startsWith(";"))
       categoryString = ".";
-    
+
     List<String> parts =
         Lists.newArrayList(Splitter.on(";").omitEmptyStrings().trimResults()
             .split(categoryString));
     Preconditions.checkArgument(parts.size() > 0, "Malformed category: "
         + categoryString);
-    
+
     Map<String, CategoryIndex> varCache = Maps.newHashMap();
     Map<String, StringObject> featureCache = Maps.newHashMap();
     SyntacticCategory category =
         fromStringHidden(parts.get(0), varCache, featureCache);
-    
+
     if (parts.size() > 1) {
       category.processDependencies(parts.get(1), varCache);
     }
@@ -792,13 +794,20 @@ public class SyntacticCategory {
 
     // Syntactic composition
     arg1.unify(parent2);
+
     // TODO not clear which will be the index of new category. Can use the
     // head information
-    SyntacticCategory resultSyncat =
+    // Cameron is the director of the movie which Dicaprio acted in .
+    /*-SyntacticCategory resultSyncat =
         new SyntacticCategory(parent1, arg2, new CategoryIndex(),
+            synCat2.getDirection());*/
+    // Jim offered and Kim accepted sandwich.
+    /*-SyntacticCategory resultSyncat =
+        new SyntacticCategory(parent1, arg2, synCat2.getIndex(),
+            synCat2.getDirection());*/
+    SyntacticCategory resultSyncat =
+        new SyntacticCategory(parent1, arg2, synCat1.getIndex(),
             synCat2.getDirection());
-    // SyntacticCategory resultSyncat = new SyntacticCategory(parent1, arg2,
-    // synCat2.getIndex(), synCat2.getDirection());
 
     return resultSyncat;
   }
@@ -1019,12 +1028,13 @@ public class SyntacticCategory {
   public static SyntacticCategory typeRaising(SyntacticCategory synCat) {
     // A -> X|(X|A)
     SyntacticCategory var = new SyntacticCategory();
-    CategoryIndex newVar = new CategoryIndex();
+
+    // TODO The category indices of X|A and X|(X|A) are not clear. Check the
+    // previous revious for an alternative.
     SyntacticCategory newArgument =
-        new SyntacticCategory(var, synCat, newVar, Direction.ANY);
+        new SyntacticCategory(var, synCat, var.getIndex(), Direction.ANY);
     SyntacticCategory newCategory =
-        new SyntacticCategory(var, newArgument, synCat.getIndex(),
-            Direction.ANY);
+        new SyntacticCategory(var, newArgument, var.getIndex(), Direction.ANY);
     return newCategory;
   }
 
@@ -1096,7 +1106,7 @@ public class SyntacticCategory {
    */
   public static SyntacticCategory generateCoordinateCategory(
       SyntacticCategory synCat) {
-    String simpleCat = synCat.toSimpleIndexString();
+    String simpleCat = synCat.toCanonicalSimpleIndexString();
     SyntacticCategory ccCat = SyntacticCategory.fromString(simpleCat);
     // SyntacticCategory deepParentCat = ccCat.getDeepParentCategory();
     // String deepParentCatString = deepParentCat.toSuperSimpleString();
@@ -1293,6 +1303,47 @@ public class SyntacticCategory {
     }
     return sb.toString();
   }
+
+
+  /**
+   * Similar to {@link #toSimpleIndexString()} except that any unified variables
+   * are represented by the same string. For example, in ((S{X}\N{Y})/N{Z}){W}
+   * if X and W are unified, the output will either be ((S{X}\N{Y})/N{Z}){X} or
+   * ((S{W}\N{Y})/N{Z}){W}.
+   * 
+   * @return
+   */
+  public String toCanonicalSimpleIndexString() {
+    StringBuilder sb = new StringBuilder();
+    if (isVar) {
+      sb.append(varPrefix + varKey);
+    } else if (isBasic) {
+      // Basic category
+      sb.append(basicCategory);
+      if (feature != null && feature.getString() != null) {
+        sb.append("[");
+        sb.append(feature);
+        sb.append("]");
+      }
+      sb.append("{");
+      sb.append(index.toUnifiedString());
+      sb.append("}");
+    } else {
+      // complex category
+      String parentString = parent.toCanonicalSimpleIndexString();
+      String argumentString = argument.toCanonicalSimpleIndexString();
+      sb.append("(");
+      sb.append(parentString);
+      sb.append(direction.toString());
+      sb.append(argumentString);
+      sb.append(")");
+      sb.append("{");
+      sb.append(index.toUnifiedString());
+      sb.append("}");
+    }
+    return sb.toString();
+  }
+
 
   /**
    * Returns simple ccg categories without indices
