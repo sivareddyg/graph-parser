@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,17 +149,14 @@ public class DisambiguateEntities {
     return false;
   }
 
-  public static List<JsonObject> cykStyledDisambiguation(JsonObject sentence,
+  public static void cykStyledDisambiguation(JsonObject sentence,
       int initialNbest, int intermediateNbest, int finalNbest,
-      boolean entityHasReadableId, KnowledgeBase kb) {
-    List<JsonObject> returnSentences = new ArrayList<>();
+      boolean entityHasReadableId, KnowledgeBase kb,
+      boolean shouldStartWithNamedEntity, boolean containsNamedEntity,
+      boolean noPrecedingNamedEntity, boolean noSucceedingNamedEntity) {
     if (!sentence.has(SentenceKeys.MATCHED_ENTITIES)) {
-      returnSentences.add(jsonParser.parse(gson.toJson(sentence))
-          .getAsJsonObject());
-      returnSentences.get(0).add(SentenceKeys.ENTITIES, new JsonArray());
-      return returnSentences;
+      return;
     }
-
 
     List<JsonObject> words = new ArrayList<>();
     sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray()
@@ -167,6 +165,21 @@ public class DisambiguateEntities {
     Map<Pair<Integer, Integer>, List<ChartEntry>> spanToEntities =
         new HashMap<>();
     Map<Integer, List<ChartEntry>> spanStartToEntities = new HashMap<>();
+
+    JsonArray disambiguatedEntities = null;
+    if (sentence.has(SentenceKeys.DISAMBIGUATED_ENTITIES)) {
+      disambiguatedEntities =
+          sentence.get(SentenceKeys.DISAMBIGUATED_ENTITIES).getAsJsonArray();
+    }
+
+    if (disambiguatedEntities == null || disambiguatedEntities.size() == 0) {
+      JsonObject emptyObject = new JsonObject();
+      emptyObject.add(SentenceKeys.ENTITIES, new JsonArray());
+      emptyObject.addProperty(SentenceKeys.SCORE, 0.0);
+      disambiguatedEntities = new JsonArray();
+      disambiguatedEntities.add(emptyObject);
+    }
+
 
     for (JsonElement matchedEntity : sentence
         .get(SentenceKeys.MATCHED_ENTITIES).getAsJsonArray()) {
@@ -178,61 +191,67 @@ public class DisambiguateEntities {
       int spanEnd = matchedEntityObj.get(SentenceKeys.END).getAsInt();
       Pair<Integer, Integer> span = Pair.of(spanStart, spanEnd);
 
-      // Entity span should start with a named entity or with a proper noun.
-      String startNer =
-          words.get(spanStart).get(SentenceKeys.NER_KEY).getAsString();
-      String startTag =
-          words.get(spanStart).get(SentenceKeys.POS_KEY).getAsString();
-      if (startNer.equals("O") && !PROPER_NOUNS.contains(startTag))
-        continue;
-
       // If the entity is a single word, it should either be a noun or
       // adjective.
+      String startTag =
+          words.get(spanStart).get(SentenceKeys.POS_KEY).getAsString();
       if (spanEnd - spanStart == 0 && !startTag.startsWith("N")
           && !startTag.startsWith("J"))
         continue;
 
+      String startNer =
+          words.get(spanStart).get(SentenceKeys.NER_KEY).getAsString();
+      if (shouldStartWithNamedEntity) {
+        // Entity span should start with a named entity or with a proper noun.
+        if (startNer.equals("O") && !PROPER_NOUNS.contains(startTag))
+          continue;
+      }
+
       String endNer =
           words.get(spanEnd).get(SentenceKeys.NER_KEY).getAsString();
-      String endTag =
-          words.get(spanEnd).get(SentenceKeys.POS_KEY).getAsString();
 
-      boolean hasNamedEntity = false;
-      for (int i = spanStart; i <= spanEnd; i++) {
-        String contextNer =
-            words.get(i).get(SentenceKeys.NER_KEY).getAsString();
-        if (!EntityAnnotator.STANFORD_NER_NON_ENTITY.contains(contextNer)) {
-          hasNamedEntity = true;
-          break;
+      if (containsNamedEntity) {
+        boolean hasNamedEntity = false;
+        for (int i = spanStart; i <= spanEnd; i++) {
+          String contextNer =
+              words.get(i).get(SentenceKeys.NER_KEY).getAsString();
+          if (!EntityAnnotator.STANFORD_NER_NON_ENTITY.contains(contextNer)) {
+            hasNamedEntity = true;
+            break;
+          }
+        }
+        if (!hasNamedEntity)
+          continue;
+      }
+
+      if (noPrecedingNamedEntity) {
+        // Entity span should not be preceded by an entity that has the same
+        // ner
+        // tag.
+        if (spanStart > 0) {
+          String prevNer =
+              words.get(spanStart - 1).get(SentenceKeys.NER_KEY).getAsString();
+          String prevTag =
+              words.get(spanStart - 1).get(SentenceKeys.POS_KEY).getAsString();
+          if (!prevNer.equals("O") && prevNer.equals(startNer)
+              && (prevTag.startsWith("N") || prevTag.startsWith("J")))
+            continue;
         }
       }
-      if (!hasNamedEntity)
-        continue;
 
-      // Entity span should not be preceded by an entity that has the same ner
-      // tag.
-      if (spanStart > 0) {
-        String prevNer =
-            words.get(spanStart - 1).get(SentenceKeys.NER_KEY).getAsString();
-        String prevTag =
-            words.get(spanStart - 1).get(SentenceKeys.POS_KEY).getAsString();
-        if (!prevNer.equals("O") && prevNer.equals(startNer)
-            && (prevTag.startsWith("N") || prevTag.startsWith("J")))
-          continue;
+      if (noSucceedingNamedEntity) {
+        // Entity span should not be succeeded by an entity that has the same
+        // ner tag.
+        if (spanEnd < words.size() - 1) {
+          String nextNer =
+              words.get(spanEnd + 1).get(SentenceKeys.NER_KEY).getAsString();
+          String nextTag =
+              words.get(spanEnd + 1).get(SentenceKeys.POS_KEY).getAsString();
+          if (!nextNer.equals("O") && nextNer.equals(endNer)
+              && (nextTag.startsWith("N") || nextTag.startsWith("J")))
+            continue;
+        }
       }
-
-      // Entity span should not be succeeded by an entity that has the same ner
-      // tag.
-      if (spanEnd < words.size() - 1) {
-        String nextNer =
-            words.get(spanEnd + 1).get(SentenceKeys.NER_KEY).getAsString();
-        String nextTag =
-            words.get(spanEnd + 1).get(SentenceKeys.POS_KEY).getAsString();
-        if (!nextNer.equals("O") && nextNer.equals(endNer)
-            && (nextTag.startsWith("N") || nextTag.startsWith("J")))
-          continue;
-      }
-
 
       spanToEntities.put(span, new ArrayList<>());
       if (!spanStartToEntities.containsKey(spanStart))
@@ -262,139 +281,229 @@ public class DisambiguateEntities {
       }
     }
 
-    List<ChartEntry> prevSpanEntities = new ArrayList<>();
-    for (int spanStart = words.size() - 1; spanStart >= 0; spanStart--) {
-      List<ChartEntry> curSpanEntities = new ArrayList<>();
-      curSpanEntities.addAll(prevSpanEntities);
-      if (spanStartToEntities.containsKey(spanStart)) {
-        curSpanEntities.addAll(spanStartToEntities.get(spanStart));
-        Collections.sort(curSpanEntities, Collections.reverseOrder());
-        if (curSpanEntities.size() > intermediateNbest)
-          curSpanEntities = curSpanEntities.subList(0, intermediateNbest);
+    List<JsonObject> newDisambiguatedEntities = new ArrayList<>();
+    for (JsonElement disambiguatedEntitiesEntry : disambiguatedEntities) {
+      JsonObject disambiguatedEntry =
+          disambiguatedEntitiesEntry.getAsJsonObject();
+      JsonArray existingEntitiesArray =
+          disambiguatedEntry.get(SentenceKeys.ENTITIES).getAsJsonArray();
+      if (existingEntitiesArray.size() > 0) {
+        newDisambiguatedEntities.add(disambiguatedEntry);
+      }
+      List<JsonObject> existingEntities = new ArrayList<>();
+      existingEntitiesArray.forEach(x -> existingEntities.add(x
+          .getAsJsonObject()));
 
-        for (ChartEntry newSpanEntry : spanStartToEntities.get(spanStart)) {
-          for (ChartEntry oldSpanEntry : prevSpanEntities) {
+      List<ChartEntry> prevSpanEntities = new ArrayList<>();
+      for (int spanStart = words.size() - 1; spanStart >= 0; spanStart--) {
+        List<ChartEntry> curSpanEntities = new ArrayList<>();
+        curSpanEntities.addAll(prevSpanEntities);
+        if (spanStartToEntities.containsKey(spanStart)) {
+          // Discard the entries that are not in relation with existing
+          // entities.
+          List<ChartEntry> potentialEntries =
+              selectValidChartEntries(spanStartToEntities.get(spanStart),
+                  existingEntities, kb);
+          if (potentialEntries.size() != 0) {
+            curSpanEntities.addAll(potentialEntries);
+            Collections.sort(curSpanEntities, Collections.reverseOrder());
+            if (curSpanEntities.size() > intermediateNbest)
+              curSpanEntities = curSpanEntities.subList(0, intermediateNbest);
+          }
+          
+          for (ChartEntry newSpanEntry : potentialEntries) {
             JsonObject newEntity = newSpanEntry.getEntities().get(0);
             Pair<Integer, Integer> newEntitySpan =
                 newSpanEntry.getEntitySpans().get(0);
             Integer newEntitySpanEnd = newEntitySpan.getRight();
+            String newEntityMid =
+                newEntity.get(SentenceKeys.ENTITY).getAsString();
 
-            Integer oldEntitySpanStart =
-                oldSpanEntry.getEntitySpans().get(0).getLeft();
+            for (ChartEntry oldSpanEntry : prevSpanEntities) {
+              Integer oldEntitySpanStart =
+                  oldSpanEntry.getEntitySpans().get(0).getLeft();
 
-            if (newEntitySpanEnd < oldEntitySpanStart) {
-              // The new entity does not have overlapping span.
-              String newEntityMid =
-                  newEntity.get(SentenceKeys.ENTITY).getAsString();
-              double nthBestEntryScore =
-                  curSpanEntities.get(curSpanEntities.size() - 1).getScore();
-              double newEntryScore =
-                  oldSpanEntry.getScore() + newSpanEntry.getScore();
+              if (newEntitySpanEnd < oldEntitySpanStart) {
+                // The new entity does not have overlapping span.
+                double nthBestEntryScore =
+                    curSpanEntities.get(curSpanEntities.size() - 1).getScore();
+                double newEntryScore =
+                    oldSpanEntry.getScore() + newSpanEntry.getScore();
 
-              if (newEntryScore > nthBestEntryScore) {
+                if (newEntryScore > nthBestEntryScore) {
 
-                // Check if the entity is connected with all other entities in
-                // the sentence.
-                boolean newEntityHasRelation = true;
-                for (JsonObject oldEntityObj : oldSpanEntry.getEntities()) {
-                  String oldEntityMid =
-                      oldEntityObj.get(SentenceKeys.ENTITY).getAsString();
-                  if (newEntityMid.equals(oldEntityMid)
-                      || !kb.hasRelation(newEntityMid, oldEntityMid)) {
-                    newEntityHasRelation = false;
-                    break;
-                  }
-                }
-
-                if (newEntityHasRelation) {
-                  ChartEntry newChartEntry = new ChartEntry();
-                  newChartEntry.setScore(newEntryScore);
-
-                  newChartEntry.getEntitySpans().add(newEntitySpan);
-                  newChartEntry.getEntitySpans().addAll(
-                      oldSpanEntry.getEntitySpans());
-
-                  newChartEntry.getEntities().add(newEntity);
-                  newChartEntry.getEntities()
-                      .addAll(oldSpanEntry.getEntities());
-
-                  // Insert the new entry using insertion sort algorithm.
-                  for (int i = curSpanEntities.size() - 1; i >= 0; i--) {
-                    if (i > 0
-                        && newEntryScore >= curSpanEntities.get(i).getScore()
-                        && newEntryScore <= curSpanEntities.get(i - 1)
-                            .getScore()) {
-                      curSpanEntities.add(i, newChartEntry);
-                      break;
-                    } else if (i == 0) {
-                      curSpanEntities.add(i, newChartEntry);
+                  // Check if the entity is connected with all other entities in
+                  // the sentence.
+                  boolean newEntityHasRelation = true;
+                  for (JsonObject oldEntityObj : oldSpanEntry.getEntities()) {
+                    String oldEntityMid =
+                        oldEntityObj.get(SentenceKeys.ENTITY).getAsString();
+                    if (newEntityMid.equals(oldEntityMid)
+                        || !kb.hasRelation(newEntityMid, oldEntityMid)) {
+                      newEntityHasRelation = false;
                       break;
                     }
                   }
 
-                  if (curSpanEntities.size() > intermediateNbest)
-                    curSpanEntities.remove(curSpanEntities.size() - 1);
+                  if (newEntityHasRelation) {
+                    ChartEntry newChartEntry = new ChartEntry();
+                    newChartEntry.setScore(newEntryScore);
+
+                    newChartEntry.getEntitySpans().add(newEntitySpan);
+                    newChartEntry.getEntitySpans().addAll(
+                        oldSpanEntry.getEntitySpans());
+
+                    newChartEntry.getEntities().add(newEntity);
+                    newChartEntry.getEntities().addAll(
+                        oldSpanEntry.getEntities());
+
+                    // Insert the new entry using insertion sort algorithm.
+                    for (int i = curSpanEntities.size() - 1; i >= 0; i--) {
+                      if (i > 0
+                          && newEntryScore >= curSpanEntities.get(i).getScore()
+                          && newEntryScore <= curSpanEntities.get(i - 1)
+                              .getScore()) {
+                        curSpanEntities.add(i, newChartEntry);
+                        break;
+                      } else if (i == 0) {
+                        curSpanEntities.add(i, newChartEntry);
+                        break;
+                      }
+                    }
+
+                    if (curSpanEntities.size() > intermediateNbest)
+                      curSpanEntities.remove(curSpanEntities.size() - 1);
+                  }
                 }
               }
             }
           }
         }
+        prevSpanEntities = curSpanEntities;
       }
-      prevSpanEntities = curSpanEntities;
-    }
 
-    int numberOfEntityPaths = 1;
-    for (ChartEntry chartEntry : prevSpanEntities) {
-      JsonObject newSentence =
-          jsonParser.parse(gson.toJson(sentence)).getAsJsonObject();
-      newSentence.remove(SentenceKeys.MATCHED_ENTITIES);
-      JsonArray entities = new JsonArray();
-      for (int i = 0; i < chartEntry.getEntities().size(); i++) {
-        JsonObject entity = new JsonObject();
-        entity.addProperty(SentenceKeys.ENTITY, chartEntry.getEntities().get(i)
-            .get(SentenceKeys.ENTITY).getAsString());
-        entity.addProperty(SentenceKeys.SCORE, chartEntry.getEntities().get(i)
-            .get(SentenceKeys.SCORE).getAsDouble());
-        entity.addProperty(SentenceKeys.START,
-            chartEntry.getEntitySpans().get(i).getLeft());
-        entity.addProperty(SentenceKeys.END, chartEntry.getEntitySpans().get(i)
-            .getRight());
-        entity.addProperty(
-            SentenceKeys.PHRASE,
-            Joiner.on(" ").join(
-                words
-                    .subList(chartEntry.getEntitySpans().get(i).getLeft(),
-                        chartEntry.getEntitySpans().get(i).getRight() + 1)
-                    .stream()
-                    .map(x -> x.get(SentenceKeys.WORD_KEY).getAsString())
-                    .iterator()));
+      int numberOfEntityPaths = 1;
+      for (ChartEntry chartEntry : prevSpanEntities) {
+        List<JsonObject> entities = new ArrayList<>();
+        if (chartEntry.getEntities().size() < 0)
+          continue;
 
-        if (chartEntry.getEntities().get(i).has("name")) {
-          entity.addProperty("name", chartEntry.getEntities().get(i)
-              .get("name").getAsString());
+        for (int i = 0; i < chartEntry.getEntities().size(); i++) {
+          JsonObject entity = new JsonObject();
+          entity.addProperty(SentenceKeys.ENTITY,
+              chartEntry.getEntities().get(i).get(SentenceKeys.ENTITY)
+                  .getAsString());
+          entity.addProperty(SentenceKeys.SCORE, chartEntry.getEntities()
+              .get(i).get(SentenceKeys.SCORE).getAsDouble());
+          entity.addProperty(SentenceKeys.START, chartEntry.getEntitySpans()
+              .get(i).getLeft());
+          entity.addProperty(SentenceKeys.END,
+              chartEntry.getEntitySpans().get(i).getRight());
+          entity.addProperty(
+              SentenceKeys.PHRASE,
+              Joiner.on(" ").join(
+                  words
+                      .subList(chartEntry.getEntitySpans().get(i).getLeft(),
+                          chartEntry.getEntitySpans().get(i).getRight() + 1)
+                      .stream()
+                      .map(x -> x.get(SentenceKeys.WORD_KEY).getAsString())
+                      .iterator()));
+
+          if (chartEntry.getEntities().get(i).has("name")) {
+            entity.addProperty("name",
+                chartEntry.getEntities().get(i).get("name").getAsString());
+          }
+
+          if (chartEntry.getEntities().get(i).has("id")) {
+            entity.addProperty("id", chartEntry.getEntities().get(i).get("id")
+                .getAsString());
+          }
+          entities.add(entity);
         }
+        entities.addAll(existingEntities);
+        entities.sort(Comparator.comparing(x -> x.get(SentenceKeys.START)
+            .getAsInt()));
+        JsonArray entitiesArr = new JsonArray();
+        entities.forEach(x -> entitiesArr.add(x));
 
-        if (chartEntry.getEntities().get(i).has("id")) {
-          entity.addProperty("id", chartEntry.getEntities().get(i).get("id")
-              .getAsString());
-        }
+        // Add entities that are already present.
+        existingEntities.forEach(x -> entities.add(x));
+        JsonObject newDisambiguatedEntry = new JsonObject();
+        newDisambiguatedEntry.add(SentenceKeys.ENTITIES, entitiesArr);
+        newDisambiguatedEntry.addProperty(SentenceKeys.SCORE,
+            chartEntry.getScore()
+                + disambiguatedEntry.get(SentenceKeys.SCORE).getAsDouble());
+        newDisambiguatedEntities.add(newDisambiguatedEntry);
 
-        entities.add(entity);
+        numberOfEntityPaths++;
+        if (numberOfEntityPaths > finalNbest)
+          break;
       }
-      newSentence.add(SentenceKeys.ENTITIES, entities);
-      returnSentences.add(newSentence);
-
-      numberOfEntityPaths++;
-      if (numberOfEntityPaths > finalNbest)
-        break;
     }
 
-    if (returnSentences.size() == 0) {
-      returnSentences.add(jsonParser.parse(gson.toJson(sentence))
-          .getAsJsonObject());
-      returnSentences.get(0).add(SentenceKeys.ENTITIES, new JsonArray());
+    if (newDisambiguatedEntities.size() > 0) {
+      newDisambiguatedEntities.sort(Comparator.comparing(
+          x -> ((JsonObject) x).get(SentenceKeys.SCORE).getAsDouble())
+          .reversed());
     }
-    return returnSentences;
+
+    if (newDisambiguatedEntities.size() > finalNbest)
+      newDisambiguatedEntities =
+          newDisambiguatedEntities.subList(0, finalNbest);
+    JsonArray newDisambiguatedEntitiesArray = new JsonArray();
+    newDisambiguatedEntities.forEach(x -> newDisambiguatedEntitiesArray.add(x));
+    sentence.add(SentenceKeys.DISAMBIGUATED_ENTITIES,
+        newDisambiguatedEntitiesArray);
+    return;
+  }
+
+  private static List<ChartEntry> selectValidChartEntries(
+      List<ChartEntry> newSpanEntries, List<JsonObject> existingEntities,
+      KnowledgeBase kb) {
+    // Current span should not intersect with already existing entity
+    // spans.
+    List<ChartEntry> potentialEntries = new ArrayList<>();
+    for (ChartEntry newSpanEntry : newSpanEntries) {
+      String newEntityMid =
+          newSpanEntry.getEntities().get(0).get(SentenceKeys.ENTITY)
+              .getAsString();
+      Integer newEntitySpanStart =
+          newSpanEntry.getEntitySpans().get(0).getLeft();
+      Integer newEntitySpanEnd =
+          newSpanEntry.getEntitySpans().get(0).getRight();
+      boolean newSpanEntryIsValid = true;
+      for (JsonObject existingEntity : existingEntities) {
+        int existingSpanStart =
+            existingEntity.get(SentenceKeys.START).getAsInt();
+        int existingSpanEnd = existingEntity.get(SentenceKeys.END).getAsInt();
+        if (newEntitySpanEnd < existingSpanStart
+            || newEntitySpanStart > existingSpanEnd) {
+          // pass.
+        } else {
+          newSpanEntryIsValid = false;
+          break;
+        }
+      }
+      if (!newSpanEntryIsValid)
+        continue;
+
+      // Current entity should be in relation with existing entities in the
+      // sentence.
+      for (JsonObject existingEntity : existingEntities) {
+        String existingMid =
+            existingEntity.get(SentenceKeys.ENTITY).getAsString();
+        if (newEntityMid.equals(existingMid)
+            || !kb.hasRelation(newEntityMid, existingMid)) {
+          newSpanEntryIsValid = false;
+          break;
+        }
+      }
+      if (!newSpanEntryIsValid)
+        continue;
+
+      potentialEntries.add(newSpanEntry);
+    }
+    return potentialEntries;
   }
 
   private static class ChartEntry implements Comparable<ChartEntry> {

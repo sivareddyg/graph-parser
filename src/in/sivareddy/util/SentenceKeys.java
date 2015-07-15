@@ -18,6 +18,7 @@ public class SentenceKeys {
   public static String ENTITY_INDEX = "index";
   public static String MATCHED_ENTITIES = "matchedEntities";
   public static String RANKED_ENTITIES = "rankedEntities";
+  public static String DISAMBIGUATED_ENTITIES = "disambiguatedEntities";
   public static String PHRASE = "phrase";
   public static String START = "start";
   public static String END = "end";

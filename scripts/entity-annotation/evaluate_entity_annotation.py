@@ -12,46 +12,50 @@ sentence_ids = set()
 answer_found_sentences = set()
 no_predictions = set()
 sentence_id_to_sentence = {}
+MAX_NBEST = 10
 
-prev_index = -1
-index_count = 0
 total = 0
 for line in sys.stdin:
     sentence = json.loads(line)
     sentence_id = sentence['index']
     sentence_ids.add(sentence_id)
     sentence_id_to_sentence[sentence_id] = sentence['sentence']
-    if "matchedEntities" in sentence:
-        no_predictions.add(sentence_id)
+    total += 1
     if sentence_id in answer_found_sentences:
         continue
-    entities = sentence['entities']
-    entity_ids = set()
-    for entity in entities:
-        if "entity" in entity:
-            entity_ids.add(entity["entity"])
-    # print entity_ids
-    gold_entity = sentence["goldMid"]
-    # print gold_entity
-    if len(entity_ids) == 0:
-        continue
-    if prev_index != sentence_id:
-        total += 1
-        index_count = 1
+    if 'disambiguatedEntities' not in sentence:
+        no_predictions.add(sentence_id)
     else:
-        index_count += 1
-    if gold_entity in entity_ids:
-        answer_found_sentences.add(sentence_id)
-        if index_count not in sentence_position_to_accuracy:
-            sentence_position_to_accuracy[index_count] = 0
-        sentence_position_to_accuracy[index_count] += 1
-    prev_index = sentence_id
+        if len(sentence['disambiguatedEntities']) == 0:
+            no_predictions.add(sentence_id)
+        index_count = 1
+        for entities in sentence['disambiguatedEntities']:
+            entity_ids = set()
+            for entity in entities['entities']:
+                if "entity" in entity:
+                    entity_ids.add(entity["entity"])
+                if "id" in entity:
+                    entity_ids.add(entity["id"].split("/")[-1])
+            # print entity_ids
+            gold_entity = sentence["goldMid"]
+            gold_entity_id = sentence["url"].split("/")[-1]
+            if len(entity_ids) == 0:
+                print sentence['sentence']
+            if gold_entity in entity_ids or gold_entity_id in entity_ids:
+                answer_found_sentences.add(sentence_id)
+                if index_count not in sentence_position_to_accuracy:
+                    sentence_position_to_accuracy[index_count] = 0
+                sentence_position_to_accuracy[index_count] += 1
+                break
+            index_count += 1
+            if index_count > MAX_NBEST:
+                break
 
 print "total =", len(sentence_ids)
 print "nthBest\tcount\ttotalAccuracy"
 
 positives = 0.0
-for i in range(1, 11):
+for i in range(1, MAX_NBEST + 1):
     positives += sentence_position_to_accuracy.get(i, 0)
     print "%d\t%d\t%.3f" % (i, sentence_position_to_accuracy.get(i, 0), positives / len(sentence_ids))
 

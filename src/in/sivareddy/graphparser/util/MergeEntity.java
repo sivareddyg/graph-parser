@@ -143,7 +143,7 @@ public class MergeEntity {
         if (newWord.has(SentenceKeys.POS_KEY)) {
           newWord.addProperty(SentenceKeys.POS_KEY, PROPER_NOUN_TAG);
         }
-        
+
         newWords.add(newWord);
         i = entityEnd;
       } else {
@@ -201,7 +201,7 @@ public class MergeEntity {
       String line = br.readLine();
       while (line != null) {
         JsonObject newSentence = mergeEntityWordsToSingleWord(line);
-        newSentence = mergeNamedEntitiesToSingleWord(gson.toJson(newSentence));
+        // newSentence = mergeNamedEntitiesToSingleWord(gson.toJson(newSentence));
         System.out.println(gson.toJson(newSentence));
         line = br.readLine();
       }

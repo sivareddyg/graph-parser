@@ -86,6 +86,121 @@ disambiguate_entities_webq_data:
 		-inputFile data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.json \
 		-outputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.json
 
+temp_output_to_oscar:
+	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.json | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 > working/dev.txt
+	cat working/dev.txt | java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.dev.split.json.txt
+	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.json | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.80 > working/training.txt
+	cat working/training.txt | java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.train.split.json.txt
+
+disambiguate_entities_webq_data_second_pass:
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+		-endpoint localhost \
+		-typeKey "fb:type.object.type" \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-initialNbest 10 \
+		-intermediateNbest 10 \
+		-finalNbest 10 \
+		-entityHasReadableId true \
+		-nthreads 10 \
+		-noSucceedingNamedEntity false \
+		-inputFile data/webquestions/webquestions.examples.train.domains.entity.disambiguated.json \
+		-outputFile data/webquestions/webquestions.examples.train.domains.entity.disambiguated.2.json
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+		-endpoint localhost \
+		-typeKey "fb:type.object.type" \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-initialNbest 10 \
+		-intermediateNbest 10 \
+		-finalNbest 10 \
+		-entityHasReadableId true \
+		-nthreads 10 \
+		-noSucceedingNamedEntity false \
+		-inputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.json \
+		-outputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.2.json
+
+disambiguate_entities_webq_data_third_pass:
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+		-endpoint localhost \
+		-typeKey "fb:type.object.type" \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-initialNbest 10 \
+		-intermediateNbest 10 \
+		-finalNbest 10 \
+		-entityHasReadableId true \
+		-nthreads 10 \
+		-noSucceedingNamedEntity false \
+		-noPrecedingNamedEntity false \
+		-containsNamedEntity false \
+		-shouldStartWithNamedEntity true \
+		-inputFile data/webquestions/webquestions.examples.train.domains.entity.disambiguated.2.json \
+		-outputFile data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+		-endpoint localhost \
+		-typeKey "fb:type.object.type" \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-initialNbest 10 \
+		-intermediateNbest 10 \
+		-finalNbest 10 \
+		-entityHasReadableId true \
+		-nthreads 10 \
+		-noSucceedingNamedEntity false \
+		-noPrecedingNamedEntity false \
+		-containsNamedEntity false \
+		-shouldStartWithNamedEntity true \
+		-inputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.2.json \
+		-outputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json
+
+disambiguate_entities_webq_data_fourth_pass:
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+		-endpoint localhost \
+		-typeKey "fb:type.object.type" \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-initialNbest 10 \
+		-intermediateNbest 10 \
+		-finalNbest 10 \
+		-entityHasReadableId true \
+		-nthreads 10 \
+		-noSucceedingNamedEntity false \
+		-noPrecedingNamedEntity false \
+		-containsNamedEntity false \
+		-shouldStartWithNamedEntity false \
+		-inputFile data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		-outputFile data/webquestions/webquestions.examples.train.domains.entity.disambiguated.4.json
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+		-endpoint localhost \
+		-typeKey "fb:type.object.type" \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-initialNbest 10 \
+		-intermediateNbest 10 \
+		-finalNbest 10 \
+		-entityHasReadableId true \
+		-nthreads 10 \
+		-noSucceedingNamedEntity false \
+		-noPrecedingNamedEntity false \
+		-containsNamedEntity false \
+		-shouldStartWithNamedEntity false \
+		-inputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		-outputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.4.json
+
+data_to_xukun:
+	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.graphparser.util.SplitForrestToSentences \
+		|java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity \
+		> working/webquestions.automaticDismabiguation.train.pass3.json.txt
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt \
+		| python scripts/extract_subset.py data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.915 \
+		> working/webquestions.automaticDismabiguation.train.pass3.taclSubset.json.txt 
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt \
+		| python scripts/extract_subset.py data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.200 \
+		> working/webquestions.automaticDismabiguation.dev.pass3.taclSubset.json.txt 
+	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.graphparser.util.SplitForrestToSentences \
+		|java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity \
+		> working/webquestions.automaticDismabiguation.test.pass3.json.txt
+	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt \
+		| python scripts/extract_subset.py data/tacl/vanilla_one_best/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.tacl.json \
+		> working/webquestions.automaticDismabiguation.test.pass3.taclSubset.json.txt 
+
 select_one_best_from_ranked_entity_webq_data:
 	cat data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.json \
 	| java -cp lib/*:bin in.sivareddy.graphparser.util.DisambiguateEntities \

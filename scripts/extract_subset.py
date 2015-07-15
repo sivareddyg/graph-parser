@@ -8,11 +8,12 @@ import json
 import sys
 
 
-all = {}
-for line in sys.stdin:
-    line = json.loads(line)
-    all[line['sentence']] = line
-
+subset = set()
 for line in open(sys.argv[1]):
     line = json.loads(line)
-    print json.dumps(all[line['sentence']])
+    subset.add(line['sentence'])
+
+for line in sys.stdin:
+    line = json.loads(line)
+    if line['sentence'] in subset:
+        print json.dumps(line)

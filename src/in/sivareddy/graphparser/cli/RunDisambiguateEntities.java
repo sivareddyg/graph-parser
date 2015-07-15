@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -50,8 +49,12 @@ public class RunDisambiguateEntities extends AbstractCli {
   private OptionSpec<Integer> initialNbest;
   private OptionSpec<Integer> intermediateNbest;
   private OptionSpec<Integer> finalNbest;
-  private OptionSpec<Boolean> entityHasReadableId;
 
+  private OptionSpec<Boolean> entityHasReadableId;
+  private OptionSpec<Boolean> shouldStartWithNamedEntity;
+  private OptionSpec<Boolean> containsNamedEntity;
+  private OptionSpec<Boolean> noPrecedingNamedEntity;
+  private OptionSpec<Boolean> noSucceedingNamedEntity;
 
   @Override
   public void initializeOptions(OptionParser parser) {
@@ -113,6 +116,32 @@ public class RunDisambiguateEntities extends AbstractCli {
             .accepts("entityHasReadableId",
                 "consider an entity as valid only if it has a readble Freebase id")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
+    shouldStartWithNamedEntity =
+        parser
+            .accepts("shouldStartWithNamedEntity",
+                "entity span should start with named entity or a proper noun")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
+    containsNamedEntity =
+        parser
+            .accepts("containsNamedEntity",
+                "entity span should contain at least one named entity")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
+    noPrecedingNamedEntity =
+        parser
+            .accepts(
+                "noPrecedingNamedEntity",
+                "entity span should not be preceeded by a named entity of the same type as current span")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
+    noSucceedingNamedEntity =
+        parser
+            .accepts(
+                "noSucceedingNamedEntity",
+                "entity span should not be preceeded by a named entity of the same type as current span")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
   }
 
   @Override
@@ -129,7 +158,11 @@ public class RunDisambiguateEntities extends AbstractCli {
           new RunDisambiguateEntitiesMain(kb, options.valueOf(nthreads),
               options.valueOf(initialNbest),
               options.valueOf(intermediateNbest), options.valueOf(finalNbest),
-              options.valueOf(entityHasReadableId));
+              options.valueOf(entityHasReadableId),
+              options.valueOf(shouldStartWithNamedEntity),
+              options.valueOf(containsNamedEntity),
+              options.valueOf(noPrecedingNamedEntity),
+              options.valueOf(noSucceedingNamedEntity));
 
       String inputFileString = options.valueOf(inputFile);
       InputStream in = null;
@@ -163,18 +196,30 @@ public class RunDisambiguateEntities extends AbstractCli {
     int initalNbest;
     int intermediateNbest;
     int finalNbest;
-    boolean entityHasReadableId;
     KnowledgeBase kb;
+
+    boolean entityHasReadableId;
+    boolean shouldStartWithNamedEntity;
+    boolean containsNamedEntity;
+    boolean noPrecedingNamedEntity;
+    boolean noSucceedingNamedEntity;
 
     public RunDisambiguateEntitiesMain(KnowledgeBase kb, int nthreads,
         int initalNbest, int intermediateNbest, int finalNbest,
-        boolean entityHasReadableId) {
+        boolean entityHasReadableId, boolean shouldStartWithNamedEntity,
+        boolean containsNamedEntity, boolean noPrecedingNamedEntity,
+        boolean noSucceedingNamedEntity) {
       this.kb = kb;
       this.nthreads = nthreads;
       this.initalNbest = initalNbest;
       this.intermediateNbest = intermediateNbest;
       this.finalNbest = finalNbest;
+
       this.entityHasReadableId = entityHasReadableId;
+      this.shouldStartWithNamedEntity = shouldStartWithNamedEntity;
+      this.containsNamedEntity = containsNamedEntity;
+      this.noPrecedingNamedEntity = noPrecedingNamedEntity;
+      this.noSucceedingNamedEntity = noSucceedingNamedEntity;
     }
 
     public void disambiguate(InputStream stream, PrintStream out)
@@ -202,12 +247,17 @@ public class RunDisambiguateEntities extends AbstractCli {
         String line = br.readLine();
         while (line != null) {
           JsonObject jsonSentence = jsonParser.parse(line).getAsJsonObject();
-          jsonSentence.addProperty(SentenceKeys.INDEX_KEY, sentCount);
+          if (!jsonSentence.has(SentenceKeys.INDEX_KEY)) {
+            jsonSentence.addProperty(SentenceKeys.INDEX_KEY, sentCount);
+            sentCount += 1;
+          }
           Runnable worker =
-              new DisambiguateSentenceRunnable(this, jsonSentence, initalNbest,
-                  intermediateNbest, finalNbest, entityHasReadableId, kb, out);
+              new DisambiguateSentenceRunnable(this, jsonSentence, kb,
+                  initalNbest, intermediateNbest, finalNbest,
+                  entityHasReadableId, shouldStartWithNamedEntity,
+                  containsNamedEntity, noPrecedingNamedEntity,
+                  noSucceedingNamedEntity, out);
           threadPool.execute(worker);
-          sentCount += 1;
           line = br.readLine();
         }
       } finally {
@@ -221,11 +271,8 @@ public class RunDisambiguateEntities extends AbstractCli {
       }
     }
 
-    public synchronized void printSentences(List<JsonObject> sentences,
-        PrintStream out) {
-      for (JsonObject sentence : sentences) {
-        out.println(gson.toJson(sentence));
-      }
+    public synchronized void printSentence(JsonObject sentence, PrintStream out) {
+      out.println(gson.toJson(sentence));
     }
 
   }
@@ -235,32 +282,43 @@ public class RunDisambiguateEntities extends AbstractCli {
     int initialNbest;
     int intermediateNbest;
     int finalNbest;
-    boolean entityHasReadableId;
     KnowledgeBase kb;
     RunDisambiguateEntitiesMain engine;
     PrintStream out;
+    boolean entityHasReadableId;
+    boolean shouldStartWithNamedEntity;
+    boolean containsNamedEntity;
+    boolean noPrecedingNamedEntity;
+    boolean noSucceedingNamedEntity;
 
     public DisambiguateSentenceRunnable(RunDisambiguateEntitiesMain engine,
-        JsonObject jsonSentence, int initialNbest, int intermediateNbest,
-        int finalNbest, boolean entityHasReadableId, KnowledgeBase kb,
+        JsonObject jsonSentence, KnowledgeBase kb, int initialNbest,
+        int intermediateNbest, int finalNbest, boolean entityHasReadableId,
+        boolean shouldStartWithNamedEntity, boolean containsNamedEntity,
+        boolean noPrecedingNamedEntity, boolean noSucceedingNamedEntity,
         PrintStream out) {
       this.engine = engine;
       this.jsonSentence = jsonSentence;
       this.initialNbest = initialNbest;
       this.intermediateNbest = intermediateNbest;
       this.finalNbest = finalNbest;
-      this.entityHasReadableId = entityHasReadableId;
       this.kb = kb;
       this.out = out;
+
+      this.entityHasReadableId = entityHasReadableId;
+      this.shouldStartWithNamedEntity = shouldStartWithNamedEntity;
+      this.containsNamedEntity = containsNamedEntity;
+      this.noPrecedingNamedEntity = noPrecedingNamedEntity;
+      this.noSucceedingNamedEntity = noSucceedingNamedEntity;
     }
 
     @Override
     public void run() {
-      List<JsonObject> taggedSentences =
-          DisambiguateEntities.cykStyledDisambiguation(jsonSentence,
-              initialNbest, intermediateNbest, finalNbest, entityHasReadableId,
-              kb);
-      engine.printSentences(taggedSentences, out);
+      DisambiguateEntities.cykStyledDisambiguation(jsonSentence, initialNbest,
+          intermediateNbest, finalNbest, entityHasReadableId, kb,
+          shouldStartWithNamedEntity, containsNamedEntity,
+          noPrecedingNamedEntity, noSucceedingNamedEntity);
+      engine.printSentence(jsonSentence, out);
     }
   }
 
