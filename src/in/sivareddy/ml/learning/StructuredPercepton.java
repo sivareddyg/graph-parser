@@ -125,7 +125,7 @@ public class StructuredPercepton implements Serializable {
 
       int oldFreqCount =
           updateFrequency.containsKey(feature) ? updateFrequency.get(feature)
-              : 0;
+              : drag;
       Integer newFreqCount = oldFreqCount + 1;
       updateFrequency.put(feature, newFreqCount);
     }

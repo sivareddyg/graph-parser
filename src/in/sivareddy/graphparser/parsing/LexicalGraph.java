@@ -22,7 +22,6 @@ import com.google.common.collect.Sets;
  * Created by bisk1 on 1/26/15.
  */
 public class LexicalGraph extends Graph<LexicalItem> {
-  private List<String> words;
   private Set<Feature> features;
   private String syntacticParse;
   private Set<String> semanticParse;
@@ -40,7 +39,6 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public LexicalGraph() {
     super();
-    words = new ArrayList<>();
     features = Sets.newHashSet();
 
     stemMatchingFeature = new StemMatchingFeature(0.0);
@@ -220,6 +218,25 @@ public class LexicalGraph extends Graph<LexicalItem> {
     }
   }
 
+  public static class EntityScoreFeature extends AbstractFeature {
+    private static final long serialVersionUID = -2582000343152762524L;
+    private static List<String> key = Lists.newArrayList("EntityScoreFeature");
+
+    public EntityScoreFeature(Double value) {
+      super(key, value);
+    }
+  }
+
+  public static class EntityWordOverlapFeature extends AbstractFeature {
+    private static final long serialVersionUID = 7095420691240643004L;
+    private static List<String> key = Lists
+        .newArrayList("EntityWordOverlapFeature");
+
+    public EntityWordOverlapFeature(Double value) {
+      super(key, value);
+    }
+  }
+
   public static class StemMatchingFeature extends AbstractFeature {
     private static final long serialVersionUID = 8298292895790279274L;
     private static List<String> key = Lists.newArrayList("Stem");
@@ -260,7 +277,8 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   @SuppressWarnings("unchecked")
   private static Set<Class<? extends AbstractFeature>> globalFeatures = Sets
-      .newHashSet(StemMatchingFeature.class, ValidQueryFeature.class,
+      .newHashSet(EntityScoreFeature.class, EntityWordOverlapFeature.class,
+          StemMatchingFeature.class, ValidQueryFeature.class,
           ArgStemMatchingFeature.class,
           MediatorStemGrelPartMatchingFeature.class,
           ArgStemGrelPartMatchingFeature.class, GraphIsConnectedFeature.class,
@@ -284,7 +302,6 @@ public class LexicalGraph extends Graph<LexicalItem> {
   public LexicalGraph copy() {
     LexicalGraph newGraph = new LexicalGraph();
     copyTo(newGraph);
-    newGraph.words.addAll(words);
     newGraph.features = Sets.newHashSet(features);
 
     newGraph.syntacticParse = syntacticParse;
@@ -337,10 +354,6 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public void setSemanticParse(Set<String> semanticParse) {
     this.semanticParse = semanticParse;
-  }
-
-  public List<String> getWords() {
-    return words;
   }
 
   @Override

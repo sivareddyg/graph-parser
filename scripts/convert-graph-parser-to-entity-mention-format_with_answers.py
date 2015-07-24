@@ -12,7 +12,8 @@ for line in sys.stdin:
         for entity in line['entities']:
             entity_mapping[entity['index']] = entity
     for original_index, word in enumerate(line['words']):
-        if ("ner" in word and word['ner'] != "O" and word['ner'] != "0") or (original_index in entity_mapping):
+        # or ("ner" in word and word['ner'] != "O" and word['ner'] != "0")
+        if original_index in entity_mapping:
             word_parts = []
             if "ner" in word and word['ner'] == "DATE":
                 word_parts = word['word'].split("_")
@@ -46,8 +47,11 @@ for line in sys.stdin:
             sent.append(word['word'])
             word_index += 1
     sentence = {}
-    if 'index' not in sentence:
+    if 'index' not in line:
         sentence_index = md5.md5(line['sentence']).hexdigest()
+        sentence["index"] = sentence_index
+    else:
+        sentence_index = line['index']
         sentence["index"] = sentence_index
     sentence["sentence"] = " ".join(sent)
     sentence["entities"] = []

@@ -73,6 +73,9 @@ public class GroundTestSentences {
     boolean ignorePronouns = true;
     boolean handleNumbers = false;
 
+    boolean entityScoreFlag = false;
+    boolean entityWordOverlapFlag = false;
+    
     double initialEdgeWeight = -1.0;
     double initialTypeWeight = -1.0;
     double initialWordWeight = -1.0;
@@ -92,7 +95,8 @@ public class GroundTestSentences {
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            ignorePronouns, handleNumbers, initialEdgeWeight,
+            ignorePronouns, handleNumbers, entityScoreFlag,
+            entityWordOverlapFlag, initialEdgeWeight,
             initialTypeWeight, initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new

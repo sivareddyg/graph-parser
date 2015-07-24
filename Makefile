@@ -86,12 +86,6 @@ disambiguate_entities_webq_data:
 		-inputFile data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.json \
 		-outputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.json
 
-temp_output_to_oscar:
-	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.json | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 > working/dev.txt
-	cat working/dev.txt | java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.dev.split.json.txt
-	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.json | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.80 > working/training.txt
-	cat working/training.txt | java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.train.split.json.txt
-
 disambiguate_entities_webq_data_second_pass:
 	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
 		-endpoint localhost \
@@ -150,6 +144,20 @@ disambiguate_entities_webq_data_third_pass:
 		-inputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.2.json \
 		-outputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json
 
+replace_unknown_mids:
+	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin/ in.sivareddy.scripts.MapNewMidToOldMid data/freebase/entities_sempre.txt.gz data/freebase/mid_to_key.txt.gz data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		> working/train.txt
+	mv working/train.txt data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json
+
+	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin/ in.sivareddy.scripts.MapNewMidToOldMid data/freebase/entities_sempre.txt.gz data/freebase/mid_to_key.txt.gz data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		> working/test.txt
+	mv working/test.txt data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json
+
+entity_disambiguation_results:
+	python scripts/entity-annotation/evaluate_entity_annotation.py < data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json | less
+
 disambiguate_entities_webq_data_fourth_pass:
 	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
 		-endpoint localhost \
@@ -182,24 +190,78 @@ disambiguate_entities_webq_data_fourth_pass:
 		-inputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
 		-outputFile data/webquestions/webquestions.examples.test.domains.entity.disambiguated.4.json
 
-data_to_xukun:
+entity_dismabiguated_webq_to_graphparser_forrest:
+	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		> working/webquestions.train.full.pass3.txt
+	cat working/webquestions.train.full.pass3.txt \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt
+	cat working/webquestions.train.full.pass3.txt \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt
+	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		> working/webquestions.test.full.pass3.txt
+	cat working/webquestions.test.full.pass3.txt \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt
+
+split_forest_to_sentences:
 	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
 		| java -cp lib/*:bin in.sivareddy.graphparser.util.SplitForrestToSentences \
 		|java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity \
 		> working/webquestions.automaticDismabiguation.train.pass3.json.txt
+	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.graphparser.util.SplitForrestToSentences \
+		|java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity \
+		> working/webquestions.automaticDismabiguation.test.pass3.json.txt
+
+webq_to_oscar:
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 > working/dev.txt
+	cat working/dev.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.dev.split.json.txt
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.80 > working/training.txt
+	cat working/training.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.train.split.json.txt
+	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt > working/test.txt
+	cat working/test.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.test.split.json.txt
+
+convert_deplambda_to_gp_forest:
+	cat working/webquestions.vanilla.freebaseAPIannotations.dev.split.singletype_lambdas.json.txt \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.train.pass3.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt 
+	cat working/webquestions.vanilla.freebaseAPIannotations.train.split.singletype_lambdas.json.txt \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.train.pass3.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt 
+	cat working/webquestions.vanilla.freebaseAPIannotations.test.split.singletype_lambdas.json.txt \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.test.pass3.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt 
+
+	cat working/webquestions.vanilla.freebaseAPIannotations.dev.split.old_lambdas.json.txt \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.train.pass3.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.old.json.txt 
+	cat working/webquestions.vanilla.freebaseAPIannotations.train.split.old_lambdas.json.txt \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.train.pass3.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.old.json.txt 
+	cat working/webquestions.vanilla.freebaseAPIannotations.test.split.old_lambdas.json.txt \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.test.pass3.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.old.json.txt 
+
+data_to_xukun:
+	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt \
+		| python scripts/extract_subset.py data/tacl/vanilla_one_best/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.tacl.json \
+		> working/webquestions.automaticDismabiguation.test.pass3.taclSubset.json.txt 
 	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt \
 		| python scripts/extract_subset.py data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.915 \
 		> working/webquestions.automaticDismabiguation.train.pass3.taclSubset.json.txt 
 	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt \
 		| python scripts/extract_subset.py data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.200 \
 		> working/webquestions.automaticDismabiguation.dev.pass3.taclSubset.json.txt 
-	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
-		| java -cp lib/*:bin in.sivareddy.graphparser.util.SplitForrestToSentences \
-		|java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity \
-		> working/webquestions.automaticDismabiguation.test.pass3.json.txt
-	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt \
-		| python scripts/extract_subset.py data/tacl/vanilla_one_best/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.tacl.json \
-		> working/webquestions.automaticDismabiguation.test.pass3.taclSubset.json.txt 
 
 select_one_best_from_ranked_entity_webq_data:
 	cat data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.json \
@@ -688,6 +750,7 @@ deplambda_supervised_vanilla_gold_full:
 	-useSchema true \
 	-useKB true \
 	-addBagOfWordsGraph true \
+	-ngramGrelPartFlag true \
 	-groundFreeVariables true \
 	-useEmptyTypes false \
 	-ignoreTypes false \
@@ -745,30 +808,31 @@ deplambda_supervised_vanilla_gold_bag_of_words:
 	-useKB true \
 	-addBagOfWordsGraph true \
 	-addOnlyBagOfWordsGraph true \
+	-ngramGrelPartFlag true \
 	-groundFreeVariables true \
 	-useEmptyTypes false \
 	-ignoreTypes false \
-	-urelGrelFlag true \
+	-urelGrelFlag false \
 	-urelPartGrelPartFlag false \
-	-utypeGtypeFlag true \
+	-utypeGtypeFlag false \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag false \
 	-wordGrelFlag false \
-	-eventTypeGrelPartFlag true \
-	-argGrelPartFlag true \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
 	-argGrelFlag false \
-	-stemMatchingFlag true \
-	-mediatorStemGrelPartMatchingFlag true \
-	-argumentStemMatchingFlag true \
-	-argumentStemGrelPartMatchingFlag true \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
 	-graphIsConnectedFlag false \
 	-graphHasEdgeFlag true \
 	-countNodesFlag false \
 	-edgeNodeCountFlag false \
 	-duplicateEdgesFlag true \
 	-grelGrelFlag true \
-	-useLexiconWeightsRel true \
-	-useLexiconWeightsType true \
+	-useLexiconWeightsRel false \
+	-useLexiconWeightsType false \
 	-validQueryFlag true \
 	-initialEdgeWeight -0.5 \
 	-initialTypeWeight -2.0 \
@@ -1030,6 +1094,244 @@ deplambda_unsupervised_free917:
 	-devFile data/deplambda/free917.txt \
 	-logFile ../working/deplambda_unsupervised_free917/business_film_people.log.txt \
 	> ../working/deplambda_unsupervised_free917/business_film_people.txt
+
+
+### CCG full experiments ###
+easyccg_supervised:
+	rm -rf ../working/easyccg_supervised
+	mkdir -p ../working/easyccg_supervised
+	java -agentlib:hprof=cpu=samples,interval=20,depth=3 -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.5 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag false \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	-logFile ../working/easyccg_supervised/all.log.txt \
+	> ../working/easyccg_supervised/all.txt
+
+bow_supervised:
+	rm -rf ../working/bow_supervised
+	mkdir -p ../working/bow_supervised
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forrestSize 10 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph true \
+	-ngramGrelPartFlag true \
+	-addOnlyBagOfWordsGraph true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel false \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+	-logFile ../working/bow_supervised/all.log.txt \
+	> ../working/bow_supervised/all.txt
+
+deplambda_supervised_automatic_entities:
+	rm -rf ../working/deplambda_supervised_automatic_entities
+	mkdir -p ../working/deplambda_supervised_automatic_entities
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forrestSize 10 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph true \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.old.json.txt \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.old.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.old.json.txt \
+	-logFile ../working/deplambda_supervised_automatic_entities/all.log.txt \
+	> ../working/deplambda_supervised_automatic_entities/all.txt
+
+deplambda_singletype_supervised_automatic_entities:
+	rm -rf ../working/deplambda_singletype_supervised_automatic_entities
+	mkdir -p ../working/deplambda_singletype_supervised_automatic_entities
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forrestSize 10 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph true \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables true \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.old.json.txt \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.old.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.old.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_automatic_entities/all.log.txt \
+	> ../working/deplambda_singletype_supervised_automatic_entities/all.txt
+
 
 ############################################### TACL Experiments  ################################################
 # TACL MWG Baseline
@@ -2569,3 +2871,8 @@ spanish_semisup_specialcases_distant_eval:
 	-logFile ../working/spanish_semisup_specialcases_distant_eval/business_film_people.log.txt \
 	> ../working/spanish_semisup_specialcases_distant_eval/business_film_people.txt
 
+
+create_old_to_new_mid_mappings:
+	zcat kinloch:/gpfs/scratch/users/s1051585/freebase/freebase-20150720.gz | grep dataworld.gardening_hint.replaced_by | cut -f1,3 | python scripts/freebase/clean_old_mid_to_mid.py | gzip > data/freebase/freebase_20150720_old_to_new_mid.txt.gz
+	zcat kinloch:/disk/scratch/users/s1051585/data/freebase-cleaned.rdf-2013-08-11-00-00.gz | grep dataworld.gardening_hint.replaced_by | cut -f1,3 | python scripts/freebase/clean_old_mid_to_mid.py | gzip > data/freebase/freebase_20130811_old_to_new_mid.txt.gz	
+	zcat ../data/freebase_sempre.ttl.gz | cut -f1,3 | python scripts/freebase/extract_entities_from_rdf_freebase.py | less

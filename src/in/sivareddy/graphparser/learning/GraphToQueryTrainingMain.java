@@ -67,10 +67,10 @@ public class GraphToQueryTrainingMain {
       boolean groundTrainingCorpusInTheEndVal, int trainingSampleSize,
       String logFile, String loadModelFromFile, int nBestTrainSyntacticParses,
       int nBestTestSyntacticParses, int nbestBestEdges, int nbestGraphs,
-      boolean useSchema, boolean useKB, boolean groundFreeVariables,
-      boolean useEmtpyTypes, boolean ignoreTypes, boolean urelGrelFlag,
-      boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
-      boolean gtypeGrelFlag, boolean ngramGrelPartFlag,
+      int forrestSize, boolean useSchema, boolean useKB,
+      boolean groundFreeVariables, boolean useEmtpyTypes, boolean ignoreTypes,
+      boolean urelGrelFlag, boolean urelPartGrelPartFlag,
+      boolean utypeGtypeFlag, boolean gtypeGrelFlag, boolean ngramGrelPartFlag,
       boolean wordGrelPartFlag, boolean wordGrelFlag,
       boolean eventTypeGrelPartFlag, boolean argGrelPartFlag,
       boolean argGrelFlag, boolean stemMatchingFlag,
@@ -83,6 +83,7 @@ public class GraphToQueryTrainingMain {
       boolean useLexiconWeightsType, boolean validQueryFlag,
       boolean useNbestGraphs, boolean addBagOfWordsGraph,
       boolean addOnlyBagOfWordsGraph, boolean handleNumbers,
+      boolean entityScoreFlag, boolean entityWordOverlapFlag,
       double initialEdgeWeight, double initialTypeWeight,
       double initialWordWeight, double stemFeaturesWeight) throws IOException {
 
@@ -124,19 +125,20 @@ public class GraphToQueryTrainingMain {
         new GraphToQueryTraining(schema, kb, groundedLexicon,
             normalCcgAutoLexicon, questionCcgAutoLexicon, semanticParseKey,
             this.nBestTrainSyntacticParses, this.nBestTestSyntacticParses,
-            nbestBestEdges, nbestGraphs, useSchema, useKB, groundFreeVariables,
-            useEmtpyTypes, ignoreTypes, currentIterationModel, urelGrelFlag,
-            urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
-            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
-            argGrelFlag, eventTypeGrelPartFlag, stemMatchingFlag,
+            nbestBestEdges, nbestGraphs, forrestSize, useSchema, useKB,
+            groundFreeVariables, useEmtpyTypes, ignoreTypes,
+            currentIterationModel, urelGrelFlag, urelPartGrelPartFlag,
+            utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag,
+            wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
+            eventTypeGrelPartFlag, stemMatchingFlag,
             mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
             validQueryFlag, useNbestGraphs, addBagOfWordsGraph,
-            addOnlyBagOfWordsGraph, handleNumbers, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight,
-            rdfGraphTools, kbGraphUri);
+            addOnlyBagOfWordsGraph, handleNumbers, entityScoreFlag,
+            entityWordOverlapFlag, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight, rdfGraphTools, kbGraphUri);
 
     supervisedTrainingExamples = new ArrayList<>();
     if (supervisedTrainingFile != null && !supervisedTrainingFile.equals("")) {
@@ -436,6 +438,7 @@ public class GraphToQueryTrainingMain {
     int nBestTestSyntacticParses = 1;
     int nbestBestEdges = 20;
     int nbestGraphs = 100;
+    int forrestSize = 1;
 
     // Set these true, or else graph construction mechanism will be
     // completely driven by lexicon
@@ -496,6 +499,9 @@ public class GraphToQueryTrainingMain {
     boolean addOnlyBagOfWordsGraph = false;
     boolean handleNumbers = true;
 
+    boolean entityScoreFlag = false;
+    boolean entityWordOverlapFlag = false;
+
     GraphToQueryTrainingMain graphToQueryModel =
         new GraphToQueryTrainingMain(schema, kb, groundedLexicon,
             normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
@@ -503,19 +509,20 @@ public class GraphToQueryTrainingMain {
             corupusTrainingFile, groundInputCorpora, semanticParseKey,
             debugEnabled, groundTrainingCorpusInTheEndVal, trainingSampleSize,
             logFile, loadModelFromFile, nBestTrainSyntacticParses,
-            nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, useSchema,
-            useKB, groundFreeVariables, useEmtpyTypes, ignoreTypes,
-            urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
-            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag,
-            eventTypeGrelPartFlag, argGrelPartFlag, argGrelFlag,
+            nBestTestSyntacticParses, nbestBestEdges, nbestGraphs,
+            forrestSize, useSchema, useKB, groundFreeVariables,
+            useEmtpyTypes, ignoreTypes, urelGrelFlag, urelPartGrelPartFlag,
+            utypeGtypeFlag, gtypeGrelFlag, ngramGrelPartFlag, wordGrelPartFlag,
+            wordGrelFlag, eventTypeGrelPartFlag, argGrelPartFlag, argGrelFlag,
             stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
             argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
             graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
             edgeNodeCountFlag, duplicateEdgesFlag, grelGrelFlag,
             useLexiconWeightsRel, useLexiconWeightsType, validQueryFlag,
             useNbestGraphs, addBagOfWordsGraph, addOnlyBagOfWordsGraph,
-            handleNumbers, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            handleNumbers, entityScoreFlag, entityWordOverlapFlag,
+            initialEdgeWeight, initialTypeWeight, initialWordWeight,
+            stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;

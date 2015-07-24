@@ -15,6 +15,9 @@ import in.sivareddy.graphparser.parsing.LexicalGraph.ArgStemGrelPartMatchingFeat
 import in.sivareddy.graphparser.parsing.LexicalGraph.ArgStemMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.DuplicateEdgeFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.EdgeNodeCountFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.EntityScoreFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.EntityWordOverlapFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.EventTypeGrelPartFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.GraphHasEdgeFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.GraphIsConnectedFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.GraphNodeCountFeature;
@@ -26,7 +29,6 @@ import in.sivareddy.graphparser.parsing.LexicalGraph.StemMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelGrelFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelPartGrelPartFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UtypeGtypeFeature;
-import in.sivareddy.graphparser.parsing.LexicalGraph.EventTypeGrelPartFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.WordGrelFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.WordGrelPartFeature;
 import in.sivareddy.graphparser.util.GroundedLexicon;
@@ -37,6 +39,7 @@ import in.sivareddy.graphparser.util.knowledgebase.EntityType;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
+import in.sivareddy.ml.basic.Feature;
 import in.sivareddy.ml.learning.StructuredPercepton;
 import in.sivareddy.util.PorterStemmer;
 import in.sivareddy.util.SentenceKeys;
@@ -102,6 +105,8 @@ public class GroundedGraphs {
   private boolean useLexiconWeightsType = false;
   private boolean duplicateEdgesFlag = true;
   private boolean handleNumbers = false;
+  private boolean entityScoreFlag = false;
+  private boolean entityWordOverlapFlag = false;
 
   private StructuredPercepton learningModel;
   public double initialEdgeWeight;
@@ -127,7 +132,8 @@ public class GroundedGraphs {
       boolean graphHasEdgeFlag, boolean countNodesFlag,
       boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
-      boolean ignorePronouns, boolean handleNumbers, double initialEdgeWeight,
+      boolean ignorePronouns, boolean handleNumbers, boolean entityScoreFlag,
+      boolean entityWordOverlapFlag, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
       double stemFeaturesWeight) throws IOException {
 
@@ -168,6 +174,9 @@ public class GroundedGraphs {
     this.countNodesFlag = countNodesFlag;
     this.edgeNodeCountFlag = edgeNodeCountFlag;
     this.duplicateEdgesFlag = duplicateEdgesFlag;
+
+    this.entityScoreFlag = entityScoreFlag;
+    this.entityWordOverlapFlag = entityWordOverlapFlag;
 
     this.useLexiconWeightsRel = useLexiconWeightsRel;
     this.useLexiconWeightsType = useLexiconWeightsType;
@@ -231,7 +240,6 @@ public class GroundedGraphs {
     }
     logger.debug("Tokenized Sentence: " + Joiner.on(" ").join(words));
 
-    List<String> contentWords = getContentWords(jsonSentence);
     if (key.equals("synPars")) {
       Set<Set<String>> allSemanticParses = new HashSet<>();
 
@@ -267,10 +275,10 @@ public class GroundedGraphs {
         }
 
         for (CcgParseTree ccgParse : ccgParses) {
-          lexicaliseArgumentsToDomainEntities(ccgParse, jsonSentence);
+          List<LexicalItem> leaves = ccgParse.getLeafNodes();
+          lexicaliseArgumentsToDomainEntities(leaves, jsonSentence);
           Set<Set<String>> semanticParses =
               ccgParse.getLexicalisedSemanticPredicates(handleNumbers);
-          List<LexicalItem> leaves = ccgParse.getLeafNodes();
           for (Set<String> semanticParse : semanticParses) {
             // Check if the semantic parse is already present. Sometimes
             // different CCG derivations could lead to the same same semantic
@@ -281,8 +289,8 @@ public class GroundedGraphs {
             allSemanticParses.add(semanticParse);
 
             int prev_size = graphs.size();
-            buildUngroundeGraphFromSemanticParse(semanticParse, leaves,
-                contentWords, score, graphs);
+            buildUngroundeGraphFromSemanticParse(semanticParse, leaves, score,
+                graphs);
 
             // Traceback each graph to its original syntactic parse.
             for (int ithGraph = prev_size; ithGraph < graphs.size(); ithGraph++) {
@@ -298,15 +306,90 @@ public class GroundedGraphs {
       JsonArray semPars = jsonSentence.get(key).getAsJsonArray();
       for (JsonElement semPar : semPars) {
         JsonArray predicates = semPar.getAsJsonArray();
+        if (predicates.size() == 0)
+          continue;
         Set<String> semanticParse = new HashSet<>();
         for (JsonElement predicate : predicates) {
           semanticParse.add(predicate.getAsString());
         }
-        buildUngroundeGraphFromSemanticParse(semanticParse, leaves,
-            contentWords, 0.0, graphs);
+        try {
+          buildUngroundeGraphFromSemanticParse(semanticParse, leaves, 0.0,
+              graphs);
+        } catch (Exception e) {
+          System.err.println(semanticParse);
+          System.err.println(leaves);
+          System.exit(0);
+        }
       }
     }
+
+    // Add ungrounded graph features.
+    addUngroundedGraphFeatures(jsonSentence, graphs);
     return graphs;
+  }
+
+  public void addUngroundedGraphFeatures(JsonObject jsonSentence,
+      List<LexicalGraph> graphs) {
+    // Add entity disambiguation scores.
+    if (entityScoreFlag) {
+      double entityScore = 0.0;
+      if (jsonSentence.has(SentenceKeys.ENTITIES)) {
+        for (JsonElement entity : jsonSentence.get(SentenceKeys.ENTITIES)
+            .getAsJsonArray()) {
+          JsonObject entityObj = entity.getAsJsonObject();
+          if (entityObj.has(SentenceKeys.SCORE)) {
+            entityScore += entityObj.get(SentenceKeys.SCORE).getAsDouble();
+          }
+        }
+      }
+      if (entityScore > 1.0) {
+        EntityScoreFeature feature =
+            new EntityScoreFeature(Math.log10(entityScore));
+        for (LexicalGraph uGraph : graphs) {
+          uGraph.addFeature(feature);
+        }
+      }
+    }
+
+    // Add entity overlap scores.
+    if (entityWordOverlapFlag) {
+      double entityWordOverlapScore = 0.0;
+      if (jsonSentence.has(SentenceKeys.ENTITIES)) {
+        for (JsonElement entity : jsonSentence.get(SentenceKeys.ENTITIES)
+            .getAsJsonArray()) {
+          JsonObject entityObj = entity.getAsJsonObject();
+          if (entityObj.has(SentenceKeys.PHRASE)
+              && entityObj.has(SentenceKeys.ENTITY_NAME)) {
+            Set<String> originalWords =
+                Sets.newHashSet(Splitter.on(CharMatcher.WHITESPACE).split(
+                    entityObj.get(SentenceKeys.PHRASE).getAsString()
+                        .toLowerCase()));
+            Set<String> predictedEntityWords =
+                Sets.newHashSet(Splitter.on(CharMatcher.WHITESPACE).split(
+                    entityObj.get(SentenceKeys.ENTITY_NAME).getAsString()
+                        .toLowerCase()));
+            int total1 = originalWords.size();
+            int total2 = predictedEntityWords.size();
+            originalWords.retainAll(predictedEntityWords);
+            int intersection = originalWords.size();
+            double p1 = (intersection + 0.0) / total1;
+            double p2 = (intersection + 0.0) / total2;
+            double mean = 0.0;
+            if (p1 + p2 > 0.05) {
+              mean = 2.0 * p1 * p2 / (p1 + p2);
+            }
+            entityWordOverlapScore += mean;
+          }
+        }
+      }
+      if (entityWordOverlapScore > 0.005) {
+        EntityWordOverlapFeature feature =
+            new EntityWordOverlapFeature(entityWordOverlapScore);
+        for (LexicalGraph uGraph : graphs) {
+          uGraph.addFeature(feature);
+        }
+      }
+    }
   }
 
   /**
@@ -321,9 +404,10 @@ public class GroundedGraphs {
     List<LexicalItem> leaves = buildLexicalItemsFromWords(jsonSentence);
     Set<String> parse =
         getBagOfWordsUngroundedSemanticParse(jsonSentence, leaves);
-    List<String> contentWords = getContentWords(jsonSentence);
-    buildUngroundeGraphFromSemanticParse(parse, leaves, contentWords, 0.0,
-        graphs);
+    buildUngroundeGraphFromSemanticParse(parse, leaves, 0.0, graphs);
+
+    // Add ungrounded graph features.
+    addUngroundedGraphFeatures(jsonSentence, graphs);
     return graphs;
   }
 
@@ -349,7 +433,6 @@ public class GroundedGraphs {
     if (entities.size() == 0)
       return parse;
 
-
     // Create all the edges.
     for (JsonElement entity : entities) {
       JsonObject entityObj = entity.getAsJsonObject();
@@ -367,38 +450,55 @@ public class GroundedGraphs {
     return parse;
   }
 
-  public static List<String> getContentWords(JsonObject jsonSentence) {
-    Set<Integer> entityIndices = new HashSet<>();
-    if (jsonSentence.has(SentenceKeys.ENTITIES)) {
-      JsonArray entities =
-          jsonSentence.get(SentenceKeys.ENTITIES).getAsJsonArray();
-      for (JsonElement entity : entities) {
-        JsonObject entityObj = entity.getAsJsonObject();
-        int index = entityObj.get(SentenceKeys.INDEX_KEY).getAsInt();
-        entityIndices.add(index);
-      }
-    }
-
+  public static List<String> getNgrams(List<LexicalItem> words, int nGram) {
     List<String> wordStrings = new ArrayList<>();
-    JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
-    int index = -1;
-    for (JsonElement word : words) {
-      index++;
-      JsonObject wordObj = word.getAsJsonObject();
-      if (entityIndices.contains(index))
+    for (LexicalItem word : words) {
+      if (!word.getLemma().equals(word.getMid()) && !word.getMid().equals("x")) {
+        // Current word is an entity.
         continue;
-      String wordString =
-          wordObj.has(SentenceKeys.LEMMA_KEY) ? wordObj
-              .get(SentenceKeys.LEMMA_KEY).getAsString().toLowerCase()
-              : wordObj.get(SentenceKeys.WORD_KEY).getAsString().toLowerCase();
+      }
 
-      String posTag = wordObj.get(SentenceKeys.POS_KEY).getAsString();
-      if (!posTag.matches("[NJVR].*") || wordString.equals(BLANK_WORD)) {
+      String wordString = word.getLemma();
+      String posTag = word.getPos();
+
+      if (posTag.startsWith("NNP"))
         continue;
+      if (nGram == 1) {
+        if (!posTag.matches("[NJVR].*")) {
+          continue;
+        }
+        if (wordString.equals(BLANK_WORD)) {
+          continue;
+        }
+      } else {
+        // This filtering creates ngrams such as "located in", "what country",
+        // "where was"
+        if (!posTag.matches("[NJVRWI].*")) {
+          continue;
+        }
+        if (wordString.equals(BLANK_WORD)) {
+          continue;
+        }
       }
       wordStrings.add(wordString);
     }
-    return wordStrings;
+
+    if (nGram == 1)
+      return wordStrings;
+    else {
+      List<String> nGrams = new ArrayList<>();
+      wordStrings.add("EOL");
+      for (int i = nGram - 1; i < wordStrings.size(); i++) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(wordStrings.get(i - nGram + 1));
+        for (int j = nGram - 2; j >= 0; j--) {
+          sb.append("::");
+          sb.append(wordStrings.get(i - j));
+        }
+        nGrams.add(sb.toString());
+      }
+      return nGrams;
+    }
   }
 
   /**
@@ -416,14 +516,17 @@ public class GroundedGraphs {
       JsonObject jsonSentence) {
     Preconditions.checkArgument(jsonSentence.has("words"));
     Map<Integer, String> tokenToEntity = new HashMap<>();
-    for (JsonElement entityElement : jsonSentence.get("entities")
-        .getAsJsonArray()) {
-      JsonObject entityObject = entityElement.getAsJsonObject();
-      tokenToEntity.put(entityObject.get("index").getAsInt(),
-          entityObject.get("entity").getAsString());
+    List<LexicalItem> items = new ArrayList<>();
+
+    if (jsonSentence.has("entities")) {
+      for (JsonElement entityElement : jsonSentence.get("entities")
+          .getAsJsonArray()) {
+        JsonObject entityObject = entityElement.getAsJsonObject();
+        tokenToEntity.put(entityObject.get("index").getAsInt(), entityObject
+            .get("entity").getAsString());
+      }
     }
 
-    List<LexicalItem> items = new ArrayList<>();
     int i = 0;
     for (JsonElement wordElement : jsonSentence.get("words").getAsJsonArray()) {
       JsonObject wordObject = wordElement.getAsJsonObject();
@@ -432,10 +535,15 @@ public class GroundedGraphs {
           wordObject.has("lemma") ? wordObject.get("lemma").getAsString()
               : word;
       String pos = wordObject.get("pos").getAsString();
-      LexicalItem lex = new LexicalItem("", word, lemma, pos, "", null);
+      String ner =
+          wordObject.has(SentenceKeys.NER_KEY) ? wordObject.get(
+              SentenceKeys.NER_KEY).getAsString() : "";
+      LexicalItem lex = new LexicalItem("", word, lemma, pos, ner, null);
       lex.setWordPosition(i);
       if (tokenToEntity.containsKey(i)) {
         lex.setMid(tokenToEntity.get(i));
+      } else {
+        setNumericalMids(wordObject, lex);
       }
       items.add(lex);
       ++i;
@@ -444,8 +552,7 @@ public class GroundedGraphs {
   }
 
   private void buildUngroundeGraphFromSemanticParse(Set<String> semanticParse,
-      List<LexicalItem> leaves, List<String> contentWords, double parseScore,
-      List<LexicalGraph> graphs) {
+      List<LexicalItem> leaves, double parseScore, List<LexicalGraph> graphs) {
     Pattern relationPattern =
         Pattern.compile("(.*)\\(([0-9]+)\\:e , ([0-9]+\\:.*)\\)");
     Pattern typePattern =
@@ -564,9 +671,6 @@ public class GroundedGraphs {
             eventEventModifiers);
     graph.setActualNodes(leaves);
     graph.setScore(parseScore);
-
-    // Add all content words to the graph.
-    graph.getWords().addAll(contentWords);
 
     // Traceback the semantic parse from which the graph is created.
     graph.setSemanticParse(semanticParse);
@@ -706,15 +810,7 @@ public class GroundedGraphs {
     return graph;
   }
 
-  public static Map<String, String> cardinalTypes = ImmutableMap
-      .<String, String>builder().put("I-DAT", "type.datetime")
-      .put("DATE", "type.datetime").put("PERCENT", "type.float")
-      .put("TIME", "type.datetime").put("MONEY", "type.float")
-      .put("CD.int", "type.int").put("CD.float", "type.float")
-      .put("FLOAT", "type.float").put("INT", "type.int").build();
-  Pattern floatPattern = Pattern.compile(".*[\\.][0-9].*");
-
-  private void lexicaliseArgumentsToDomainEntities(CcgParseTree ccgParse,
+  private void lexicaliseArgumentsToDomainEntities(List<LexicalItem> leaves,
       JsonObject jsonSentence) {
     JsonArray entities;
     if (jsonSentence.has("entities"))
@@ -723,8 +819,6 @@ public class GroundedGraphs {
       entities = new JsonArray();
 
     JsonArray words = jsonSentence.getAsJsonArray("words");
-    List<LexicalItem> leaves = ccgParse.getLeafNodes();
-
     List<JsonObject> wordObjects = Lists.newArrayList();
     for (JsonElement word : words) {
       JsonObject wordObject = word.getAsJsonObject();
@@ -732,28 +826,9 @@ public class GroundedGraphs {
     }
 
     for (int i = 0; i < leaves.size(); i++) {
-      String stanfordNer = "";
-      if (wordObjects.get(i).has("ner")) {
-        stanfordNer = wordObjects.get(i).get("ner").getAsString();
-      }
+      JsonObject wordObject = wordObjects.get(i);
       LexicalItem leaf = leaves.get(i);
-      String candcNer = leaf.getNeType();
-      String posTag = leaf.getPos();
-      if (posTag.equals("CD")) {
-        String word = leaf.getWord();
-        if (floatPattern.matcher(word).matches()) {
-          posTag = "CD.float";
-        } else {
-          posTag = "CD.int";
-        }
-      }
-      String mid =
-          cardinalTypes.containsKey(candcNer) ? cardinalTypes.get(candcNer)
-              : (cardinalTypes.containsKey(stanfordNer) ? cardinalTypes
-                  .get(stanfordNer)
-                  : (cardinalTypes.containsKey(posTag) ? cardinalTypes
-                      .get(posTag) : leaf.getMid()));
-      leaf.setMid(mid);
+      setNumericalMids(wordObject, leaf);
     }
 
     // mids from freebase annotation or geoquery entity recognition
@@ -763,6 +838,45 @@ public class GroundedGraphs {
       String mid = entityObject.get("entity").getAsString();
       leaves.get(index).setMID(mid);
       leaves.get(index).setIsEntity(true);
+    }
+  }
+
+  public static Map<String, String> cardinalTypes = ImmutableMap
+      .<String, String>builder().put("I-DAT", "type.datetime")
+      .put("DATE", "type.datetime").put("PERCENT", "type.float")
+      .put("TIME", "type.datetime").put("MONEY", "type.float")
+      .put("CD.int", "type.int").put("CD.float", "type.float")
+      .put("FLOAT", "type.float").put("INT", "type.int").build();
+  private static Pattern floatPattern = Pattern.compile(".*[\\.][0-9].*");
+  private static Pattern datePattern = Pattern.compile("[0-9]{3,4}");
+
+  public static void setNumericalMids(JsonObject wordObject, LexicalItem leaf) {
+    String stanfordNer = "";
+    if (wordObject.has("ner")) {
+      stanfordNer = wordObject.get("ner").getAsString();
+    }
+    String word = leaf.getWord();
+    String ner = leaf.getNeType();
+    String posTag = leaf.getPos();
+
+    if (datePattern.matcher(word).matches()) {
+      ner = "DATE";
+    } else if (posTag.equals("CD")) {
+      if (floatPattern.matcher(word).matches()) {
+        posTag = "CD.float";
+      } else {
+        posTag = "CD.int";
+      }
+    }
+    String mid =
+        cardinalTypes.containsKey(ner) ? cardinalTypes.get(ner)
+            : (cardinalTypes.containsKey(stanfordNer) ? cardinalTypes
+                .get(stanfordNer)
+                : (cardinalTypes.containsKey(posTag) ? cardinalTypes
+                    .get(posTag) : null));
+
+    if (mid != null) {
+      leaf.setMid(mid);
     }
   }
 
@@ -781,6 +895,27 @@ public class GroundedGraphs {
   }
 
   public List<LexicalGraph> createGroundedGraph(LexicalGraph graph,
+      Set<LexicalItem> restrictedNodes, int nbestEdges, int nbestGraphs,
+      boolean useEntityTypes, boolean useKB, boolean groundFreeVariables,
+      boolean useEmtpyTypes, boolean ignoreTypes, boolean testing) {
+    List<LexicalGraph> groundedGraphs =
+        createGroundedGraphPrivate(graph, restrictedNodes, nbestEdges,
+            nbestGraphs, useEntityTypes, useKB, groundFreeVariables,
+            useEmtpyTypes, ignoreTypes, testing);
+
+    // Add features from ungrounded graph such as entity overlap features,
+    // entity score features.
+    if (graph.getFeatures().size() > 0) {
+      for (LexicalGraph gGraph : groundedGraphs) {
+        for (Feature feature : graph.getFeatures()) {
+          gGraph.addFeature(feature);
+        }
+      }
+    }
+    return groundedGraphs;
+  }
+
+  private List<LexicalGraph> createGroundedGraphPrivate(LexicalGraph graph,
       Set<LexicalItem> restrictedNodes, int nbestEdges, int nbestGraphs,
       boolean useEntityTypes, boolean useKB, boolean groundFreeVariables,
       boolean useEmtpyTypes, boolean ignoreTypes, boolean testing) {
@@ -1833,14 +1968,33 @@ public class GroundedGraphs {
         }
 
         if (ngramGrelPartFlag) {
-          for (String word : ungroundedGraph.getWords()) {
+          for (String word : getNgrams(ungroundedGraph.getActualNodes(), 1)) {
             key = Lists.newArrayList(word, grelLeft);
-            NgramGrelFeature ngramGrelFeature = new NgramGrelFeature(key, 1.0);
-            newGraph.addFeature(ngramGrelFeature);
+            NgramGrelFeature unigramGrelFeature =
+                new NgramGrelFeature(key, 1.0);
+            newGraph.addFeature(unigramGrelFeature);
 
             key = Lists.newArrayList(word, grelRight);
-            ngramGrelFeature = new NgramGrelFeature(key, 1.0);
-            newGraph.addFeature(ngramGrelFeature);
+            unigramGrelFeature = new NgramGrelFeature(key, 1.0);
+            newGraph.addFeature(unigramGrelFeature);
+
+            key = Lists.newArrayList(word, grelLeft, grelRight);
+            unigramGrelFeature = new NgramGrelFeature(key, 1.0);
+            newGraph.addFeature(unigramGrelFeature);
+          }
+
+          for (String biGram : getNgrams(ungroundedGraph.getActualNodes(), 2)) {
+            key = Lists.newArrayList(biGram, grelLeft);
+            NgramGrelFeature biGramGrelFeature = new NgramGrelFeature(key, 1.0);
+            newGraph.addFeature(biGramGrelFeature);
+
+            key = Lists.newArrayList(biGram, grelRight);
+            biGramGrelFeature = new NgramGrelFeature(key, 1.0);
+            newGraph.addFeature(biGramGrelFeature);
+
+            key = Lists.newArrayList(biGram, grelLeft, grelRight);
+            biGramGrelFeature = new NgramGrelFeature(key, 1.0);
+            newGraph.addFeature(biGramGrelFeature);
           }
         }
 

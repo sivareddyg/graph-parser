@@ -15,6 +15,8 @@ for line in os.popen("zcat %s" % (sys.argv[1])):
     mid, name_id = line.strip().split("\t")
     id_to_mid[name_id] = mid
 
+
+bad_ids = set()
 for line in sys.stdin:
     line = json.loads(line)
     if "disambiguatedEntities" in line:
@@ -24,8 +26,13 @@ for line in sys.stdin:
                 if id in id_to_mid:
                     mid = id_to_mid[id]
                     if mid != entity['entity']:
-                        sys.stderr.write(mid + ' ' + entity['entity'] + '\n')
-                    entity['entity'] = mid
+                        sys.stderr.write(
+                            id + ' ' + mid + ' ' + entity['entity'] + '\n')
+                        bad_ids.add(id)
+                    #entity['entity'] = mid
                 else:
                     sys.stderr.write(id + 'not in mapping \n')
-    print json.dumps(line)
+    # print json.dumps(line)
+
+for id in bad_ids:
+    print id

@@ -15,6 +15,9 @@ def document_to_graphparser_input(document):
   
   if 'text' in document:
     gdoc['sentence'] = document['text']
+
+  if 'docid' in document:
+    gdoc['index'] = document['docid']
  
   sent_words = [word['word'] for word in document['token']]
   
@@ -43,25 +46,35 @@ def document_to_graphparser_input(document):
       # If there is a head, use it, else treat the first word in the phrase as head.
       head = measure['phrase']['head']  if 'head' in measure else measure['phrase']['start']
       head_to_phrase[head] = ' '.join(sent_words[measure['phrase']['start'] : measure['phrase']['end'] + 1])
+      # print head_to_phrase
       for token_index in range(measure['phrase']['start'], measure['phrase']['end'] + 1):
         if token_index != head:
           token_to_mention_or_measure_head[token_index] = head
       if 'type' in measure:
         measure_type = measure['type']
         head_to_freebase_id[head] = measure_types.get(measure_type, 'type.float')
+  # print token_to_mention_or_measure_head
       
   old_token_index_to_new = {}
   # Populate words
   gdoc["words"] = []
   words = gdoc["words"]
-  new_word_index = 0
+
+  new_word_index = -1
+  prev_head = -1
   for token_index, token in enumerate(document['token']):
+    if token_index in token_to_mention_or_measure_head:
+       cur_head = token_to_mention_or_measure_head[token_index]
+    else:
+        cur_head = token_index
+    if prev_head != cur_head:
+        new_word_index += 1
     old_token_index_to_new[token_index] = new_word_index
-     
-    # Store only the heads
-    if token_index in token_to_mention_or_measure_head: continue
-    new_word_index += 1
+    prev_head = cur_head
     
+  for token_index, token in enumerate(document['token']):
+    # store only the heads.
+    if token_index in token_to_mention_or_measure_head: continue
     words.append({})
     word = words[-1]
     for key in token:
@@ -129,6 +142,7 @@ def process_lambda(words, head_to_freebase_id, old_token_index_to_new, old_lambd
   
   basic_expressions = basic_expression_pattern.findall(old_lambda)
   for basic_expression in basic_expressions:
+    # print basic_expression
     m = type_pattern.match(basic_expression)
     if m:
       predicate = m.group(1)
@@ -256,16 +270,13 @@ if __name__ == "__main__":
   # print line
   # 
   
-  cache = set()
   for i, line in enumerate(sys.stdin):
     document = json.loads(line.strip())
     try:
       gdoc = document_to_graphparser_input(document)
       sentence = " ".join([word['word'] for word in gdoc['words']])
-      if sentence not in cache:
-        if 'sentence' not in gdoc:
-          gdoc['sentence'] = sentence
-        print json.dumps(gdoc)
-        cache.add(sentence)
+      if 'sentence' not in gdoc:
+        gdoc['sentence'] = sentence
+      print json.dumps(gdoc)
     except:
       sys.stderr.write("Cannot process sentid:%d %s" %(i, line))

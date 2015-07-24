@@ -15,6 +15,7 @@ import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.ml.basic.Feature;
 import in.sivareddy.ml.learning.StructuredPercepton;
+import in.sivareddy.util.SentenceKeys;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -71,6 +72,7 @@ public class GraphToQueryTraining {
   int nbestGraphs = 100;
   int nbestTrainSyntacticParses = 1;
   int nbestTestSyntacticParses = 1;
+  int forrestSize = 1;
 
   boolean useEntityTypes = true;
   boolean useKB = true;
@@ -79,7 +81,7 @@ public class GraphToQueryTraining {
   boolean ignoreTypes = false;
 
   boolean validQueryFlag = true;
-  boolean useNbestGraphs = false;
+  boolean useNbestSurrogateGraphs = false;
   boolean addBagOfWordsGraph = false;
   boolean addOnlyBagOfWordsGraph = false;
 
@@ -93,22 +95,24 @@ public class GraphToQueryTraining {
       GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
       CcgAutoLexicon questionCcgAutoLexicon, String semanticParseKey,
       int nbestTrainSyntacticParses, int nbestTestSyntacticParses,
-      int nbestEdges, int nbestGraphs, boolean useSchema, boolean useKB,
-      boolean groundFreeVariables, boolean useEmtpyTypes, boolean ignoreTypes,
-      StructuredPercepton learningModel, boolean urelGrelFlag,
-      boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
-      boolean gtypeGrelFlag, boolean grelGrelFlag, boolean ngramGrelPartFlag,
-      boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
-      boolean argGrelFlag, boolean eventTypeGrelPartFlag,
-      boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
+      int nbestEdges, int nbestGraphs, int forrestSize, boolean useSchema,
+      boolean useKB, boolean groundFreeVariables, boolean useEmtpyTypes,
+      boolean ignoreTypes, StructuredPercepton learningModel,
+      boolean urelGrelFlag, boolean urelPartGrelPartFlag,
+      boolean utypeGtypeFlag, boolean gtypeGrelFlag, boolean grelGrelFlag,
+      boolean ngramGrelPartFlag, boolean wordGrelPartFlag,
+      boolean wordGrelFlag, boolean argGrelPartFlag, boolean argGrelFlag,
+      boolean eventTypeGrelPartFlag, boolean stemMatchingFlag,
+      boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean graphIsConnectedFlag,
       boolean graphHasEdgeFlag, boolean countNodesFlag,
       boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
-      boolean validQueryFlag, boolean useNbestGraphs,
+      boolean validQueryFlag, boolean useNbestSurrogateGraphs,
       boolean addBagOfWordsGraph, boolean addOnlyBagOfWordsGraph,
-      boolean handleNumbers, double initialEdgeWeight,
+      boolean handleNumbers, boolean entityScoreFlag,
+      boolean entityWordOverlapFlag, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
       double stemFeaturesWeight, RdfGraphTools rdfGraphTools,
       List<String> kbGraphUri) throws IOException {
@@ -121,6 +125,8 @@ public class GraphToQueryTraining {
     this.nbestTestSyntacticParses = nbestTestSyntacticParses;
     this.nbestEdges = nbestEdges;
     this.nbestGraphs = nbestGraphs;
+    this.forrestSize = forrestSize;
+
     this.useEntityTypes = useSchema;
     this.useKB = useKB;
     this.groundFreeVariables = groundFreeVariables;
@@ -136,7 +142,7 @@ public class GraphToQueryTraining {
 
     this.rdfGraphTools = rdfGraphTools;
     this.kbGraphUri = kbGraphUri;
-    this.useNbestGraphs = useNbestGraphs;
+    this.useNbestSurrogateGraphs = useNbestSurrogateGraphs;
     this.addOnlyBagOfWordsGraph = addOnlyBagOfWordsGraph;
     this.addBagOfWordsGraph = addBagOfWordsGraph || addOnlyBagOfWordsGraph;
 
@@ -154,8 +160,9 @@ public class GraphToQueryTraining {
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            ignorePronouns, handleNumbers, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
+            ignorePronouns, handleNumbers, entityScoreFlag,
+            entityWordOverlapFlag, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
 
   }
 
@@ -233,7 +240,7 @@ public class GraphToQueryTraining {
     }
     threadPool.shutdown();
 
-    // Wait until all threads are finished
+    // Wait until all threads are finished.
     while (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
       logger.debug("Awaiting completion of threads.");
     }
@@ -705,7 +712,7 @@ public class GraphToQueryTraining {
       if (marginDifference > MARGIN)
         break;
       predGraphsWithinMargin.add(gGraph);
-      if (!useNbestGraphs)
+      if (!useNbestSurrogateGraphs)
         break;
     }
 
@@ -719,7 +726,7 @@ public class GraphToQueryTraining {
     List<LexicalGraph> finalGoldGraphs = Lists.newArrayList();
     for (Pair<Integer, LexicalGraph> gGraphPair : goldGraphs) {
       finalGoldGraphs.add(gGraphPair.getRight());
-      if (!useNbestGraphs)
+      if (!useNbestSurrogateGraphs)
         break;
       else {
         // Duplicate the gold graph since all gold graphs will also be present
@@ -749,12 +756,12 @@ public class GraphToQueryTraining {
     logger.info("Best predicted graph: " + predGraphsWithinMargin.get(0));
     logger.info("Best gold graph: " + finalGoldGraphs.get(0));
 
-    if (debugEnabled && !useNbestGraphs) {
+    if (debugEnabled && !useNbestSurrogateGraphs) {
       logger.debug("Best Gold graph features before update");
       learningModel.printFeatureWeights(bestGoldGraph.getFeatures(), logger);
     }
 
-    if (debugEnabled && !useNbestGraphs) {
+    if (debugEnabled && !useNbestSurrogateGraphs) {
       logger.debug("Best Predicted graph features before update");
       learningModel.printFeatureWeights(bestPredictedGraph.getFeatures(),
           logger);
@@ -771,13 +778,13 @@ public class GraphToQueryTraining {
     logger.debug("Predicted After Update: " + bestPredictedGraph.getScore());
     logger.debug("Gold After Update: " + bestGoldGraph.getScore());
 
-    if (debugEnabled && !useNbestGraphs) {
+    if (debugEnabled && !useNbestSurrogateGraphs) {
       logger.debug("Predicted graph features after update");
       learningModel.printFeatureWeights(bestPredictedGraph.getFeatures(),
           logger);
     }
 
-    if (debugEnabled && !useNbestGraphs) {
+    if (debugEnabled && !useNbestSurrogateGraphs) {
       logger.debug("Gold graph features after update");
       learningModel.printFeatureWeights(bestGoldGraph.getFeatures(), logger);
     }
@@ -1094,21 +1101,36 @@ public class GraphToQueryTraining {
       goldResults = new HashMap<>();
       goldResults.put("answerSubset", goldAnswers);
     }
-
     logger.info("Gold Results : " + goldResults);
 
-    // Get ungrounded graphs
-    List<LexicalGraph> uGraphs = Lists.newArrayList();
-
-    // Add graphs from syntactic parse/already given semantic parses.
-    if (!addOnlyBagOfWordsGraph) {
-      uGraphs.addAll(graphCreator.buildUngroundedGraph(jsonSentence,
-          semanticParseKey, nbestParses, logger));
+    List<JsonObject> forrest = new ArrayList<>();
+    if (jsonSentence.has(SentenceKeys.FOREST)) {
+      JsonArray jsonForrest =
+          jsonSentence.get(SentenceKeys.FOREST).getAsJsonArray();
+      int i = 0;
+      for (JsonElement element : jsonForrest) {
+        i++;
+        if (i > forrestSize)
+          break;
+        forrest.add(element.getAsJsonObject());
+      }
+    } else {
+      forrest.add(jsonSentence);
     }
 
-    // Add a bag-of-word graph.
-    if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
-      uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(jsonSentence));
+    // Get ungrounded graphs.
+    List<LexicalGraph> uGraphs = Lists.newArrayList();
+    for (JsonObject element : forrest) {
+      // Add graphs from syntactic parse/already given semantic parses.
+      if (!addOnlyBagOfWordsGraph) {
+        uGraphs.addAll(graphCreator.buildUngroundedGraph(element,
+            semanticParseKey, nbestParses, logger));
+      }
+
+      // Add a bag-of-word graph.
+      if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
+        uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(element));
+      }
     }
 
     if (uGraphs.size() < 1) {
@@ -1510,31 +1532,47 @@ public class GraphToQueryTraining {
       goldResults.put("answerSubset", goldAnswers);
     }
 
+    List<JsonObject> forrest = new ArrayList<>();
+    if (jsonSentence.has(SentenceKeys.FOREST)) {
+      JsonArray jsonForrest =
+          jsonSentence.get(SentenceKeys.FOREST).getAsJsonArray();
+      int i = 0;
+      for (JsonElement element : jsonForrest) {
+        i++;
+        if (i > forrestSize)
+          break;
+        forrest.add(element.getAsJsonObject());
+      }
+    } else {
+      forrest.add(jsonSentence);
+    }
+
     // Get ungrounded graphs
     List<LexicalGraph> uGraphs = Lists.newArrayList();
-
-    // Add graphs from syntactic parse/already given semantic parses.
-    if (!addOnlyBagOfWordsGraph) {
-      uGraphs.addAll(graphCreator.buildUngroundedGraph(jsonSentence,
-          semanticParseKey, nbestTestSyntacticParses, logger));
-    }
-
-    // Add a bag-of-word graph.
-    if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
-      uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(jsonSentence));
-    }
-
-    if (uGraphs.size() < 1) {
-      logger.debug("No uGraphs");
-
-      // Syntactic parser mistakes. There are no predicted results.
-      firstBestMap.put(sentCount, -1);
-      results.put(sentCount, new HashMap<>());
-      for (Integer nthBest : testingNbestParsesRange) {
-        results.get(sentCount).put(nthBest,
-            RdfGraphTools.getCleanedResults(goldResults, null));
+    for (JsonObject element : forrest) {
+      // Add graphs from syntactic parse/already given semantic parses.
+      if (!addOnlyBagOfWordsGraph) {
+        uGraphs.addAll(graphCreator.buildUngroundedGraph(element,
+            semanticParseKey, nbestTestSyntacticParses, logger));
       }
-      return;
+
+      // Add a bag-of-word graph.
+      if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
+        uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(element));
+      }
+
+      if (uGraphs.size() < 1) {
+        logger.debug("No uGraphs");
+
+        // Syntactic parser mistakes. There are no predicted results.
+        firstBestMap.put(sentCount, -1);
+        results.put(sentCount, new HashMap<>());
+        for (Integer nthBest : testingNbestParsesRange) {
+          results.get(sentCount).put(nthBest,
+              RdfGraphTools.getCleanedResults(goldResults, null));
+        }
+        return;
+      }
     }
 
     // Get grounded Graphs

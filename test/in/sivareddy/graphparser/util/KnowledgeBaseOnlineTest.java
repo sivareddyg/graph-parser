@@ -21,12 +21,18 @@ public class KnowledgeBaseOnlineTest {
         new Schema("data/freebase/schema/all_domains_schema.txt");
     
     KnowledgeBaseOnline kb =
-        new KnowledgeBaseOnline("rockall", "http://rockall:8890/sparql", "dba",
+        new KnowledgeBaseOnline("kinloch", "http://kinloch:8890/sparql", "dba",
             "dba", 100000, schema);
 
+    System.out.println("Egypt");
+    System.out.println(kb.getRelations("m.02k54"));
+    
     System.out.println(kb.getRelations("m.01ypc"));
     
     System.out.println(kb.getRelations("m.07484"));
+    
+    System.out.println("Syracuse");
+    System.out.println(kb.getRelations("m.071cn"));
     
     // true
     System.out.println(kb.hasRelation("m.06rn8p", "m.031q99"));

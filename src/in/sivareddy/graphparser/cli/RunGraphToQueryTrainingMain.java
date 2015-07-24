@@ -76,6 +76,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Integer> nBestTestSyntacticParses;
   private OptionSpec<Integer> nbestGraphs;
   private OptionSpec<Integer> nbestEdges;
+  private OptionSpec<Integer> forrestSize;
 
   // Set these true, or else graph construction mechanism will be
   // completely driven by lexicon
@@ -136,7 +137,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> addBagOfWordsGraphFlag;
   private OptionSpec<Boolean> addOnlyBagOfWordsGraphFlag;
   private OptionSpec<Boolean> handleNumbersFlag;
-
+  private OptionSpec<Boolean> entityScoreFlag;
+  private OptionSpec<Boolean> entityWordOverlapFlag;
 
   @Override
   public void initializeOptions(OptionParser parser) {
@@ -291,6 +293,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("nbestEdges",
                 "number of edges/types for each ungrounded edge/types")
             .withRequiredArg().ofType(Integer.class).defaultsTo(1000);
+
+    forrestSize =
+        parser
+            .accepts("forrestSize",
+                "maximum number of sentences to consider in the forrest")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(1);
 
     debugEnabledFlag =
         parser.accepts("debugEnabledFlag", "Enable debug mode")
@@ -505,6 +513,18 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("handleNumbersFlag",
                 "treat numbers specially and introduce COUNT. Suitable for Free917 data.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    entityScoreFlag =
+        parser
+            .accepts("entityScoreFlag",
+                "use entity disambiguation scores as features")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    entityWordOverlapFlag =
+        parser
+            .accepts("entityWordOverlapFlag",
+                "use entity phrase and entity name overlap features")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
   }
 
   @Override
@@ -569,6 +589,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           options.valueOf(nBestTestSyntacticParses);
       int nbestGraphsVal = options.valueOf(nbestGraphs);
       int nbestEdgesVal = options.valueOf(nbestEdges);
+      int forrestSizeVal = options.valueOf(forrestSize);
 
       // Set these true, or else graph construction mechanism will be
       // completely driven by lexicon
@@ -636,6 +657,9 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           options.valueOf(addOnlyBagOfWordsGraphFlag);
       boolean handleNumbersFlagVal = options.valueOf(handleNumbersFlag);
 
+      boolean entityScoreFlagVal = options.valueOf(entityScoreFlag);
+      boolean entityWordOverlapFlagVal = options.valueOf(entityWordOverlapFlag);
+
       boolean groundTrainingCorpusInTheEndVal =
           options.valueOf(groundTrainingCorpusInTheEnd);
 
@@ -652,19 +676,21 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               groundTrainingCorpusInTheEndVal, trainingSampleSizeCount,
               logfile, loadModelFromFileVal, nBestTrainSyntacticParsesVal,
               nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal,
-              useSchemaVal, useKBVal, groundFreeVariablesVal, useEmptyTypesVal,
-              ignoreTypesVal, urelGrelFlagVal, urelPartGrelPartFlagVal,
-              utypeGtypeFlagVal, gtypeGrelFlagVal, ngramGrelPartFlagVal,
-              wordGrelPartFlagVal, wordGrelFlagVal, eventTypeGrelPartFlagVal,
-              argGrelPartFlagVal, argGrelFlagVal, stemMatchingFlagVal,
-              mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
-              argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
-              graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
-              duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
-              useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
-              addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
-              handleNumbersFlagVal, initialEdgeWeightVal, initialTypeWeightVal,
-              initialWordWeightVal, stemFeaturesWeightVal);
+              forrestSizeVal, useSchemaVal, useKBVal, groundFreeVariablesVal,
+              useEmptyTypesVal, ignoreTypesVal, urelGrelFlagVal,
+              urelPartGrelPartFlagVal, utypeGtypeFlagVal, gtypeGrelFlagVal,
+              ngramGrelPartFlagVal, wordGrelPartFlagVal, wordGrelFlagVal,
+              eventTypeGrelPartFlagVal, argGrelPartFlagVal, argGrelFlagVal,
+              stemMatchingFlagVal, mediatorStemGrelPartMatchingFlagVal,
+              argumentStemMatchingFlagVal, argumentStemGrelPartMatchingFlagVal,
+              graphIsConnectedFlagVal, graphHasEdgeFlagVal, countNodesFlagVal,
+              edgeNodeCountFlagVal, duplicateEdgesFlagVal, grelGrelFlagVal,
+              useLexiconWeightsRelVal, useLexiconWeightsTypeVal,
+              validQueryFlagVal, useNbestGraphsVal, addBagOfWordsGraphVal,
+              addOnlyBagOfWordsGraphVal, handleNumbersFlagVal,
+              entityScoreFlagVal, entityWordOverlapFlagVal,
+              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
+              stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
 
       // Run the best model.
@@ -674,9 +700,6 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           && !groundInputCorporaFiles.equals("")) {
         graphToQueryModel.groundSentences(threadCount);
       }
-
-
-
     } catch (IOException e) {
       e.printStackTrace();
     } catch (InterruptedException e) {

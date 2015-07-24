@@ -49,7 +49,9 @@ public class SplitForrestToSentences {
       e.printStackTrace();
     }
 
-    if (!jsonSentence.has(SentenceKeys.DISAMBIGUATED_ENTITIES)) {
+    if (!jsonSentence.has(SentenceKeys.DISAMBIGUATED_ENTITIES)
+        || jsonSentence.get(SentenceKeys.DISAMBIGUATED_ENTITIES)
+            .getAsJsonArray().size() == 0) {
       sentences.add(jsonSentence);
       return sentences;
     }
@@ -58,11 +60,16 @@ public class SplitForrestToSentences {
         jsonSentence.get(SentenceKeys.DISAMBIGUATED_ENTITIES).getAsJsonArray();
     jsonSentence.remove(SentenceKeys.DISAMBIGUATED_ENTITIES);
 
+    int i = 0;
     for (JsonElement entities : disambiguatedEntities) {
+      i++;
       JsonElement entitiesList =
           entities.getAsJsonObject().get(SentenceKeys.ENTITIES);
       JsonObject newJsonSentence =
           jsonParser.parse(gson.toJson(jsonSentence)).getAsJsonObject();
+      newJsonSentence.addProperty(SentenceKeys.INDEX_KEY, String
+          .format("%s:%d", newJsonSentence.get(SentenceKeys.INDEX_KEY)
+              .getAsString(), i));
       newJsonSentence.add(SentenceKeys.ENTITIES, entitiesList);
       sentences.add(newJsonSentence);
     }

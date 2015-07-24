@@ -5,9 +5,16 @@ import in.sivareddy.util.SentenceKeys;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -98,6 +105,109 @@ public class MergeEntity {
     newSentence.add(SentenceKeys.WORDS_KEY, newWords);
     newSentence.add(SentenceKeys.ENTITIES, newEntities);
     return newSentence;
+  }
+
+
+  public static JsonObject mergeDateEntities(String sentence) {
+    JsonObject sentenceObj = jsonParser.parse(sentence).getAsJsonObject();
+    JsonObject newSentence = jsonParser.parse(sentence).getAsJsonObject();
+
+    Set<Integer> entityPostions = new HashSet<>();
+    List<JsonObject> entities = new ArrayList<>();
+    if (sentenceObj.has(SentenceKeys.ENTITIES)) {
+      for (JsonElement entity : sentenceObj.get(SentenceKeys.ENTITIES)
+          .getAsJsonArray()) {
+        JsonObject entityObj = entity.getAsJsonObject();
+        entityPostions.add(entityObj.get(SentenceKeys.ENTITY_INDEX).getAsInt());
+        entities.add(entityObj);
+      }
+    }
+
+    JsonArray oldWords =
+        sentenceObj.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+    Map<Integer, Integer> oldToNewMap = new HashMap<>();
+    JsonArray newWords = new JsonArray();
+
+    int newIndex = 0;
+    for (int i = 0; i < oldWords.size(); i++) {
+      JsonObject oldWord = oldWords.get(i).getAsJsonObject();
+      oldToNewMap.put(i, newIndex);
+      if (!entityPostions.contains(i) && isDate(oldWord)) {
+        StringBuilder phraseBuilder = new StringBuilder();
+        phraseBuilder.append(oldWord.get(SentenceKeys.WORD_KEY).getAsString());
+        int entityEnd = i;
+        for (int j = i + 1; j < oldWords.size(); j++) {
+          JsonObject nextWord = oldWords.get(j).getAsJsonObject();
+          if (entityPostions.contains(j) || !isDate(nextWord)) {
+            break;
+          } else {
+            phraseBuilder.append(" ");
+            phraseBuilder.append(nextWord.get(SentenceKeys.WORD_KEY)
+                .getAsString());
+            oldToNewMap.put(j, newIndex);
+            entityEnd = j;
+          }
+        }
+
+        JsonObject newWord =
+            jsonParser.parse(gson.toJson(oldWord)).getAsJsonObject();
+        String newWordString =
+            getWordsCapitalizedInitial(oldWords, i, entityEnd);
+
+        newWord.addProperty(SentenceKeys.WORD_KEY, newWordString);
+
+        if (newWord.has(SentenceKeys.LEMMA_KEY)) {
+          newWord.addProperty(SentenceKeys.LEMMA_KEY, newWordString);
+        }
+
+        newWords.add(newWord);
+        String phrase = phraseBuilder.toString();
+        JsonObject entityObj = new JsonObject();
+        entityObj.addProperty(SentenceKeys.PHRASE, phrase);
+        entityObj.addProperty(SentenceKeys.ENTITY, "type.datetime");
+        entityObj.addProperty(SentenceKeys.ENTITY_INDEX, i);
+        entities.add(entityObj);
+
+        i = entityEnd;
+      } else {
+        newWords.add(oldWord);
+      }
+      newIndex++;
+    }
+    newSentence.add(SentenceKeys.WORDS_KEY, newWords);
+    entities.sort(Comparator.comparing(x -> x.get(SentenceKeys.ENTITY_INDEX)
+        .getAsInt()));
+    
+    if (entities.size() > 0) {
+      JsonArray entityArr = new JsonArray();
+      newSentence.add(SentenceKeys.ENTITIES, entityArr);
+
+      for (JsonObject entityObj : entities) {
+        int newEntityIndex =
+            oldToNewMap
+                .get(entityObj.get(SentenceKeys.ENTITY_INDEX).getAsInt());
+        entityObj.addProperty(SentenceKeys.ENTITY_INDEX, newEntityIndex);
+        entityArr.add(entityObj);
+      }
+    }
+    return newSentence;
+  }
+
+  private static Set<String> timeEntities = Sets.newHashSet("TIME", "DATE");
+  private static Pattern yearPattern = Pattern.compile("[0-9]{3,4}");
+
+  private static boolean isDate(JsonObject wordObject) {
+    String word = wordObject.get(SentenceKeys.WORD_KEY).getAsString();
+    if (yearPattern.matcher(word).matches()) {
+      return true;
+    }
+
+    if (wordObject.has(SentenceKeys.NER_KEY)) {
+      String ner = wordObject.get(SentenceKeys.NER_KEY).getAsString();
+      if (timeEntities.contains(ner))
+        return true;
+    }
+    return false;
   }
 
   public static JsonObject mergeNamedEntitiesToSingleWord(String sentence) {
@@ -201,7 +311,9 @@ public class MergeEntity {
       String line = br.readLine();
       while (line != null) {
         JsonObject newSentence = mergeEntityWordsToSingleWord(line);
-        // newSentence = mergeNamedEntitiesToSingleWord(gson.toJson(newSentence));
+        newSentence = mergeDateEntities(gson.toJson(newSentence));
+        // newSentences =
+        // mergeNamedEntitiesToSingleWord(gson.toJson(newSentences));
         System.out.println(gson.toJson(newSentence));
         line = br.readLine();
       }
