@@ -353,15 +353,9 @@ public class RdfGraphTools {
       }
     }
 
-    boolean hasDate = false;
     LinkedHashSet<String> goldAnswers = goldResults.get(goldVarName);
     if (goldVarName != null && goldVarName.equals("targetValue")) {
-      hasDate =
-          (goldAnswers.size() > 0 && goldAnswers.iterator().next()
-              .contains("XMLSchema#datetime")) ? true : false;
-      if (hasDate) {
-        goldAnswers = convertDatesToYears(goldAnswers);
-      }
+      goldAnswers = convertDatesToYears(goldAnswers);
     } else {
       goldAnswers = goldResults.get(goldVar);
     }
@@ -388,15 +382,9 @@ public class RdfGraphTools {
               .get(predVar);
 
       for (String predAnswer : predAnswers) {
+        predAnswersCleaned.add(convertDateToYear(predAnswer));
         predAnswer = predAnswer.split("\\^\\^")[0];
         predAnswer = predAnswer.replaceAll("@[a-zA-Z\\-]+$", "");
-        if (hasDate) {
-          Matcher matcher = Pattern.compile("([0-9]{3,4})").matcher(predAnswer);
-          if (matcher.find()) {
-            predAnswer = matcher.group(1);
-          }
-        }
-        predAnswersCleaned.add(predAnswer);
       }
     } else if (goldVar.equals("answerSubset") || goldVar.equals("answer")) {
       LinkedHashSet<String> predAnswers = predResults.get(predVar);
@@ -562,13 +550,23 @@ public class RdfGraphTools {
     LinkedHashSet<String> dates = Sets.newLinkedHashSet();
     for (String result : results) {
       // date = 2008-12-31^^http://www.w3.org/2001/XMLSchema#datetime
-      if (result.contains("XMLSchema#datetime")) {
-        String date = Splitter.on("^^").split(result).iterator().next();
-        date = Splitter.on("-").split(date).iterator().next();
-        dates.add(date);
-      }
+      dates.add(convertDateToYear(result));
     }
     return dates;
+  }
+
+  public static String convertDateToYear(String result) {
+    // date = 2008-12-31^^http://www.w3.org/2001/XMLSchema#datetime
+    if (result.contains("XMLSchema#datetime")) {
+      String date = Splitter.on("^^").split(result).iterator().next();
+      String[] dateParts = date.split("-");
+      if (dateParts.length == 3)
+        date =
+            String.format("%d/%d/%d", Integer.parseInt(dateParts[1]),
+                Integer.parseInt(dateParts[2]), Integer.parseInt(dateParts[0]));
+      return date;
+    }
+    return result;
   }
 
   public static void main(String[] args) {

@@ -50,9 +50,21 @@ entity_span_tag_webq_data:
 	cat data/webquestions/webquestions.examples.test.domains.json \
 		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
 		| python scripts/webquestions-preprocessing/add_gold_mid_using_gold_url.py data/freebase/mid_to_key.txt.gz \
+		| java -cp lib/*:bin/ in.sivareddy.scripts.AddGoldRelationsToWebQuestionsData localhost data/freebase/schema/all_domains_schema.txt \
 	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
 		| java -cp lib/*:bin in.sivareddy.scripts.NounPhraseAnnotator EN_PTB \
 		> data/webquestions/webquestions.examples.test.domains.entity.matches.json
+
+add_gold_relations:
+		cat data/webquestions/webquestions.examples.train.domains.entity.matches.json \
+		| java -cp lib/*:bin/ in.sivareddy.scripts.AddGoldRelationsToWebQuestionsData localhost data/freebase/schema/all_domains_schema.txt \
+		> working/webquestions.examples.train.domains.entity.matches.json
+		mv working/webquestions.examples.train.domains.entity.matches.json data/webquestions/webquestions.examples.train.domains.entity.matches.json
+
+		cat data/webquestions/webquestions.examples.test.domains.entity.matches.json \
+		| java -cp lib/*:bin/ in.sivareddy.scripts.AddGoldRelationsToWebQuestionsData localhost data/freebase/schema/all_domains_schema.txt \
+		> working/webquestions.examples.test.domains.entity.matches.json
+		mv working/webquestions.examples.test.domains.entity.matches.json data/webquestions/webquestions.examples.test.domains.entity.matches.json
 
 rank_entity_webq_data:
 	cat data/webquestions/webquestions.examples.train.domains.entity.matches.json \
@@ -158,6 +170,17 @@ replace_unknown_mids:
 entity_disambiguation_results:
 	python scripts/entity-annotation/evaluate_entity_annotation.py < data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json | less
 
+copy_gold_relations:
+	python scripts/entity-annotation/copy_gold_relations.py data/webquestions/webquestions.examples.train.domains.entity.matches.json \
+		< data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		> working/webquestions.examples.train.domains.entity.disambiguated.3.json
+	mv working/webquestions.examples.train.domains.entity.disambiguated.3.json data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json
+
+	python scripts/entity-annotation/copy_gold_relations.py data/webquestions/webquestions.examples.test.domains.entity.matches.json \
+		< data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		> working/webquestions.examples.test.domains.entity.disambiguated.3.json
+	mv working/webquestions.examples.test.domains.entity.disambiguated.3.json data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json
+
 disambiguate_entities_webq_data_fourth_pass:
 	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
 		-endpoint localhost \
@@ -194,15 +217,19 @@ entity_dismabiguated_webq_to_graphparser_forrest:
 	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
 		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
 		> working/webquestions.train.full.pass3.txt
+
 	cat working/webquestions.train.full.pass3.txt \
 		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt
+
 	cat working/webquestions.train.full.pass3.txt \
 		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt
+
 	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
 		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
 		> working/webquestions.test.full.pass3.txt
+
 	cat working/webquestions.test.full.pass3.txt \
 		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt
@@ -216,6 +243,11 @@ split_forest_to_sentences:
 		| java -cp lib/*:bin in.sivareddy.graphparser.util.SplitForrestToSentences \
 		|java -cp lib/*:bin in.sivareddy.graphparser.util.MergeEntity \
 		> working/webquestions.automaticDismabiguation.test.pass3.json.txt
+
+full_data_to_xukun:
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 > working/dev.txt
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.80 > working/training.txt
+	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt > working/test.txt
 
 webq_to_oscar:
 	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 > working/dev.txt
@@ -262,6 +294,23 @@ data_to_xukun:
 	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt \
 		| python scripts/extract_subset.py data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.200 \
 		> working/webquestions.automaticDismabiguation.dev.pass3.taclSubset.json.txt 
+
+evaluate_bow_goldMid_goldRel:
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+		| java -cp lib/*:bin in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
+		> data/outputs/bow_goldMid_goldRel.trainAndDev.answers.txt
+
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+		| java -cp lib/*:bin in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
+		> data/outputs/bow_goldMid_goldRel.train.answers.txt
+
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+		| java -cp lib/*:bin in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
+		> data/outputs/bow_goldMid_goldRel.dev.answers.txt
+
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+		| java -cp lib/*:bin in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
+		> data/outputs/bow_goldMid_goldRel.test.answers.txt
 
 select_one_best_from_ranked_entity_webq_data:
 	cat data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.json \
@@ -1173,6 +1222,7 @@ bow_supervised:
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-forrestSize 10 \
+	-ngramLength 2 \
 	-useSchema true \
 	-useKB true \
 	-addBagOfWordsGraph true \
@@ -1234,6 +1284,7 @@ deplambda_supervised_automatic_entities:
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-forrestSize 10 \
+	-ngramLength 2 \
 	-useSchema true \
 	-useKB true \
 	-addBagOfWordsGraph true \
@@ -1292,6 +1343,7 @@ deplambda_singletype_supervised_automatic_entities:
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-forrestSize 10 \
+	-ngramLength 2 \
 	-useSchema true \
 	-useKB true \
 	-addBagOfWordsGraph true \
@@ -2167,6 +2219,28 @@ clean_test_data:
 		> data/distant_eval/unsupervised_syntax/test.json.blank
 	gzip data/distant_eval/unsupervised_syntax/test.json.blank
 
+create_blank_spanish:
+	zcat data/distant_eval/spanish/semisup/train.json.gz \
+		| python scripts/createBLANK.py \
+		| gzip > data/distant_eval/spanish/semisup/train.json.blank.gz
+
+unsupervised_round_2_data:
+	zcat data/distant_eval/unsupervised_syntax_round_2/train.json.gz \
+		| python scripts/createBLANK.py \
+		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		| gzip > data/distant_eval/unsupervised_syntax_round_2/train.json.blank.gz
+	zcat data/distant_eval/unsupervised_syntax_round_2/test.json.gz \
+		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		| gzip > data/distant_eval/unsupervised_syntax_round_2/test.json.blank.gz
+	zcat data/distant_eval/unsupervised_syntax_round_2/dev.json.gz \
+		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		| gzip > data/distant_eval/unsupervised_syntax_round_2/dev.json.blank.gz
 
 clean_spanish_data:
 	zcat data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz \
@@ -2174,12 +2248,6 @@ clean_spanish_data:
 		| python scripts/spanish/filter_sentences_with_less_than_two_entities.py \
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities_spanish.py \
 		| gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.filtered.txt.gz
-
-create_blank_spanish:
-	zcat data/distant_eval/spanish/semisup/train.json.gz \
-		| python scripts/createBLANK.py \
-		| gzip > data/distant_eval/spanish/semisup/train.json.blank.gz
-	
 
 unsupervised_first_experiment:
 	mkdir -p ../working/unsupervised_first_experiment
@@ -2297,6 +2365,22 @@ create_unsup_grounded_lexicon:
 	--relationTypesFile data/dummy.txt \
 	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
 	--outputLexiconFile data/distant_eval/grounded_lexicon/unsup_grounded_lexicon.txt \
+	> /dev/null
+
+create_unsup_grounded_lexicon_round_2:
+	mkdir -p data/distant_eval/grounded_lexicon
+	zcat data/distant_eval/unsupervised_syntax_round_2/train.json.gz \
+	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	--relationLexicalIdentifiers lemma \
+	--semanticParseKey synPars \
+	--argumentLexicalIdentifiers mid \
+	--candcIndexFile data/distant_eval/unsupervised_syntax/ybisk-mapping.txt \
+	--unaryRulesFile lib_data/dummy.txt \
+	--binaryRulesFile lib_data/dummy.txt \
+	--specialCasesFile lib_data/ybisk-specialcases.txt \
+	--relationTypesFile data/dummy.txt \
+	--kbZipFile data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	--outputLexiconFile data/distant_eval/grounded_lexicon/unsup_grounded_lexicon_round_2.txt \
 	> /dev/null
 
 candc_distant_eval:
@@ -2696,6 +2780,65 @@ unsup_specialcases_distant_eval:
 	-devFile data/distant_eval/unsupervised_syntax/dev.json.1000.blank.gz \
 	-logFile ../working/unsup_specialcases_distant_eval/business_film_people.log.txt \
 	> ../working/unsup_specialcases_distant_eval/business_film_people.txt
+
+unsup_specialcases_distant_eval_round_2:
+	rm -rf ../working/unsup_specialcases_distant_eval_round_2
+	mkdir -p ../working/unsup_specialcases_distant_eval_round_2
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-ccgIndexedMapping data/distant_eval/unsupervised_syntax/ybisk-mapping.txt \
+	-ccgLexicon lib_data/ybisk-specialcases.txt \
+	-ccgLexiconQuestions lib_data/dummy.txt \
+	-lexicon data/distant_eval/grounded_lexicon/unsup_grounded_lexicon_round_2.txt \
+	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
+	-binaryRules lib_data/dummy.txt \
+	-unaryRules lib_data/dummy.txt \
+	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 100 \
+	-nBestTrainSyntacticParses 5 \
+	-nBestTestSyntacticParses 5 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-ngramGrelPartFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -1.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.00 \
+	-endpoint localhost \
+	-trainingCorpora data/distant_eval/unsupervised_syntax_round_2/train.json.blank.gz \
+	-devFile data/distant_eval/unsupervised_syntax_round_2/dev.json.1000.blank.gz \
+	-logFile ../working/unsup_specialcases_distant_eval_round_2/business_film_people.log.txt \
+	> ../working/unsup_specialcases_distant_eval_round_2/business_film_people.txt
 
 unsup_specialcases_distant_eval_loaded_model:
 	rm -rf ../working/unsup_specialcases_distant_eval_loaded_model

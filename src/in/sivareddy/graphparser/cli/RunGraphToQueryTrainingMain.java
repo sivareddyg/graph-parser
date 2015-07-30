@@ -77,6 +77,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Integer> nbestGraphs;
   private OptionSpec<Integer> nbestEdges;
   private OptionSpec<Integer> forrestSize;
+  private OptionSpec<Integer> ngramLength;
 
   // Set these true, or else graph construction mechanism will be
   // completely driven by lexicon
@@ -298,6 +299,13 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
         parser
             .accepts("forrestSize",
                 "maximum number of sentences to consider in the forrest")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+
+    ngramLength =
+        parser
+            .accepts(
+                "ngramLength",
+                "if ngrams feature is activated, the length of ngrams to be considered. ngrams of lower length are automatically added.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(1);
 
     debugEnabledFlag =
@@ -590,6 +598,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       int nbestGraphsVal = options.valueOf(nbestGraphs);
       int nbestEdgesVal = options.valueOf(nbestEdges);
       int forrestSizeVal = options.valueOf(forrestSize);
+      int ngramLengthVal = options.valueOf(ngramLength);
 
       // Set these true, or else graph construction mechanism will be
       // completely driven by lexicon
@@ -676,21 +685,21 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               groundTrainingCorpusInTheEndVal, trainingSampleSizeCount,
               logfile, loadModelFromFileVal, nBestTrainSyntacticParsesVal,
               nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal,
-              forrestSizeVal, useSchemaVal, useKBVal, groundFreeVariablesVal,
-              useEmptyTypesVal, ignoreTypesVal, urelGrelFlagVal,
-              urelPartGrelPartFlagVal, utypeGtypeFlagVal, gtypeGrelFlagVal,
-              ngramGrelPartFlagVal, wordGrelPartFlagVal, wordGrelFlagVal,
-              eventTypeGrelPartFlagVal, argGrelPartFlagVal, argGrelFlagVal,
-              stemMatchingFlagVal, mediatorStemGrelPartMatchingFlagVal,
-              argumentStemMatchingFlagVal, argumentStemGrelPartMatchingFlagVal,
-              graphIsConnectedFlagVal, graphHasEdgeFlagVal, countNodesFlagVal,
-              edgeNodeCountFlagVal, duplicateEdgesFlagVal, grelGrelFlagVal,
-              useLexiconWeightsRelVal, useLexiconWeightsTypeVal,
-              validQueryFlagVal, useNbestGraphsVal, addBagOfWordsGraphVal,
-              addOnlyBagOfWordsGraphVal, handleNumbersFlagVal,
-              entityScoreFlagVal, entityWordOverlapFlagVal,
-              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
-              stemFeaturesWeightVal);
+              forrestSizeVal, ngramLengthVal, useSchemaVal, useKBVal,
+              groundFreeVariablesVal, useEmptyTypesVal, ignoreTypesVal,
+              urelGrelFlagVal, urelPartGrelPartFlagVal, utypeGtypeFlagVal,
+              gtypeGrelFlagVal, ngramGrelPartFlagVal, wordGrelPartFlagVal,
+              wordGrelFlagVal, eventTypeGrelPartFlagVal, argGrelPartFlagVal,
+              argGrelFlagVal, stemMatchingFlagVal,
+              mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
+              argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
+              graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
+              duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
+              useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
+              addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
+              handleNumbersFlagVal, entityScoreFlagVal,
+              entityWordOverlapFlagVal, initialEdgeWeightVal,
+              initialTypeWeightVal, initialWordWeightVal, stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
 
       // Run the best model.

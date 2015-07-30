@@ -109,6 +109,7 @@ public class GroundedGraphs {
   private boolean entityWordOverlapFlag = false;
 
   private StructuredPercepton learningModel;
+  private int ngramLength = 2;
   public double initialEdgeWeight;
   public double initialTypeWeight;
   public double initialWordWeight;
@@ -121,7 +122,7 @@ public class GroundedGraphs {
       GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
       CcgAutoLexicon questionCcgAutoLexicon,
       String[] relationLexicalIdentifiers, String[] relationTypingIdentifiers,
-      StructuredPercepton learningModel, boolean urelGrelFlag,
+      StructuredPercepton learningModel, int ngramLength, boolean urelGrelFlag,
       boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
       boolean gtypeGrelPartFlag, boolean grelGrelFlag, boolean ngramGrelFlag,
       boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
@@ -181,6 +182,7 @@ public class GroundedGraphs {
     this.useLexiconWeightsRel = useLexiconWeightsRel;
     this.useLexiconWeightsType = useLexiconWeightsType;
 
+    this.ngramLength = ngramLength;
     this.initialEdgeWeight = initialEdgeWeight;
     this.initialTypeWeight = initialTypeWeight;
     this.initialWordWeight = initialWordWeight;
@@ -879,11 +881,6 @@ public class GroundedGraphs {
       leaf.setMid(mid);
     }
   }
-
-  /*-public List<LexicalGraph> createGroundedGraph(LexicalGraph graph, int nbestEdges, int nbestGraphs, boolean useEntityTypes, boolean useKB,
-  		boolean groundFreeVariables) {
-  	return createGroundedGraph(graph, null, nbestEdges, nbestGraphs, useEntityTypes, useKB, groundFreeVariables, false);
-  }*/
 
   public List<LexicalGraph> createGroundedGraph(LexicalGraph graph,
       int nbestEdges, int nbestGraphs, boolean useEntityTypes, boolean useKB,
@@ -1968,33 +1965,21 @@ public class GroundedGraphs {
         }
 
         if (ngramGrelPartFlag) {
-          for (String word : getNgrams(ungroundedGraph.getActualNodes(), 1)) {
-            key = Lists.newArrayList(word, grelLeft);
-            NgramGrelFeature unigramGrelFeature =
-                new NgramGrelFeature(key, 1.0);
-            newGraph.addFeature(unigramGrelFeature);
+          for (int n = 1; n <= ngramLength; n++) {
+            for (String biGram : getNgrams(ungroundedGraph.getActualNodes(), n)) {
+              key = Lists.newArrayList(biGram, grelLeft);
+              NgramGrelFeature biGramGrelFeature =
+                  new NgramGrelFeature(key, 1.0);
+              newGraph.addFeature(biGramGrelFeature);
 
-            key = Lists.newArrayList(word, grelRight);
-            unigramGrelFeature = new NgramGrelFeature(key, 1.0);
-            newGraph.addFeature(unigramGrelFeature);
+              key = Lists.newArrayList(biGram, grelRight);
+              biGramGrelFeature = new NgramGrelFeature(key, 1.0);
+              newGraph.addFeature(biGramGrelFeature);
 
-            key = Lists.newArrayList(word, grelLeft, grelRight);
-            unigramGrelFeature = new NgramGrelFeature(key, 1.0);
-            newGraph.addFeature(unigramGrelFeature);
-          }
-
-          for (String biGram : getNgrams(ungroundedGraph.getActualNodes(), 2)) {
-            key = Lists.newArrayList(biGram, grelLeft);
-            NgramGrelFeature biGramGrelFeature = new NgramGrelFeature(key, 1.0);
-            newGraph.addFeature(biGramGrelFeature);
-
-            key = Lists.newArrayList(biGram, grelRight);
-            biGramGrelFeature = new NgramGrelFeature(key, 1.0);
-            newGraph.addFeature(biGramGrelFeature);
-
-            key = Lists.newArrayList(biGram, grelLeft, grelRight);
-            biGramGrelFeature = new NgramGrelFeature(key, 1.0);
-            newGraph.addFeature(biGramGrelFeature);
+              key = Lists.newArrayList(biGram, grelLeft, grelRight);
+              biGramGrelFeature = new NgramGrelFeature(key, 1.0);
+              newGraph.addFeature(biGramGrelFeature);
+            }
           }
         }
 

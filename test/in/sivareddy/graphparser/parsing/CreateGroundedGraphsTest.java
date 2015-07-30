@@ -37,7 +37,7 @@ public class CreateGroundedGraphsTest {
     groundedLexicon = new GroundedLexicon("lib_data/dummy.txt");
     schema = new Schema("data/freebase/schema/all_domains_schema.txt");
     kb =
-        new KnowledgeBaseOnline("bravas", "http://bravas:8890/sparql", "dba",
+        new KnowledgeBaseOnline("kinloch", "http://kinloch:8890/sparql", "dba",
             "dba", 0, schema);
     questionCcgAutoLexicon =
         new CcgAutoLexicon("./lib_data/candc_markedup.modified",
@@ -59,10 +59,10 @@ public class CreateGroundedGraphsTest {
     GroundedGraphs graphCreator =
         new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
             questionCcgAutoLexicon, relationLexicalIdentifiers,
-            relationTypingIdentifiers, null, false, false, false, false, false,
+            relationTypingIdentifiers, null, 1, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
-            false, false, false, 10.0, 1.0, 0.0, 0.0);
+            false, false, false, false, 10.0, 1.0, 0.0, 0.0);
 
     JsonParser parser = new JsonParser();
 
@@ -100,7 +100,7 @@ public class CreateGroundedGraphsTest {
             System.out.println(groundedGraph);
             System.out.println("Graph Query: "
                 + GraphToSparqlConverter.convertGroundedGraph(groundedGraph,
-                    schema));
+                    schema, 100));
           }
         }
 

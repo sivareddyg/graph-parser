@@ -95,15 +95,15 @@ public class GraphToQueryTraining {
       GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
       CcgAutoLexicon questionCcgAutoLexicon, String semanticParseKey,
       int nbestTrainSyntacticParses, int nbestTestSyntacticParses,
-      int nbestEdges, int nbestGraphs, int forrestSize, boolean useSchema,
-      boolean useKB, boolean groundFreeVariables, boolean useEmtpyTypes,
-      boolean ignoreTypes, StructuredPercepton learningModel,
-      boolean urelGrelFlag, boolean urelPartGrelPartFlag,
-      boolean utypeGtypeFlag, boolean gtypeGrelFlag, boolean grelGrelFlag,
-      boolean ngramGrelPartFlag, boolean wordGrelPartFlag,
-      boolean wordGrelFlag, boolean argGrelPartFlag, boolean argGrelFlag,
-      boolean eventTypeGrelPartFlag, boolean stemMatchingFlag,
-      boolean mediatorStemGrelPartMatchingFlag,
+      int nbestEdges, int nbestGraphs, int forrestSize, int ngramLength,
+      boolean useSchema, boolean useKB, boolean groundFreeVariables,
+      boolean useEmtpyTypes, boolean ignoreTypes,
+      StructuredPercepton learningModel, boolean urelGrelFlag,
+      boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
+      boolean gtypeGrelFlag, boolean grelGrelFlag, boolean ngramGrelPartFlag,
+      boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
+      boolean argGrelFlag, boolean eventTypeGrelPartFlag,
+      boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean graphIsConnectedFlag,
       boolean graphHasEdgeFlag, boolean countNodesFlag,
@@ -152,10 +152,10 @@ public class GraphToQueryTraining {
         new GroundedGraphs(this.schema, this.kb, this.groundedLexicon,
             normalCcgAutoLexicon, questionCcgAutoLexicon,
             relationLexicalIdentifiers, relationTypingIdentifiers,
-            this.learningModel, urelGrelFlag, urelPartGrelPartFlag,
-            utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag,
-            wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
-            eventTypeGrelPartFlag, stemMatchingFlag,
+            this.learningModel, ngramLength, urelGrelFlag,
+            urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
+            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
+            argGrelFlag, eventTypeGrelPartFlag, stemMatchingFlag,
             mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
@@ -163,7 +163,6 @@ public class GraphToQueryTraining {
             ignorePronouns, handleNumbers, entityScoreFlag,
             entityWordOverlapFlag, initialEdgeWeight, initialTypeWeight,
             initialWordWeight, stemFeaturesWeight);
-
   }
 
   JsonParser jsonParser = new JsonParser();
@@ -523,7 +522,7 @@ public class GraphToQueryTraining {
           nbestPredictedGraphs)) {
         String query =
             GraphToSparqlConverter.convertGroundedGraph(pGraph, targetNode,
-                schema, kbGraphUri);
+                schema, kbGraphUri, 10);
 
         Map<String, LinkedHashSet<String>> resultsMap =
             rdfGraphTools.runQueryHttp(query);
@@ -585,7 +584,7 @@ public class GraphToQueryTraining {
     for (LexicalGraph gGraph : predGgraphsConstrained) {
       String query =
           GraphToSparqlConverter.convertGroundedGraph(gGraph, targetNode,
-              schema, kbGraphUri);
+              schema, kbGraphUri, 10);
       resultsMap = rdfGraphTools.runQueryHttp(query);
       results =
           resultsMap != null && resultsMap.containsKey(targetVar) ? resultsMap
@@ -678,7 +677,7 @@ public class GraphToQueryTraining {
         }
         String query =
             GraphToSparqlConverter.convertGroundedGraph(goldGraph, targetNode,
-                schema, kbGraphUri);
+                schema, kbGraphUri, 10);
         logger.debug("Year query: " + query);
         resultsMap = rdfGraphTools.runQueryHttp(query);
         logger.debug("Year pred results: " + resultsMap);
@@ -1157,7 +1156,7 @@ public class GraphToQueryTraining {
         for (LexicalGraph gGraph : currentGroundedGraphs) {
           String query =
               GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
-                  kbGraphUri);
+                  kbGraphUri, 20);
           Map<String, LinkedHashSet<String>> predResults =
               rdfGraphTools.runQueryHttp(query);
 
@@ -1225,7 +1224,7 @@ public class GraphToQueryTraining {
 
       String query =
           GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
-              kbGraphUri);
+              kbGraphUri, 20);
       logger.debug("Predicted query: " + query);
       logger.debug("Gold query: " + goldQuery);
       Map<String, LinkedHashSet<String>> predResults =
@@ -1604,7 +1603,7 @@ public class GraphToQueryTraining {
     for (LexicalGraph gGraph : gGraphs) {
       String query =
           GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
-              kbGraphUri);
+              kbGraphUri, 30);
       Map<String, LinkedHashSet<String>> predResults =
           rdfGraphTools.runQueryHttp(query);
       gGraphsAndResults.add(Pair.of(gGraph, predResults));
@@ -1637,7 +1636,6 @@ public class GraphToQueryTraining {
       }
     }
 
-
     gGraphsAndResults.sort(Comparator.comparing(x -> x.getLeft()));
     int count = 0;
 
@@ -1656,7 +1654,7 @@ public class GraphToQueryTraining {
 
       String predQuery =
           GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
-              kbGraphUri);
+              kbGraphUri, 100);
       logger.info("Predicted Query: " + predQuery);
       logger.info("Gold Query: " + goldQuery);
 

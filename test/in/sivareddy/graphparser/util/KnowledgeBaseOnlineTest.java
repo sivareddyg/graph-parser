@@ -24,8 +24,11 @@ public class KnowledgeBaseOnlineTest {
         new KnowledgeBaseOnline("kinloch", "http://kinloch:8890/sparql", "dba",
             "dba", 100000, schema);
 
-    System.out.println("Egypt");
-    System.out.println(kb.getRelations("m.02k54"));
+    System.out.println("Nike");
+    System.out.println(kb.getRelations("m.0lwkh", "m.09c7w0"));
+    
+    System.out.println("Andrew Jackson");
+    System.out.println(kb.getRelations("m.0rlz", "type.datetime"));
     
     System.out.println(kb.getRelations("m.01ypc"));
     

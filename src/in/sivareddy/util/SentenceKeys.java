@@ -12,9 +12,10 @@ public class SentenceKeys {
   public static String DEPENDENCY_KEY = "dep";
   public static String SENT_END = "sentEnd";
   public static String SVG_TREES = "svgTrees";
+  
   public static String CCG_PARSES = "synPars";
   public static String CCG_PARSE = "synPar";
-  public static String FOREST = "forest";
+  public static String DEPENDENCY_LAMBDA = "dependency_lambda";
   
   public static String ENTITIES = "entities";
   public static String ENTITY = "entity";
@@ -28,6 +29,15 @@ public class SentenceKeys {
   public static String START = "start";
   public static String END = "end";
   public static String SCORE = "score";
-  public static String DEPENDENCY_LAMBDA = "dependency_lambda";
+  
+  public static String FOREST = "forest";
+  
+  public static String GOLD_MID = "goldMid";
+  public static String GOLD_RELATIONS = "goldRelations";
+  public static String RELATION = "relation";
+  public static String RELATION_LEFT = "relationLeft";
+  public static String RELATION_RIGHT = "relationRight";
+  public static String TARGET_VALUE = "targetValue";
+  
 }
 

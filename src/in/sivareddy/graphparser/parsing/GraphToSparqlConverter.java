@@ -25,18 +25,19 @@ import com.google.common.collect.Sets;
 public class GraphToSparqlConverter {
   public static String TYPE_KEY = "rdf:type";
 
-  public static String convertGroundedGraph(LexicalGraph graph, Schema schema) {
-    return convertGroundedGraph(graph, null, schema, null);
+  public static String convertGroundedGraph(LexicalGraph graph, Schema schema,
+      int limit) {
+    return convertGroundedGraph(graph, null, schema, null, limit);
   }
 
   public static String convertGroundedGraph(LexicalGraph graph, Schema schema,
-      List<String> kbGraphUri) {
-    return convertGroundedGraph(graph, null, schema, kbGraphUri);
+      List<String> kbGraphUri, int limit) {
+    return convertGroundedGraph(graph, null, schema, kbGraphUri, limit);
   }
 
   // convert grounded graph to sparql query
   public static String convertGroundedGraph(LexicalGraph graph,
-      LexicalItem targetNode, Schema schema, List<String> graphUris) {
+      LexicalItem targetNode, Schema schema, List<String> graphUris, int limit) {
     Map<String, Integer> mediatorKeys = Maps.newHashMap();
     TreeSet<Edge<LexicalItem>> edges = Sets.newTreeSet(graph.getEdges());
     int edgeCount = 0;
@@ -222,8 +223,8 @@ public class GraphToSparqlConverter {
             String
                 .format(
                     "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-                        + "SELECT DISTINCT %s %s WHERE { %s } LIMIT 10",
-                    targetVar, graphString, queryString);
+                        + "SELECT DISTINCT %s %s WHERE { %s } LIMIT %d",
+                    targetVar, graphString, queryString, limit);
       } else {
         String nameString =
             String
@@ -234,8 +235,9 @@ public class GraphToSparqlConverter {
             String
                 .format(
                     "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-                        + "SELECT DISTINCT %s %sname %s WHERE { %s %s } LIMIT 10",
-                    targetVar, targetVar, graphString, queryString, nameString);
+                        + "SELECT DISTINCT %s %sname %s WHERE { %s %s } LIMIT %d",
+                    targetVar, targetVar, graphString, queryString, nameString,
+                    limit);
       }
     } else {
       queryString =

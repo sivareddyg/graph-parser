@@ -67,7 +67,7 @@ public class GraphToQueryTrainingMain {
       boolean groundTrainingCorpusInTheEndVal, int trainingSampleSize,
       String logFile, String loadModelFromFile, int nBestTrainSyntacticParses,
       int nBestTestSyntacticParses, int nbestBestEdges, int nbestGraphs,
-      int forrestSize, boolean useSchema, boolean useKB,
+      int forrestSize, int ngramLength, boolean useSchema, boolean useKB,
       boolean groundFreeVariables, boolean useEmtpyTypes, boolean ignoreTypes,
       boolean urelGrelFlag, boolean urelPartGrelPartFlag,
       boolean utypeGtypeFlag, boolean gtypeGrelFlag, boolean ngramGrelPartFlag,
@@ -125,8 +125,8 @@ public class GraphToQueryTrainingMain {
         new GraphToQueryTraining(schema, kb, groundedLexicon,
             normalCcgAutoLexicon, questionCcgAutoLexicon, semanticParseKey,
             this.nBestTrainSyntacticParses, this.nBestTestSyntacticParses,
-            nbestBestEdges, nbestGraphs, forrestSize, useSchema, useKB,
-            groundFreeVariables, useEmtpyTypes, ignoreTypes,
+            nbestBestEdges, nbestGraphs, forrestSize, ngramLength, useSchema,
+            useKB, groundFreeVariables, useEmtpyTypes, ignoreTypes,
             currentIterationModel, urelGrelFlag, urelPartGrelPartFlag,
             utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag,
             wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
@@ -439,6 +439,7 @@ public class GraphToQueryTrainingMain {
     int nbestBestEdges = 20;
     int nbestGraphs = 100;
     int forrestSize = 1;
+    int ngramLength = 2;
 
     // Set these true, or else graph construction mechanism will be
     // completely driven by lexicon
@@ -509,11 +510,11 @@ public class GraphToQueryTrainingMain {
             corupusTrainingFile, groundInputCorpora, semanticParseKey,
             debugEnabled, groundTrainingCorpusInTheEndVal, trainingSampleSize,
             logFile, loadModelFromFile, nBestTrainSyntacticParses,
-            nBestTestSyntacticParses, nbestBestEdges, nbestGraphs,
-            forrestSize, useSchema, useKB, groundFreeVariables,
-            useEmtpyTypes, ignoreTypes, urelGrelFlag, urelPartGrelPartFlag,
-            utypeGtypeFlag, gtypeGrelFlag, ngramGrelPartFlag, wordGrelPartFlag,
-            wordGrelFlag, eventTypeGrelPartFlag, argGrelPartFlag, argGrelFlag,
+            nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, forrestSize,
+            ngramLength, useSchema, useKB, groundFreeVariables, useEmtpyTypes,
+            ignoreTypes, urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag,
+            gtypeGrelFlag, ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag,
+            eventTypeGrelPartFlag, argGrelPartFlag, argGrelFlag,
             stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
             argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
             graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,

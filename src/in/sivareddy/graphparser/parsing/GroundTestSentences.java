@@ -44,7 +44,9 @@ public class GroundTestSentences {
 
     // System.out.println("Types: " + schema.getTypes().size() +
     // schema.getTypes());
-
+    
+    int ngramLength = 1;
+    
     boolean urelGrelFlag = true;
     boolean urelPartGrelPartFlag = true;
     boolean utypeGtypeFlag = true;
@@ -75,7 +77,7 @@ public class GroundTestSentences {
 
     boolean entityScoreFlag = false;
     boolean entityWordOverlapFlag = false;
-    
+
     double initialEdgeWeight = -1.0;
     double initialTypeWeight = -1.0;
     double initialWordWeight = -1.0;
@@ -87,17 +89,17 @@ public class GroundTestSentences {
     GroundedGraphs graphCreator =
         new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
             questionCcgAutoLexicon, relationLexicalIdentifiers,
-            relationTypingIdentifiers, learningModel, urelGrelFlag,
-            urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
-            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
-            argGrelFlag, wordBigramGrelPartFlag, stemMatchingFlag,
-            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
-            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
-            useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            ignorePronouns, handleNumbers, entityScoreFlag,
-            entityWordOverlapFlag, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
+            relationTypingIdentifiers, learningModel, ngramLength,
+            urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
+            grelGrelFlag, ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag,
+            argGrelPartFlag, argGrelFlag, wordBigramGrelPartFlag,
+            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
+            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
+            graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
+            edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
+            duplicateEdgesFlag, ignorePronouns, handleNumbers, entityScoreFlag,
+            entityWordOverlapFlag, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));
@@ -219,7 +221,7 @@ public class GroundTestSentences {
                   + "\n");
               String query =
                   GraphToSparqlConverter.convertGroundedGraph(groundedGraph,
-                      schema);
+                      schema, 100);
               System.out.println("Sentence: " + sentence);
               System.out.println("Pred Query: " + query);
               System.out.println("Gold Query: " + goldQuery);

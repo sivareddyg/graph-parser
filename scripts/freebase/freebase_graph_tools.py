@@ -20,7 +20,7 @@ class Freebase:
         params = {
                 'query': query,
                 'key': api_key,
-                "limit": 100
+                "limit": 10000
         }
         url = service_url + '?' + urllib.urlencode(params)
         response = json.loads(urllib.urlopen(url).read())
@@ -33,7 +33,7 @@ class Freebase:
           "domain": "/%s",
           "id": null,
           "/freebase/type_hints/mediator": null,
-          "limit": 100
+          "limit": 10000
         }]""" %(domain)
         response = self.run_mql_query(query)
         return response
@@ -46,7 +46,7 @@ class Freebase:
             "namespace": "/%s"
             }],
           "/freebase/type_hints/mediator": null, 
-          "limit": 100
+          "limit": 10000
         }]""" %(domain)
         response = self.run_mql_query(query)
         return response
@@ -58,7 +58,7 @@ class Freebase:
           "domain": "/%s",
           "/freebase/type_hints/mediator": true,
           "id": null,
-          "limit": 100
+          "limit": 10000
         }]""" %(domain)
         response = self.run_mql_query(query)
         return response
@@ -72,7 +72,7 @@ class Freebase:
           "/type/property/expected_type": null,
           "id": null,
           "/type/property/schema": "%s",
-          "limit": 100
+          "limit": 10000
         }] """ %(typeId)
         response = self.run_mql_query(query)
         return response
@@ -82,7 +82,7 @@ class Freebase:
           "type": "/type/type",
           "/freebase/type_hints/mediator": null,
           "id": "%s",
-          "limit": 100
+          "limit": 10000
         }""" %(typeId)
         result = self.run_mql_query(query)
         return result["/freebase/type_hints/mediator"]
@@ -93,7 +93,7 @@ class Freebase:
           "type": "/type/property",
           "/type/property/reverse_property": null,
           "id": "%s",
-          "limit": 100
+          "limit": 10000
         } """ %(relationId)
         response = self.run_mql_query(query)
         return response["/type/property/reverse_property"]
@@ -104,7 +104,7 @@ class Freebase:
           "type": "/type/property",
           "/type/property/master_property": null,
           "id": "%s",
-          "limit": 100
+          "limit": 10000
         } """ %(relationId)
         response = self.run_mql_query(query)
         return response["/type/property/master_property"]
