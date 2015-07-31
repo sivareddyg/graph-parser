@@ -3,8 +3,6 @@ package in.sivareddy.ml.learning;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Sets;
-
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelGrelFeature;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
 import in.sivareddy.ml.basic.Feature;
@@ -49,9 +47,9 @@ public class StrcuturedPerceptronSerializationTest extends TestCase {
     goldFeatures.add(feat);
 
     StructuredPercepton clone = sp.serialClone();
-    assertEquals(sp.getScoreTraining(Sets.newHashSet(goldFeatures)),
-        clone.getScoreTraining(Sets.newHashSet(goldFeatures)));
-    assertEquals(sp.getScoreTesting(Sets.newHashSet(goldFeatures)),
-        clone.getScoreTesting(Sets.newHashSet(goldFeatures)));
+    assertEquals(sp.getScoreTraining(new ArrayList<>(goldFeatures)),
+        clone.getScoreTraining(new ArrayList<>(goldFeatures)));
+    assertEquals(sp.getScoreTesting(new ArrayList<>(goldFeatures)),
+        clone.getScoreTesting(new ArrayList<>(goldFeatures)));
   }
 }

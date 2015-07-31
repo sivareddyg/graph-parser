@@ -729,40 +729,6 @@ public class GroundedGraphs {
         EntityType nodeType = new EntityType(entityTypeString);
         nodeType.setWeight(groundedLexicon.getUngroundedTypeScore(nodeType));
         graph.addType(parentNode, modifierNode, nodeType);
-
-        // adding additional types (madeup types) using edges of type
-        // "director of photography"
-        String modifierString = modifierNode.getMid();
-        if (!events.containsKey(modifierIndex)
-            || modifierString.startsWith("m.")
-            || modifierString.startsWith("type."))
-          continue;
-        TreeSet<Edge<LexicalItem>> modifierNodeEdges =
-            graph.getEdges(modifierNode);
-        if (modifierNodeEdges == null)
-          continue;
-        for (Edge<LexicalItem> modifierNodeEdge : modifierNodeEdges) {
-          LexicalItem newModifierNode = modifierNodeEdge.getRight();
-          Pair<String, Integer> newModifierNodeRelPart =
-              Pair.of(modifierNodeEdge.getRelation().getRight(),
-                  newModifierNode.getWordPosition());
-          // dirty code to see if director modifies photography or
-          // photography modifies director
-          if (!events.get(modifierIndex).contains(newModifierNodeRelPart))
-            continue;
-
-          String newModifierNodeString = newModifierNode.getMid();
-          String newModifierPos = newModifierNode.getPos();
-          if (newModifierNodeString.startsWith("m.")
-              || newModifierNodeString.startsWith("type.")
-              || CcgParseTree.lexicalPosTags.contains(newModifierPos))
-            continue;
-          newModifierNodeString =
-              modifierString + "." + newModifierNodeString + ".1";
-          nodeType = new EntityType(newModifierNodeString);
-          nodeType.setWeight(groundedLexicon.getUngroundedTypeScore(nodeType));
-          graph.addType(modifierNode, newModifierNode, nodeType);
-        }
       }
     }
 
@@ -916,6 +882,8 @@ public class GroundedGraphs {
       Set<LexicalItem> restrictedNodes, int nbestEdges, int nbestGraphs,
       boolean useEntityTypes, boolean useKB, boolean groundFreeVariables,
       boolean useEmtpyTypes, boolean ignoreTypes, boolean testing) {
+    boolean allowMerging = true;
+
     TreeSet<Edge<LexicalItem>> edges = graph.getEdges();
     List<LexicalGraph> groundedGraphs = Lists.newArrayList();
     if (edges.size() == 0)
@@ -1135,54 +1103,6 @@ public class GroundedGraphs {
       gGraph.setSemanticParse(graph.getSemanticParse());
     }
     return groundedGraphs;
-  }
-
-  @SuppressWarnings("unused")
-  private Map<Type<LexicalItem>, List<Type<LexicalItem>>> organiseTypes(
-      List<Type<LexicalItem>> nodeTypes) {
-    // returns a map containing the main type and all its subtypes
-    // find nodes that are from the same parent e.g. society.1 is already
-    // present in secret.society.1
-    Map<Type<LexicalItem>, List<Type<LexicalItem>>> map = Maps.newHashMap();
-    Set<Type<LexicalItem>> typesCovered = Sets.newHashSet();
-    for (int k = 0; k < nodeTypes.size(); k++) {
-      Type<LexicalItem> kthType = nodeTypes.get(k);
-      EntityType kthEntityType = kthType.getEntityType();
-      String kthEntityTypeString = kthEntityType.getType();
-      for (int j = k + 1; j < nodeTypes.size(); j++) {
-        Type<LexicalItem> jthType = nodeTypes.get(j);
-        EntityType jthEntityType = jthType.getEntityType();
-        String jthEntityTypeString = jthEntityType.getType();
-        // types modifying the same parent
-        if (jthType.getParentNode().equals(kthType.getParentNode())) {
-          if (jthEntityTypeString.contains(kthEntityTypeString)) {
-            // secret.society.1 containing society.1
-            if (!map.containsKey(kthType))
-              map.put(kthType, new ArrayList<Type<LexicalItem>>());
-            if (map.containsKey(jthType))
-              map.get(kthType).addAll(map.get(jthType));
-            map.get(kthType).add(jthType);
-            typesCovered.add(kthType);
-            typesCovered.add(jthType);
-          } else if (kthEntityTypeString.contains(jthEntityTypeString)) {
-            if (!map.containsKey(jthType))
-              map.put(jthType, new ArrayList<Type<LexicalItem>>());
-            if (map.containsKey(kthType))
-              map.get(jthType).addAll(map.get(kthType));
-            map.get(jthType).add(kthType);
-            typesCovered.add(kthType);
-            typesCovered.add(jthType);
-          }
-        }
-      }
-    }
-
-    for (Type<LexicalItem> nodeType : nodeTypes) {
-      if (!typesCovered.contains(nodeType))
-        map.put(nodeType, new ArrayList<Type<LexicalItem>>());
-    }
-
-    return map;
   }
 
   private static Set<String> standardTypes = Sets.newHashSet("type.datetime",
@@ -1607,8 +1527,8 @@ public class GroundedGraphs {
             for (Edge<LexicalItem> neighboringEdge : neighboringEdges) {
               Relation neighboringRelation = neighboringEdge.getRelation();
               if (neighboringRelation.equals(groundedRelation)) {
-                DuplicateEdgeFeature feat = newGraph.duplicateEdgeFeature;
-                feat.setFeatureValue(feat.getFeatureValue() + 1.0);
+                DuplicateEdgeFeature feat = new DuplicateEdgeFeature(1.0);
+                newGraph.addFeature(feat);
               }
             }
           }
@@ -1618,8 +1538,8 @@ public class GroundedGraphs {
             for (Edge<LexicalItem> neighboringEdge : neighboringEdges) {
               Relation neighboringRelation = neighboringEdge.getRelation();
               if (neighboringRelation.equals(inverse)) {
-                DuplicateEdgeFeature feat = newGraph.duplicateEdgeFeature;
-                feat.setFeatureValue(feat.getFeatureValue() + 1.0);
+                DuplicateEdgeFeature feat = new DuplicateEdgeFeature(1.0);
+                newGraph.addFeature(feat);
               }
             }
           }
@@ -1843,8 +1763,8 @@ public class GroundedGraphs {
                   grelLeftInverse, modifierStem))
                   && (stringContainsWord(grelRightStripped, modifierStem) || stringContainsWord(
                       grelRightInverse, modifierStem))) {
-                ArgStemMatchingFeature s = newGraph.argStemMatchingFeature;
-                s.setFeatureValue(s.getFeatureValue() + 1.0);
+                ArgStemMatchingFeature s = new ArgStemMatchingFeature(1.0);
+                newGraph.addFeature(s);
                 newGraph.argumentsStemsMatched.add(modifierNode);
               }
             }
@@ -1956,8 +1876,8 @@ public class GroundedGraphs {
                   || (stringContainsWord(grelRightStripped, modifierStem) && stringContainsWord(
                       grelRightInverse, modifierStem))) {
                 ArgStemGrelPartMatchingFeature s =
-                    newGraph.argStemGrelPartMatchingFeature;
-                s.setFeatureValue(s.getFeatureValue() + 1.0);
+                    new ArgStemGrelPartMatchingFeature(1.0);
+                newGraph.addFeature(s);
                 newGraph.argumentStemGrelPartMatchedNodes.add(modifierNode);
               }
             }
@@ -2140,8 +2060,8 @@ public class GroundedGraphs {
                 grelLeftInverse, mediatorStem))
                 && (stringContainsWord(grelRightStripped, mediatorStem) || stringContainsWord(
                     grelRightInverse, mediatorStem))) {
-              StemMatchingFeature s = newGraph.stemMatchingFeature;
-              s.setFeatureValue(s.getFeatureValue() + 1.0);
+              StemMatchingFeature s = new StemMatchingFeature(1.0);
+              newGraph.addFeature(s);
               newGraph.mediatorsStemsMatched.add(mediator);
             }
           }
@@ -2172,8 +2092,8 @@ public class GroundedGraphs {
                   grelLeftInverse, modifierStem))
                   && (stringContainsWord(grelRightStripped, modifierStem) || stringContainsWord(
                       grelRightInverse, modifierStem))) {
-                StemMatchingFeature s = newGraph.stemMatchingFeature;
-                s.setFeatureValue(s.getFeatureValue() + 1.0);
+                StemMatchingFeature s = new StemMatchingFeature(1.0);
+                newGraph.addFeature(s);
                 newGraph.mediatorsStemsMatched.add(modifierNode);
               }
             }
@@ -2265,8 +2185,8 @@ public class GroundedGraphs {
                 || (stringContainsWord(grelRightStripped, mediatorStem) && stringContainsWord(
                     grelRightInverse, mediatorStem))) {
               MediatorStemGrelPartMatchingFeature s =
-                  newGraph.mediatorStemGrelPartMatchingFeature;
-              s.setFeatureValue(s.getFeatureValue() + 1.0);
+                  new MediatorStemGrelPartMatchingFeature(1.0);
+              newGraph.addFeature(s);
               newGraph.mediatorStemGrelPartMatchedNodes.add(mediator);
             }
           }
@@ -2299,8 +2219,8 @@ public class GroundedGraphs {
                   || (stringContainsWord(grelRightStripped, modifierStem) && stringContainsWord(
                       grelRightInverse, modifierStem))) {
                 MediatorStemGrelPartMatchingFeature s =
-                    newGraph.mediatorStemGrelPartMatchingFeature;
-                s.setFeatureValue(s.getFeatureValue() + 1.0);
+                    new MediatorStemGrelPartMatchingFeature(1.0);
+                newGraph.addFeature(s);
                 newGraph.mediatorStemGrelPartMatchedNodes.add(modifierNode);
               }
             }

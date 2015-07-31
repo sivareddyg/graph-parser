@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,13 +28,12 @@ import org.apache.log4j.Logger;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class StructuredPercepton implements Serializable {
-  private static final long serialVersionUID = 5892061696728510700L;
-  private Map<Feature, Double> weightVector;
-  private Map<Feature, Double> cumulativeWeightVector;
-  private Map<Feature, Integer> updateFrequency;
+  private static final long serialVersionUID = -5106179293065955512L;
+  private final Map<Feature, Double> weightVector;
+  private final Map<Feature, Double> cumulativeWeightVector;
+  private final Map<Feature, Integer> updateFrequency;
   public static int drag = 3;
 
   public StructuredPercepton() {
@@ -49,7 +50,7 @@ public class StructuredPercepton implements Serializable {
     }
   }
 
-  public synchronized Double getScoreTraining(Set<Feature> featureVector) {
+  public synchronized Double getScoreTraining(List<Feature> featureVector) {
     Double score = 0.0;
     Double weight;
     for (Feature feature : featureVector) {
@@ -59,7 +60,7 @@ public class StructuredPercepton implements Serializable {
     return score;
   }
 
-  public synchronized Double getScoreTesting(Set<Feature> featureVector) {
+  public synchronized Double getScoreTesting(List<Feature> featureVector) {
     Double score = 0.0;
     for (Feature feature : featureVector) {
       Double value = feature.getFeatureValue();
@@ -79,15 +80,13 @@ public class StructuredPercepton implements Serializable {
     Double goldParsesWeight = 1.0 / goldParsesSize;
     Double wrongParsesWeight = 1.0 / wrongParsesSize;
 
-    Set<Feature> features = Sets.newHashSet();
-    Map<Feature, Double> goldFeatVecMap = Maps.newHashMap();
+    Set<Feature> features = new HashSet<>();
+    Map<Feature, Double> goldFeatVecMap = new HashMap<>();
     for (Feature feature : goldFeatVec) {
       if (Math.abs(feature.getFeatureValue()) > 0.0) {
-        if (!goldFeatVecMap.containsKey(feature)) {
-          goldFeatVecMap.put(feature, 0.0);
-        }
-        goldFeatVecMap.put(feature, goldFeatVecMap.get(feature)
-            + goldParsesWeight * feature.getFeatureValue());
+        Double value = goldFeatVecMap.getOrDefault(feature, 0.0);
+        goldFeatVecMap.put(feature,
+            value + goldParsesWeight * feature.getFeatureValue());
         features.add(feature);
       }
     }
@@ -151,7 +150,7 @@ public class StructuredPercepton implements Serializable {
     }
   }
 
-  public synchronized void printFeatureWeightsTesting(Set<Feature> featVec,
+  public synchronized void printFeatureWeightsTesting(List<Feature> featVec,
       Logger logger) {
     try {
       List<Pair<Double, Feature>> feats = Lists.newArrayList();

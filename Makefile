@@ -2370,7 +2370,7 @@ create_unsup_grounded_lexicon:
 create_unsup_grounded_lexicon_round_2:
 	mkdir -p data/distant_eval/grounded_lexicon
 	zcat data/distant_eval/unsupervised_syntax_round_2/train.json.gz \
-	| java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+	| java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
 	--relationLexicalIdentifiers lemma \
 	--semanticParseKey synPars \
 	--argumentLexicalIdentifiers mid \
@@ -2784,7 +2784,7 @@ unsup_specialcases_distant_eval:
 unsup_specialcases_distant_eval_round_2:
 	rm -rf ../working/unsup_specialcases_distant_eval_round_2
 	mkdir -p ../working/unsup_specialcases_distant_eval_round_2
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-schema data/freebase/schema/business_film_people_schema.txt \
 	-relationTypesFile lib_data/dummy.txt \
 	-ccgIndexedMapping data/distant_eval/unsupervised_syntax/ybisk-mapping.txt \
@@ -2899,6 +2899,10 @@ unsup_specialcases_distant_eval_loaded_model:
 	-testFile data/distant_eval/unsupervised_syntax/test.json.blank.gz \
 	-logFile ../working/unsup_specialcases_distant_eval_loaded_model/business_film_people.log.txt \
 	> ../working/unsup_specialcases_distant_eval_loaded_model/business_film_people.txt
+
+distant_evaluation:
+	python scripts/error-analysis/entity_wise_results.py data/distant_eval/unsupervised_syntax_round_2/dev.json.1000.blank.gz ~/Dropbox/SivaData/unsup_best_model_round_2/business_film_people.log.txt.eval.dev.iteration5.1best.answers.txt
+
 
 spanish_bow_distant_eval:
 	rm -rf ../working/spanish_bow_distant_eval

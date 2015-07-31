@@ -8,6 +8,7 @@ import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.ml.basic.AbstractFeature;
 import in.sivareddy.ml.basic.Feature;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,18 +18,10 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-/**
- * Created by bisk1 on 1/26/15.
- */
 public class LexicalGraph extends Graph<LexicalItem> {
-  private Set<Feature> features;
+  private final List<Feature> features;
   private String syntacticParse;
   private Set<String> semanticParse;
-  StemMatchingFeature stemMatchingFeature;
-  ArgStemMatchingFeature argStemMatchingFeature;
-  MediatorStemGrelPartMatchingFeature mediatorStemGrelPartMatchingFeature;
-  ArgStemGrelPartMatchingFeature argStemGrelPartMatchingFeature;
-  DuplicateEdgeFeature duplicateEdgeFeature;
 
   Set<LexicalItem> argumentsStemsMatched = Sets.newHashSet();
   Set<LexicalItem> mediatorsStemsMatched = Sets.newHashSet();
@@ -38,23 +31,10 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public LexicalGraph() {
     super();
-    features = Sets.newHashSet();
-
-    stemMatchingFeature = new StemMatchingFeature(0.0);
-    argStemMatchingFeature = new ArgStemMatchingFeature(0.0);
-    mediatorStemGrelPartMatchingFeature =
-        new MediatorStemGrelPartMatchingFeature(0.0);
-    argStemGrelPartMatchingFeature = new ArgStemGrelPartMatchingFeature(0.0);
-    duplicateEdgeFeature = new DuplicateEdgeFeature(0.0);
-
-    features.add(stemMatchingFeature);
-    features.add(argStemMatchingFeature);
-    features.add(mediatorStemGrelPartMatchingFeature);
-    features.add(argStemGrelPartMatchingFeature);
-    features.add(duplicateEdgeFeature);
+    features = new ArrayList<>();
   }
 
-  public Set<Feature> getFeatures() {
+  public List<Feature> getFeatures() {
     return features;
   }
 
@@ -274,66 +254,17 @@ public class LexicalGraph extends Graph<LexicalItem> {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private static Set<Class<? extends AbstractFeature>> globalFeatures = Sets
-      .newHashSet(EntityScoreFeature.class, EntityWordOverlapFeature.class,
-          StemMatchingFeature.class, ValidQueryFeature.class,
-          ArgStemMatchingFeature.class,
-          MediatorStemGrelPartMatchingFeature.class,
-          ArgStemGrelPartMatchingFeature.class, GraphIsConnectedFeature.class,
-          GraphNodeCountFeature.class, EdgeNodeCountFeature.class,
-          DuplicateEdgeFeature.class);
-
   public void addFeature(Feature feature) {
-    if (globalFeatures.contains(feature.getClass())) {
-      if (features.contains(feature))
-        features.remove(feature);
-    }
-    if (features.contains(feature)) {
-      features.remove(feature);
-      feature.setFeatureValue(feature.getFeatureValue() + 1.0);
-      features.add(feature);
-    } else {
-      features.add(feature);
-    }
+    features.add(feature);
   }
 
   public LexicalGraph copy() {
     LexicalGraph newGraph = new LexicalGraph();
     copyTo(newGraph);
-    newGraph.features = Sets.newHashSet(features);
+    newGraph.features.addAll(features);
 
     newGraph.syntacticParse = syntacticParse;
     newGraph.semanticParse = semanticParse;
-
-    newGraph.stemMatchingFeature.setFeatureValue(stemMatchingFeature
-        .getFeatureValue());
-    newGraph.addFeature(newGraph.stemMatchingFeature);
-    newGraph.mediatorsStemsMatched = Sets.newHashSet(mediatorsStemsMatched);
-
-    newGraph.argStemMatchingFeature.setFeatureValue(argStemMatchingFeature
-        .getFeatureValue());
-    newGraph.addFeature(newGraph.argStemMatchingFeature);
-    newGraph.argumentsStemsMatched = Sets.newHashSet(argumentsStemsMatched);
-
-    newGraph.mediatorStemGrelPartMatchingFeature
-        .setFeatureValue(mediatorStemGrelPartMatchingFeature.getFeatureValue());
-    newGraph.addFeature(newGraph.mediatorStemGrelPartMatchingFeature);
-    newGraph.mediatorStemGrelPartMatchedNodes =
-        Sets.newHashSet(mediatorStemGrelPartMatchedNodes);
-
-    newGraph.argStemGrelPartMatchingFeature
-        .setFeatureValue(argStemGrelPartMatchingFeature.getFeatureValue());
-    newGraph.addFeature(newGraph.argStemGrelPartMatchingFeature);
-    newGraph.argumentStemGrelPartMatchedNodes =
-        Sets.newHashSet(argumentStemGrelPartMatchedNodes);
-
-    newGraph.duplicateEdgeFeature.setFeatureValue(duplicateEdgeFeature
-        .getFeatureValue());
-    newGraph.addFeature(newGraph.duplicateEdgeFeature);
-
-    ValidQueryFeature feat = new ValidQueryFeature(false);
-    newGraph.addFeature(feat);
 
     newGraph.setScore(new Double(getScore()));
     return newGraph;

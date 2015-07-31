@@ -737,14 +737,14 @@ public class GraphToQueryTraining {
     // Collect all features from gold graphs.
     List<Feature> goldGraphFeatures = Lists.newArrayList();
     for (LexicalGraph goldGraph : finalGoldGraphs) {
-      Set<Feature> feats = goldGraph.getFeatures();
+      List<Feature> feats = goldGraph.getFeatures();
       goldGraphFeatures.addAll(feats);
     }
 
     // Collect all features from predicted graphs.
     List<Feature> predGraphFeatures = Lists.newArrayList();
     for (LexicalGraph predGraph : predGraphsWithinMargin) {
-      Set<Feature> feats = predGraph.getFeatures();
+      List<Feature> feats = predGraph.getFeatures();
       predGraphFeatures.addAll(feats);
     }
 
@@ -1198,8 +1198,8 @@ public class GraphToQueryTraining {
 
     logger.info("Total number of grounded graphs: " + gGraphs.size());
 
-    Set<Feature> predGraphFeatures = null;
-    Set<Feature> goldGraphFeatures = null;
+    List<Feature> predGraphFeatures = null;
+    List<Feature> goldGraphFeatures = null;
     int count = 0;
     for (LexicalGraph gGraph : gGraphs) {
       count += 1;

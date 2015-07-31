@@ -208,8 +208,8 @@ public class GroundTestSentences {
             // int connectedGraphCount = 0;
             int count = 0;
             boolean foundAnswer = false;
-            Set<Feature> predGraphFeatures = null;
-            Set<Feature> goldGraphFeatures = null;
+            List<Feature> predGraphFeatures = null;
+            List<Feature> goldGraphFeatures = null;
             for (LexicalGraph groundedGraph : groundedGraphs) {
               count += 1;
               /*-if (count > 1) {
