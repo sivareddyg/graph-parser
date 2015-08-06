@@ -296,20 +296,20 @@ data_to_xukun:
 		> working/webquestions.automaticDismabiguation.dev.pass3.taclSubset.json.txt 
 
 evaluate_bow_goldMid_goldRel:
-	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	# cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
 		| java -cp lib/*:bin in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
 		> data/outputs/bow_goldMid_goldRel.trainAndDev.answers.txt
 
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
-		| java -cp lib/*:bin in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
 		> data/outputs/bow_goldMid_goldRel.train.answers.txt
 
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
-		| java -cp lib/*:bin in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
 		> data/outputs/bow_goldMid_goldRel.dev.answers.txt
 
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
-		| java -cp lib/*:bin in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateBoWOracleUsingGoldMidAndGoldRelations localhost data/freebase/schema/all_domains_schema.txt \
 		> data/outputs/bow_goldMid_goldRel.test.answers.txt
 
 select_one_best_from_ranked_entity_webq_data:
