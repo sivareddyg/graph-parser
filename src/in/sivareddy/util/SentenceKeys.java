@@ -10,12 +10,16 @@ public class SentenceKeys {
   public static String INDEX_KEY = "index";
   public static String HEAD_KEY = "head";
   public static String DEPENDENCY_KEY = "dep";
+  public static String DEPENDENCY_ROOT = "ROOT";
   public static String SENT_END = "sentEnd";
   public static String SVG_TREES = "svgTrees";
   
   public static String CCG_PARSES = "synPars";
   public static String CCG_PARSE = "synPar";
   public static String DEPENDENCY_LAMBDA = "dependency_lambda";
+  public static String DEPENDENCY_QUESTION_GRAPH = "dependency_question_graph";
+  public static String DEPENDENCY_GRAPH = "dependency_graph";
+  public static String BOW_QUESTION_GRAPH = "bow_question_graph";
   
   public static String ENTITIES = "entities";
   public static String ENTITY = "entity";
@@ -39,5 +43,6 @@ public class SentenceKeys {
   public static String RELATION_RIGHT = "relationRight";
   public static String TARGET_VALUE = "targetValue";
   
+  public static String BLANK_WORD = "_blank_";
 }
 

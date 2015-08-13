@@ -10,9 +10,9 @@ import java.util.Comparator;
  */
 public class Edge<T> implements Comparable<Edge<T>>, Serializable {
   private static final long serialVersionUID = -4028291793069620184L;
-  T node1;
-  T node2;
-  T mediator;
+  private T node1;
+  private T node2;
+  private T mediator;
   private Relation relation;
 
   public Edge(T node1, T node2, T mediator, Relation relation) {
@@ -48,14 +48,24 @@ public class Edge<T> implements Comparable<Edge<T>>, Serializable {
     T node1;
     T node2;
     Relation relation;
-    if (this.relation.getLeft().compareTo(this.relation.getRight()) < 0) {
+    int relCompare =
+        this.relation.getLeft().compareTo(this.relation.getRight());
+    if (relCompare < 0) {
+      node1 = this.node1;
+      node2 = this.node2;
+      relation = this.relation;
+    } else if (relCompare > 0) {
+      node1 = this.node2;
+      node2 = this.node1;
+      relation = this.relation.inverse();
+    } else if (this.node1.hashCode() < this.node2.hashCode()) {
       node1 = this.node1;
       node2 = this.node2;
       relation = this.relation;
     } else {
       node1 = this.node2;
       node2 = this.node1;
-      relation = this.relation.inverse();
+      relation = this.relation;
     }
 
     final int prime = 31;

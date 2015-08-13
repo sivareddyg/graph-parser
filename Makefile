@@ -1229,7 +1229,9 @@ bow_supervised:
 	-addBagOfWordsGraph true \
 	-ngramGrelPartFlag true \
 	-addOnlyBagOfWordsGraph true \
-	-groundFreeVariables true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
 	-useEmptyTypes false \
 	-ignoreTypes false \
 	-urelGrelFlag false \
@@ -1254,6 +1256,7 @@ bow_supervised:
 	-useLexiconWeightsRel false \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
+	-useGoldRelations true \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
 	-initialEdgeWeight -0.5 \
@@ -3024,3 +3027,62 @@ create_old_to_new_mid_mappings:
 	zcat kinloch:/gpfs/scratch/users/s1051585/freebase/freebase-20150720.gz | grep dataworld.gardening_hint.replaced_by | cut -f1,3 | python scripts/freebase/clean_old_mid_to_mid.py | gzip > data/freebase/freebase_20150720_old_to_new_mid.txt.gz
 	zcat kinloch:/disk/scratch/users/s1051585/data/freebase-cleaned.rdf-2013-08-11-00-00.gz | grep dataworld.gardening_hint.replaced_by | cut -f1,3 | python scripts/freebase/clean_old_mid_to_mid.py | gzip > data/freebase/freebase_20130811_old_to_new_mid.txt.gz	
 	zcat ../data/freebase_sempre.ttl.gz | cut -f1,3 | python scripts/freebase/extract_entities_from_rdf_freebase.py | less
+
+run_infinite_beam:
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		dependency_question_graph \
+		../working/log.txt \
+	   	false \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+		> data/outputs/dependency_without_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		dependency_question_graph \
+		../working/log.txt \
+	   	true \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+		> data/outputs/dependency_with_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+	   	dependency_lambda \
+		../working/log.txt \
+	   	false \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+		> data/outputs/deplambda_singletype_without_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		dependency_lambda \
+		../working/log.txt \
+	   	true \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+		> data/outputs/deplambda_singletype_with_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		../working/log.txt \
+	   	true \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+		> data/outputs/ccg_with_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		../working/log.txt \
+	   	false \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+		> data/outputs/ccg_without_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		bow_question_graph \
+		../working/log.txt \
+	   	false \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+		> data/outputs/bow_without_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		bow_question_graph \
+		../working/log.txt \
+	   	true \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+		> data/outputs/bow_with_merge.dev.answers.txt
+

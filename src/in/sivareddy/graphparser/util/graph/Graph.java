@@ -178,6 +178,29 @@ public class Graph<T> implements Comparable<Graph<T>> {
     return graphString;
   }
 
+  @Override
+  public int hashCode() {
+    int prime = 31;
+    int result = 1;
+
+    for (Edge<T> edge : edges) {
+      result += edge.hashCode();
+    }
+    result = prime * result;
+
+    for (Type<T> type : types) {
+      result += type.hashCode();
+    }
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object arg0) {
+    if (arg0 == null)
+      return false;
+    return hashCode() == arg0.hashCode();
+  }
+
   public Graph() {
     score = 0.0;
     nodes = new TreeSet<>();
@@ -198,7 +221,6 @@ public class Graph<T> implements Comparable<Graph<T>> {
     newGraph.nodes = new TreeSet<>(nodes);
     newGraph.edges = new TreeSet<>(edges);
     newGraph.types = new TreeSet<>(types);
-
 
     // eventTypes and eventEventModifiers remain same in every graph since
     // these edges/types are not grounded
@@ -228,7 +250,13 @@ public class Graph<T> implements Comparable<Graph<T>> {
 
   public void addEdge(T node1, T node2, T mediator, Relation relation) {
     Edge<T> edge = new Edge<>(node1, node2, mediator, relation);
-    // System.out.println(edge.hashCode());
+    addEdge(edge);
+  }
+
+  public void addEdge(Edge<T> edge) {
+    T node1 = edge.getLeft();
+    T node2 = edge.getRight();
+    T mediator = edge.getMediator();
 
     if (edges.contains(edge)) {
       return;
@@ -289,8 +317,8 @@ public class Graph<T> implements Comparable<Graph<T>> {
       return false;
     }
 
-    connectedNodes.add(edges.first().node1);
-    nodesCovered.add(edges.first().node1);
+    connectedNodes.add(edges.first().getLeft());
+    nodesCovered.add(edges.first().getLeft());
 
     int i = 0;
     while (i < connectedNodes.size()) {
@@ -301,9 +329,9 @@ public class Graph<T> implements Comparable<Graph<T>> {
       T node = connectedNodes.get(i);
       if (nodeEdges.containsKey(node)) {
         for (Edge<T> edge : nodeEdges.get(node)) {
-          T node1 = edge.node1;
-          T node2 = edge.node2;
-          T mediator = edge.mediator;
+          T node1 = edge.getLeft();
+          T node2 = edge.getRight();
+          T mediator = edge.getMediator();
           if (!nodesCovered.contains(node1)) {
             connectedNodes.add(node1);
             nodesCovered.add(node1);
@@ -413,8 +441,8 @@ public class Graph<T> implements Comparable<Graph<T>> {
       return 0;
     }
 
-    connectedNodes.add(edges.first().node1);
-    nodesCovered.add(edges.first().node1);
+    connectedNodes.add(edges.first().getLeft());
+    nodesCovered.add(edges.first().getLeft());
 
     int i = 0;
     while (i < connectedNodes.size()) {
@@ -425,9 +453,9 @@ public class Graph<T> implements Comparable<Graph<T>> {
       T node = connectedNodes.get(i);
       if (nodeEdges.containsKey(node)) {
         for (Edge<T> edge : nodeEdges.get(node)) {
-          T node1 = edge.node1;
-          T node2 = edge.node2;
-          T mediator = edge.mediator;
+          T node1 = edge.getLeft();
+          T node2 = edge.getRight();
+          T mediator = edge.getMediator();
           if (!nodesCovered.contains(node1)) {
             connectedNodes.add(node1);
             nodesCovered.add(node1);
@@ -516,8 +544,8 @@ public class Graph<T> implements Comparable<Graph<T>> {
       return connectedNodes;
     }
 
-    connectedNodes.add(edges.first().node1);
-    nodesCovered.add(edges.first().node1);
+    connectedNodes.add(edges.first().getLeft());
+    nodesCovered.add(edges.first().getLeft());
 
     int i = 0;
     while (i < connectedNodes.size()) {
@@ -528,9 +556,9 @@ public class Graph<T> implements Comparable<Graph<T>> {
       T node = connectedNodes.get(i);
       if (nodeEdges.containsKey(node)) {
         for (Edge<T> edge : nodeEdges.get(node)) {
-          T node1 = edge.node1;
-          T node2 = edge.node2;
-          T mediator = edge.mediator;
+          T node1 = edge.getLeft();
+          T node2 = edge.getRight();
+          T mediator = edge.getMediator();
           if (!nodesCovered.contains(node1)) {
             connectedNodes.add(node1);
             nodesCovered.add(node1);
@@ -549,36 +577,20 @@ public class Graph<T> implements Comparable<Graph<T>> {
 
     }
 
-    if (connectedNodes.size() == nodes.size()) {
-      return connectedNodes;
-    }
-
-    /*- Commenting out since counting creates one extra node with no feature added. But the other parse will have a feature. So better not count numerical nodes
-    // adding all the nodes having the property COUNT
-    for (T node : nodeProperties.keySet()) {
-    	Set<Property> properties = nodeProperties.get(node);
-    	for (Property property : properties) {
-    		if (property.getPropertyName().equals("COUNT")) {
-    			String arg = property.getArguments();
-    			int argIndex = Integer.parseInt(arg.split(":")[0]);
-    			T argNode = actualNodes.get(argIndex);
-    			if (!nodesCovered.contains(argNode)) {
-    				nodesCovered.add(argNode);
-    				connectedNodes.add(argNode);
-    			}
-    		}
-    	}
-    }*/
-
     return connectedNodes;
-
   }
-
-
 
   @Override
   public int compareTo(Graph<T> o) {
     return o.score.compareTo(score);
+  }
+
+  public Map<T, TreeSet<Edge<T>>> getNodeEdges() {
+    return nodeEdges;
+  }
+
+  public Map<T, TreeSet<Type<T>>> getNodeTypes() {
+    return nodeTypes;
   }
 
 }

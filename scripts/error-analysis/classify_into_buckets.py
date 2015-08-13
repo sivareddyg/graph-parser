@@ -8,7 +8,7 @@ import json
 import sys
 from sempre_evaluation_lib import computeF1, getResults
 
-F1_THRESHOLD = 0.5
+F1_THRESHOLD = 0.2
 
 one_best_file = sys.argv[1]
 nbest_file = sys.argv[2]

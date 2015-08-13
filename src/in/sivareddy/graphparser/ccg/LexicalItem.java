@@ -11,8 +11,7 @@ public class LexicalItem extends CcgParseTree implements
   private String synCat;
   String word;
   String lemma;
-  String pos;
-  boolean isEntity = false; 
+  String pos; 
 
   // named entity type
   String neType;
@@ -156,13 +155,9 @@ public class LexicalItem extends CcgParseTree implements
   }
   
   public boolean isEntity() {
-    return isEntity;
+    return mid.startsWith("m.") || mid.startsWith("type.");
   }
   
-  public void setIsEntity(boolean value) {
-    isEntity = value;
-  }
-
   @Override
   public String toString() {
     return Objects.toStringHelper(this).addValue(word).addValue(pos)

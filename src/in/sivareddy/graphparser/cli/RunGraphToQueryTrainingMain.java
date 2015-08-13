@@ -85,6 +85,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> useSchema;
   private OptionSpec<Boolean> useKB;
   private OptionSpec<Boolean> groundFreeVariables;
+  private OptionSpec<Boolean> groundEntityVariableEdges;
+  private OptionSpec<Boolean> groundEntityEntityEdges;
   private OptionSpec<Boolean> useEmptyTypes;
   private OptionSpec<Boolean> ignoreTypes;
 
@@ -140,6 +142,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> handleNumbersFlag;
   private OptionSpec<Boolean> entityScoreFlag;
   private OptionSpec<Boolean> entityWordOverlapFlag;
+  private OptionSpec<Boolean> allowMerging;
+  private OptionSpec<Boolean> useGoldRelations;
 
   @Override
   public void initializeOptions(OptionParser parser) {
@@ -331,6 +335,19 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "groundFreeVariables",
                 "Ground free variables which do not have any entity clue e.g. ground city(x) where x is not known")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    groundEntityVariableEdges =
+        parser
+            .accepts("groundEntityVariableEdges",
+                "Ground the edges between entities and variables.")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
+    groundEntityEntityEdges =
+        parser
+            .accepts("groundEntityEntityEdges",
+                "Ground the edges between entities and entities.")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
     useEmptyTypes =
         parser.accepts("useEmptyTypes", "use type.empty for empty types")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
@@ -533,6 +550,18 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("entityWordOverlapFlag",
                 "use entity phrase and entity name overlap features")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    allowMerging =
+        parser
+            .accepts("allowMerging",
+                "Creates additional grounded graphs by merging nodes in the ungrounded graph")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    useGoldRelations =
+        parser
+            .accepts("useGoldRelations",
+                "use gold relations and gold mid for constructing gold graphs during training")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
   }
 
   @Override
@@ -605,6 +634,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       boolean useSchemaVal = options.valueOf(useSchema);
       boolean useKBVal = options.valueOf(useKB);
       boolean groundFreeVariablesVal = options.valueOf(groundFreeVariables);
+      boolean groundEntityVariableEdgesVal =
+          options.valueOf(groundEntityVariableEdges);
+      boolean groundEntityEntityEdgesVal =
+          options.valueOf(groundEntityEntityEdges);
       boolean useEmptyTypesVal = options.valueOf(useEmptyTypes);
       boolean ignoreTypesVal = options.valueOf(ignoreTypes);
 
@@ -668,6 +701,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
       boolean entityScoreFlagVal = options.valueOf(entityScoreFlag);
       boolean entityWordOverlapFlagVal = options.valueOf(entityWordOverlapFlag);
+      boolean allowMergingVal = options.valueOf(allowMerging);
+      boolean useGoldRelationsVal = options.valueOf(useGoldRelations);
 
       boolean groundTrainingCorpusInTheEndVal =
           options.valueOf(groundTrainingCorpusInTheEnd);
@@ -686,7 +721,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               logfile, loadModelFromFileVal, nBestTrainSyntacticParsesVal,
               nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal,
               forrestSizeVal, ngramLengthVal, useSchemaVal, useKBVal,
-              groundFreeVariablesVal, useEmptyTypesVal, ignoreTypesVal,
+              groundFreeVariablesVal, groundEntityVariableEdgesVal,
+              groundEntityEntityEdgesVal, useEmptyTypesVal, ignoreTypesVal,
               urelGrelFlagVal, urelPartGrelPartFlagVal, utypeGtypeFlagVal,
               gtypeGrelFlagVal, ngramGrelPartFlagVal, wordGrelPartFlagVal,
               wordGrelFlagVal, eventTypeGrelPartFlagVal, argGrelPartFlagVal,
@@ -698,8 +734,9 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
               addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
               handleNumbersFlagVal, entityScoreFlagVal,
-              entityWordOverlapFlagVal, initialEdgeWeightVal,
-              initialTypeWeightVal, initialWordWeightVal, stemFeaturesWeightVal);
+              entityWordOverlapFlagVal, allowMergingVal, useGoldRelationsVal,
+              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
+              stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount);
 
       // Run the best model.

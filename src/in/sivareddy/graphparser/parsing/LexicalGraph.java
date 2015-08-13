@@ -9,33 +9,85 @@ import in.sivareddy.ml.basic.AbstractFeature;
 import in.sivareddy.ml.basic.Feature;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 public class LexicalGraph extends Graph<LexicalItem> {
   private final List<Feature> features;
   private String syntacticParse;
   private Set<String> semanticParse;
+  private final Map<LexicalItem, LexicalItem> unifiedNodes;
+  private int mergeCount = 0;
 
-  Set<LexicalItem> argumentsStemsMatched = Sets.newHashSet();
-  Set<LexicalItem> mediatorsStemsMatched = Sets.newHashSet();
+  public void increaseMergeCount() {
+    mergeCount++;
+  }
 
-  Set<LexicalItem> argumentStemGrelPartMatchedNodes = Sets.newHashSet();
-  Set<LexicalItem> mediatorStemGrelPartMatchedNodes = Sets.newHashSet();
+  public int getMergeCount() {
+    return mergeCount;
+  }
+
+  private Map<Edge<LexicalItem>, Pair<Edge<LexicalItem>, Edge<LexicalItem>>> groundedToUngrounded =
+      null;
+
+  // Useful to store ungrounded graph associated with the grounded graph.
+  private LexicalGraph parallelGraph = null;
 
   public LexicalGraph() {
     super();
     features = new ArrayList<>();
+    unifiedNodes = new HashMap<>();
+  }
+
+  public LexicalItem getUnifiedNode(LexicalItem node) {
+    return unifiedNodes.getOrDefault(node, node);
+  }
+
+  public void unifyNodes(LexicalItem parentNode, LexicalItem childNode) {
+    if (parentNode.equals(childNode))
+      return;
+
+    for (Entry<LexicalItem, LexicalItem> entry : unifiedNodes.entrySet()) {
+      if (entry.getKey().equals(childNode)
+          || entry.getValue().equals(childNode)) {
+        entry.setValue(parentNode);
+      }
+    }
+
+    unifiedNodes.put(childNode, parentNode);
   }
 
   public List<Feature> getFeatures() {
     return features;
+  }
+
+  public static class MergedEdgeFeature extends AbstractFeature {
+    private static final long serialVersionUID = 4867048253442317385L;
+
+    public MergedEdgeFeature(List<?> key, Double value) {
+      super(key, value);
+    }
+  }
+
+  public static class HasQuestionEntityEdgeFeature extends AbstractFeature {
+    private static final long serialVersionUID = -6946577834582002816L;
+    private static List<String> key = Lists
+        .newArrayList("HasQuestionEntityEdge");
+
+    public HasQuestionEntityEdgeFeature(boolean flag) {
+      super(key, flag ? 1.0 : 0.0);
+    }
   }
 
   public static class UrelGrelFeature extends AbstractFeature {
@@ -260,9 +312,21 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public LexicalGraph copy() {
     LexicalGraph newGraph = new LexicalGraph();
+
+    if (getParallelGraph() != null) {
+      newGraph.setParallelGraph(getParallelGraph().copy());
+    }
+
+    if (groundedToUngrounded != null) {
+      newGraph.groundedToUngrounded = new HashMap<>(groundedToUngrounded);
+    }
+
+    newGraph.unifiedNodes.putAll(unifiedNodes);
     copyTo(newGraph);
+
     newGraph.features.addAll(features);
 
+    newGraph.mergeCount = mergeCount;
     newGraph.syntacticParse = syntacticParse;
     newGraph.semanticParse = semanticParse;
 
@@ -354,5 +418,144 @@ public class LexicalGraph extends Graph<LexicalItem> {
     }
 
     return graphString.toString();
+  }
+
+  public LexicalGraph getParallelGraph() {
+    return parallelGraph;
+  }
+
+  public void setParallelGraph(LexicalGraph parallelGraph) {
+    this.parallelGraph = parallelGraph.copy();
+  }
+
+  public void updateMergedReferences(LexicalItem parentNode,
+      LexicalItem childNode) {
+    if (parallelGraph != null)
+      parallelGraph.updateMergedReferences(parentNode, childNode);
+
+    Map<LexicalItem, Set<Property>> properties = this.getNodeProperties();
+    if (properties.containsKey(childNode)) {
+      Set<Property> childProperties = properties.get(childNode);
+
+      properties.putIfAbsent(parentNode, new HashSet<>());
+      properties.get(parentNode).addAll(childProperties);
+      properties.remove(childNode);
+    }
+
+    TreeSet<Edge<LexicalItem>> childEdges = this.getEdges(childNode);
+    HashSet<Edge<LexicalItem>> parentEdges =
+        this.getEdges(parentNode) != null ? new HashSet<>(
+            this.getEdges(parentNode)) : new HashSet<>();
+    if (childEdges != null && childEdges.size() > 0) {
+      childEdges = new TreeSet<>(childEdges);
+      for (Edge<LexicalItem> edge : childEdges) {
+        if (!edge.getRight().equals(parentNode)) {
+          // An edge should not exist between the new node and the parent node.
+          HashSet<Edge<LexicalItem>> existingEdges =
+              this.getEdges(edge.getRight()) != null ? new HashSet<>(
+                  this.getEdges(edge.getRight())) : new HashSet<>();
+          existingEdges.retainAll(parentEdges);
+          if (existingEdges.size() == 0) {
+            addEdge(parentNode, edge.getRight(), edge.getMediator(),
+                edge.getRelation());
+          }
+        }
+        removeEdge(edge);
+      }
+    }
+
+    TreeSet<Type<LexicalItem>> childTypes = this.getTypes(childNode);
+    if (childTypes != null && childTypes.size() > 0) {
+      for (Type<LexicalItem> childType : childTypes) {
+        addType(parentNode, childType.getModifierNode(),
+            childType.getEntityType());
+        getTypes().remove(childType);
+      }
+      getNodeTypes().remove(childNode);
+    }
+    unifyNodes(parentNode, childNode);
+  }
+
+  public void addGroundedToUngroundedEdges(Edge<LexicalItem> groundedEdge,
+      Edge<LexicalItem> ungroundedEdge) {
+    if (groundedToUngrounded == null)
+      groundedToUngrounded = new HashMap<>();
+
+    groundedToUngrounded.put(groundedEdge,
+        Pair.of(groundedEdge, ungroundedEdge));
+  }
+
+  public Pair<Edge<LexicalItem>, Edge<LexicalItem>> getGroundedToUngroundedEdges(
+      Edge<LexicalItem> groundedEdge) {
+    if (groundedToUngrounded == null)
+      return null;
+    return groundedToUngrounded.getOrDefault(groundedEdge, null);
+  }
+
+  public void removeGroundedToUngroundedEdges(Edge<LexicalItem> groundedEdge) {
+    groundedToUngrounded.remove(groundedEdge);
+  }
+
+  public void removeEdge(Edge<LexicalItem> edge) {
+    getEdges().remove(edge);
+    getEdges(edge.getLeft()).remove(edge);
+    getEdges(edge.getRight()).remove(edge.inverse());
+  }
+
+  public boolean isQuestionNode(LexicalItem node) {
+    if (getProperties().get(node) != null) {
+      for (Property property : getProperties().get(node)) {
+        if (property.getPropertyName().equals("QUESTION"))
+          return true;
+      }
+    }
+    return false;
+  }
+
+  public void removeType(Type<LexicalItem> mergedType) {
+    getTypes().remove(mergedType);
+    getTypes(mergedType.getParentNode()).remove(mergedType);
+  }
+
+  public HashSet<LexicalItem> getMidNode(String mid) {
+    HashSet<LexicalItem> midNodes = new HashSet<>();
+    for (LexicalItem node : getNodes()) {
+      if (node.getMid().equals(mid)) {
+        midNodes.add(node);
+      }
+    }
+    return midNodes;
+  }
+
+  public HashSet<LexicalItem> getQuestionNode() {
+    HashSet<LexicalItem> nodes = new HashSet<>();
+    for (LexicalItem node : getNodes()) {
+      if (isQuestionNode(node)) {
+        nodes.add(node);
+      }
+    }
+    return nodes;
+  }
+
+  public boolean hasPath(LexicalItem node1, LexicalItem node2) {
+    // Check if a path exists.
+    Set<LexicalItem> nodesVisited = new HashSet<>();
+    LinkedList<LexicalItem> toVisitNodes = new LinkedList<>();
+    toVisitNodes.add(node1);
+    while (toVisitNodes.peek() != null) {
+      LexicalItem node = toVisitNodes.poll();
+      nodesVisited.add(node);
+      TreeSet<Edge<LexicalItem>> edges = getEdges(node);
+      for (Edge<LexicalItem> edge : edges) {
+        LexicalItem newNode = edge.getRight();
+        if (!nodesVisited.contains(newNode)) {
+          if (newNode.equals(node2)) {
+            return true;
+          }
+          toVisitNodes.add(newNode);
+        }
+      }
+    }
+    return false;
   }
 }

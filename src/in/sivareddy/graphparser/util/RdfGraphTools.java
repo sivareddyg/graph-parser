@@ -29,6 +29,7 @@ import virtuoso.jena.driver.VirtuosoUpdateRequest;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Collections2;
@@ -559,14 +560,32 @@ public class RdfGraphTools {
     // date = 2008-12-31^^http://www.w3.org/2001/XMLSchema#datetime
     if (result.contains("XMLSchema#datetime")) {
       String date = Splitter.on("^^").split(result).iterator().next();
-      String[] dateParts = date.split("-");
-      if (dateParts.length == 3)
+      List<String> dateParts =
+          Splitter.on("-").trimResults(CharMatcher.anyOf("-")).trimResults()
+              .omitEmptyStrings().splitToList(date);
+      
+      if (dateParts.size() == 3) {
         date =
-            String.format("%d/%d/%d", Integer.parseInt(dateParts[1]),
-                Integer.parseInt(dateParts[2]), Integer.parseInt(dateParts[0]));
-      return date;
+            String.format("%d/%d/%d", getNumber(dateParts.get(1)),
+                getNumber(dateParts.get(2)), getNumber(dateParts.get(0)));
+        return date;
+      } else if (dateParts.size() == 1) {
+        date = String.format("%d", getNumber(dateParts.get(0)));
+        return date;
+      } else if (dateParts.size() == 2) {
+        date = String.format("%d", getNumber(dateParts.get(0)));
+        return date;
+      }
     }
     return result;
+  }
+
+  private static int getNumber(String number) {
+    Matcher numberMatcher = Pattern.compile("^([0-9]+)").matcher(number);
+    if (numberMatcher.find()) {
+      return Integer.parseInt(numberMatcher.group(1));
+    }
+    return 0;
   }
 
   public static void main(String[] args) {

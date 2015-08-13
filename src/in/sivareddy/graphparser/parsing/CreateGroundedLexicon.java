@@ -233,7 +233,6 @@ public class CreateGroundedLexicon {
             int index = entityObject.get("index").getAsInt();
             String mid = entityObject.get("entity").getAsString();
             leaves.get(index).setMID(mid);
-            leaves.get(index).setIsEntity(true);
           }
 
           // do not handle the numbers specially for lexicon

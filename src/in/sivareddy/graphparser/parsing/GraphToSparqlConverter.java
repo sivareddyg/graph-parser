@@ -38,6 +38,7 @@ public class GraphToSparqlConverter {
   // convert grounded graph to sparql query
   public static String convertGroundedGraph(LexicalGraph graph,
       LexicalItem targetNode, Schema schema, List<String> graphUris, int limit) {
+    LexicalItem realTargetNode = graph.getUnifiedNode(targetNode);
     Map<String, Integer> mediatorKeys = Maps.newHashMap();
     TreeSet<Edge<LexicalItem>> edges = Sets.newTreeSet(graph.getEdges());
     int edgeCount = 0;
@@ -69,7 +70,7 @@ public class GraphToSparqlConverter {
         continue;
       }
 
-      String parentVarName = getNodeVariable(parentNode, targetNode);
+      String parentVarName = getNodeVariable(parentNode, realTargetNode);
       String typeName = entityType.getType();
       String[] parts = typeName.split("#");
       if (parts.length > 1) {
@@ -104,8 +105,8 @@ public class GraphToSparqlConverter {
       int rightEdgeLength = rightEdge.length();
       String tripleName = "";
 
-      String leftNodeVar = getNodeVariable(leftNode, targetNode);
-      String rightNodeVar = getNodeVariable(rightNode, targetNode);
+      String leftNodeVar = getNodeVariable(leftNode, realTargetNode);
+      String rightNodeVar = getNodeVariable(rightNode, realTargetNode);
       if (leftEdgeLength == rightEdgeLength
           && leftEdge.substring(0, leftEdgeLength - 2).equals(
               rightEdge.substring(0, rightEdgeLength - 2))) {
@@ -198,23 +199,23 @@ public class GraphToSparqlConverter {
           queryString =
               String.format(
                   "SELECT count(DISTINCT %s) AS ?x%s %s WHERE { %s }",
-                  getNodeVariable(node, targetNode), countNode, graphString,
-                  queryString);
+                  getNodeVariable(node, realTargetNode), countNode,
+                  graphString, queryString);
           countVars.add(String.format("?x%s", countNode));
         } else if (property.getPropertyName().equals("QUESTION")) {
-          targetVar = getNodeVariable(node, targetNode);
+          targetVar = getNodeVariable(node, realTargetNode);
         }
       }
     }
 
-    if (targetNode != null && !targetVar.equals("")) {
+    if (realTargetNode != null && !targetVar.equals("")) {
       System.err
           .println("Warning: Target variable and QUESTION property both present. Target variable overides QUESTION");
     }
 
-    if (targetNode != null) {
+    if (realTargetNode != null) {
       // Overiding target variable.
-      targetVar = getNodeVariable(targetNode, targetNode);
+      targetVar = getNodeVariable(realTargetNode, realTargetNode);
     }
 
     if (!targetVar.equals("")) {

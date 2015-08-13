@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,9 +43,9 @@ public class GroundTestSentences {
 
     // System.out.println("Types: " + schema.getTypes().size() +
     // schema.getTypes());
-    
+
     int ngramLength = 1;
-    
+
     boolean urelGrelFlag = true;
     boolean urelPartGrelPartFlag = true;
     boolean utypeGtypeFlag = true;
@@ -78,6 +77,8 @@ public class GroundTestSentences {
     boolean entityScoreFlag = false;
     boolean entityWordOverlapFlag = false;
 
+    boolean allowMerging = false;
+
     double initialEdgeWeight = -1.0;
     double initialTypeWeight = -1.0;
     double initialWordWeight = -1.0;
@@ -98,8 +99,8 @@ public class GroundTestSentences {
             graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
             edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
             duplicateEdgesFlag, ignorePronouns, handleNumbers, entityScoreFlag,
-            entityWordOverlapFlag, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            entityWordOverlapFlag, allowMerging, initialEdgeWeight,
+            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));
@@ -186,6 +187,8 @@ public class GroundTestSentences {
             boolean useSchema = true;
             boolean useKB = true;
             boolean groundFreeVariables = false;
+            boolean groundEntityVariableEdges = true;
+            boolean groundEntityEntityEdges = true;
             boolean useEmtpyTypes = false;
             boolean ignoreTypes = false;
             for (LexicalGraph ungroundedGraph : graphs) {
@@ -195,7 +198,9 @@ public class GroundTestSentences {
               List<LexicalGraph> currentGroundedGraphs =
                   graphCreator.createGroundedGraph(ungroundedGraph,
                       nbestLexicon, nbestGraphs, useSchema, useKB,
-                      groundFreeVariables, useEmtpyTypes, ignoreTypes, false);
+                      groundFreeVariables, groundEntityVariableEdges,
+                      groundEntityEntityEdges, useEmtpyTypes, ignoreTypes,
+                      false);
               groundedGraphs.addAll(currentGroundedGraphs);
             }
             Collections.sort(groundedGraphs);
