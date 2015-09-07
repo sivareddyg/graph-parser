@@ -116,15 +116,11 @@ public class StructuredPercepton implements Serializable {
       Double newWeight = oldWeight + difference;
       weightVector.put(feature, newWeight);
 
-      double oldCumultativeWeight =
-          cumulativeWeightVector.containsKey(feature) ? cumulativeWeightVector
-              .get(feature) : 0.0;
+      double oldCumultativeWeight = cumulativeWeightVector.getOrDefault(feature, 0.0);
       Double newCumulativeWeight = oldCumultativeWeight + newWeight;
       cumulativeWeightVector.put(feature, newCumulativeWeight);
 
-      int oldFreqCount =
-          updateFrequency.containsKey(feature) ? updateFrequency.get(feature)
-              : drag;
+      int oldFreqCount = updateFrequency.getOrDefault(feature, drag);
       Integer newFreqCount = oldFreqCount + 1;
       updateFrequency.put(feature, newFreqCount);
     }

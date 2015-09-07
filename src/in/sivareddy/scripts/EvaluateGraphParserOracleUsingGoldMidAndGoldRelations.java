@@ -14,9 +14,13 @@ import in.sivareddy.ml.learning.StructuredPercepton;
 import in.sivareddy.util.SentenceKeys;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,10 +28,12 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -35,8 +41,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Appender;
-import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -62,11 +66,15 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
   Logger logger = Logger.getLogger(this.getClass());
   int totalMerges = 0;
   int totalGraphs = 0;
-
+  int graphsFoundSentCount = 0;
+  String goldOutputFile;
+  final ConcurrentHashMap<String, Pair<HashSet<LexicalGraph>, Double>> sentenceToGoldGraphs =
+      new ConcurrentHashMap<>();
 
   public EvaluateGraphParserOracleUsingGoldMidAndGoldRelations(
       String schemaFile, String endPointName, String semanticParseKey,
-      String logFile, int nthreads, boolean allowMerging) throws IOException {
+      String goldOutputFile, int nthreads, boolean allowMerging,
+      boolean handleEventEventEdges) throws IOException {
 
     Schema schema = new Schema(schemaFile);
     RdfGraphTools endPoint =
@@ -77,6 +85,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     this.nthreads = nthreads;
     this.endPoint = endPoint;
     this.schema = schema;
+    this.goldOutputFile = goldOutputFile;
 
     groundedLexicon = new GroundedLexicon("lib_data/dummy.txt");
     schema = new Schema("data/freebase/schema/all_domains_schema.txt");
@@ -104,11 +113,11 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
             relationTypingIdentifiers, new StructuredPercepton(), 1, true,
             true, true, true, true, true, true, true, true, true, true, true,
             true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, allowMerging, 10.0, 1.0, 0.0, 0.0);
+            true, true, true, allowMerging, handleEventEventEdges, true, 10.0,
+            1.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
-    Appender fileAppender = new FileAppender(layout, logFile);
-    logger.addAppender(fileAppender);
+    logger.removeAllAppenders();
   }
 
   public void evaluateAll(InputStream stream, PrintStream out)
@@ -151,13 +160,51 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
       // pass.
     }
 
+    BufferedWriter bw =
+        new BufferedWriter(new FileWriter(goldOutputFile + ".readable.txt"));
     if (sentCount > 0) {
-      System.err.println("Average Merge Count: " + (totalMerges + 0.0)
-          / sentCount);
+      bw.write("Average Merge Count: " + (totalMerges + 0.0) / sentCount);
+      bw.write("\n");
 
-      System.err.println("Average Number of Grounded Graphs: "
-          + (totalGraphs + 0.0) / sentCount);
+      if (graphsFoundSentCount > 0)
+        bw.write("Average Number of Grounded Graphs: " + (totalGraphs + 0.0)
+            / graphsFoundSentCount);
+      bw.write("\n");
     }
+
+    for (Entry<String, Pair<HashSet<LexicalGraph>, Double>> entry : sentenceToGoldGraphs
+        .entrySet()) {
+      bw.write("Sentence: ");
+      bw.write(entry.getKey());
+      bw.write("\n");
+      bw.write("F1 score: ");
+      bw.write(entry.getValue().getRight().toString());
+      bw.write("\n");
+      Set<LexicalGraph> groundedGraphs = entry.getValue().getLeft();
+      bw.write("Total number of grounded graphs: ");
+      bw.write(String.valueOf(groundedGraphs.size()));
+      bw.write("\n");
+      for (LexicalGraph groundedGraph : groundedGraphs) {
+        bw.write("Ungrounded graph: ");
+        if (groundedGraph != null) {
+          bw.write(groundedGraph.getParallelGraph().toString());
+        }
+        bw.write("\n");
+        bw.write("Grounded graph: ");
+        if (groundedGraph != null) {
+          bw.write(groundedGraph.toString());
+        }
+        bw.write("\n");
+      }
+    }
+    bw.close();
+
+    // Save gold graphs.
+    FileOutputStream fileOut = new FileOutputStream(goldOutputFile + ".ser");
+    ObjectOutputStream objStream = new ObjectOutputStream(fileOut);
+    objStream.writeObject(sentenceToGoldGraphs);
+    objStream.close();
+    fileOut.close();
   }
 
   public static class EvaluateSentenceRunnable implements Runnable {
@@ -213,15 +260,14 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
 
     // Get all the ungrounded graphs which has main entity node, and a path from
     // main entity node to question node.
-    double bestSoFar = -1.0;
+    double bestSoFar = 0.0;
     LexicalGraph bestGraph = null;
+    HashSet<LexicalGraph> bestGraphs = new HashSet<>();
     Map<String, LinkedHashSet<String>> bestAnswers = null;
     for (JsonObject instance : allSentences) {
       String goldMid = sentence.get(SentenceKeys.GOLD_MID).getAsString();
       List<LexicalGraph> newGraphs =
-          graphCreator.buildUngroundedGraph(instance, semanticParseKey, 1000);
-      // List<LexicalGraph> newGraphs =
-      // graphCreator.getBagOfWordsUngroundedGraph(instance);
+          graphCreator.buildUngroundedGraph(instance, semanticParseKey, 1);
       for (LexicalGraph newGraph : newGraphs) {
         HashSet<LexicalItem> mainEntityNodes = newGraph.getMidNode(goldMid);
         if (mainEntityNodes == null || mainEntityNodes.size() == 0)
@@ -274,21 +320,29 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
           double f1 =
               RdfGraphTools.getPointWiseF1(goldResultsMap, predictedResultsMap);
 
-          if (f1 > bestSoFar) {
+          if (f1 > 0.0 && f1 > bestSoFar + 0.00000005) {
             bestGraph = graph;
             bestSoFar = f1;
             bestAnswers = predictedResultsMap;
+            bestGraphs = new HashSet<>();
+            bestGraphs.add(graph);
+          } else if (f1 > 0.0 && f1 + 0.00000005 > bestSoFar
+              && bestGraphs.size() > 0) {
+            bestGraphs.add(graph);
           }
         }
 
-        if (bestSoFar > 0.9) {
+        /*-if (bestSoFar > 0.9) {
           break;
-        }
+        }*/
       }
-      if (bestSoFar > 0.9) {
+      /*-if (bestSoFar > 0.9) {
         break;
-      }
+      }*/
     }
+
+    // Store gold graphs for serialisation.
+    sentenceToGoldGraphs.put(sentenceString, Pair.of(bestGraphs, bestSoFar));
 
     Pair<Set<String>, Set<String>> cleanedResults =
         RdfGraphTools.getCleanedResults(goldResultsMap, bestAnswers);
@@ -307,14 +361,28 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
       log.debug(bestGraph);
       log.debug("Predicted: " + predictedAnswers);
       log.debug("Gold: " + goldAnswers);
+      graphsFoundSentCount += 1;
     }
   }
 
   public static void main(String[] args) throws IOException,
       InterruptedException {
+    String schemaFile = args[0];
+    String endPointName = args[1];
+    String semanticParseKey = args[2];
+    String goldOutputFile = args[3];
+    int nthreads = 20;
+    boolean allowMerging = Boolean.parseBoolean(args[4]);
+
+    boolean handleEventEventEdges = false;
+    if (semanticParseKey.equals(SentenceKeys.DEPENDENCY_LAMBDA)) {
+      handleEventEventEdges = true;
+    }
+
     EvaluateGraphParserOracleUsingGoldMidAndGoldRelations engine =
-        new EvaluateGraphParserOracleUsingGoldMidAndGoldRelations(args[0],
-            args[1], args[2], args[3], 20, Boolean.parseBoolean(args[4]));
+        new EvaluateGraphParserOracleUsingGoldMidAndGoldRelations(schemaFile,
+            endPointName, semanticParseKey, goldOutputFile, nthreads,
+            allowMerging, handleEventEventEdges);
     engine.evaluateAll(System.in, System.out);
   }
 }

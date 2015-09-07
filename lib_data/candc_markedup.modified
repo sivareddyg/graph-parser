@@ -381,7 +381,7 @@ N\N
 
 # modified
 ((S[b]\NP)/PP)/NP
-  3 (((S[b]{_}\NP{Y}<1>){_}/PP{_}){_}/NP{W}<2>){_}
+  3 (((S[b]{_}\NP{Y}<1>){_}/PP{Z}){_}/NP{W}<2>){_}
   1 ncsubj %l %f _
   2 iobj %l %f =PP/NP
   2 xcomp _ %l %f =PP/(S[ng]\NP)

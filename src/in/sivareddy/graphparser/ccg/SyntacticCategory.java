@@ -2,6 +2,7 @@ package in.sivareddy.graphparser.ccg;
 
 import in.sivareddy.util.StringObject;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,10 +53,12 @@ import com.google.common.collect.Sets;
  * @author Siva Reddy
  */
 
-public class SyntacticCategory {
+public class SyntacticCategory implements Serializable {
+  private static final long serialVersionUID = 802993260107274992L;
 
   public static class IndexedDependency implements
-      Comparable<IndexedDependency> {
+      Comparable<IndexedDependency>, Serializable {
+    private static final long serialVersionUID = -6561959734458007973L;
     private CategoryIndex parent;
     private CategoryIndex child;
     private String relation;

@@ -2,6 +2,7 @@ package in.sivareddy.graphparser.ccg;
 
 import in.sivareddy.util.IntegerObject;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,8 @@ import com.google.common.collect.Sets;
  * @author Siva Reddy
  * 
  */
-public class CategoryIndex {
+public class CategoryIndex implements Serializable {
+  private static final long serialVersionUID = -3142867484224764555L;
   private IntegerObject variableValue = null;
   private String variableName;
 

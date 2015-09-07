@@ -751,15 +751,6 @@ public class CcgParseTree {
               LexicalItem childNode =
                   nodesIndexMap.get(childIndex.getVariableValue().getValue());
 
-              if (!CcgAutoLexicon.complementLemmas.contains(childNode.word)
-                  && !CcgAutoLexicon.typePosTags.contains(childNode.pos)
-                  && !CcgAutoLexicon.typeModPosTags.contains(childNode.pos)
-                  && !(CcgAutoLexicon.eventPosTags.contains(childNode.pos) && !headNode
-                      .equals(childNode))
-                  && !CcgAutoLexicon.questionPosTags.contains(childNode.pos)) {
-                continue;
-              }
-
               if (IGNOREPRONOUNS
                   && (CcgAutoLexicon.pronounPosTags.contains(headNode.pos) || CcgAutoLexicon.pronounPosTags
                       .contains(lexicalNode.pos)))
@@ -1048,7 +1039,8 @@ public class CcgParseTree {
               sb.append(lexicalNode.wordPosition + ":s");
               sb.append(" , ");
 
-              if (lexicalPosTags.contains(childNode.pos) || childNode.isEntity()) {
+              if (lexicalPosTags.contains(childNode.pos)
+                  || childNode.isEntity()) {
                 sb.append(childNode.lexicaliseArgument());
               } else {
                 sb.append(childNode.wordPosition + ":" + "x");

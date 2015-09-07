@@ -36,11 +36,29 @@ public class CreateGraphParserForrestFromEntityDisambiguatedSentences {
     for (JsonObject sentence : sentences) {
       JsonObject mergedSentence =
           MergeEntity.mergeEntityWordsToSingleWord(gson.toJson(sentence));
-      mergedSentence = MergeEntity.mergeDateEntities(gson.toJson(mergedSentence));
+      mergedSentence =
+          MergeEntity.mergeDateEntities(gson.toJson(mergedSentence));
       pipeline.processSentence(mergedSentence);
+      JsonArray words =
+          mergedSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+      if (mergedSentence.has(SentenceKeys.ENTITIES)) {
+        for (JsonElement entityElm : mergedSentence.get(SentenceKeys.ENTITIES)
+            .getAsJsonArray()) {
+          JsonObject entityObj = entityElm.getAsJsonObject();
+          if (!entityObj.get(SentenceKeys.ENTITY).getAsString()
+              .matches("type.*")) {
+            JsonObject word =
+                words.get(entityObj.get(SentenceKeys.INDEX_KEY).getAsInt())
+                    .getAsJsonObject();
+            if (word.has(SentenceKeys.POS_KEY)) {
+              word.addProperty(SentenceKeys.POS_KEY,
+                  MergeEntity.PROPER_NOUN_TAG);
+            }
+          }
+        }
+      }
       List<String> processedWords = new ArrayList<>();
-      for (JsonElement word : mergedSentence.get(SentenceKeys.WORDS_KEY)
-          .getAsJsonArray()) {
+      for (JsonElement word : words) {
         JsonObject wordObj = word.getAsJsonObject();
         processedWords.add(String.format("%s|%s|O",
             wordObj.get(SentenceKeys.WORD_KEY).getAsString(),

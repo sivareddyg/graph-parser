@@ -63,15 +63,16 @@ public class GraphToQueryTrainingMain {
       CcgAutoLexicon questionCcgAutoLexicon, RdfGraphTools rdfGraphTools,
       List<String> kbGraphUri, String testingFile, String devFile,
       String supervisedTrainingFile, String unsupervisedTrainingFile,
-      String groundInputCorpora, String sematicParseKey, boolean debugEnabled,
-      boolean groundTrainingCorpusInTheEndVal, int trainingSampleSize,
-      String logFile, String loadModelFromFile, int nBestTrainSyntacticParses,
-      int nBestTestSyntacticParses, int nbestBestEdges, int nbestGraphs,
-      int forrestSize, int ngramLength, boolean useSchema, boolean useKB,
-      boolean groundFreeVariables, boolean groundEntityVariableEdges,
-      boolean groundEntityEntityEdges, boolean useEmtpyTypes,
-      boolean ignoreTypes, boolean urelGrelFlag, boolean urelPartGrelPartFlag,
-      boolean utypeGtypeFlag, boolean gtypeGrelFlag, boolean ngramGrelPartFlag,
+      String groundInputCorpora, String sematicParseKey, String goldParsesFile,
+      boolean debugEnabled, boolean groundTrainingCorpusInTheEndVal,
+      int trainingSampleSize, String logFile, String loadModelFromFile,
+      int nBestTrainSyntacticParses, int nBestTestSyntacticParses,
+      int nbestBestEdges, int nbestGraphs, int forrestSize, int ngramLength,
+      boolean useSchema, boolean useKB, boolean groundFreeVariables,
+      boolean groundEntityVariableEdges, boolean groundEntityEntityEdges,
+      boolean useEmtpyTypes, boolean ignoreTypes, boolean urelGrelFlag,
+      boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
+      boolean gtypeGrelFlag, boolean ngramGrelPartFlag,
       boolean wordGrelPartFlag, boolean wordGrelFlag,
       boolean eventTypeGrelPartFlag, boolean argGrelPartFlag,
       boolean argGrelFlag, boolean stemMatchingFlag,
@@ -85,7 +86,9 @@ public class GraphToQueryTrainingMain {
       boolean useNbestGraphs, boolean addBagOfWordsGraph,
       boolean addOnlyBagOfWordsGraph, boolean handleNumbers,
       boolean entityScoreFlag, boolean entityWordOverlapFlag,
-      boolean allowMerging, boolean useGoldRelations, double initialEdgeWeight,
+      boolean allowMerging, boolean useGoldRelations,
+      boolean evaluateOnlyTheFirstBest, boolean handleEventEventEdges,
+      boolean useBackOffGraph, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
       double stemFeaturesWeight) throws IOException {
 
@@ -126,14 +129,14 @@ public class GraphToQueryTrainingMain {
     graphToQuery =
         new GraphToQueryTraining(schema, kb, groundedLexicon,
             normalCcgAutoLexicon, questionCcgAutoLexicon, semanticParseKey,
-            this.nBestTrainSyntacticParses, this.nBestTestSyntacticParses,
-            nbestBestEdges, nbestGraphs, forrestSize, ngramLength, useSchema,
-            useKB, groundFreeVariables, groundEntityVariableEdges,
-            groundEntityEntityEdges, useEmtpyTypes, ignoreTypes,
-            currentIterationModel, urelGrelFlag, urelPartGrelPartFlag,
-            utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag,
-            wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
-            eventTypeGrelPartFlag, stemMatchingFlag,
+            goldParsesFile, this.nBestTrainSyntacticParses,
+            this.nBestTestSyntacticParses, nbestBestEdges, nbestGraphs,
+            forrestSize, ngramLength, useSchema, useKB, groundFreeVariables,
+            groundEntityVariableEdges, groundEntityEntityEdges, useEmtpyTypes,
+            ignoreTypes, currentIterationModel, urelGrelFlag,
+            urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
+            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
+            argGrelFlag, eventTypeGrelPartFlag, stemMatchingFlag,
             mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
             argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
@@ -141,6 +144,7 @@ public class GraphToQueryTrainingMain {
             validQueryFlag, useNbestGraphs, addBagOfWordsGraph,
             addOnlyBagOfWordsGraph, handleNumbers, entityScoreFlag,
             entityWordOverlapFlag, allowMerging, useGoldRelations,
+            evaluateOnlyTheFirstBest, handleEventEventEdges, useBackOffGraph,
             initialEdgeWeight, initialTypeWeight, initialWordWeight,
             stemFeaturesWeight, rdfGraphTools, kbGraphUri);
 
@@ -213,8 +217,8 @@ public class GraphToQueryTrainingMain {
     return examples;
   }
 
-  public void train(int iterations, int nthreads) throws IOException,
-      InterruptedException {
+  public void train(int iterations, int nthreads, boolean evaluateBeforeTraining)
+      throws IOException, InterruptedException {
     if (iterations <= 0)
       return;
 
@@ -234,9 +238,9 @@ public class GraphToQueryTrainingMain {
           .info("######## Evaluating the model before training ###########");
       evalLogger.info("######## Development Data ###########");
       highestPerformace =
-          graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
-              + ".eval.dev.beforeTraining", debugEnabled,
-              testingNbestParsesRange, nthreads);
+          evaluateBeforeTraining ? graphToQuery.testCurrentModel(devExamples,
+              evalLogger, logFile + ".eval.dev.beforeTraining", debugEnabled,
+              testingNbestParsesRange, nthreads) : 0.0;
       appender.close();
     }
 
@@ -248,10 +252,7 @@ public class GraphToQueryTrainingMain {
         graphToQuery.setLearningModel(currentIterationModel);
       }
 
-      List<String> trainingSample = getTrainingSample(trainingSampleSize);
-      graphToQuery.trainFromSentences(trainingSample, nthreads, logFile
-          + ".train.iteration" + i, debugEnabled);
-
+      // Logger.
       Logger evalLogger =
           Logger.getLogger(GraphToQueryTraining.class + ".eval.iteration" + i);
       RollingFileAppender appender =
@@ -263,11 +264,40 @@ public class GraphToQueryTrainingMain {
       else
         evalLogger.setLevel(Level.INFO);
 
-      evalLogger.info("######## Development Data ###########");
-      Double performance =
-          graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
-              + ".eval.dev.iteration" + i, debugEnabled,
-              testingNbestParsesRange, nthreads);
+      List<String> trainingSample = getTrainingSample(trainingSampleSize);
+      double performance = 0.0;
+
+      // First iteration is the key. Chose the best first iteration model in 3
+      // attempts.
+      if (i == 0 && devExamples != null && devExamples.size() > 0
+          && trainingSample.size() > 0) {
+        double firstIterationBestPerformance = highestPerformace;
+        StructuredPercepton firstIterationBestModel = null;
+        for (int j = 0; j < 3; j++) {
+          StructuredPercepton beforeTrainingModel =
+              currentIterationModel.serialClone();
+          graphToQuery.setLearningModel(beforeTrainingModel);
+          double curPerformance =
+              runIteration(trainingSample, evalLogger,
+                  String.format("%d.%d", i, j), nthreads);
+          if (firstIterationBestPerformance < curPerformance) {
+            firstIterationBestPerformance = curPerformance;
+            firstIterationBestModel = graphToQuery.getLearningModel();
+          }
+          trainingSample = getTrainingSample(trainingSampleSize);
+        }
+
+        if (firstIterationBestModel != null) {
+          currentIterationModel = firstIterationBestModel;
+          performance = firstIterationBestPerformance;
+          graphToQuery.setLearningModel(currentIterationModel);
+        }
+      } else {
+        performance =
+            runIteration(trainingSample, evalLogger, String.valueOf(i),
+                nthreads);
+      }
+
       if (devExamples != null && devExamples.size() > 0
           && trainingSample.size() > 0) {
         if (performance > highestPerformace) {
@@ -290,6 +320,20 @@ public class GraphToQueryTrainingMain {
       currentIterationModel.saveModel(logFile + ".model.iteration" + i);
       appender.close();
     }
+  }
+
+  public double runIteration(List<String> trainingSample, Logger evalLogger,
+      String iterationIdentifier, int nthreads) throws IOException,
+      InterruptedException {
+    graphToQuery.trainFromSentences(trainingSample, nthreads, logFile
+        + ".train.iteration" + iterationIdentifier, debugEnabled);
+
+    evalLogger.info("######## Development Data ###########");
+    Double performance =
+        graphToQuery.testCurrentModel(devExamples, evalLogger, logFile
+            + ".eval.dev.iteration" + iterationIdentifier, debugEnabled,
+            testingNbestParsesRange, nthreads);
+    return performance;
   }
 
   public void testBestModel(int nthreads) throws IOException,
@@ -434,6 +478,9 @@ public class GraphToQueryTrainingMain {
 
     String logFile = "working/sup_easyccg.log.txt";
     String loadModelFromFile = null;
+    String semanticParseKey = "synPars";
+    String goldParsesFile = null;
+
     boolean debugEnabled = true;
     boolean groundTrainingCorpusInTheEndVal = false;
     int trainingSampleSize = 1000;
@@ -495,8 +542,6 @@ public class GraphToQueryTrainingMain {
     double initialWordWeight = -1.0;
     double stemFeaturesWeight = 0.0;
 
-    String semanticParseKey = "synPars";
-
     // Denotation feature
     boolean validQueryFlag = true;
 
@@ -511,19 +556,25 @@ public class GraphToQueryTrainingMain {
 
     boolean allowMerging = false;
     boolean useGoldRelations = false;
+    boolean evaluateOnlyTheFirstBest = false;
+
+    boolean evaluateBeforeTraining = true;
+    boolean handleEventEventEdges = false;
+    boolean useBackOffGraph = false;
 
     GraphToQueryTrainingMain graphToQueryModel =
         new GraphToQueryTrainingMain(schema, kb, groundedLexicon,
             normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
             kbGraphUri, testFile, devFile, supervisedTrainingFile,
             corupusTrainingFile, groundInputCorpora, semanticParseKey,
-            debugEnabled, groundTrainingCorpusInTheEndVal, trainingSampleSize,
-            logFile, loadModelFromFile, nBestTrainSyntacticParses,
-            nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, forrestSize,
-            ngramLength, useSchema, useKB, groundFreeVariables,
-            groundEntityVariableEdges, groundEntityEntityEdges, useEmtpyTypes,
-            ignoreTypes, urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag,
-            gtypeGrelFlag, ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag,
+            goldParsesFile, debugEnabled, groundTrainingCorpusInTheEndVal,
+            trainingSampleSize, logFile, loadModelFromFile,
+            nBestTrainSyntacticParses, nBestTestSyntacticParses,
+            nbestBestEdges, nbestGraphs, forrestSize, ngramLength, useSchema,
+            useKB, groundFreeVariables, groundEntityVariableEdges,
+            groundEntityEntityEdges, useEmtpyTypes, ignoreTypes, urelGrelFlag,
+            urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
+            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag,
             eventTypeGrelPartFlag, argGrelPartFlag, argGrelFlag,
             stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
             argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
@@ -532,12 +583,13 @@ public class GraphToQueryTrainingMain {
             useLexiconWeightsRel, useLexiconWeightsType, validQueryFlag,
             useNbestGraphs, addBagOfWordsGraph, addOnlyBagOfWordsGraph,
             handleNumbers, entityScoreFlag, entityWordOverlapFlag,
-            allowMerging, useGoldRelations, initialEdgeWeight,
+            allowMerging, useGoldRelations, evaluateOnlyTheFirstBest,
+            handleEventEventEdges, useBackOffGraph, initialEdgeWeight,
             initialTypeWeight, initialWordWeight, stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;
-    graphToQueryModel.train(iterations, nthreads);
+    graphToQueryModel.train(iterations, nthreads, evaluateBeforeTraining);
   }
 
   public static void main(String[] args) throws IOException,

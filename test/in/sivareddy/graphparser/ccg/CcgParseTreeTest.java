@@ -14,10 +14,10 @@ public class CcgParseTreeTest {
   @Test
   public void testParseFromString() throws IOException,
       FunnyCombinatorException, BadParseException {
-     CcgAutoLexicon lexicon = new
-     CcgAutoLexicon("./lib_data/candc_markedup.modified",
-     "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
-     "./lib_data/lexicon_specialCases.txt");
+    CcgAutoLexicon lexicon =
+        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
+            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
+            "./lib_data/lexicon_specialCases_questions_vanilla.txt");
 
     /*-CcgAutoLexicon lexicon =
     new CcgAutoLexicon("./lib_data/ybisk-mapping.txt",
@@ -46,6 +46,24 @@ public class CcgParseTreeTest {
     // ccgParser.parseFromString("(<L N Adobe Adobe NNP I-ORG I-NP N>)");
     // assertEquals(ccgParseTree.getLeafNodes().size(), 1);
 
+    sent = "What to do in Laughlin_Nevada?";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[dcl] ba 1 2> (<T NP ba 0 2> (<L NP All All DT O O NP>) (<T NP\\NP fa 0 2> (<L (NP\\NP)/NP of of IN O O (NP\\NP)/NP>) (<L NP us we PRP O O NP>) ) ) (<T S[dcl]\\NP ba 0 2> (<L S[dcl]\\NP went go VBD O O S[dcl]\\NP>) (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/NP to to TO O O ((S\\NP)\\(S\\NP))/NP>) (<T NP rp 0 2> (<T NP lex 0 1> (<L N UK UK NNP LOCATION O N>) ) (<L . . . . O O .>) ) ) ) ) ");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    System.out.println();
+
+    sent = "What did god say to Abraham about circumcision?";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP fc 0 2> (<T S[q]/(S[b]\\NP) fa 0 2> (<L (S[q]/(S[b]\\NP))/NP did do VBD O O (S[q]/(S[b]\\NP))/NP>) (<T NP lex 0 1> (<L N god god NN O O N>) ) ) (<T (S[b]\\NP)/NP bx 0 2> (<L ((S[b]\\NP)/PP)/NP say say VBP O O ((S[b]\\NP)/PP)/NP>) (<T (S[X]\\NP)\\((S[X]\\NP)/PP) tr 0 1> (<T PP fa 0 2> (<L PP/NP to to TO O O PP/NP>) (<T NP ba 0 2> (<T NP lex 0 1> (<L N Abraham Abraham NNP PERSON O N>) ) (<T NP\\NP fa 0 2> (<L (NP\\NP)/NP about about IN O O (NP\\NP)/NP>) (<T NP rp 0 2> (<T NP lex 0 1> (<L N circumcision circumcision NN O O N>) ) (<L . ? ? . O O .>) ) ) ) ) ) ) ) )");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    System.out.println();
+
     sent = "He ate and drank soup.";
     ccgParseTrees =
         ccgParser
@@ -54,8 +72,8 @@ public class CcgParseTreeTest {
     System.out.println(sent);
     System.out.println(relations);
     System.out.println();
-    
-    
+
+
     sent = "Jim offered and Kim accepted sandwich.";
     ccgParseTrees =
         ccgParser
@@ -64,7 +82,7 @@ public class CcgParseTreeTest {
     System.out.println(sent);
     System.out.println(relations);
     System.out.println();
-    
+
     sent = "The soldier is not afraid to die .";
     ccgParseTrees =
         ccgParser
@@ -74,7 +92,7 @@ public class CcgParseTreeTest {
     System.out.println(relations);
     System.out.println();
 
-    
+
     sent = "Obama is the president of US";
     ccgParseTrees =
         ccgParser

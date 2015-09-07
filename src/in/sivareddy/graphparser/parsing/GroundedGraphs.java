@@ -60,6 +60,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
@@ -75,6 +76,13 @@ import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.trees.GrammaticalRelation;
+import edu.stanford.nlp.trees.GrammaticalRelation.Language;
+import edu.stanford.nlp.trees.TypedDependency;
 
 public class GroundedGraphs {
   private Schema schema;
@@ -111,6 +119,8 @@ public class GroundedGraphs {
   private boolean entityScoreFlag = false;
   private boolean entityWordOverlapFlag = false;
   private boolean allowMerging = false;
+  private boolean handleEventEventEdges = false;
+  private boolean useBackOffGraph = false;
 
   private StructuredPercepton learningModel;
   private int ngramLength = 2;
@@ -139,6 +149,7 @@ public class GroundedGraphs {
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
       boolean ignorePronouns, boolean handleNumbers, boolean entityScoreFlag,
       boolean entityWordOverlapFlag, boolean allowMerging,
+      boolean handleEventEventEdges, boolean useBackOffGraph,
       double initialEdgeWeight, double initialTypeWeight,
       double initialWordWeight, double stemFeaturesWeight) throws IOException {
 
@@ -180,6 +191,8 @@ public class GroundedGraphs {
     this.edgeNodeCountFlag = edgeNodeCountFlag;
     this.duplicateEdgesFlag = duplicateEdgesFlag;
     this.allowMerging = allowMerging;
+    this.handleEventEventEdges = handleEventEventEdges;
+    this.useBackOffGraph = useBackOffGraph;
 
     this.entityScoreFlag = entityScoreFlag;
     this.entityWordOverlapFlag = entityWordOverlapFlag;
@@ -210,6 +223,10 @@ public class GroundedGraphs {
         new ArgStemGrelPartMatchingFeature(0.0);
     this.learningModel.setWeightIfAbsent(argStemGrelPartMatchingFeature,
         stemFeaturesWeight);
+
+    this.learningModel.setWeightIfAbsent(
+        new HasQuestionEntityEdgeFeature(true), 3.0);
+    this.learningModel.setWeightIfAbsent(new GraphHasEdgeFeature(true), 2.0);
   }
 
   /**
@@ -258,7 +275,6 @@ public class GroundedGraphs {
           jsonSentence.get(SentenceKeys.CCG_PARSES).getAsJsonArray();
 
       int parseCount = 1;
-
       for (JsonElement synParseElement : synPars) {
         if (parseCount > nbest)
           break;
@@ -321,15 +337,43 @@ public class GroundedGraphs {
         return graphs;
       List<LexicalItem> leaves = buildLexicalItemsFromWords(jsonSentence);
       JsonArray semPars = jsonSentence.get(key).getAsJsonArray();
+
       for (JsonElement semPar : semPars) {
         JsonArray predicates = semPar.getAsJsonArray();
         if (predicates.size() == 0)
           continue;
         Set<String> semanticParse = new HashSet<>();
-        for (JsonElement predicate : predicates) {
-          semanticParse.add(predicate.getAsString());
-        }
+        predicates.forEach(x -> semanticParse.add(x.getAsString()));
         buildUngroundeGraphFromSemanticParse(semanticParse, leaves, 0.0, graphs);
+      }
+
+      // Remove multiple question nodes, and retain only the one that appear
+      // first.
+      graphs.forEach(g -> g.removeMultipleQuestionNodes());
+
+      if (useBackOffGraph) {
+        // If there is no path found between question and entity nodes, use a
+        // backoff graph.
+        boolean graphHasPath = false;
+        for (LexicalGraph graph : graphs) {
+          graphHasPath |= graph.hasPathBetweenQuestionAndEntityNodes();
+        }
+
+        if (!graphHasPath) {
+          graphs.clear();
+          for (JsonElement semPar : semPars) {
+            JsonArray predicates = semPar.getAsJsonArray();
+            if (predicates.size() == 0)
+              continue;
+            Set<String> semanticParse = new HashSet<>();
+            predicates.forEach(x -> semanticParse.add(x.getAsString()));
+            LexicalGraph backOffGraph =
+                buildBackOffUngroundedGraph(jsonSentence, semanticParse);
+            if (backOffGraph != null) {
+              graphs.add(backOffGraph);
+            }
+          }
+        }
       }
     }
 
@@ -612,7 +656,7 @@ public class GroundedGraphs {
     CcgParser.resetCounter();
   }
 
-  protected static List<LexicalItem> buildLexicalItemsFromWords(
+  public static List<LexicalItem> buildLexicalItemsFromWords(
       JsonObject jsonSentence) {
     Preconditions.checkArgument(jsonSentence.has("words"));
     Map<Integer, String> tokenToEntity = new HashMap<>();
@@ -651,124 +695,135 @@ public class GroundedGraphs {
     return items;
   }
 
-  private void buildUngroundeGraphFromSemanticParse(Set<String> semanticParse,
-      List<LexicalItem> leaves, double parseScore, List<LexicalGraph> graphs) {
-    Pattern relationPattern =
-        Pattern.compile("(.*)\\(([0-9]+)\\:e , ([0-9]+\\:.*)\\)");
-    Pattern typePattern =
-        Pattern.compile("(.*)\\(([0-9]+)\\:s , ([0-9]+\\:.*)\\)");
+  private static class UngroundedGraphBuildingBlocks {
+    public Map<Integer, Set<Pair<String, Integer>>> events = Maps.newHashMap();
+    public Map<Integer, Set<Pair<String, Integer>>> types = Maps.newHashMap();
+    public Map<Integer, Set<Pair<String, Integer>>> eventTypes = Maps
+        .newHashMap();
+    public Map<Integer, Set<Pair<String, Integer>>> eventEventModifiers = Maps
+        .newHashMap();
+    public Map<Integer, Set<Pair<String, String>>> specialTypes = Maps
+        .newHashMap();
 
-    // NEGATION(E), NEGATION(S), COUNT(X, int)
-    Pattern specialPattern =
-        Pattern.compile("(.*)\\(([0-9]+)\\:[^\\s]+( , )?([0-9]+:.*)?\\)");
-    // Pattern varPattern = Pattern.compile("^[0-9]+\\:x$");
-    Pattern eventPattern = Pattern.compile("^[0-9]+\\:e$");
+    public UngroundedGraphBuildingBlocks(Set<String> semanticParse) {
+      Pattern relationPattern =
+          Pattern.compile("(.*)\\(([0-9]+)\\:e , ([0-9]+\\:.*)\\)");
+      Pattern typePattern =
+          Pattern.compile("(.*)\\(([0-9]+)\\:s , ([0-9]+\\:.*)\\)");
 
-    logger.debug("Semantic Parse:" + semanticParse);
+      // NEGATION(E), NEGATION(S), COUNT(X, int)
+      Pattern specialPattern =
+          Pattern.compile("(.*)\\(([0-9]+)\\:[^\\s]+( , )?([0-9]+:.*)?\\)");
+      // Pattern varPattern = Pattern.compile("^[0-9]+\\:x$");
+      Pattern eventPattern = Pattern.compile("^[0-9]+\\:e$");
 
-    Map<Integer, Set<Pair<String, Integer>>> events = Maps.newHashMap();
-    Map<Integer, Set<Pair<String, Integer>>> types = Maps.newHashMap();
-    Map<Integer, Set<Pair<String, Integer>>> eventTypes = Maps.newHashMap();
-    Map<Integer, Set<Pair<String, Integer>>> eventEventModifiers =
-        Maps.newHashMap();
+      // Build the semantic tree
+      for (String predicate : semanticParse) {
+        boolean isMatchedAlready = false;
+        Matcher matcher = relationPattern.matcher(predicate);
+        if (matcher.find()) {
+          isMatchedAlready = true;
+          String relationName = matcher.group(1);
 
-    Map<Integer, Set<Pair<String, String>>> specialTypes = Maps.newHashMap();
+          // Removing this constraint since there might be cases with completely
+          // capitalised predicates, and fall in Semantic Category types. Check
+          // if
+          // this has any side effects in future.
+          /*-Preconditions.checkArgument(
+              !SemanticCategoryType.types.contains(relationName),
+              "relation pattern should not match special types");*/
 
-    // Build the semantic tree
-    for (String predicate : semanticParse) {
-      boolean isMatchedAlready = false;
-      Matcher matcher = relationPattern.matcher(predicate);
-      if (matcher.find()) {
-        isMatchedAlready = true;
-        String relationName = matcher.group(1);
+          Integer eventIndex = Integer.valueOf(matcher.group(2));
+          String argumentName = matcher.group(3);
+          Integer argumentIndex = Integer.valueOf(argumentName.split(":")[0]);
 
-        // Removing this constraint since there might be cases with completely
-        // capitalised predicates, and fall in Semantic Category types. Check if
-        // this has any side effects in future.
-        /*-Preconditions.checkArgument(
-            !SemanticCategoryType.types.contains(relationName),
-            "relation pattern should not match special types");*/
-
-        Integer eventIndex = Integer.valueOf(matcher.group(2));
-        String argumentName = matcher.group(3);
-        Integer argumentIndex = Integer.valueOf(argumentName.split(":")[0]);
-
-        if (eventPattern.matcher(argumentName).matches()) {
-          // if the event takes event as argument
-          Pair<String, Integer> value = Pair.of(relationName, argumentIndex);
-          if (!eventEventModifiers.containsKey(eventIndex))
-            eventEventModifiers.put(eventIndex,
-                new HashSet<Pair<String, Integer>>());
-          eventEventModifiers.get(eventIndex).add(value);
-        } else {
-          // if the event takes an entity as an argument
-          if (!events.containsKey(eventIndex))
-            events.put(eventIndex, new HashSet<Pair<String, Integer>>());
-          Pair<String, Integer> edge = Pair.of(relationName, argumentIndex);
-          events.get(eventIndex).add(edge);
+          if (eventPattern.matcher(argumentName).matches()) {
+            // if the event takes event as argument
+            Pair<String, Integer> value = Pair.of(relationName, argumentIndex);
+            if (!eventEventModifiers.containsKey(eventIndex))
+              eventEventModifiers.put(eventIndex,
+                  new HashSet<Pair<String, Integer>>());
+            eventEventModifiers.get(eventIndex).add(value);
+          } else {
+            // if the event takes an entity as an argument
+            if (!events.containsKey(eventIndex))
+              events.put(eventIndex, new HashSet<Pair<String, Integer>>());
+            Pair<String, Integer> edge = Pair.of(relationName, argumentIndex);
+            events.get(eventIndex).add(edge);
+          }
         }
-      }
 
-      if (isMatchedAlready)
-        continue;
-      matcher = typePattern.matcher(predicate);
-      if (matcher.find()) {
-        isMatchedAlready = true;
-        String typeName = matcher.group(1);
+        if (isMatchedAlready)
+          continue;
+        matcher = typePattern.matcher(predicate);
+        if (matcher.find()) {
+          isMatchedAlready = true;
+          String typeName = matcher.group(1);
 
-        // Removing this constraint since there might be cases with completely
-        // capitalised predicates, and fall in Semantic Category types. Check if
-        // this has any side effects in future.
-        /*-Preconditions.checkArgument(
-            !SemanticCategoryType.types.contains(typeName),
-            "type pattern should not match special types");*/
+          // Removing this constraint since there might be cases with completely
+          // capitalised predicates, and fall in Semantic Category types. Check
+          // if
+          // this has any side effects in future.
+          /*-Preconditions.checkArgument(
+              !SemanticCategoryType.types.contains(typeName),
+              "type pattern should not match special types");*/
 
-        Integer stateIndex = Integer.valueOf(matcher.group(2));
-        String argumentName = matcher.group(3);
-        Integer argumentIndex = Integer.valueOf(argumentName.split(":")[0]);
+          Integer stateIndex = Integer.valueOf(matcher.group(2));
+          String argumentName = matcher.group(3);
+          Integer argumentIndex = Integer.valueOf(argumentName.split(":")[0]);
 
-        if (eventPattern.matcher(argumentName).matches()) {
-          // if the state takes event as argument
-          Pair<String, Integer> value = Pair.of(typeName, stateIndex);
-          if (!eventTypes.containsKey(argumentIndex))
-            eventTypes.put(argumentIndex, new HashSet<Pair<String, Integer>>());
-          eventTypes.get(argumentIndex).add(value);
-        } else {
-          // if the state takes entity as argument
-          if (!types.containsKey(argumentIndex))
-            types.put(argumentIndex, new HashSet<Pair<String, Integer>>());
-          Pair<String, Integer> entityType = Pair.of(typeName, stateIndex);
-          types.get(argumentIndex).add(entityType);
+          if (eventPattern.matcher(argumentName).matches()) {
+            // if the state takes event as argument
+            Pair<String, Integer> value = Pair.of(typeName, stateIndex);
+            if (!eventTypes.containsKey(argumentIndex))
+              eventTypes.put(argumentIndex,
+                  new HashSet<Pair<String, Integer>>());
+            eventTypes.get(argumentIndex).add(value);
+          } else {
+            // if the state takes entity as argument
+            if (!types.containsKey(argumentIndex))
+              types.put(argumentIndex, new HashSet<Pair<String, Integer>>());
+            Pair<String, Integer> entityType = Pair.of(typeName, stateIndex);
+            types.get(argumentIndex).add(entityType);
+          }
         }
-      }
 
-      if (isMatchedAlready)
-        continue;
-      matcher = specialPattern.matcher(predicate);
-      if (matcher.find()) {
-        String specialTypeName = matcher.group(1);
-        Integer entityIndex = Integer.valueOf(matcher.group(2));
-        String args = matcher.group(4);
+        if (isMatchedAlready)
+          continue;
+        matcher = specialPattern.matcher(predicate);
+        if (matcher.find()) {
+          String specialTypeName = matcher.group(1);
+          Integer entityIndex = Integer.valueOf(matcher.group(2));
+          String args = matcher.group(4);
 
-        // System.out.println(predicate);
-        // System.out.println(specialTypeName);
-        // CHANGE THIS LATER
+          // System.out.println(predicate);
+          // System.out.println(specialTypeName);
+          // CHANGE THIS LATER
 
-        Preconditions.checkArgument(
-            SemanticCategoryType.types.contains(specialTypeName),
-            "Unknown special type");
-        if (!specialTypes.containsKey(entityIndex))
-          specialTypes.put(entityIndex, new HashSet<Pair<String, String>>());
-        Pair<String, String> specialTypeProperties =
-            Pair.of(specialTypeName, args);
-        specialTypes.get(entityIndex).add(specialTypeProperties);
+          Preconditions.checkArgument(
+              SemanticCategoryType.types.contains(specialTypeName),
+              "Unknown special type");
+          if (!specialTypes.containsKey(entityIndex))
+            specialTypes.put(entityIndex, new HashSet<Pair<String, String>>());
+          Pair<String, String> specialTypeProperties =
+              Pair.of(specialTypeName, args);
+          specialTypes.get(entityIndex).add(specialTypeProperties);
+        }
       }
     }
+  }
+
+  private void buildUngroundeGraphFromSemanticParse(Set<String> semanticParse,
+      List<LexicalItem> leaves, double parseScore, List<LexicalGraph> graphs) {
+    logger.debug("Semantic Parse:" + semanticParse);
+
+    UngroundedGraphBuildingBlocks blocks =
+        new UngroundedGraphBuildingBlocks(semanticParse);
 
     // Build the graph
     LexicalGraph graph =
-        buildUngroundedGraph(leaves, events, types, specialTypes, eventTypes,
-            eventEventModifiers);
+        buildUngroundedGraph(leaves, blocks.events, blocks.types,
+            blocks.specialTypes, blocks.eventTypes, blocks.eventEventModifiers);
     graph.setActualNodes(leaves);
     graph.setScore(parseScore);
 
@@ -784,6 +839,23 @@ public class GroundedGraphs {
       Map<Integer, Set<Pair<String, Integer>>> eventTypes,
       Map<Integer, Set<Pair<String, Integer>>> eventEventModifiers) {
 
+    if (handleEventEventEdges) {
+      for (Integer eventIndex : eventEventModifiers.keySet()) {
+        for (Pair<String, Integer> type : eventEventModifiers.get(eventIndex)) {
+          Integer modifierIndex = type.getRight();
+          String entityTypeString = type.getLeft();
+
+          events.putIfAbsent(eventIndex, new HashSet<>());
+          events.get(eventIndex).add(
+              Pair.of(entityTypeString + ".arg_1", modifierIndex));
+
+          events.putIfAbsent(modifierIndex, new HashSet<>());
+          events.get(modifierIndex).add(
+              Pair.of(entityTypeString + ".arg_2", modifierIndex));
+        }
+      }
+    }
+
     LexicalGraph graph = new LexicalGraph();
 
     for (Integer event : events.keySet()) {
@@ -793,9 +865,6 @@ public class GroundedGraphs {
         for (int j = i + 1; j < subEdges.size(); j++) {
           String leftEdge = subEdges.get(i).getLeft();
           String rightEdge = subEdges.get(j).getLeft();
-
-          // if (leftEdge.equals(rightEdge))
-          // continue;
 
           int node1Index = subEdges.get(i).getRight();
           int node2Index = subEdges.get(j).getRight();
@@ -874,6 +943,296 @@ public class GroundedGraphs {
     // "director of photography" is found
 
     return graph;
+  }
+
+
+  public LexicalGraph buildBackOffUngroundedGraph(JsonObject sentence,
+      Set<String> semanticParse) {
+    Pattern badQuestionPattern =
+        Pattern.compile(String.format("%s\\(([0-9]+)\\:[^x].*\\)",
+            SemanticCategoryType.QUESTION));
+
+    Set<String> semanticParseCopy =
+        semanticParse.stream()
+            .filter(x -> !badQuestionPattern.matcher(x).matches())
+            .collect(Collectors.toSet());
+
+
+    if (sentence.get(SentenceKeys.ENTITIES) == null)
+      return null;
+
+    JsonArray entities = sentence.get(SentenceKeys.ENTITIES).getAsJsonArray();
+    if (entities.size() == 0)
+      return null;
+
+    Set<Integer> entityPositions = new HashSet<>();
+    entities.forEach(x -> entityPositions.add(x.getAsJsonObject()
+        .get(SentenceKeys.INDEX_KEY).getAsInt()));
+
+    Pattern relationPattern =
+        Pattern.compile("(.*)\\(([0-9]+)\\:e , ([0-9]+)\\:.*\\)");
+    Pattern questionPattern =
+        Pattern.compile(String.format("%s\\(([0-9]+)\\:x\\)",
+            SemanticCategoryType.QUESTION));
+
+    HashMap<Integer, Set<Pair<Integer, String>>> entityToEvent =
+        new HashMap<>();
+    HashMap<Integer, Set<Integer>> eventToEntities = new HashMap<>();
+    HashSet<Integer> questionIndices = new HashSet<>();
+    Set<String> questionStrings = new HashSet<>();
+    for (String element : semanticParseCopy) {
+      Matcher eventEntitymatcher = relationPattern.matcher(element);
+      if (eventEntitymatcher.matches()) {
+        String predicate = eventEntitymatcher.group(1);
+        int event = Integer.parseInt(eventEntitymatcher.group(2));
+        int entity = Integer.parseInt(eventEntitymatcher.group(3));
+        entityToEvent.putIfAbsent(entity, new HashSet<>());
+        entityToEvent.get(entity).add(Pair.of(event, predicate));
+        eventToEntities.putIfAbsent(event, new HashSet<>());
+        eventToEntities.get(event).add(entity);
+      }
+
+      Matcher questionMatcher = questionPattern.matcher(element);
+      if (questionMatcher.matches()) {
+        questionStrings.add(questionMatcher.group());
+        int questionIndex = Integer.parseInt(questionMatcher.group(1));
+        questionIndices.add(questionIndex);
+      }
+    }
+
+    semanticParseCopy.removeAll(questionStrings);
+    if (questionIndices.size() == 0) {
+      questionIndices.add(0);
+    }
+    Integer questionIndex = questionIndices.iterator().next();
+    semanticParseCopy.add(String.format("%s(%d:x)",
+        SemanticCategoryType.QUESTION, questionIndex));
+
+    if (entityToEvent.keySet().containsAll(entityPositions)) {
+      // Case 1: If all the entities are present in the parse,
+      // add question to the event nodes.
+      for (Set<Pair<Integer, String>> eventAndPredicates : entityToEvent
+          .values()) {
+        for (Pair<Integer, String> eventAndPredicate : eventAndPredicates) {
+          Integer eventIndex = eventAndPredicate.getLeft();
+
+          // Add the question node to the only the events it is not connected.
+          if (eventToEntities.get(eventIndex).contains(questionIndex))
+            continue;
+          String predicate = eventAndPredicate.getRight();
+          int lastIndex = predicate.lastIndexOf(".");
+          if (lastIndex < 0)
+            lastIndex = predicate.length() - 1;
+          predicate = predicate.substring(0, lastIndex);
+          semanticParseCopy.add(String.format("%s.dep_arg2(%d:e , %d:x)",
+              predicate, eventIndex, questionIndex));
+        }
+      }
+    } else {
+      // Case 2: If question node is connected to an event, add entities to
+      // the question's event.
+      Pattern questionEventPattern =
+          Pattern.compile(String.format("(.*)\\(([0-9]+)\\:e , %d\\:x\\)",
+              questionIndex));
+      boolean eventFound = false;
+      for (String element : semanticParse) {
+        Matcher eventEntitymatcher = questionEventPattern.matcher(element);
+        if (eventEntitymatcher.matches()) {
+          eventFound = true;
+          String predicate = eventEntitymatcher.group(1);
+          int lastIndex = predicate.lastIndexOf(".");
+          if (lastIndex < 0)
+            lastIndex = predicate.length() - 1;
+          predicate = predicate.substring(0, lastIndex);
+
+          int eventIndex = Integer.parseInt(eventEntitymatcher.group(2));
+          for (JsonElement entityElm : entities) {
+            JsonObject entityObj = entityElm.getAsJsonObject();
+            int entityIndex =
+                entityObj.get(SentenceKeys.ENTITY_INDEX).getAsInt();
+
+            // Add event-entity subedges only if they are not already present.
+            if (eventToEntities.get(eventIndex).contains(entityIndex))
+              continue;
+
+            String entity = entityObj.get(SentenceKeys.ENTITY).getAsString();
+            semanticParseCopy.add(String.format("%s.dep_arg2(%d:e , %d:%s)",
+                predicate, eventIndex, entityIndex, entity));
+          }
+        }
+      }
+
+      if (!eventFound) {
+        // Case 3: If no question node event found, create a dummy event 0:e,
+        // and connect all entities and question node to it.
+        for (JsonElement entityElm : entities) {
+          JsonObject entityObj = entityElm.getAsJsonObject();
+          int entityIndex = entityObj.get(SentenceKeys.ENTITY_INDEX).getAsInt();
+          String entity = entityObj.get(SentenceKeys.ENTITY).getAsString();
+          if (eventToEntities.containsKey(questionIndex)
+              && eventToEntities.get(questionIndex).contains(entityIndex))
+            continue;
+          semanticParseCopy.add(String.format("dep_arg2(%d:e , %d:%s)",
+              questionIndex, entityIndex, entity));
+        }
+        semanticParseCopy.add(String.format(String.format(
+            "dep_arg2(%d:e , %d:x)", questionIndex, questionIndex)));
+      }
+    }
+
+    List<LexicalItem> leaves = buildLexicalItemsFromWords(sentence);
+    List<LexicalGraph> graphs = new ArrayList<>();
+    buildUngroundeGraphFromSemanticParse(semanticParseCopy, leaves, 0.0, graphs);
+    Preconditions.checkArgument(graphs.size() == 1);
+    return graphs.get(0);
+  }
+
+  public static final GrammaticalRelation EVENT_TO_ENTITY_EDGE =
+      new GrammaticalRelation(Language.Any, "ev_en", "event_to_entity_edge",
+          null);
+  public static final GrammaticalRelation EVENT_TO_EVENT_EDGE =
+      new GrammaticalRelation(Language.Any, "ev_ev", "event_to_event_edge",
+          null);
+  public static final GrammaticalRelation ENTITY_TO_TYPE =
+      new GrammaticalRelation(Language.Any, "en_t", "entity_type", null);
+  public static final GrammaticalRelation EVENT_TO_TYPE =
+      new GrammaticalRelation(Language.Any, "ev_t", "event_type", null);
+  public static final GrammaticalRelation ANY_TYPE = new GrammaticalRelation(
+      Language.Any, "__any__", "__any__", null);
+
+  public static final Map<String, GrammaticalRelation> grammaticalRelationCache;
+  static {
+    grammaticalRelationCache = new HashMap<>();
+    grammaticalRelationCache.put("gov", GrammaticalRelation.GOVERNOR);
+    grammaticalRelationCache.put("dep", GrammaticalRelation.DEPENDENT);
+    grammaticalRelationCache.put("root", GrammaticalRelation.ROOT);
+    grammaticalRelationCache.put("KILL", GrammaticalRelation.KILL);
+  }
+
+  public static synchronized GrammaticalRelation getGrammaticalRelation(
+      String relName, String relType) {
+    // No distinction between rel types for now. TODO.
+    String key = relName;
+    if (grammaticalRelationCache.containsKey(key)) {
+      return grammaticalRelationCache.get(key);
+    }
+    GrammaticalRelation rel =
+        new GrammaticalRelation(Language.Any, relName, relName, ANY_TYPE);
+    grammaticalRelationCache.put(key, rel);
+    return rel;
+  }
+
+  /**
+   * Builds Stanford style {@code SemanticGraph} from the given semantic parse.
+   * 
+   * @param semanticParse
+   * @param leaves
+   * @return
+   */
+  public SemanticGraph buildSemanticGraphFromSemanticParse(
+      Set<String> semanticParse, List<LexicalItem> leaves) {
+    UngroundedGraphBuildingBlocks blocks =
+        new UngroundedGraphBuildingBlocks(semanticParse);
+    return buildSemanticGraph(leaves, blocks.events, blocks.types,
+        blocks.specialTypes, blocks.eventTypes, blocks.eventEventModifiers);
+  }
+
+  public static IndexedWord makeWord(LexicalItem word) {
+    CoreLabel w = new CoreLabel();
+    w.setWord(word.getWord());
+    w.setValue(word.getLemma());
+    if (word.getWordPosition() >= 0) {
+      w.setIndex(word.getWordPosition());
+    }
+    return new IndexedWord(w);
+  }
+
+  private SemanticGraph buildSemanticGraph(List<LexicalItem> leaves,
+      Map<Integer, Set<Pair<String, Integer>>> events,
+      Map<Integer, Set<Pair<String, Integer>>> types,
+      Map<Integer, Set<Pair<String, String>>> specialTypes,
+      Map<Integer, Set<Pair<String, Integer>>> eventTypes,
+      Map<Integer, Set<Pair<String, Integer>>> eventEventModifiers) {
+
+
+    List<TypedDependency> dependencies = new ArrayList<>();
+    for (Integer event : events.keySet()) {
+      List<Pair<String, Integer>> subEdges =
+          Lists.newArrayList(events.get(event));
+      for (int i = 0; i < subEdges.size(); i++) {
+        String leftEdge = subEdges.get(i).getLeft();
+
+        int node1Index = subEdges.get(i).getRight();
+
+        LexicalItem node1 = leaves.get(node1Index);
+        LexicalItem mediator = leaves.get(event);
+
+
+        GrammaticalRelation leftRel = getGrammaticalRelation(leftEdge, "ev_en");
+
+        IndexedWord node1Word = makeWord(node1);
+        IndexedWord mediatorWord = makeWord(mediator);
+        TypedDependency leftDep =
+            new TypedDependency(leftRel, mediatorWord, node1Word);
+        dependencies.add(leftDep);
+      }
+    }
+
+    for (Integer entityIndex : types.keySet()) {
+      for (Pair<String, Integer> type : types.get(entityIndex)) {
+        Integer modifierIndex = type.getRight();
+        String entityTypeString = type.getLeft();
+
+        LexicalItem parentNode = leaves.get(entityIndex);
+        LexicalItem modifierNode = leaves.get(modifierIndex);
+
+        GrammaticalRelation rel =
+            getGrammaticalRelation(entityTypeString, "en_t");
+        IndexedWord parentWord = makeWord(parentNode);
+        IndexedWord modifierWord = makeWord(modifierNode);
+        TypedDependency dep =
+            new TypedDependency(rel, parentWord, modifierWord);
+        dependencies.add(dep);
+      }
+    }
+
+    for (Integer eventIndex : eventTypes.keySet()) {
+      for (Pair<String, Integer> type : eventTypes.get(eventIndex)) {
+        Integer modifierIndex = type.getRight();
+        String entityTypeString = type.getLeft();
+
+        LexicalItem parentNode = leaves.get(eventIndex);
+        LexicalItem modifierNode = leaves.get(modifierIndex);
+
+        GrammaticalRelation rel =
+            getGrammaticalRelation(entityTypeString, "ev_t");
+        IndexedWord parentWord = makeWord(parentNode);
+        IndexedWord modifierWord = makeWord(modifierNode);
+        TypedDependency dep =
+            new TypedDependency(rel, parentWord, modifierWord);
+        dependencies.add(dep);
+      }
+    }
+
+    for (Integer eventIndex : eventEventModifiers.keySet()) {
+      for (Pair<String, Integer> type : eventEventModifiers.get(eventIndex)) {
+        Integer modifierIndex = type.getRight();
+        String entityTypeString = type.getLeft();
+
+        LexicalItem parentNode = leaves.get(eventIndex);
+        LexicalItem modifierNode = leaves.get(modifierIndex);
+
+        GrammaticalRelation rel =
+            getGrammaticalRelation(entityTypeString, "ev_ev");
+        IndexedWord parentWord = makeWord(parentNode);
+        IndexedWord modifierWord = makeWord(modifierNode);
+        TypedDependency dep =
+            new TypedDependency(rel, parentWord, modifierWord);
+        dependencies.add(dep);
+      }
+    }
+
+    return new SemanticGraph(dependencies);
   }
 
   private void lexicaliseArgumentsToDomainEntities(List<LexicalItem> leaves,
@@ -1365,7 +1724,7 @@ public class GroundedGraphs {
 
     HashSet<Edge<LexicalItem>> mergedEgdes =
         new HashSet<>(mergedGraph.getParallelGraph().getEdges(childNode));
-    // TreeSet and HashSet intersection behaves wierdly.
+    // TreeSet and HashSet intersection behaves weirdly.
     mergedEgdes.retainAll(new HashSet<>(mergedGraph.getParallelGraph()
         .getEdges(parentNode)));
     for (Edge<LexicalItem> mergedEdge : mergedEgdes) {
@@ -1375,6 +1734,12 @@ public class GroundedGraphs {
           Lists.newArrayList(mergedEdge.getRelation().getLeft(), mergedEdge
               .getRelation().getRight(), childIsEntity, parentIsEntity);
       MergedEdgeFeature mergedFeature = new MergedEdgeFeature(key, 1.0);
+      mergedGraph.addFeature(mergedFeature);
+
+      key =
+          Lists.newArrayList(childNode.getPos(), parentNode.getPos(),
+              childIsEntity, parentIsEntity);
+      mergedFeature = new MergedEdgeFeature(key, 1.0);
       mergedGraph.addFeature(mergedFeature);
     }
 
@@ -1853,7 +2218,9 @@ public class GroundedGraphs {
                 ungroundedRelation, groundedRelation);
         Edge<LexicalItem> groundedEgde =
             new Edge<>(node1, node2, mediator, groundedRelation);
-        newGraph.addGroundedToUngroundedEdges(groundedEgde, edge);
+        Edge<LexicalItem> unGroundedEgde =
+            new Edge<>(node1, node2, mediator, edge.getRelation());
+        newGraph.addGroundedToUngroundedEdges(groundedEgde, unGroundedEgde);
         newGraph.addEdge(node1, node2, mediator, groundedRelation);
         newGraph.getFeatures().addAll(features);
         Double score = getScore(newGraph, testing);
@@ -1885,7 +2252,6 @@ public class GroundedGraphs {
   private List<Feature> getEdgeFeatures(LexicalGraph gGraph, LexicalItem node1,
       LexicalItem node2, LexicalItem mediator, Relation ungroundedRelation,
       Relation groundedRelation) {
-
     LexicalGraph uGraph = gGraph.getParallelGraph();
     List<Feature> features = new ArrayList<>();
 
@@ -1900,23 +2266,20 @@ public class GroundedGraphs {
 
     // Graph has question and entity edge feature.
     if (gGraph.isQuestionNode(node1) || gGraph.isQuestionNode(node2)) {
-      LexicalItem questionNode = node1;
-      LexicalItem otherNode = node2;
-      if (!gGraph.isQuestionNode(node1)) {
-        questionNode = node2;
-        otherNode = node1;
-      }
+      LexicalItem otherNode = gGraph.isQuestionNode(node1) ? node2 : node1;
       if (otherNode.isEntity()) {
-        boolean graphAlreadyHasQuestionEntityEdgeFeature = false;
-        if (gGraph.getEdges(questionNode) != null) {
-          for (Edge<LexicalItem> edge : gGraph.getEdges(questionNode)) {
-            if (edge.getRight().isEntity()) {
-              graphAlreadyHasQuestionEntityEdgeFeature = true;
-              break;
-            }
-          }
+        HashSet<LexicalItem> questionEdgeEntityNodes = new HashSet<>();
+        for (LexicalItem qNode : gGraph.getQuestionNode()) {
+          TreeSet<Edge<LexicalItem>> questionEdges = gGraph.getEdges(qNode);
+          if (questionEdges != null)
+            questionEdges.forEach(x -> {
+              if (x.getRight().isEntity())
+                questionEdgeEntityNodes.add(x.getRight());
+            });
         }
-        if (!graphAlreadyHasQuestionEntityEdgeFeature) {
+
+        // No other entity node should be connected to the questionNode.
+        if (questionEdgeEntityNodes.size() == 0) {
           features.add(new HasQuestionEntityEdgeFeature(true));
         }
       }
@@ -2329,8 +2692,8 @@ public class GroundedGraphs {
             && (stringContainsWord(grelRightStripped, mediatorStem) || stringContainsWord(
                 grelRightInverse, mediatorStem))) {
           StemMatchingFeature s =
-              new StemMatchingFeature(1.0 / countMediator(mediator,
-                  uGraph.getEdges()));
+              new StemMatchingFeature(2.0 / (countMediator(mediator,
+                  uGraph.getEdges()) + 1.0));
           features.add(s);
         }
       }
@@ -2359,8 +2722,8 @@ public class GroundedGraphs {
               && (stringContainsWord(grelRightStripped, modifierStem) || stringContainsWord(
                   grelRightInverse, modifierStem))) {
             StemMatchingFeature s =
-                new StemMatchingFeature(1.0 / countMediator(mediator,
-                    uGraph.getEdges()));
+                new StemMatchingFeature(2.0 / (countMediator(mediator,
+                    uGraph.getEdges()) + 1.0));
             features.add(s);
           }
         }
@@ -2447,8 +2810,8 @@ public class GroundedGraphs {
             || (stringContainsWord(grelRightStripped, mediatorStem) && stringContainsWord(
                 grelRightInverse, mediatorStem))) {
           MediatorStemGrelPartMatchingFeature s =
-              new MediatorStemGrelPartMatchingFeature(1.0 / countMediator(
-                  mediator, uGraph.getEdges()));
+              new MediatorStemGrelPartMatchingFeature(2.0 / (countMediator(
+                  mediator, uGraph.getEdges()) + 1.0));
           features.add(s);
         }
       }
@@ -2477,8 +2840,8 @@ public class GroundedGraphs {
               || (stringContainsWord(grelRightStripped, modifierStem) && stringContainsWord(
                   grelRightInverse, modifierStem))) {
             MediatorStemGrelPartMatchingFeature s =
-                new MediatorStemGrelPartMatchingFeature(1.0 / countMediator(
-                    mediator, uGraph.getEdges()));
+                new MediatorStemGrelPartMatchingFeature(2.0 / (countMediator(
+                    mediator, uGraph.getEdges()) + 1.0));
             features.add(s);
           }
         }
@@ -2556,8 +2919,8 @@ public class GroundedGraphs {
               && (stringContainsWord(grelRightStripped, modifierStem) || stringContainsWord(
                   grelRightInverse, modifierStem))) {
             ArgStemMatchingFeature s =
-                new ArgStemMatchingFeature(1.0 / uGraph.getEdges(
-                    nodeType.getParentNode()).size());
+                new ArgStemMatchingFeature(2.0 / (uGraph.getEdges(
+                    nodeType.getParentNode()).size() + 1.0));
             features.add(s);
           }
         }
@@ -2668,8 +3031,8 @@ public class GroundedGraphs {
               || (stringContainsWord(grelRightStripped, modifierStem) && stringContainsWord(
                   grelRightInverse, modifierStem))) {
             ArgStemGrelPartMatchingFeature s =
-                new ArgStemGrelPartMatchingFeature(1.0 / uGraph.getEdges(
-                    nodeType.getParentNode()).size());
+                new ArgStemGrelPartMatchingFeature(2.0 / (uGraph.getEdges(
+                    nodeType.getParentNode()).size() + 1.0));
             features.add(s);
           }
         }

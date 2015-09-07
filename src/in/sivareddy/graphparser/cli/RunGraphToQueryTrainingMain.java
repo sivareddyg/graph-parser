@@ -61,6 +61,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<String> trainingCorpora;
   private OptionSpec<String> supervisedCorpus;
   private OptionSpec<String> semanticParseKey;
+  private OptionSpec<String> goldParsesFile;
 
   // Optional corpus to be grounded.
   private OptionSpec<String> groundInputCorpora;
@@ -76,7 +77,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Integer> nBestTestSyntacticParses;
   private OptionSpec<Integer> nbestGraphs;
   private OptionSpec<Integer> nbestEdges;
-  private OptionSpec<Integer> forrestSize;
+  private OptionSpec<Integer> forestSize;
   private OptionSpec<Integer> ngramLength;
 
   // Set these true, or else graph construction mechanism will be
@@ -144,6 +145,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> entityWordOverlapFlag;
   private OptionSpec<Boolean> allowMerging;
   private OptionSpec<Boolean> useGoldRelations;
+  private OptionSpec<Boolean> evaluateOnlyTheFirstBest;
+  private OptionSpec<Boolean> evaluateBeforeTraining;
+  private OptionSpec<Boolean> handleEventEventEdges;
+  private OptionSpec<Boolean> useBackOffGraph;
 
   @Override
   public void initializeOptions(OptionParser parser) {
@@ -219,6 +224,11 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("semanticParseKey",
                 "key from which a semantic parse is read").withRequiredArg()
             .ofType(String.class).defaultsTo("synPars");
+    goldParsesFile =
+        parser
+            .accepts("goldParsesFileVal",
+                "Serialized file containing gold graphs for trianing sentences")
+            .withRequiredArg().ofType(String.class).defaultsTo("");
 
     groundInputCorpora =
         parser
@@ -299,9 +309,9 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "number of edges/types for each ungrounded edge/types")
             .withRequiredArg().ofType(Integer.class).defaultsTo(1000);
 
-    forrestSize =
+    forestSize =
         parser
-            .accepts("forrestSize",
+            .accepts("forestSize",
                 "maximum number of sentences to consider in the forrest")
             .withRequiredArg().ofType(Integer.class).defaultsTo(1);
 
@@ -562,6 +572,32 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("useGoldRelations",
                 "use gold relations and gold mid for constructing gold graphs during training")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    evaluateOnlyTheFirstBest =
+        parser
+            .accepts("evaluateOnlyTheFirstBest",
+                "evaluate only the first best test graph").withRequiredArg()
+            .ofType(Boolean.class).defaultsTo(false);
+
+    evaluateBeforeTraining =
+        parser
+            .accepts("evaluateBeforeTraining",
+                "evaluate the initial model before training").withRequiredArg()
+            .ofType(Boolean.class).defaultsTo(true);
+
+    handleEventEventEdges =
+        parser
+            .accepts(
+                "handleEventEventEdges",
+                "Split event-event edge to event-entity, event-entity edges. Use only when the representation cannot handle control cases. ")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    useBackOffGraph =
+        parser
+            .accepts(
+                "useBackOffGraph",
+                "Adds a back off graph if there is no path between question node and entity nodes.")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
   }
 
   @Override
@@ -611,6 +647,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       String corupusTrainingFile = options.valueOf(trainingCorpora);
       String groundInputCorporaFiles = options.valueOf(groundInputCorpora);
       String semanticParseKeyString = options.valueOf(semanticParseKey);
+      String goldParsesFileVal = options.valueOf(goldParsesFile);
 
       String logfile = options.valueOf(logFile);
       String loadModelFromFileVal = options.valueOf(loadModelFromFile);
@@ -626,7 +663,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           options.valueOf(nBestTestSyntacticParses);
       int nbestGraphsVal = options.valueOf(nbestGraphs);
       int nbestEdgesVal = options.valueOf(nbestEdges);
-      int forrestSizeVal = options.valueOf(forrestSize);
+      int forestSizeVal = options.valueOf(forestSize);
       int ngramLengthVal = options.valueOf(ngramLength);
 
       // Set these true, or else graph construction mechanism will be
@@ -677,6 +714,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       // surprisingly grelGrel not useful
       boolean grelGrelFlagVal = options.valueOf(grelGrelFlag);
 
+
+
       // Default weights
       boolean useLexiconWeightsRelVal = options.valueOf(useLexiconWeightsRel);
       boolean useLexiconWeightsTypeVal = options.valueOf(useLexiconWeightsType);
@@ -703,6 +742,13 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       boolean entityWordOverlapFlagVal = options.valueOf(entityWordOverlapFlag);
       boolean allowMergingVal = options.valueOf(allowMerging);
       boolean useGoldRelationsVal = options.valueOf(useGoldRelations);
+      boolean evaluateOnlyTheFirstBestVal =
+          options.valueOf(evaluateOnlyTheFirstBest);
+
+      boolean evaluateBeforeTrainingVal =
+          options.valueOf(evaluateBeforeTraining);
+      boolean handleEventEventEdgesVal = options.valueOf(handleEventEventEdges);
+      boolean useBackOffGraphVal = options.valueOf(useBackOffGraph);
 
       boolean groundTrainingCorpusInTheEndVal =
           options.valueOf(groundTrainingCorpusInTheEnd);
@@ -716,11 +762,11 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
               kbGraphUri, testfile, devfile, supervisedTrainingFile,
               corupusTrainingFile, groundInputCorporaFiles,
-              semanticParseKeyString, debugEnabled,
+              semanticParseKeyString, goldParsesFileVal, debugEnabled,
               groundTrainingCorpusInTheEndVal, trainingSampleSizeCount,
               logfile, loadModelFromFileVal, nBestTrainSyntacticParsesVal,
               nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal,
-              forrestSizeVal, ngramLengthVal, useSchemaVal, useKBVal,
+              forestSizeVal, ngramLengthVal, useSchemaVal, useKBVal,
               groundFreeVariablesVal, groundEntityVariableEdgesVal,
               groundEntityEntityEdgesVal, useEmptyTypesVal, ignoreTypesVal,
               urelGrelFlagVal, urelPartGrelPartFlagVal, utypeGtypeFlagVal,
@@ -735,9 +781,11 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
               handleNumbersFlagVal, entityScoreFlagVal,
               entityWordOverlapFlagVal, allowMergingVal, useGoldRelationsVal,
-              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
-              stemFeaturesWeightVal);
-      graphToQueryModel.train(iterationCount, threadCount);
+              evaluateOnlyTheFirstBestVal, handleEventEventEdgesVal,
+              useBackOffGraphVal, initialEdgeWeightVal, initialTypeWeightVal,
+              initialWordWeightVal, stemFeaturesWeightVal);
+      graphToQueryModel.train(iterationCount, threadCount,
+          evaluateBeforeTrainingVal);
 
       // Run the best model.
       graphToQueryModel.testBestModel(threadCount);

@@ -1,12 +1,15 @@
 package in.sivareddy.graphparser.ccg;
 
+import java.io.Serializable;
+
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Preconditions;
 
-public class Category {
+public class Category implements Serializable {
+  private static final long serialVersionUID = -4538848961536949725L;
   private SyntacticCategory synCat;
   private SemanticCategory semCat;
 

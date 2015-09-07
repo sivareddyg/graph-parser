@@ -61,7 +61,11 @@ public class StanfordPipeline {
 
   public JsonObject processSentence(String sentence) {
     JsonObject jsonSentence = jsonParser.parse(sentence).getAsJsonObject();
-    processSentence(jsonSentence);
+    try {
+      processSentence(jsonSentence);
+    } catch (Exception e) {
+      // pass.
+    }
     return jsonSentence;
   }
 
@@ -101,7 +105,12 @@ public class StanfordPipeline {
     }
 
     Annotation annotation = new Annotation(sentence);
-    pipeline.annotate(annotation);
+    try {
+      pipeline.annotate(annotation);
+    } catch (Exception e) {
+      // pass.
+    }
+
     int wordCount = 0;
     for (CoreMap sentenceAnnotation : annotation.get(SentencesAnnotation.class)) {
       int sentStart = wordCount;

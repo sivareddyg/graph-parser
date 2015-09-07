@@ -34,6 +34,9 @@ public class SentenceKeys {
   public static String END = "end";
   public static String SCORE = "score";
   
+  public static String PARAPHRASE = "paraphrase";
+  public static String PARAPHRASE_SCORE = "paraphraseScore";
+  
   public static String FOREST = "forest";
   
   public static String GOLD_MID = "goldMid";

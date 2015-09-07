@@ -1,17 +1,20 @@
 package in.sivareddy.graphparser.ccg;
 
+import java.io.Serializable;
+
 import com.google.common.base.Objects;
 
 /**
  * Created by bisk1 on 1/26/15.
  */
 public class LexicalItem extends CcgParseTree implements
-    Comparable<LexicalItem> {
+    Comparable<LexicalItem>, Serializable {
+  private static final long serialVersionUID = 16874271356455052L;
   int wordPosition = -1;
   private String synCat;
   String word;
   String lemma;
-  String pos; 
+  String pos;
 
   // named entity type
   String neType;
@@ -153,11 +156,11 @@ public class LexicalItem extends CcgParseTree implements
   public void setMid(String mid) {
     this.mid = mid;
   }
-  
+
   public boolean isEntity() {
     return mid.startsWith("m.") || mid.startsWith("type.");
   }
-  
+
   @Override
   public String toString() {
     return Objects.toStringHelper(this).addValue(word).addValue(pos)

@@ -4,6 +4,7 @@ import in.sivareddy.graphparser.util.knowledgebase.EntityType;
 import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class Graph<T> implements Comparable<Graph<T>> {
+public class Graph<T> implements Comparable<Graph<T>>, Serializable {
+  private static final long serialVersionUID = 8302375996011637856L;
+
   private List<T> actualNodes;
 
   private TreeSet<T> nodes;

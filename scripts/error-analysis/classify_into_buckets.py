@@ -45,7 +45,7 @@ for line in open(nbest_file):
         exit()
     r, p, f = computeF1(gold, predicted)
 
-    if f > 0.99:
+    if f >= F1_THRESHOLD:
         correct_in_beam.add(sentence)
     elif len(predicted) == 0:
         no_predictions.add(sentence)
@@ -54,7 +54,8 @@ for line in open(nbest_file):
 
 
 correct_only_in_beam = correct_in_beam - fully_correct - partially_correct
-out_of_beam = out_of_beam - partially_correct
+out_of_beam = out_of_beam - partially_correct - fully_correct
+no_predictions = no_predictions - partially_correct - fully_correct
 
 total = 0.0 + (len(fully_correct) + len(partially_correct) +
                len(correct_only_in_beam) + len(out_of_beam) + len(no_predictions))

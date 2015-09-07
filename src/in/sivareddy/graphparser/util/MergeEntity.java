@@ -72,7 +72,6 @@ public class MergeEntity {
               .getAsJsonObject();
       newWord.remove(SentenceKeys.WORD_KEY);
 
-
       String entityPhrase =
           getWordsCapitalizedInitial(oldWords, entityStart, entityEnd);
       newWord.addProperty(SentenceKeys.WORD_KEY, entityPhrase);
@@ -177,7 +176,7 @@ public class MergeEntity {
     newSentence.add(SentenceKeys.WORDS_KEY, newWords);
     entities.sort(Comparator.comparing(x -> x.get(SentenceKeys.ENTITY_INDEX)
         .getAsInt()));
-    
+
     if (entities.size() > 0) {
       JsonArray entityArr = new JsonArray();
       newSentence.add(SentenceKeys.ENTITIES, entityArr);
@@ -219,11 +218,21 @@ public class MergeEntity {
     Map<Integer, Integer> oldToNewMap = new HashMap<>();
     JsonArray newWords = new JsonArray();
 
+    Set<Integer> entityPositions = new HashSet<>();
+    if (newSentence.has(SentenceKeys.ENTITIES)) {
+      for (JsonElement entity : newSentence.get(SentenceKeys.ENTITIES)
+          .getAsJsonArray()) {
+        JsonObject entityObj = entity.getAsJsonObject();
+        entityPositions.add(entityObj.get(SentenceKeys.INDEX_KEY).getAsInt());
+      }
+    }
+
     int newIndex = 0;
     for (int i = 0; i < oldWords.size(); i++) {
       JsonObject oldWord = oldWords.get(i).getAsJsonObject();
       oldToNewMap.put(i, newIndex);
       if (oldWord.has(SentenceKeys.NER_KEY)
+          && !entityPositions.contains(i)
           && !oldWord.get(SentenceKeys.NER_KEY).getAsString()
               .equals(NON_NAMED_ENTITY)) {
         String namedEntity = oldWord.get(SentenceKeys.NER_KEY).getAsString();
@@ -232,7 +241,8 @@ public class MergeEntity {
           String nextNamedEntity =
               oldWords.get(j).getAsJsonObject().get(SentenceKeys.NER_KEY)
                   .getAsString();
-          if (!nextNamedEntity.equals(namedEntity)) {
+          if (!nextNamedEntity.equals(namedEntity)
+              || entityPositions.contains(j)) {
             break;
           } else {
             oldToNewMap.put(j, newIndex);

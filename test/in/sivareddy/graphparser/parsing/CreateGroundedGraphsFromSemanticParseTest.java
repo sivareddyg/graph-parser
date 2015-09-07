@@ -1,22 +1,16 @@
 package in.sivareddy.graphparser.parsing;
 
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
-import in.sivareddy.graphparser.ccg.LexicalItem;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseOnline;
-import in.sivareddy.graphparser.util.knowledgebase.Relation;
 import in.sivareddy.ml.learning.StructuredPercepton;
 import in.sivareddy.util.SentenceKeys;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
@@ -26,8 +20,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -54,7 +46,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     groundedLexicon = new GroundedLexicon("lib_data/dummy.txt");
     schema = new Schema("data/freebase/schema/all_domains_schema.txt");
     kb =
-        new KnowledgeBaseOnline("stkilda", "http://stkilda:8890/sparql", "dba",
+        new KnowledgeBaseOnline("rockall", "http://rockall:8890/sparql", "dba",
             "dba", 50000, schema);
 
     questionCcgAutoLexicon =
@@ -76,14 +68,14 @@ public class CreateGroundedGraphsFromSemanticParseTest {
             relationTypingIdentifiers, new StructuredPercepton(), 1, true,
             true, true, true, true, true, true, true, true, true, true, true,
             true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, 10.0, 1.0, 0.0, 0.0);
+            true, true, true, true, true, true, 10.0, 1.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
     Appender stdoutAppender = new ConsoleAppender(layout);
     logger.addAppender(stdoutAppender);
   }
 
-  @Test
+  /*-@Test
   public void testGroundedGraphs() throws IOException {
     // GroundedLexicon groundedLexicon = null;
     String line =
@@ -131,7 +123,53 @@ public class CreateGroundedGraphsFromSemanticParseTest {
   }
 
   @Test
-  public void testGroundedGraphsWithCollapseAndFiltering() throws IOException {
+  public void testGraphPaths() throws IOException {
+    // GroundedLexicon groundedLexicon = null;
+    String line =
+        "{\"sentence\":\"The libel OBJ has proved that the SUBJ was defamatory\",\"entities\":[{\"entity\":\"m.OBJ\",\"index\":2},{\"entity\":\"m.SUBJ\",\"index\":7}],\"words\":[{\"word\":\"The\",\"lemma\":\"the\",\"pos\":\"DT\",\"ner\":\"O\"},{\"word\":\"libel\",\"lemma\":\"libel\",\"pos\":\"NN\",\"ner\":\"O\"},{\"word\":\"OBJ\",\"lemma\":\"OBJ\",\"pos\":\"NNP\",\"ner\":\"O\"},{\"word\":\"has\",\"lemma\":\"have\",\"pos\":\"VBZ\",\"ner\":\"O\"},{\"word\":\"proved\",\"lemma\":\"prove\",\"pos\":\"VBN\",\"ner\":\"O\"},{\"word\":\"that\",\"lemma\":\"that\",\"pos\":\"IN\",\"ner\":\"O\"},{\"word\":\"the\",\"lemma\":\"the\",\"pos\":\"DT\",\"ner\":\"O\"},{\"word\":\"SUBJ\",\"lemma\":\"SUBJ\",\"pos\":\"NNP\",\"ner\":\"O\"},{\"word\":\"was\",\"lemma\":\"be\",\"pos\":\"VBD\",\"ner\":\"O\"},{\"word\":\"defamatory\",\"lemma\":\"defamatory\",\"pos\":\"JJ\",\"ner\":\"O\",\"sentEnd\":true}], \"dependency_lambda\":[[\"defamatory.1(9:s , 7:m.SUBJ)\",\"UNIQUE(7:m.SUBJ)\",\"proved.2(4:e , 9:e)\",\"libel(1:s , 2:m.OBJ)\",\"proved.1(4:e , 2:m.OBJ)\",\"UNIQUE(2:m.OBJ)\"]]}";
+
+    JsonObject jsonSentence = jsonParser.parse(line).getAsJsonObject();
+
+    List<LexicalGraph> graphs =
+        graphCreator.buildUngroundedGraph(jsonSentence, "dependency_lambda", 1,
+            logger);
+
+    System.out.println("# Ungrounded Graphs");
+    if (graphs.size() > 0) {
+      for (LexicalGraph ungroundedGraph : graphs) {
+        System.out.println(ungroundedGraph);
+        IndexedWord obj =
+            GroundedGraphs.makeWord(ungroundedGraph.getActualNodes().get(2));
+        IndexedWord subj =
+            GroundedGraphs.makeWord(ungroundedGraph.getActualNodes().get(7));
+        SemanticGraph semanticGraph =
+            graphCreator.buildSemanticGraphFromSemanticParse(
+                ungroundedGraph.getSemanticParse(),
+                ungroundedGraph.getActualNodes());
+        System.out.println(semanticGraph);
+        System.out.println("Directed: "
+            + semanticGraph.getShortestDirectedPathNodes(subj, obj));
+
+        System.out.println("Path from SUBJ to OBJ");
+        List<SemanticGraphEdge> edges =
+            semanticGraph.getShortestUndirectedPathEdges(subj, obj);
+        for (SemanticGraphEdge edge : edges) {
+          System.out.println(edge.getRelation());
+        }
+
+        System.out.println("Path from OBJ to SUBJ");
+        edges = semanticGraph.getShortestUndirectedPathEdges(obj, subj);
+        for (SemanticGraphEdge edge : edges) {
+          System.out.println(edge.getRelation());
+        }
+        System.out.println();
+      }
+    }
+  }
+
+
+  @Test
+  public void testGroundedGraphsWithMergeAndFiltering() throws IOException {
     /*-
     Semantic Parse: [prophet.first(6:s , 7:x), UNIQUE(3:x), QUESTION(0:x), name(3:s , 3:x), prophet.of.arg_2(7:e , 9:m.0flw86), prophet(7:s , 7:x), UNIQUE(7:x), name.of.arg_1(3:e , 3:x), be.copula.arg_2(1:e , 0:x), name.of.arg_2(3:e , 7:x), be.copula.arg_1(1:e , 3:x), prophet.of.arg_1(7:e , 7:x)]
     Words: 
@@ -155,7 +193,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     7   [UNIQUE]
     EventTypes: 
     EventEventModifiers: 
-     */
+     
 
     List<JsonObject> jsonSentences = Lists.newArrayList();
 
@@ -258,6 +296,104 @@ public class CreateGroundedGraphsFromSemanticParseTest {
                 + groundedGraphs.size());
             System.out.println("# Total number of Connected Grounded Graphs: "
                 + connectedGraphCount);
+            System.out.println();
+          }
+        }
+      }
+    }
+  }
+
+
+  @Test
+  public void testGroundedGraphsWithMerge() throws IOException {
+    List<JsonObject> jsonSentences = Lists.newArrayList();
+
+    JsonObject sentence =
+        jsonParser
+            .parse(
+                "{\"index\":\"a03e7e72e954f0f40245b98977da2c25:1\",\"sentence\":\"what is the capital city of albania?\",\"url\":\"http://www.freebase.com/view/en/albania\",\"goldRelations\":[{\"relationLeft\":\"location.country.capital.1\",\"score\":1.0,\"relationRight\":\"location.country.capital.2\"},{\"relationLeft\":\"location.location.contains.1\",\"score\":0.019801980198019802,\"relationRight\":\"location.location.contains.2\"}],\"targetValue\":\"(list (description Tirana))\",\"goldMid\":\"m.0jdx\",\"entities\":[{\"name\":\"Edinburgh\",\"entity\":\"m.02m77\",\"score\":110.485825,\"phrase\":\"city\",\"id\":\"/en/edinburgh\",\"index\":4},{\"name\":\"Scotland\",\"entity\":\"m.06q1r\",\"score\":34.241409,\"phrase\":\"albania\",\"id\":\"/en/scotland\",\"index\":6}],\"words\":[{\"category\":\"PRON\",\"head\":1,\"end\":3,\"lemma\":\"what\",\"dep\":\"attr\",\"break_level\":3,\"pos\":\"WP\",\"start\":0,\"word\":\"What\"},{\"category\":\"VERB\",\"end\":6,\"start\":5,\"dep\":\"ROOT\",\"break_level\":1,\"pos\":\"VBZ\",\"lemma\":\"be\",\"word\":\"is\"},{\"category\":\"DET\",\"head\":3,\"end\":10,\"lemma\":\"the\",\"dep\":\"det\",\"break_level\":1,\"pos\":\"DT\",\"start\":8,\"word\":\"the\"},{\"category\":\"NOUN\",\"head\":1,\"end\":18,\"lemma\":\"capital\",\"dep\":\"nsubj\",\"break_level\":1,\"pos\":\"NN\",\"start\":12,\"word\":\"capital\"},{\"category\":\"NOUN\",\"head\":3,\"end\":23,\"lemma\":\"City\",\"dep\":\"appos\",\"break_level\":1,\"pos\":\"NNP\",\"start\":20,\"word\":\"City\"},{\"category\":\"ADP\",\"head\":4,\"end\":26,\"lemma\":\"of\",\"dep\":\"prep\",\"break_level\":1,\"pos\":\"IN\",\"start\":25,\"word\":\"of\"},{\"category\":\"NOUN\",\"head\":5,\"end\":34,\"lemma\":\"Albania\",\"dep\":\"pobj\",\"break_level\":1,\"pos\":\"NNP\",\"start\":28,\"word\":\"Albania\"},{\"category\":\".\",\"head\":1,\"end\":36,\"lemma\":\"?\",\"dep\":\"p\",\"break_level\":1,\"pos\":\".\",\"start\":36,\"word\":\"?\"}],\"dependency_lambda\":[[\"be.copula.arg_1(1:e , 3:x)\",\"of.arg_1(4:e , 4:m.02m77)\",\"be.copula.arg_2(1:e , 0:x)\",\"QUESTION(0:x)\",\"capital(3:s , 3:x)\",\"capital.q.arg_2(3:e , 4:m.02m77)\",\"UNIQUE(3:x)\",\"capital.q.arg_1(3:e , 3:x)\",\"of.arg_2(4:e , 6:m.06q1r)\"],[\"be.copula.arg_1(1:e , 3:x)\",\"be.copula.arg_2(1:e , 0:x)\",\"QUESTION(0:x)\",\"capital.of.arg_2(3:e , 6:m.06q1r)\",\"capital(3:s , 3:x)\",\"capital.of.arg_1(3:e , 3:x)\",\"city(4:s , 3:x)\",\"UNIQUE(3:x)\"]]}")
+            .getAsJsonObject();
+    jsonSentences.add(sentence);
+
+    for (JsonObject jsonSentence : jsonSentences) {
+      List<LexicalGraph> graphs =
+          graphCreator.buildUngroundedGraph(jsonSentence,
+              SentenceKeys.DEPENDENCY_LAMBDA, 1, logger);
+
+      System.out.println("# Ungrounded Graphs");
+      if (graphs.size() > 0) {
+        for (LexicalGraph ungroundedGraph : graphs) {
+          System.out.println(ungroundedGraph);
+          if (ungroundedGraph.getQuestionNode().iterator().hasNext()) {
+            List<LexicalGraph> groundedGraphs =
+                graphCreator.createGroundedGraph(ungroundedGraph, null, 1000,
+                    10000, true, true, false, false, false, false, true, false);
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
+
+            for (LexicalGraph groundedGraph : groundedGraphs) {
+              System.out.println(groundedGraph.getParallelGraph());
+              System.out.println(groundedGraph);
+              System.out.println("Graph Query: "
+                  + GraphToSparqlConverter.convertGroundedGraph(groundedGraph,
+                      schema, 200));
+              System.out.println("Features: " + groundedGraph.getFeatures());
+            }
+
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
+            System.out.println();
+          }
+        }
+      }
+    }
+  }*/
+
+  @Test
+  public void testBackoffGroundedGraphsWithMerge() throws IOException {
+    List<JsonObject> jsonSentences = Lists.newArrayList();
+
+    JsonObject sentence =
+        jsonParser
+            .parse(
+                "{\"index\":\"095596d7bf516419aca164552319522e:1\",\"domain\":[\"film\"],\"sentence\":\"who played dorothy in the wizard of oz movie?\",\"url\":\"http://www.freebase.com/view/en/dorothy_gale\",\"goldRelations\":[{\"relationLeft\":\"film.performance.character\",\"score\":0.16666666666666669,\"relationRight\":\"film.performance.actor\"}],\"targetValue\":\"(list (description \\\"Judy Garland\\\"))\",\"goldMid\":\"m.020hj1\",\"entities\":[{\"name\":\"Dorothy Gale\",\"entity\":\"m.020hj1\",\"score\":84.735451,\"phrase\":\"dorothy in the wizard\",\"id\":\"/en/dorothy_gale\",\"index\":2},{\"name\":\"The Wizard of Oz\",\"entity\":\"m.02q52q\",\"score\":390.615906,\"phrase\":\"oz movie\",\"id\":\"/en/the_wizard_of_oz\",\"index\":4}],\"words\":[{\"category\":\"PRON\",\"head\":1,\"end\":2,\"lemma\":\"who\",\"dep\":\"nsubj\",\"break_level\":3,\"pos\":\"WP\",\"start\":0,\"word\":\"Who\"},{\"category\":\"VERB\",\"end\":9,\"start\":4,\"dep\":\"ROOT\",\"break_level\":1,\"pos\":\"VBD\",\"lemma\":\"play\",\"word\":\"played\"},{\"category\":\"NOUN\",\"head\":1,\"end\":17,\"lemma\":\"Dorothy_In_The_Wizard\",\"dep\":\"dobj\",\"break_level\":1,\"pos\":\"NNP\",\"start\":11,\"word\":\"Dorothy_In_The_Wizard\"},{\"category\":\"ADP\",\"head\":2,\"end\":34,\"lemma\":\"of\",\"dep\":\"prep\",\"break_level\":1,\"pos\":\"IN\",\"start\":33,\"word\":\"of\"},{\"category\":\"NOUN\",\"head\":3,\"end\":43,\"lemma\":\"Oz_Movie\",\"dep\":\"pobj\",\"break_level\":1,\"pos\":\"NNP\",\"start\":39,\"word\":\"Oz_Movie\"},{\"category\":\".\",\"head\":1,\"end\":45,\"lemma\":\"?\",\"dep\":\"p\",\"break_level\":1,\"pos\":\".\",\"start\":45,\"word\":\"?\"}],\"dependency_lambda\":[[\"play.arg_2(1:e , 2:m.020hj1)\",\"of.arg_2(2:e , 4:m.02q52q)\",\"QUESTION(0:x)\",\"play.arg_1(1:e , 0:x)\",\"who(0:s , 0:x)\"]]}")
+            .getAsJsonObject();
+    // jsonSentences.add(sentence);
+
+    sentence =
+        jsonParser
+            .parse(
+                "{\"index\":\"40753f7151fa1c0aa520999f3b3a254c:1\",\"sentence\":\"what time do the polls open in indiana 2012?\",\"url\":\"http://www.freebase.com/view/en/indiana\",\"goldRelations\":[{\"relationLeft\":\"time.time_zone.locations_in_this_time_zone.2\",\"score\":0.4,\"relationRight\":\"time.time_zone.locations_in_this_time_zone.1\"}],\"targetValue\":\"(list (description UTC−06:00))\",\"goldMid\":\"m.03v1s\",\"entities\":[{\"name\":\"Indiana\",\"entity\":\"m.03v1s\",\"score\":139.72702,\"phrase\":\"indiana\",\"id\":\"/en/indiana\",\"index\":7},{\"phrase\":\"2012\",\"entity\":\"type.datetime\",\"index\":8}],\"words\":[{\"category\":\"DET\",\"head\":1,\"end\":3,\"lemma\":\"what\",\"dep\":\"det\",\"break_level\":3,\"pos\":\"WDT\",\"start\":0,\"word\":\"What\"},{\"category\":\"NOUN\",\"head\":5,\"end\":8,\"lemma\":\"time\",\"dep\":\"dep\",\"break_level\":1,\"pos\":\"NN\",\"start\":5,\"word\":\"time\"},{\"category\":\"VERB\",\"head\":5,\"end\":11,\"lemma\":\"do\",\"dep\":\"aux\",\"break_level\":1,\"pos\":\"VBP\",\"start\":10,\"word\":\"do\"},{\"category\":\"DET\",\"head\":4,\"end\":15,\"lemma\":\"the\",\"dep\":\"det\",\"break_level\":1,\"pos\":\"DT\",\"start\":13,\"word\":\"the\"},{\"category\":\"NOUN\",\"head\":5,\"end\":21,\"start\":17,\"dep\":\"nsubj\",\"break_level\":1,\"pos\":\"NNS\",\"lemma\":\"poll\",\"word\":\"polls\"},{\"category\":\"ADJ\",\"end\":26,\"lemma\":\"open\",\"dep\":\"ROOT\",\"break_level\":1,\"pos\":\"JJ\",\"start\":23,\"word\":\"open\"},{\"category\":\"ADP\",\"head\":5,\"end\":29,\"lemma\":\"in\",\"dep\":\"prep\",\"break_level\":1,\"pos\":\"IN\",\"start\":28,\"word\":\"in\"},{\"category\":\"NOUN\",\"head\":6,\"end\":37,\"lemma\":\"Indiana\",\"dep\":\"pobj\",\"break_level\":1,\"pos\":\"NNP\",\"start\":31,\"word\":\"Indiana\"},{\"category\":\"NUM\",\"head\":7,\"end\":42,\"lemma\":\"2012\",\"dep\":\"num\",\"break_level\":1,\"pos\":\"CD\",\"start\":39,\"word\":\"2012\"},{\"category\":\".\",\"head\":5,\"end\":44,\"lemma\":\"?\",\"dep\":\"p\",\"break_level\":1,\"pos\":\".\",\"start\":44,\"word\":\"?\"}],\"dependency_lambda\":[[\"poll(4:s , 4:x)\",\"time.open(5:s , 1:x)\",\"time.in.arg_2(1:e , 7:m.03v1s)\",\"2012(8:s , 7:m.03v1s)\",\"time.arg_1(1:e , 4:x)\",\"QUESTION(1:x)\",\"UNIQUE(4:x)\",\"time(1:s , 1:x)\"]]}")
+            .getAsJsonObject();
+    jsonSentences.add(sentence);
+    
+    for (JsonObject jsonSentence : jsonSentences) {
+      List<LexicalGraph> graphs =
+          graphCreator.buildUngroundedGraph(jsonSentence,
+              SentenceKeys.DEPENDENCY_LAMBDA, 1, logger);
+
+      System.out.println("# Ungrounded Graphs");
+      if (graphs.size() > 0) {
+        for (LexicalGraph ungroundedGraph : graphs) {
+          System.out.println(ungroundedGraph);
+          if (ungroundedGraph.getQuestionNode().iterator().hasNext()) {
+            List<LexicalGraph> groundedGraphs =
+                graphCreator.createGroundedGraph(ungroundedGraph, null, 1000,
+                    10000, true, true, false, false, false, false, true, false);
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
+
+            for (LexicalGraph groundedGraph : groundedGraphs) {
+              System.out.println(groundedGraph.getParallelGraph());
+              System.out.println(groundedGraph);
+              System.out.println("Graph Query: "
+                  + GraphToSparqlConverter.convertGroundedGraph(groundedGraph,
+                      schema, 200));
+              System.out.println("Features: " + groundedGraph.getFeatures());
+            }
+
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
             System.out.println();
           }
         }

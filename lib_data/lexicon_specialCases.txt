@@ -34,6 +34,17 @@ the	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	UNIQUE
 *	*	(S[adj]\NP)/(S[to]\NP)	((S[adj]{_}\NP{Y}){_}/(S[to]{Z}\NP{Y}){Z}){_};_ 1 Y,_ 2 Z	EVENT
 *	*	(S[ng]\NP)/(S[to]\NP)	((S[ng]{_}\NP{Y}){_}/(S[to]{Z}\NP{Y}){Z}){_};_ 1 Y,_ 2 Z	EVENT
 
+# Wrong pos tags
+*	*	S[dcl]\NP	(S[dcl]{_}\NP{Y}){_};_ 1 Y	EVENT
+*	*	S[b]\NP	(S[b]{_}\NP{Y}){_};_ 1 Y	EVENT
+*	*	(S[dcl]\NP)/NP	((S[dcl]{_}\NP{Y}){_}/NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+*	*	(S[pss]\NP)/NP	((S[pss]{_}\NP{Y}){_}/NP{Z}){_};_ 1 Z,_ 2 Y	EVENT
+*	*	(S[b]\NP)/NP	((S[b]{_}\NP{Y}){_}/NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+*	*	(S[dcl]\NP)/PP	((S[dcl]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
+*	*	(S[b]\NP)/PP	((S[b]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
+*	*	(S[dcl]\NP)/PP	((S[dcl]{_}\NP{Y}){_}/PP{_}){_};_ 1 Y	EVENT
+*	*	((S[dcl]\NP)/PP)/NP	(((S[dcl]{_}\NP{Y}){_}/PP{_}){_}/NP{W}){_};_ 1 Y,_ 2 W	EVENT
+
 # passive case
 by	*	((S\NP)\(S\NP))/NP	(((S[X]{Y}\NP{Z}){Y}\(S[X]{Y}\NP{Z}){Y}){_}/NP{W}){_};_ 1 Y,_ 2 W	(lambda $f1 $f2 $f3 $Y (exists $W $Z $_ (and (EVENT $Y $Y 1 $W ENTITY) ($f1 $W) (($f2 $Z) $Y) ($f3 $Z))))
 
@@ -53,6 +64,12 @@ that	*	S[em]/S[dcl]	(S[em]{Y}/S[dcl]{Y}){_};_ 1 Y	CLOSED
 # Artificial possessive - Over generation of ungrounded graphs - Comment it for public usage
 's	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	(lambda $f1 $f2 $Y (exists $Z (and (COPULA $Y $Z) (TYPE $Y $Z))))
 's	IPOS	(NP[nb]/N)\NP	((NP[nb]{Y}/N{Y}){_}\NP{Z}){_};_ 1 Y,_ 2 Z	EVENT
+
+# This program is dedicated "to" providing food.
+*	*	PP/(S[ng]\NP)	(PP{X}/(S[ng]{Y}\NP{Z}){Y}){_};_ 1 Y	EVENT
+
+# "All" of us went to UK.
+*	*	NP	NP{_}	(lambda $_ (TYPE $_ $_))
 
 # BLANK category
 _blank_	*	N	N{X}	(lambda $X (QUESTION $X))

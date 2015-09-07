@@ -1,6 +1,7 @@
 package in.sivareddy.graphparser.parsing;
 
 import in.sivareddy.graphparser.ccg.LexicalItem;
+import in.sivareddy.graphparser.ccg.SemanticCategoryType;
 import in.sivareddy.graphparser.util.graph.Edge;
 import in.sivareddy.graphparser.util.graph.Graph;
 import in.sivareddy.graphparser.util.graph.Type;
@@ -9,6 +10,7 @@ import in.sivareddy.ml.basic.AbstractFeature;
 import in.sivareddy.ml.basic.Feature;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -17,13 +19,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class LexicalGraph extends Graph<LexicalItem> {
+  private static final long serialVersionUID = -4595359430330862744L;
   private final List<Feature> features;
   private String syntacticParse;
   private Set<String> semanticParse;
@@ -447,7 +452,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
         this.getEdges(parentNode) != null ? new HashSet<>(
             this.getEdges(parentNode)) : new HashSet<>();
     if (childEdges != null && childEdges.size() > 0) {
-      childEdges = new TreeSet<>(childEdges);
+      childEdges = new TreeSet<>(childEdges); // avoids loop and deletion clash
       for (Edge<LexicalItem> edge : childEdges) {
         if (!edge.getRight().equals(parentNode)) {
           // An edge should not exist between the new node and the parent node.
@@ -478,6 +483,12 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public void addGroundedToUngroundedEdges(Edge<LexicalItem> groundedEdge,
       Edge<LexicalItem> ungroundedEdge) {
+    Preconditions.checkArgument(groundedEdge.getLeft().equals(
+        ungroundedEdge.getLeft()));
+    Preconditions.checkArgument(groundedEdge.getRight().equals(
+        ungroundedEdge.getRight()));
+    Preconditions.checkArgument(groundedEdge.getMediator().equals(
+        ungroundedEdge.getMediator()));
     if (groundedToUngrounded == null)
       groundedToUngrounded = new HashMap<>();
 
@@ -546,6 +557,8 @@ public class LexicalGraph extends Graph<LexicalItem> {
       LexicalItem node = toVisitNodes.poll();
       nodesVisited.add(node);
       TreeSet<Edge<LexicalItem>> edges = getEdges(node);
+      if (edges == null)
+        continue;
       for (Edge<LexicalItem> edge : edges) {
         LexicalItem newNode = edge.getRight();
         if (!nodesVisited.contains(newNode)) {
@@ -557,5 +570,57 @@ public class LexicalGraph extends Graph<LexicalItem> {
       }
     }
     return false;
+  }
+
+  public boolean hasPathBetweenQuestionAndEntityNodes() {
+    Set<LexicalItem> realQuestionNodes = getQuestionNode();
+    Set<LexicalItem> questionNodes =
+        realQuestionNodes.stream().filter(x -> !x.isEntity())
+            .collect(Collectors.toSet());
+
+    if (questionNodes.size() == 0) {
+      return false;
+    }
+
+    Set<LexicalItem> entityNodes =
+        this.getActualNodes().stream().filter(x -> x.isEntity())
+            .collect(Collectors.toSet());
+
+    if (entityNodes.size() == 0)
+      return false;
+
+    boolean hasPath = true;
+    for (LexicalItem questionNode : questionNodes) {
+      for (LexicalItem entityNode : entityNodes) {
+        hasPath &= hasPath(questionNode, entityNode);
+      }
+    }
+
+    return hasPath;
+  }
+
+  public boolean removeMultipleQuestionNodes() {
+    List<LexicalItem> questionNodes = new ArrayList<>(getQuestionNode());
+    if (questionNodes.size() < 2)
+      return false;
+    questionNodes.sort(Comparator.comparing(x -> x.getWordPosition()));
+    for (int i = 1; i < questionNodes.size(); i++) {
+      LexicalItem questionNode = questionNodes.get(i);
+      Set<Property> nodeProps = getProperties(questionNode);
+      Set<Property> questionProps =
+          nodeProps
+              .stream()
+              .filter(
+                  x -> x.getPropertyName().equals(
+                      SemanticCategoryType.QUESTION.toString()))
+              .collect(Collectors.toSet());
+
+      if (nodeProps.size() == questionProps.size()) {
+        getProperties().remove(questionNode);
+      } else {
+        nodeProps.removeAll(questionProps);
+      }
+    }
+    return true;
   }
 }
