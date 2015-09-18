@@ -7,14 +7,13 @@ Created on 22 Nov 2013
 import hashlib
 import sys
 import json
-import gzip
+import os
 
 sentences_hashes = {} # sent_hash_key : [list of entities]
 sent_file = sys.argv[1]
 
-f = gzip.open(sent_file, "rb")
 count = 0;
-for line in f:
+for line in os.popen("zcat %s" % (sent_file)):
     count += 1;
     if count % 10000 == 0:
         sys.stderr.write(str(count) + '\n')
@@ -40,11 +39,8 @@ for line in f:
             oldEntities.extend(newEntities)
     else:
         sentences_hashes[hashkey] = entities
-f.close()
 
-
-f = gzip.open(sent_file, "rb")
-for line in f:
+for line in os.popen("zcat %s" % (sent_file)):
     line = line.rstrip()
     parts = json.loads(line)
     sent = parts[0]
@@ -54,5 +50,6 @@ for line in f:
     if sentences_hashes.has_key(hashkey):
         entities = sentences_hashes.pop(hashkey)
         entities.sort(key = lambda x : x[2])
-        sent = [sent, entities]
-        print json.dumps(sent)
+        if len(entities) > 1:
+            sent = [sent, entities]
+            print json.dumps(sent)

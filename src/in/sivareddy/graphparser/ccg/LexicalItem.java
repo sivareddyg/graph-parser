@@ -161,6 +161,10 @@ public class LexicalItem extends CcgParseTree implements
     return mid.startsWith("m.") || mid.startsWith("type.");
   }
 
+  public boolean isStandardEntity() {
+    return mid.startsWith("type.");
+  }
+
   @Override
   public String toString() {
     return Objects.toStringHelper(this).addValue(word).addValue(pos)

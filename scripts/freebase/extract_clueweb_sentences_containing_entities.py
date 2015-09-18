@@ -38,14 +38,7 @@ def get_sentence(current_record_content, start_offset, end_offset):
         sent_end = sent_end + 1
     return [sent_start, sent_end] 
 
-def extract_sentences(clueweb_directory, freebase_directory, valid_entity_files):
-    valid_entities = {}
-    for entity_file in valid_entity_files: 
-        for line in open(entity_file):
-            entity = line.split()[0].strip(".").replace("ns:", "/").replace(".", "/")
-            # print entity
-            valid_entities[entity] = 1
-
+def extract_sentences(clueweb_directory, freebase_directory):
     sub_directories = os.listdir(freebase_directory) 
     for directory in sub_directories:
         clueweb_subdir = os.path.join(clueweb_directory, directory)
@@ -81,7 +74,7 @@ def extract_sentences(clueweb_directory, freebase_directory, valid_entity_files)
                 line = line.rstrip()
                 columns = line.split('\t')
                 entity_tag = columns[-1]
-                if valid_entities.has_key(entity_tag):
+                if entity_tag.startswith("/m/"):
                     record_number = int(columns[0].split("-")[-1])
                     encoding = columns[1].lower()
                     entity_name = columns[2]
@@ -131,6 +124,5 @@ if __name__ == "__main__":
 
     clueweb_directory = sys.argv[1]
     freebase_directory = sys.argv[2]
-    valid_entity_files = sys.argv[3:]
-    extract_sentences(clueweb_directory, freebase_directory, valid_entity_files)
+    extract_sentences(clueweb_directory, freebase_directory)
     

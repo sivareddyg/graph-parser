@@ -1,13 +1,18 @@
 package others;
 
+import in.sivareddy.util.ProcessStreamInterface;
 import in.sivareddy.util.SentenceKeys;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -24,7 +29,7 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 
-public class StanfordPipeline {
+public class StanfordPipeline extends ProcessStreamInterface {
   public static String ANNOTATORS_KEY = "annotators";
   public static String POS_ANNOTATOR = "pos";
   public static String NER_ANNOTATOR = "ner";
@@ -61,11 +66,7 @@ public class StanfordPipeline {
 
   public JsonObject processSentence(String sentence) {
     JsonObject jsonSentence = jsonParser.parse(sentence).getAsJsonObject();
-    try {
-      processSentence(jsonSentence);
-    } catch (Exception e) {
-      // pass.
-    }
+    processSentence(jsonSentence);
     return jsonSentence;
   }
 
@@ -79,26 +80,14 @@ public class StanfordPipeline {
               && options.get(WHITESPACE_TOKENIZER).equals("true"),
               "words are already tokenized. You should use tokenize.whitespace=true");
 
-      Preconditions
-          .checkArgument(options.containsKey(WHITESPACE_TOKENIZER)
-              && options.get(WHITESPACE_TOKENIZER).equals("true"),
-              "input is already tokenized. You should use tokenize.whitespace=true");
-
       Preconditions.checkArgument(options.containsKey(SENTENCE_EOL_SPLITTER)
           && options.get(SENTENCE_EOL_SPLITTER).equals("true"),
           "input is already tokenized. You should use ssplit.eolonly=true");
 
-      StringBuilder sb = new StringBuilder();
-      jsonSentence
-          .get(SentenceKeys.WORDS_KEY)
-          .getAsJsonArray()
-          .forEach(
-              word -> {
-                sb.append(word.getAsJsonObject().get(SentenceKeys.WORD_KEY)
-                    .getAsString());
-                sb.append(" ");
-              });
-      sentence = sb.toString().trim();
+      List<String> wordStrings = new ArrayList<>();
+      words.forEach(word -> wordStrings.add(word.getAsJsonObject()
+          .get(SentenceKeys.WORD_KEY).getAsString()));
+      sentence = Joiner.on(" ").join(wordStrings).toString();
     } else {
       sentence = jsonSentence.get(SentenceKeys.SENTENCE_KEY).getAsString();
       words = new JsonArray();
@@ -128,7 +117,8 @@ public class StanfordPipeline {
         }
 
         String word = token.get(TextAnnotation.class);
-        wordObject.addProperty(SentenceKeys.WORD_KEY, word);
+        wordObject.addProperty(SentenceKeys.WORD_KEY,
+            CharMatcher.WHITESPACE.replaceFrom(word, ""));
         if (annotators.contains(LEMMA_ANNOTATOR)) {
           String lemma = token.get(LemmaAnnotation.class);
           wordObject.addProperty(SentenceKeys.LEMMA_KEY, lemma);

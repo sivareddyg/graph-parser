@@ -12,7 +12,7 @@ sentences_hashes = set()
 
 for line in sys.stdin:
     line = line.rstrip()
-    try:
+    if True: #try:
         parts = json.loads(line)
         words = [word['word'] for word in parts['words']]
         sent = " ".join(words).encode('ascii', 'ignore')
@@ -26,5 +26,5 @@ for line in sys.stdin:
             sentences_hashes.add(hashkey)
             if len(sentences_hashes) > 5000000:
                 sentences_hashes = set()
-    except:
+    else: #except:
         sys.stderr.write(line + '\n')

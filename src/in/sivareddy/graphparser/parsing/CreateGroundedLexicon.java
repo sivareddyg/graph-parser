@@ -1,551 +1,192 @@
 package in.sivareddy.graphparser.parsing;
 
-import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
-import in.sivareddy.graphparser.ccg.CcgParseTree;
-import in.sivareddy.graphparser.ccg.CcgParser;
-import in.sivareddy.graphparser.ccg.FunnyCombinatorException;
 import in.sivareddy.graphparser.ccg.LexicalItem;
 import in.sivareddy.graphparser.ccg.SemanticCategoryType;
-import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
-import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
+import in.sivareddy.graphparser.util.graph.Edge;
+import in.sivareddy.graphparser.util.graph.Type;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
+import in.sivareddy.graphparser.util.knowledgebase.Property;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
 import in.sivareddy.util.SentenceKeys;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.TreeSet;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.tuple.Pair;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class CreateGroundedLexicon {
-  private ConcurrentMap<Relation, ConcurrentMap<Relation, Double>> predicateToGroundedRelationMap;
-  private ConcurrentMap<Relation, Double> predicateCounts;
-  private ConcurrentMap<String, ConcurrentMap<String, Double>> langTypeToGroundedTypeMap;
-  private ConcurrentMap<String, Double> typeCounts;
+  private HashMap<Relation, HashMap<Relation, Double>> predicateToGroundedRelationMap =
+      new HashMap<>();
+  private HashMap<Relation, Double> predicateCounts = new HashMap<>();
+  private HashMap<String, HashMap<String, Double>> langTypeToGroundedTypeMap =
+      new HashMap<>();
+  private HashMap<String, Double> typeCounts = new HashMap<>();
 
-  public static Map<String, String> cardinalTypes = ImmutableMap
-      .<String, String>builder().put("I-DAT", "type.datetime")
-      .put("DATE", "type.datetime").put("PERCENT", "type.float")
-      .put("TIME", "type.datetime").put("MONEY", "type.float")
-      .put("CD.int", "type.int").put("CD.float", "type.float").build();
+  private final GroundedGraphs graphCreator;
+  private boolean ignoreTypes = false;
+  private String semanticParseKey;
+  private int nBestCcgParses = 1;
+  private KnowledgeBase kb;
+  private static JsonParser jsonParser = new JsonParser();
 
-  Pattern floatPattern = Pattern.compile(".*[\\.][0-9].*");
-
-  private KnowledgeBaseCached kb;
-  private CcgParser ccgParser;
-
-  public CreateGroundedLexicon(KnowledgeBaseCached kb,
-      CcgAutoLexicon ccgAutoLexicon, String[] lexicalFields,
-      String[] argIdentifierFields, String[] relationTypingFeilds,
-      boolean ignorePronouns) {
-    ccgParser =
-        new CcgParser(ccgAutoLexicon, lexicalFields, argIdentifierFields,
-            relationTypingFeilds, ignorePronouns);
-    predicateToGroundedRelationMap = new ConcurrentHashMap<>();
-    langTypeToGroundedTypeMap = new ConcurrentHashMap<>();
-    predicateCounts = new ConcurrentHashMap<>();
-    typeCounts = new ConcurrentHashMap<>();
+  public CreateGroundedLexicon(GroundedGraphs graphCreator, KnowledgeBase kb,
+      String semanticParseKey, boolean ignoreTypes, int nbestCcgParses) {
+    this.graphCreator = graphCreator;
+    this.ignoreTypes = ignoreTypes;
+    this.semanticParseKey = semanticParseKey;
+    this.nBestCcgParses = nbestCcgParses;
     this.kb = kb;
   }
 
-  public static class CreateGroundedLexiconRunnable implements Runnable {
-    private List<String> jsonSentences;
-    JsonParser parser = new JsonParser();
-    Gson gson = new Gson();
-    private CreateGroundedLexicon creator;
-    boolean printSentences;
-    String semanticParseKey;
+  private static Relation EMPTY_RELATION = new Relation("type.empty",
+      "type.empty");
+  private static String EMPTY_TYPE = "type.empty";
+  private static Property NEGATION = new Property(String.format("%s",
+      SemanticCategoryType.NEGATION));
 
-    public CreateGroundedLexiconRunnable(List<String> jsonSentences,
-        CreateGroundedLexicon creator, String semanticParseKey,
-        boolean printSentences) {
-      Preconditions.checkArgument(jsonSentences != null);
-      this.jsonSentences = jsonSentences;
-      this.creator = creator;
-      this.printSentences = printSentences;
-      this.semanticParseKey = semanticParseKey;
-    }
+  public void processSentence(JsonObject jsonSentence) {
+    List<LexicalGraph> uGraphs =
+        graphCreator.buildUngroundedGraph(jsonSentence, semanticParseKey,
+            nBestCcgParses);
 
-    @Override
-    public void run() {
-      List<JsonObject> usefulSentences = Lists.newArrayList();
-
-      for (String line : jsonSentences) {
-        if (line.equals("") || line.charAt(0) == '#') {
-          continue;
-        }
-        JsonObject jsonSentence = parser.parse(line).getAsJsonObject();
-        List<Set<String>> semanticParses;
-        if (semanticParseKey == "synPars") {
-          semanticParses =
-              creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
-        } else {
-          semanticParses = new ArrayList<>();
-          semanticParses = new ArrayList<>();
-          if (!jsonSentence.has(semanticParseKey))
-            continue;
-          JsonArray semPars =
-              jsonSentence.get(semanticParseKey).getAsJsonArray();
-          Set<String> semanticParse = new HashSet<>();
-          for (JsonElement semPar : semPars) {
-            JsonArray predicates = semPar.getAsJsonArray();
-            for (JsonElement predicate : predicates) {
-              semanticParse.add(predicate.getAsString());
-            }
-            semanticParses.add(semanticParse);
+    for (LexicalGraph uGraph : uGraphs) {
+      // If the graph contains negation, ignore it.
+      boolean containsNegation = false;
+      Map<LexicalItem, Set<Property>> props = uGraph.getProperties();
+      if (props != null) {
+        for (Entry<LexicalItem, Set<Property>> entry : props.entrySet()) {
+          if (entry.getValue() != null && entry.getValue().contains(NEGATION)) {
+            containsNegation = true;
+            break;
           }
         }
-
-        if (semanticParses == null || semanticParses.size() == 0) {
-          continue;
-        }
-
-        // If the sentence has at least one useful parse
-        boolean isUseful = false;
-        for (Set<String> semanticParse : semanticParses) {
-          boolean isUsefulParse =
-              creator.updateLexicon(semanticParse, jsonSentence,
-                  1.0 / semanticParses.size());
-          if (isUsefulParse) {
-            isUseful = true;
-          }
-        }
-        if (isUseful && printSentences) {
-          usefulSentences.add(jsonSentence);
-        }
       }
+      if (containsNegation)
+        continue;
 
-      if (!printSentences) {
-        return;
-      }
+      double uScore = 1.0 / uGraphs.size();
+      for (Edge<LexicalItem> edge : uGraph.getEdges()) {
+        LexicalItem node1 = edge.getLeft();
+        LexicalItem node2 = edge.getRight();
+        if (node1.isEntity() && node2.isEntity()) {
+          Relation uRel = edge.getRelation();
+          Relation invUrel = uRel.inverse();
+          int uCompare =
+              edge.getRelation().getLeft()
+                  .compareTo(edge.getRelation().getRight());
 
-      safePrintln(usefulSentences);
-    }
-
-    private synchronized void safePrintln(List<JsonObject> sentences) {
-      for (JsonObject jsonSentence : sentences) {
-        System.out.println(gson.toJson(jsonSentence));
-      }
-    }
-  }
-
-  /**
-   * lexicalise arguments to domain entities
-   *
-   * @param jsonSentence - Sentence containing candc syntactic parse and
-   *        information about entities
-   * @param nparses - no of semantic parses to consider
-   *
-   * @return
-   */
-  public List<Set<String>> lexicaliseArgumentsToDomainEntities(
-      JsonObject jsonSentence, int nparses) {
-    List<Set<String>> allParses = Lists.newArrayList();
-
-    // JsonParser parser = new JsonParser();
-    // JsonElement jelement = parser.parse(jsonSentence);
-
-    JsonArray entities = jsonSentence.getAsJsonArray("entities");
-
-    JsonArray words = jsonSentence.getAsJsonArray("words");
-    if (!jsonSentence.has("synPars"))
-      return allParses;
-    JsonArray syntacticParses = jsonSentence.getAsJsonArray("synPars");
-    List<String> wordStrings = Lists.newArrayList();
-    List<JsonObject> wordObjects = Lists.newArrayList();
-
-    for (JsonElement word : words) {
-      JsonObject wordObject = word.getAsJsonObject();
-      wordObjects.add(wordObject);
-      String wordString = wordObject.get("word").getAsString();
-      wordStrings.add(wordString);
-    }
-    String sent = Joiner.on(" ").join(wordStrings);
-    jsonSentence.addProperty("sentence", sent);
-    // System.err.println("Sent -> " + sent);
-
-    int parseCount = 0;
-    for (JsonElement syntacticParse : syntacticParses) {
-      parseCount += 1;
-      if (parseCount > nparses) {
-        break;
-      }
-      JsonObject synParseMap = syntacticParse.getAsJsonObject();
-      String synParse = synParseMap.get("synPar").getAsString();
-      try {
-        List<CcgParseTree> trees = ccgParser.parseFromString(synParse);
-        for (CcgParseTree tree : trees) {
-          List<LexicalItem> leaves = tree.getLeafNodes();
-          for (int i = 0; i < leaves.size(); i++) {
-            String stanfordNer = "";
-            if (wordObjects.get(i).has(SentenceKeys.NER_KEY)) {
-              stanfordNer =
-                  wordObjects.get(i).get(SentenceKeys.NER_KEY).getAsString();
+          synchronized (predicateCounts) {
+            if (uCompare <= 0) {
+              Double prevScore = predicateCounts.getOrDefault(uRel, 0.0);
+              predicateCounts.put(uRel, prevScore + uScore);
+            } else {
+              Double prevScore = predicateCounts.getOrDefault(invUrel, 0.0);
+              predicateCounts.put(invUrel, prevScore + uScore);
             }
-            LexicalItem leaf = leaves.get(i);
-            String candcNer = leaf.getNeType();
-            String posTag = leaf.getPos();
-            if (posTag.equals("CD")) {
-              String word = leaf.getWord();
-              if (floatPattern.matcher(word).matches()) {
-                posTag = "CD.float";
-              } else {
-                posTag = "CD.int";
+          }
+
+          Set<Relation> groundedRelations =
+              kb.getRelations(node1.getMid(), node2.getMid());
+          if (groundedRelations != null && groundedRelations.size() > 0) {
+            double gScore = 1.0 / (uGraphs.size() * groundedRelations.size());
+            for (Relation grel : groundedRelations) {
+              if (uCompare < 0) {
+                insertUrelGrel(uRel, grel, gScore);
+              } else if (uCompare > 0) {
+                insertUrelGrel(invUrel, grel.inverse(), gScore);
+              } else if (uCompare == 0) {
+                if (grel.getLeft().compareTo(grel.getRight()) <= 0) {
+                  insertUrelGrel(uRel, grel, gScore);
+                } else {
+                  insertUrelGrel(uRel, grel.inverse(), gScore);
+                }
               }
             }
-            String mid =
-                cardinalTypes.containsKey(candcNer) ? cardinalTypes
-                    .get(candcNer)
-                    : (cardinalTypes.containsKey(stanfordNer) ? cardinalTypes
-                        .get(stanfordNer)
-                        : (cardinalTypes.containsKey(posTag) ? cardinalTypes
-                            .get(posTag) : leaf.getMid()));
-            leaf.setMid(mid);
+          } else {
+            if (uCompare <= 0) {
+              insertUrelGrel(uRel, EMPTY_RELATION, uScore);
+            } else {
+              insertUrelGrel(invUrel, EMPTY_RELATION, uScore);
+            }
           }
-
-          // mids from freebase annotation or geoquery entity
-          // recognition
-          for (JsonElement entityElement : entities) {
-            JsonObject entityObject = entityElement.getAsJsonObject();
-            int index = entityObject.get("index").getAsInt();
-            String mid = entityObject.get("entity").getAsString();
-            leaves.get(index).setMID(mid);
-          }
-
-          // do not handle the numbers specially for lexicon
-          // generation -
-          // i.e. do not produce the predicate COUNT
-          Set<Set<String>> predicates =
-              tree.getLexicalisedSemanticPredicates(false);
-          // System.err.println(predicates);
-          allParses.add(Lists.newArrayList(predicates).get(0));
         }
-      } catch (FunnyCombinatorException e) {
-        // skip this parse
-      } catch (BadParseException e) {
-        // skip this parse
-      } catch (Exception e) {
-        // generally when the sentence has special characters like
-        // brackets which confuse brackets from semantic parse
-        // skip this parse
+      }
+
+      if (!ignoreTypes) {
+        for (LexicalItem node : uGraph.getActualNodes()) {
+          if (node.isEntity() && !node.isStandardEntity()) {
+            TreeSet<Type<LexicalItem>> uTypes = uGraph.getTypes(node);
+            if (uTypes != null && uTypes.size() > 0) {
+              Set<String> gTypes = kb.getTypes(node.getMid());
+              for (Type<LexicalItem> uTypeObj : uTypes) {
+                String uType = uTypeObj.getEntityType().getType();
+
+                synchronized (typeCounts) {
+                  Double prevUtypeScore = typeCounts.getOrDefault(uType, 0.0);
+                  typeCounts.put(uType, prevUtypeScore + uScore);
+                }
+
+                HashMap<String, Double> gTypeFreq = null;
+                synchronized (langTypeToGroundedTypeMap) {
+                  langTypeToGroundedTypeMap.putIfAbsent(uType, new HashMap<>());
+                  gTypeFreq = langTypeToGroundedTypeMap.get(uType);
+                }
+
+                synchronized (gTypeFreq) {
+                  if (gTypes != null && gTypes.size() > 0) {
+                    double gScore = 1.0 / (uGraphs.size() * gTypes.size());
+                    for (String gType : gTypes) {
+                      Double prevScore = gTypeFreq.getOrDefault(gType, 0.0);
+                      gTypeFreq.put(gType, prevScore + gScore);
+                    }
+                  } else {
+                    Double prevScore = gTypeFreq.getOrDefault(EMPTY_TYPE, 0.0);
+                    gTypeFreq.put(EMPTY_TYPE, prevScore + uScore);
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
-    return allParses;
   }
 
-  /**
-   *
-   * @return
-   */
-  public boolean updateLexicon(Set<String> predicates, JsonObject jsonSentence,
-      Double normalisingConstant) {
-    // boolean isUseful = false;
-    Pattern relationPattern = Pattern.compile("(.*)\\(([0-9]+\\:e) , (.*)\\)");
-    Pattern typePattern = Pattern.compile("(.*)\\([0-9]+\\:s , (.*)\\)");
-    Pattern specialPattern = Pattern.compile("(.*)\\([0-9]+\\:[se][\\)\\ ]");
-    Pattern varPattern = Pattern.compile("[^\\:]+\\:x");
-    Pattern eventPattern = Pattern.compile("[^\\:]+\\:e");
-    Set<String> negationTypes = Sets.newHashSet("NEGATION", "COMPLEMENT");
-    Set<String> questionTypes = Sets.newHashSet("QUESTION");
-
-    /*-
-     * South_African_Airways flies directly from New_York to Johannesburg .
-     * [fly.fly.1.I-ORG(e1 , m.0q0b4), fly.from.2.I-LOC(e1 , m.02_286), fly.to.2.I-LOC(e1 , m.0g284)], fly.directly.1(e1), 
-     */
-
-    Map<String, Set<String>> varsToEvents = Maps.newHashMap();
-    Map<String, Set<String>> entityArgsToEvents = Maps.newHashMap();
-    Set<String> nonDomainEntities = Sets.newHashSet();
-
-    // 2:e=[(on.1,m.0q9h2), (in.2,m.02_286), (in.1,m.0q9h2)]
-    Map<String, Set<Pair<String, String>>> events = Maps.newHashMap();
-    Map<String, Set<String>> types = Maps.newHashMap();
-
-    int negationCount = 0;
-
-    for (String predicate : predicates) {
-      boolean isMatchedAlready = false;
-      Matcher matcher = relationPattern.matcher(predicate);
-      if (matcher.find()) {
-        isMatchedAlready = true;
-        String relationName = matcher.group(1);
-        String eventName = matcher.group(2);
-        String argumentName = matcher.group(3);
-        String entityName = argumentName.split(":")[1];
-        // relationName is not lexicalised and is of special
-        // type
-        if (SemanticCategoryType.types.contains(relationName)) {
-          negationCount++;
-          continue;
-        }
-
-        if (varPattern.matcher(argumentName).matches()) {
-          if (!varsToEvents.containsKey(argumentName)) {
-            varsToEvents.put(argumentName, new HashSet<String>());
-          }
-          varsToEvents.get(argumentName).add(eventName);
-          continue;
-        } else if (eventPattern.matcher(argumentName).matches()) {
-          continue;
-        } else if (!kb.hasEntity(entityName)) {
-          // if entity does not belong to the domain of interest
-          nonDomainEntities.add(entityName);
-          continue;
-        } else {
-          // argument is an entity
-          if (!entityArgsToEvents.containsKey(argumentName)) {
-            entityArgsToEvents.put(argumentName, new HashSet<String>());
-          }
-          entityArgsToEvents.get(argumentName).add(eventName);
-        }
-
-        if (!events.containsKey(eventName)) {
-          events.put(eventName, new HashSet<Pair<String, String>>());
-        }
-        // note: lowercasing relation names
-        Pair<String, String> edge =
-            Pair.of(relationName.toLowerCase(), entityName);
-        events.get(eventName).add(edge);
-      }
-
-      if (isMatchedAlready) {
-        continue;
-      }
-
-      matcher = typePattern.matcher(predicate);
-      if (matcher.find()) {
-        isMatchedAlready = true;
-        String relationName = matcher.group(1);
-        String argumentName = matcher.group(2);
-        String entityName = argumentName.split(":")[1];
-        if (SemanticCategoryType.types.contains(relationName)) {
-          if (negationTypes.contains(relationName)) {
-            negationCount++;
-          }
-          continue;
-        }
-
-        if (varPattern.matcher(argumentName).matches()) {
-          if (!varsToEvents.containsKey(argumentName)) {
-            varsToEvents.put(argumentName, new HashSet<String>());
-          }
-          continue;
-        } else if (eventPattern.matcher(argumentName).matches()) {
-          continue;
-        } else if (!kb.hasEntity(entityName)) {
-          nonDomainEntities.add(entityName);
-          continue;
-        }
-
-        if (!types.containsKey(entityName)) {
-          types.put(entityName, new HashSet<String>());
-        }
-        // note: lowercasing type names
-        types.get(entityName).add(relationName.toLowerCase());
-      }
-
-      if (isMatchedAlready) {
-        continue;
-      }
-
-      matcher = specialPattern.matcher(predicate);
-      if (matcher.find()) {
-        String relationName = matcher.group(1);
-        if (negationTypes.contains(relationName)) {
-          negationCount++;
-        }
-        if (questionTypes.contains(relationName)) {
-          return false;
-        }
-      }
+  private void insertUrelGrel(Relation uRel, Relation gRel, double increment) {
+    HashMap<Relation, Double> gRelFreq = null;
+    synchronized (predicateToGroundedRelationMap) {
+      predicateToGroundedRelationMap.putIfAbsent(uRel, new HashMap<>());
+      gRelFreq = predicateToGroundedRelationMap.get(uRel);
     }
 
-    int validRelCount = 0;
-    Set<String> importantEvents = Sets.newHashSet();
-    // Check the knowledge base to create grounded lexicon
-    for (String event : events.keySet()) {
-      List<Pair<String, String>> relationEdges =
-          Lists.newArrayList(events.get(event));
-      for (int i = 0; i < relationEdges.size(); i++) {
-        for (int j = i + 1; j < relationEdges.size(); j++) {
-          Pair<String, String> relationEdge1 = relationEdges.get(i);
-          Pair<String, String> relationEdge2 = relationEdges.get(j);
-
-          if (relationEdge1.compareTo(relationEdge2) < 0) {
-            relationEdge1 = relationEdges.get(j);
-            relationEdge2 = relationEdges.get(i);
-          }
-
-          String relation1 = relationEdge1.getLeft();
-          String entity1 = relationEdge1.getRight();
-
-          String relation2 = relationEdge2.getLeft();
-          String entity2 = relationEdge2.getRight();
-
-          if (relation1.equals(relation2)) {
-            continue;
-          }
-
-          Relation languagePredicate = Relation.of(relation1, relation2);
-          Set<Relation> groundedRelations = kb.getRelations(entity1, entity2);
-
-          if (groundedRelations == null || groundedRelations.size() == 0) {
-            continue;
-          }
-
-          importantEvents.add(event);
-
-          ConcurrentHashMap<Relation, Double> groundedRelationsScore;
-          predicateToGroundedRelationMap.putIfAbsent(languagePredicate,
-              new ConcurrentHashMap<Relation, Double>());
-          groundedRelationsScore =
-              (ConcurrentHashMap<Relation, Double>) predicateToGroundedRelationMap
-                  .get(languagePredicate);
-
-          Double increment =
-              1.0 / groundedRelations.size() * normalisingConstant;
-          for (Relation groundedRelation : groundedRelations) {
-            groundedRelationsScore.putIfAbsent(groundedRelation, 0.0);
-            Double count = groundedRelationsScore.get(groundedRelation);
-            count += increment;
-            groundedRelationsScore.put(groundedRelation, count);
-            validRelCount += 1;
-          }
-          predicateCounts.putIfAbsent(languagePredicate, 0.0);
-          Double predicateCount = predicateCounts.get(languagePredicate);
-          predicateCount += 1.0 * normalisingConstant;
-          predicateCounts.put(languagePredicate, predicateCount);
-        }
-      }
+    synchronized (gRelFreq) {
+      Double prevScore = gRelFreq.getOrDefault(gRel, 0.0);
+      gRelFreq.put(gRel, prevScore + increment);
     }
-
-    if (validRelCount == 0) {
-      return false;
-    }
-    // else
-    // isUseful = true;
-
-    for (String entity : types.keySet()) {
-      Set<String> languageTypes = types.get(entity);
-      Set<String> groundedTypes = kb.getTypes(entity);
-      if (groundedTypes == null || groundedTypes.size() == 0) {
-        continue;
-      }
-      for (String languageType : languageTypes) {
-        ConcurrentMap<String, Double> groundedTypesScore;
-
-        langTypeToGroundedTypeMap.putIfAbsent(languageType,
-            new ConcurrentHashMap<String, Double>());
-        groundedTypesScore = langTypeToGroundedTypeMap.get(languageType);
-
-        Double increment = 1.0 / groundedTypes.size() * normalisingConstant;
-        for (String groundedType : groundedTypes) {
-          groundedTypesScore.putIfAbsent(groundedType, 0.0);
-          Double count = groundedTypesScore.get(groundedType);
-          count += increment;
-          groundedTypesScore.put(groundedType, count);
-        }
-        typeCounts.putIfAbsent(languageType, 0.0);
-        Double typeCount = typeCounts.get(languageType);
-        typeCount += 1.0 * normalisingConstant;
-        typeCounts.put(languageType, typeCount);
-      }
-    }
-
-    int boundedVarCount = 0;
-    int freeVarCount = 0;
-
-    for (String var : varsToEvents.keySet()) {
-      Set<String> curVarEvents = varsToEvents.get(var);
-      int size = curVarEvents.size();
-      if (size < 2) {
-        freeVarCount += 1;
-        continue;
-      }
-
-      curVarEvents.retainAll(importantEvents);
-      size = curVarEvents.size();
-
-      // if the variable appears in two important events, then
-      // variable is bounded
-      if (size > 1) {
-        boundedVarCount += 1;
-      } else {
-        freeVarCount += 1;
-      }
-    }
-
-    int freeEntityCount = 0;
-    for (String var : entityArgsToEvents.keySet()) {
-      Set<String> curEvents = entityArgsToEvents.get(var);
-      int size = curEvents.size();
-
-      curEvents.retainAll(importantEvents);
-      size = curEvents.size();
-
-      // if the entity does not appear in any important event
-      if (size == 0) {
-        freeEntityCount += 1;
-      }
-    }
-
-    int foreignEntityCount = nonDomainEntities.size();
-
-    // Storing the values from the most useful parse
-    if (!jsonSentence.has("boundedVarCount")
-        || jsonSentence.get("boundedVarCount").getAsInt() > boundedVarCount) {
-      jsonSentence.addProperty("boundedVarCount", boundedVarCount);
-    }
-
-    if (!jsonSentence.has("freeVarCount")
-        || jsonSentence.get("freeVarCount").getAsInt() > freeVarCount) {
-      jsonSentence.addProperty("freeVarCount", freeVarCount);
-    }
-
-    if (!jsonSentence.has("freeEntityCount")
-        || jsonSentence.get("freeEntityCount").getAsInt() > freeEntityCount) {
-      jsonSentence.addProperty("freeEntityCount", freeEntityCount);
-    }
-
-    if (!jsonSentence.has("foreignEntityCount")
-        || jsonSentence.get("foreignEntityCount").getAsInt() > foreignEntityCount) {
-      jsonSentence.addProperty("foreignEntityCount", foreignEntityCount);
-    }
-
-    if (!jsonSentence.has("negationCount")
-        || jsonSentence.get("negationCount").getAsInt() > negationCount) {
-      jsonSentence.addProperty("negationCount", negationCount);
-    }
-
-    // System.err.println(jsonSentence.get("sentence").getAsString());
-
-    // System.out.println();
-    // return isUseful;
-    return true;
   }
+
 
   /**
    * Compare pairs having doubles as values
@@ -613,4 +254,74 @@ public class CreateGroundedLexicon {
       }
     }
   }
+
+  public void processStream(InputStream stream, OutputStream lexiconOut,
+      int nthreads) throws IOException, InterruptedException {
+    final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
+    ThreadPoolExecutor threadPool =
+        new ThreadPoolExecutor(nthreads, nthreads, 600, TimeUnit.SECONDS, queue);
+
+    threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
+      @Override
+      public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        // this will block if the queue is full
+        try {
+          executor.getQueue().put(r);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    });
+
+    BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+    long lineCount = 0;
+    try {
+      String line = br.readLine();
+      long start = System.currentTimeMillis();
+      while (line != null) {
+        lineCount++;
+        if (lineCount % 500 == 0) {
+          long end = System.currentTimeMillis();
+          System.err.println(String.format("Processed %d lines @ 500 sentences per %d seconds!",
+              lineCount, (end - start) / 1000));
+          start = end;
+        }
+        JsonObject jsonSentence = jsonParser.parse(line).getAsJsonObject();
+        if (jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray().size() <= 30) {
+          Runnable worker = new PipelineRunnable(this, jsonSentence);
+          threadPool.execute(worker);
+        }
+        line = br.readLine();
+      }
+    } finally {
+      br.close();
+    }
+    threadPool.shutdown();
+
+    // Wait until all threads are finished
+    while (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
+      // pass.
+    }
+
+    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(lexiconOut));
+    printLexicon(bw);
+    bw.close();
+  }
+
+  public static class PipelineRunnable implements Runnable {
+    JsonObject sentence;
+    CreateGroundedLexicon engine;
+    PrintStream out;
+
+    public PipelineRunnable(CreateGroundedLexicon engine, JsonObject sentence) {
+      this.engine = engine;
+      this.sentence = sentence;
+    }
+
+    @Override
+    public void run() {
+      engine.processSentence(sentence);
+    }
+  }
+
 }

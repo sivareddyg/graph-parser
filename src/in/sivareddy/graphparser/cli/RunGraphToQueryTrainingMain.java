@@ -143,6 +143,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> handleNumbersFlag;
   private OptionSpec<Boolean> entityScoreFlag;
   private OptionSpec<Boolean> entityWordOverlapFlag;
+  private OptionSpec<Boolean> paraphraseScoreFlag;
   private OptionSpec<Boolean> allowMerging;
   private OptionSpec<Boolean> useGoldRelations;
   private OptionSpec<Boolean> evaluateOnlyTheFirstBest;
@@ -561,6 +562,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "use entity phrase and entity name overlap features")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
+    paraphraseScoreFlag =
+        parser.accepts("paraphraseScoreFlag", "use paraphrase scores")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
     allowMerging =
         parser
             .accepts("allowMerging",
@@ -740,6 +745,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
       boolean entityScoreFlagVal = options.valueOf(entityScoreFlag);
       boolean entityWordOverlapFlagVal = options.valueOf(entityWordOverlapFlag);
+      boolean paraphraseScoreFlagVal = options.valueOf(paraphraseScoreFlag);
       boolean allowMergingVal = options.valueOf(allowMerging);
       boolean useGoldRelationsVal = options.valueOf(useGoldRelations);
       boolean evaluateOnlyTheFirstBestVal =
@@ -780,7 +786,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
               addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
               handleNumbersFlagVal, entityScoreFlagVal,
-              entityWordOverlapFlagVal, allowMergingVal, useGoldRelationsVal,
+              entityWordOverlapFlagVal, paraphraseScoreFlagVal,
+              allowMergingVal, useGoldRelationsVal,
               evaluateOnlyTheFirstBestVal, handleEventEventEdgesVal,
               useBackOffGraphVal, initialEdgeWeightVal, initialTypeWeightVal,
               initialWordWeightVal, stemFeaturesWeightVal);

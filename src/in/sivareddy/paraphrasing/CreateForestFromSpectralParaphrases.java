@@ -58,11 +58,8 @@ public class CreateForestFromSpectralParaphrases {
       while (line != null) {
         JsonObject sentence = jsonParser.parse(line).getAsJsonObject();
         String sent = sentence.get("original").getAsString();
-        sent = sent.replace(" ?", "?");
-        List<JsonObject> paraphrases =
-            sentenceToParaphrases.getOrDefault(sent, new ArrayList<>());
-        paraphrases.add(sentence);
-        sentenceToParaphrases.putIfAbsent(sent, paraphrases);
+        sentenceToParaphrases.putIfAbsent(sent, new ArrayList<>());
+        sentenceToParaphrases.get(sent).add(sentence);
         line = br.readLine();
       }
     } finally {
@@ -76,12 +73,30 @@ public class CreateForestFromSpectralParaphrases {
       JsonArray disambiguatedEntities =
           sentObj.get(SentenceKeys.DISAMBIGUATED_ENTITIES).getAsJsonArray();
 
+      if (!sentenceToParaphrases.containsKey(sent)) {
+        System.err.println("Paraphrase not found for:" + sent);
+        continue;
+      }
+
       System.err.println(sent);
       for (JsonObject paraphraseObj : sentenceToParaphrases.get(sent)) {
         String paraphrase =
             paraphraseObj.getAsJsonObject().get("utterance").getAsString();
         Double paraphraseScore =
             paraphraseObj.getAsJsonObject().get("utteranceScore").getAsDouble();
+
+        if (paraphrase.equals(sent)) {
+          // Take the tokenization from the original sentence.
+          List<String> originalWords = new ArrayList<>();
+          sentObj
+              .get(SentenceKeys.WORDS_KEY)
+              .getAsJsonArray()
+              .forEach(
+                  x -> originalWords.add(x.getAsJsonObject()
+                      .get(SentenceKeys.WORD_KEY).getAsString()));
+          paraphrase = Joiner.on(" ").join(originalWords).toString();
+        }
+
         List<String> words =
             Splitter.on(CharMatcher.WHITESPACE).trimResults()
                 .omitEmptyStrings().splitToList(paraphrase);

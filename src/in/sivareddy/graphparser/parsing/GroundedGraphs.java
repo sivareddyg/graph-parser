@@ -3,6 +3,7 @@ package in.sivareddy.graphparser.parsing;
 import in.sivareddy.graphparser.ccg.CategoryIndex;
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.ccg.CcgParseTree;
+import in.sivareddy.graphparser.ccg.CcgParseTree.TooManyParsesException;
 import in.sivareddy.graphparser.ccg.CcgParser;
 import in.sivareddy.graphparser.ccg.FunnyCombinatorException;
 import in.sivareddy.graphparser.ccg.LexicalItem;
@@ -27,6 +28,7 @@ import in.sivareddy.graphparser.parsing.LexicalGraph.HasQuestionEntityEdgeFeatur
 import in.sivareddy.graphparser.parsing.LexicalGraph.MediatorStemGrelPartMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.MergedEdgeFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.NgramGrelFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.ParaphraseScoreFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.StemMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelGrelFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelPartGrelPartFeature;
@@ -118,6 +120,7 @@ public class GroundedGraphs {
   private boolean handleNumbers = false;
   private boolean entityScoreFlag = false;
   private boolean entityWordOverlapFlag = false;
+  private boolean paraphraseScoreFlag = false;
   private boolean allowMerging = false;
   private boolean handleEventEventEdges = false;
   private boolean useBackOffGraph = false;
@@ -148,10 +151,11 @@ public class GroundedGraphs {
       boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
       boolean ignorePronouns, boolean handleNumbers, boolean entityScoreFlag,
-      boolean entityWordOverlapFlag, boolean allowMerging,
-      boolean handleEventEventEdges, boolean useBackOffGraph,
-      double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double stemFeaturesWeight) throws IOException {
+      boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
+      boolean allowMerging, boolean handleEventEventEdges,
+      boolean useBackOffGraph, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double stemFeaturesWeight) throws IOException {
 
     // ccg parser initialisation
     String[] argumentLexicalIdenfiers = {"mid"};
@@ -196,6 +200,7 @@ public class GroundedGraphs {
 
     this.entityScoreFlag = entityScoreFlag;
     this.entityWordOverlapFlag = entityWordOverlapFlag;
+    this.paraphraseScoreFlag = paraphraseScoreFlag;
 
     this.useLexiconWeightsRel = useLexiconWeightsRel;
     this.useLexiconWeightsType = useLexiconWeightsType;
@@ -227,6 +232,10 @@ public class GroundedGraphs {
     this.learningModel.setWeightIfAbsent(
         new HasQuestionEntityEdgeFeature(true), 3.0);
     this.learningModel.setWeightIfAbsent(new GraphHasEdgeFeature(true), 2.0);
+
+    this.learningModel.setWeightIfAbsent(new EntityScoreFeature(1.0), 2.0);
+    this.learningModel
+        .setWeightIfAbsent(new EntityWordOverlapFeature(1.0), 2.0);
   }
 
   /**
@@ -296,7 +305,8 @@ public class GroundedGraphs {
             ccgParses = normalCcgParser.parseFromString(synParse);
           else
             ccgParses = questionCcgParser.parseFromString(synParse);
-        } catch (FunnyCombinatorException | BadParseException e) {
+        } catch (FunnyCombinatorException | BadParseException
+            | TooManyParsesException e) {
           // bad parse
           continue;
         }
@@ -316,8 +326,17 @@ public class GroundedGraphs {
             allSemanticParses.add(semanticParse);
 
             int prev_size = graphs.size();
-            buildUngroundeGraphFromSemanticParse(semanticParse, leaves, score,
-                graphs);
+
+            try {
+              buildUngroundeGraphFromSemanticParse(semanticParse, leaves,
+                  score, graphs);
+            } catch (Exception e) {
+              System.err.println("Warining: bad semantic parse: "
+                  + semanticParse);
+              System.err.println("Corresponding sentence: "
+                  + Joiner.on(" ").join(words));
+              e.printStackTrace();
+            }
 
             // Traceback each graph to its original syntactic parse.
             for (int ithGraph = prev_size; ithGraph < graphs.size(); ithGraph++) {
@@ -344,7 +363,16 @@ public class GroundedGraphs {
           continue;
         Set<String> semanticParse = new HashSet<>();
         predicates.forEach(x -> semanticParse.add(x.getAsString()));
-        buildUngroundeGraphFromSemanticParse(semanticParse, leaves, 0.0, graphs);
+
+        try {
+          buildUngroundeGraphFromSemanticParse(semanticParse, leaves, 0.0,
+              graphs);
+        } catch (Exception e) {
+          System.err.println("Warining: bad semantic parse: " + semanticParse);
+          System.err.println("Corresponding sentence: "
+              + Joiner.on(" ").join(words));
+          e.printStackTrace();
+        }
       }
 
       // Remove multiple question nodes, and retain only the one that appear
@@ -429,16 +457,27 @@ public class GroundedGraphs {
             double p1 = (intersection + 0.0) / total1;
             double p2 = (intersection + 0.0) / total2;
             double mean = 0.0;
-            if (p1 + p2 > 0.05) {
+            if (p1 + p2 > 0.0005) {
               mean = 2.0 * p1 * p2 / (p1 + p2);
             }
             entityWordOverlapScore += mean;
           }
         }
       }
-      if (entityWordOverlapScore > 0.005) {
+      if (entityWordOverlapScore > 0.0005) {
         EntityWordOverlapFeature feature =
             new EntityWordOverlapFeature(entityWordOverlapScore);
+        for (LexicalGraph uGraph : graphs) {
+          uGraph.addFeature(feature);
+        }
+      }
+    }
+
+    if (paraphraseScoreFlag) {
+      if (jsonSentence.has(SentenceKeys.PARAPHRASE_SCORE)) {
+        double score =
+            jsonSentence.get(SentenceKeys.PARAPHRASE_SCORE).getAsDouble();
+        ParaphraseScoreFeature feature = new ParaphraseScoreFeature(score);
         for (LexicalGraph uGraph : graphs) {
           uGraph.addFeature(feature);
         }
@@ -861,6 +900,10 @@ public class GroundedGraphs {
     for (Integer event : events.keySet()) {
       List<Pair<String, Integer>> subEdges =
           Lists.newArrayList(events.get(event));
+      if (subEdges.size() > 10) {
+        // TODO: throw exception.
+        return graph;
+      }
       for (int i = 0; i < subEdges.size(); i++) {
         for (int j = i + 1; j < subEdges.size(); j++) {
           String leftEdge = subEdges.get(i).getLeft();

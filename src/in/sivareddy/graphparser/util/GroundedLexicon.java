@@ -246,21 +246,26 @@ public class GroundedLexicon {
     // tf-idf weighting of ungrounded relations
     Set<Relation> urels = urelToGrelMap.keySet();
     for (Relation sourceRelation : urels) {
-      Double tf = sourceRelation.getWeight();
-      Double idf =
-          Math.log((urels.size() + 0.0)
-              / (urelToGrelMap.get(sourceRelation).size() + 0.0));
-      Double weight = tf * idf;
-      sourceRelation.setWeight(weight);
-      tfIdfRelation.put(sourceRelation, weight);
-      // p(grel / urel) is stored in target relation
-      List<Relation> grels = urelToGrelMap.get(sourceRelation);
-      for (Relation grel : grels) {
-        Double count = grel.getWeight();
-        Double pGrelGivenUrel = count / tf;
-        // Double prob = count / relCount;
-        // Double maxprob = count / urelGrelFreqMax;
-        grel.setWeight(pGrelGivenUrel);
+      try {
+        Double tf = sourceRelation.getWeight();
+
+        Double idf =
+            Math.log((urels.size() + 0.0)
+                / (urelToGrelMap.get(sourceRelation).size() + 0.0));
+        Double weight = tf * idf;
+        sourceRelation.setWeight(weight);
+        tfIdfRelation.put(sourceRelation, weight);
+        // p(grel / urel) is stored in target relation
+        List<Relation> grels = urelToGrelMap.get(sourceRelation);
+        for (Relation grel : grels) {
+          Double count = grel.getWeight();
+          Double pGrelGivenUrel = count / tf;
+          // Double prob = count / relCount;
+          // Double maxprob = count / urelGrelFreqMax;
+          grel.setWeight(pGrelGivenUrel);
+        }
+      } catch (Exception e) {
+        System.err.println("Warning: " + sourceRelation + " has a collision!");
       }
     }
 

@@ -52,13 +52,6 @@ public class RunPosTaggerAndNerPipeline {
   private static Gson gson = new Gson();
   private static JsonParser jsonParser = new JsonParser();
 
-  int nthreads = 1;
-
-  public RunPosTaggerAndNerPipeline(int nthreads)
-      throws ArgumentValidationException, IOException {
-    this.nthreads = nthreads;
-  }
-  
   public List<JsonObject> processText(JsonObject sentence)
       throws ArgumentValidationException, IOException, InterruptedException {
     sentence = processSentence(gson.toJson(sentence));
@@ -91,7 +84,7 @@ public class RunPosTaggerAndNerPipeline {
     return sentence;
   }
 
-  public void processStream(InputStream stream, PrintStream out)
+  public void processStream(InputStream stream, PrintStream out, int nthreads)
       throws IOException, InterruptedException {
     final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
     ThreadPoolExecutor threadPool =
@@ -193,7 +186,7 @@ public class RunPosTaggerAndNerPipeline {
     Appender stdoutAppender = new ConsoleAppender(layout);
     logger.addAppender(stdoutAppender);
 
-    RunPosTaggerAndNerPipeline engine = new RunPosTaggerAndNerPipeline(20);
-    engine.processStream(System.in, System.out);
+    RunPosTaggerAndNerPipeline engine = new RunPosTaggerAndNerPipeline();
+    engine.processStream(System.in, System.out, 40);
   }
 }

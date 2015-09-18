@@ -68,7 +68,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
             relationTypingIdentifiers, new StructuredPercepton(), 1, true,
             true, true, true, true, true, true, true, true, true, true, true,
             true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, true, true, 10.0, 1.0, 0.0, 0.0);
+            true, true, true, true, true, true, true, 10.0, 1.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
     Appender stdoutAppender = new ConsoleAppender(layout);
@@ -366,7 +366,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
                 "{\"index\":\"40753f7151fa1c0aa520999f3b3a254c:1\",\"sentence\":\"what time do the polls open in indiana 2012?\",\"url\":\"http://www.freebase.com/view/en/indiana\",\"goldRelations\":[{\"relationLeft\":\"time.time_zone.locations_in_this_time_zone.2\",\"score\":0.4,\"relationRight\":\"time.time_zone.locations_in_this_time_zone.1\"}],\"targetValue\":\"(list (description UTC−06:00))\",\"goldMid\":\"m.03v1s\",\"entities\":[{\"name\":\"Indiana\",\"entity\":\"m.03v1s\",\"score\":139.72702,\"phrase\":\"indiana\",\"id\":\"/en/indiana\",\"index\":7},{\"phrase\":\"2012\",\"entity\":\"type.datetime\",\"index\":8}],\"words\":[{\"category\":\"DET\",\"head\":1,\"end\":3,\"lemma\":\"what\",\"dep\":\"det\",\"break_level\":3,\"pos\":\"WDT\",\"start\":0,\"word\":\"What\"},{\"category\":\"NOUN\",\"head\":5,\"end\":8,\"lemma\":\"time\",\"dep\":\"dep\",\"break_level\":1,\"pos\":\"NN\",\"start\":5,\"word\":\"time\"},{\"category\":\"VERB\",\"head\":5,\"end\":11,\"lemma\":\"do\",\"dep\":\"aux\",\"break_level\":1,\"pos\":\"VBP\",\"start\":10,\"word\":\"do\"},{\"category\":\"DET\",\"head\":4,\"end\":15,\"lemma\":\"the\",\"dep\":\"det\",\"break_level\":1,\"pos\":\"DT\",\"start\":13,\"word\":\"the\"},{\"category\":\"NOUN\",\"head\":5,\"end\":21,\"start\":17,\"dep\":\"nsubj\",\"break_level\":1,\"pos\":\"NNS\",\"lemma\":\"poll\",\"word\":\"polls\"},{\"category\":\"ADJ\",\"end\":26,\"lemma\":\"open\",\"dep\":\"ROOT\",\"break_level\":1,\"pos\":\"JJ\",\"start\":23,\"word\":\"open\"},{\"category\":\"ADP\",\"head\":5,\"end\":29,\"lemma\":\"in\",\"dep\":\"prep\",\"break_level\":1,\"pos\":\"IN\",\"start\":28,\"word\":\"in\"},{\"category\":\"NOUN\",\"head\":6,\"end\":37,\"lemma\":\"Indiana\",\"dep\":\"pobj\",\"break_level\":1,\"pos\":\"NNP\",\"start\":31,\"word\":\"Indiana\"},{\"category\":\"NUM\",\"head\":7,\"end\":42,\"lemma\":\"2012\",\"dep\":\"num\",\"break_level\":1,\"pos\":\"CD\",\"start\":39,\"word\":\"2012\"},{\"category\":\".\",\"head\":5,\"end\":44,\"lemma\":\"?\",\"dep\":\"p\",\"break_level\":1,\"pos\":\".\",\"start\":44,\"word\":\"?\"}],\"dependency_lambda\":[[\"poll(4:s , 4:x)\",\"time.open(5:s , 1:x)\",\"time.in.arg_2(1:e , 7:m.03v1s)\",\"2012(8:s , 7:m.03v1s)\",\"time.arg_1(1:e , 4:x)\",\"QUESTION(1:x)\",\"UNIQUE(4:x)\",\"time(1:s , 1:x)\"]]}")
             .getAsJsonObject();
     jsonSentences.add(sentence);
-    
+
     for (JsonObject jsonSentence : jsonSentences) {
       List<LexicalGraph> graphs =
           graphCreator.buildUngroundedGraph(jsonSentence,

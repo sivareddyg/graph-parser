@@ -7,7 +7,6 @@
 	<classpathentry kind="lib" path="lib/guava-15.0.jar" sourcepath="/home/siva/.m2/repository/com/google/guava/guava/15.0/guava-15.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-corenlp-3.5.0-models.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-corenlp-3.5.0.jar"/>
-	<classpathentry kind="lib" path="lib/easyccg.jar"/>
 	<classpathentry kind="lib" path="lib/gson-2.2.2.jar"/>
 	<classpathentry kind="lib" path="lib/jopt-simple-4.4.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-corenlp-caseless-2014-02-25-models.jar"/>
@@ -38,5 +37,6 @@
 	<classpathentry kind="lib" path="lib/xercesImpl-2.11.0.jar"/>
 	<classpathentry kind="lib" path="lib/xml-apis-1.4.01.jar"/>
 	<classpathentry kind="lib" path="lib/jena-iri-1.1.2.jar"/>
+	<classpathentry kind="lib" path="lib/easyccg.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

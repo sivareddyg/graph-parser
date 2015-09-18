@@ -110,13 +110,11 @@ public class RunGraphParserKunData {
             relationTypingIdentifiers, null, 1, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, 10.0, 1.0, 0.0,
-            0.0);
+            false, false, false, false, false, false, false, false, 10.0, 1.0,
+            0.0, 0.0);
   }
 
-  public static JsonObject processSentence(String line) {
-    JsonObject sentence = jsonParser.parse(line).getAsJsonObject();
-
+  public void processSentence(JsonObject sentence) {
     String sentenceString =
         sentence.get(SentenceKeys.SENTENCE_KEY).getAsString();
     sentenceString = sentenceString.trim();
@@ -135,7 +133,7 @@ public class RunGraphParserKunData {
 
     // System.err.println("Hello : " + cleanSentenceString);
 
-    sentence = englishPipeline.processSentence(gson.toJson(sentence));
+    englishPipeline.processSentence(sentence);
     JsonArray entities = new JsonArray();
     int i = 0;
     for (JsonElement wordElm : sentence.get(SentenceKeys.WORDS_KEY)
@@ -155,7 +153,6 @@ public class RunGraphParserKunData {
     sentence = MergeEntity.mergeEntityWordsToSingleWord(gson.toJson(sentence));
     sentence =
         MergeEntity.mergeNamedEntitiesToSingleWord(gson.toJson(sentence));
-    return sentence;
   }
 
   public List<String> getCcgParse(JsonObject sentence)
@@ -216,7 +213,8 @@ public class RunGraphParserKunData {
     try {
       String line = br.readLine();
       while (line != null) {
-        JsonObject sentence = processSentence(line);
+        JsonObject sentence = jsonParser.parse(line).getAsJsonObject();
+        engine.processSentence(sentence);
         logger.debug("# Original Sentence: "
             + jsonParser.parse(line).getAsJsonObject()
                 .get(SentenceKeys.SENTENCE_KEY).getAsString());

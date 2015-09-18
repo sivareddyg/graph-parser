@@ -1,6 +1,8 @@
 package in.sivareddy.graphparser.ccg;
 
+import in.sivareddy.graphparser.ccg.CcgParseTree.TooManyParsesException;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
+
 import org.junit.Test;
 
 import java.io.IOException;
@@ -13,7 +15,7 @@ public class CcgParseTreeTest {
 
   @Test
   public void testParseFromString() throws IOException,
-      FunnyCombinatorException, BadParseException {
+      FunnyCombinatorException, BadParseException, TooManyParsesException {
     CcgAutoLexicon lexicon =
         new CcgAutoLexicon("./lib_data/candc_markedup.modified",
             "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",

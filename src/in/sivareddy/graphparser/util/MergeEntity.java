@@ -209,6 +209,9 @@ public class MergeEntity {
     return false;
   }
 
+  private static Set<String> PROPER_NOUN_NERS = Sets.newHashSet("LOCATION",
+      "PERSON", "ORGANIZATION");
+
   public static JsonObject mergeNamedEntitiesToSingleWord(String sentence) {
     JsonObject sentenceObj = jsonParser.parse(sentence).getAsJsonObject();
     JsonObject newSentence = jsonParser.parse(sentence).getAsJsonObject();
@@ -260,7 +263,8 @@ public class MergeEntity {
           newWord.addProperty(SentenceKeys.LEMMA_KEY, newWordString);
         }
 
-        if (newWord.has(SentenceKeys.POS_KEY)) {
+        if (newWord.has(SentenceKeys.POS_KEY)
+            && PROPER_NOUN_NERS.contains(namedEntity)) {
           newWord.addProperty(SentenceKeys.POS_KEY, PROPER_NOUN_TAG);
         }
 

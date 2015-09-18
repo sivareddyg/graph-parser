@@ -1,6 +1,8 @@
 package in.sivareddy.graphparser.ccg;
 
+import in.sivareddy.graphparser.ccg.CcgParseTree.TooManyParsesException;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
+
 import org.junit.Test;
 
 import java.io.IOException;
@@ -10,7 +12,7 @@ import java.util.Set;
 public class CcgParseTreeTestSpanish {
   @Test
   public void testParseFromString() throws IOException,
-      FunnyCombinatorException, BadParseException {
+      FunnyCombinatorException, BadParseException, TooManyParsesException {
     CcgAutoLexicon lexicon =
         new CcgAutoLexicon("./lib_data/ybisk-semi-mapping.txt",
             "./lib_data/dummy.txt", "./lib_data/dummy.txt",

@@ -46,6 +46,7 @@ public class CcgParseTree {
   public static String[] ARGUMENT_IDENTIFIERS;
   public static String[] RELATION_TYPING_IDENTIFIERS;
   public boolean IGNOREPRONOUNS = true;
+  private int MAX_SEMANTIC_PARSES = 16;
 
   public static synchronized int getNodeCount() {
     nodeCount++;
@@ -116,7 +117,8 @@ public class CcgParseTree {
   }
 
   public List<CcgParseTree> parseFromString(String treeString)
-      throws FunnyCombinatorException, BadParseException {
+      throws FunnyCombinatorException, BadParseException,
+      TooManyParsesException {
     // System.err.println(treeString);
     List<CcgParseTree> nodes = parseFromStringHidden(treeString);
     for (CcgParseTree node : nodes) {
@@ -131,7 +133,8 @@ public class CcgParseTree {
   }
 
   private List<CcgParseTree> parseFromStringHidden(String treeString)
-      throws FunnyCombinatorException, BadParseException {
+      throws FunnyCombinatorException, BadParseException,
+      TooManyParsesException {
     Stack<CcgParseTree> nodes = new Stack<>();
     List<CcgParseTree> trees = new ArrayList<>();
     Stack<Character> cStack = new Stack<>();
@@ -171,6 +174,11 @@ public class CcgParseTree {
       } else {
         newTreeSb.append(cArray[i]);
       }
+    }
+
+    if (treePaths.size() > MAX_SEMANTIC_PARSES) {
+      throw new TooManyParsesException(String.format("%d parses possible.",
+          treePaths.size()));
     }
 
     cArray = newTreeSb.toString().toCharArray();
@@ -1216,4 +1224,21 @@ public class CcgParseTree {
   public String toString() {
     return Objects.toStringHelper(this).addValue(currentCategory).toString();
   }
+
+  /**
+   * An exception to indicate too many semantic parse possibilities.
+   *
+   */
+  public static class TooManyParsesException extends Exception {
+    private static final long serialVersionUID = 1L;
+
+    public TooManyParsesException() {
+      super();
+    }
+
+    public TooManyParsesException(String message) {
+      super(message);
+    }
+  }
+
 }

@@ -48,7 +48,12 @@ for line in sys.stdin:
             word_index += 1
     sentence = {}
     if 'index' not in line:
-        sentence_index = md5.md5(line['sentence']).hexdigest()
+        sentence_str = ""
+        if 'sentence' not in line:
+            sentence_str = " ".join(sent)
+        else:
+            sentence_str = line['sentence']
+        sentence_index = md5.md5(sentence_str).hexdigest()
         sentence["index"] = sentence_index
     else:
         sentence_index = line['index']

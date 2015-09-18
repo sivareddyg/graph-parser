@@ -62,8 +62,8 @@ public class CreateGroundedGraphsTest {
             relationTypingIdentifiers, null, 1, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, 10.0, 1.0, 0.0,
-            0.0);
+            false, false, false, false, false, false, false, false, 10.0, 1.0,
+            0.0, 0.0);
 
     JsonParser parser = new JsonParser();
 

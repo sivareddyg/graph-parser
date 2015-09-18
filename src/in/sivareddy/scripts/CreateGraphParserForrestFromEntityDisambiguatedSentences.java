@@ -2,16 +2,19 @@ package in.sivareddy.scripts;
 
 import in.sivareddy.graphparser.util.MergeEntity;
 import in.sivareddy.graphparser.util.SplitForrestToSentences;
+import in.sivareddy.util.ProcessStreamInterface;
 import in.sivareddy.util.SentenceKeys;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import others.EasyCcgCli;
+import others.StanfordPipeline;
+import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -20,15 +23,20 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import others.EasyCcgCli;
-import others.StanfordPipeline;
-import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
-
-public class CreateGraphParserForrestFromEntityDisambiguatedSentences {
+public class CreateGraphParserForrestFromEntityDisambiguatedSentences extends
+    ProcessStreamInterface {
   private static final Gson gson = new Gson();
 
-  public static JsonObject runGraphParserPipeline(StanfordPipeline pipeline,
-      EasyCcgCli ccgParser, String disambiguatedSentence)
+  private final StanfordPipeline pipeline;
+  private final EasyCcgCli ccgParser;
+
+  public CreateGraphParserForrestFromEntityDisambiguatedSentences(
+      StanfordPipeline pipeline, EasyCcgCli ccgParser) {
+    this.pipeline = pipeline;
+    this.ccgParser = ccgParser;
+  }
+
+  public JsonObject runGraphParserPipeline(String disambiguatedSentence)
       throws ArgumentValidationException, IOException, InterruptedException {
     JsonArray forrest = new JsonArray();
     List<JsonObject> sentences =
@@ -94,6 +102,23 @@ public class CreateGraphParserForrestFromEntityDisambiguatedSentences {
     return forrestObj;
   }
 
+  @Override
+  public void processSentence(JsonObject sentence) {
+    JsonObject sentenceNew = null;
+    try {
+      sentenceNew = runGraphParserPipeline(gson.toJson(sentence));
+    } catch (ArgumentValidationException | IOException | InterruptedException e) {
+      e.printStackTrace();
+    }
+    for (Entry<String, JsonElement> entry : sentence.entrySet()) {
+      sentence.remove(entry.getKey());
+    }
+
+    for (Entry<String, JsonElement> entry : sentenceNew.entrySet()) {
+      sentence.add(entry.getKey(), entry.getValue());
+    }
+  }
+  
   public static void main(String[] args) throws ArgumentValidationException,
       IOException, InterruptedException {
     // Stanford pipeline.
@@ -116,17 +141,9 @@ public class CreateGraphParserForrestFromEntityDisambiguatedSentences {
     EasyCcgCli ccgParser =
         new EasyCcgCli(ccgModelDir + " -s -r S[q] S[qem] S[wq]", nbestParses);
 
-    Gson gson = new Gson();
-    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    try {
-      String line = br.readLine();
-      while (line != null) {
-        JsonObject forrest = runGraphParserPipeline(pipeline, ccgParser, line);
-        System.out.println(gson.toJson(forrest));
-        line = br.readLine();
-      }
-    } finally {
-      br.close();
-    }
+    CreateGraphParserForrestFromEntityDisambiguatedSentences engine =
+        new CreateGraphParserForrestFromEntityDisambiguatedSentences(pipeline,
+            ccgParser);
+    engine.processStream(System.in, System.out, 30, true);
   }
 }

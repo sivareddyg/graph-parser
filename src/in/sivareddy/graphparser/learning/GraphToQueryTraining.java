@@ -125,12 +125,13 @@ public class GraphToQueryTraining {
       boolean validQueryFlag, boolean useNbestSurrogateGraphs,
       boolean addBagOfWordsGraph, boolean addOnlyBagOfWordsGraph,
       boolean handleNumbers, boolean entityScoreFlag,
-      boolean entityWordOverlapFlag, boolean allowMerging,
-      boolean useGoldRelations, boolean evaluateOnlyTheFirstBest,
-      boolean handleEventEventEdges, boolean useBackOffGraph,
-      double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double stemFeaturesWeight,
-      RdfGraphTools rdfGraphTools, List<String> kbGraphUri) throws IOException {
+      boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
+      boolean allowMerging, boolean useGoldRelations,
+      boolean evaluateOnlyTheFirstBest, boolean handleEventEventEdges,
+      boolean useBackOffGraph, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double stemFeaturesWeight, RdfGraphTools rdfGraphTools,
+      List<String> kbGraphUri) throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
 
@@ -182,9 +183,9 @@ public class GraphToQueryTraining {
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
             ignorePronouns, handleNumbers, entityScoreFlag,
-            entityWordOverlapFlag, allowMerging, handleEventEventEdges,
-            useBackOffGraph, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            entityWordOverlapFlag, paraphraseScoreFlag, allowMerging,
+            handleEventEventEdges, useBackOffGraph, initialEdgeWeight,
+            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
 
 
   }

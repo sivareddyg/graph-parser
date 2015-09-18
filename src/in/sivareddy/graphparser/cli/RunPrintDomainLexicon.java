@@ -2,263 +2,190 @@ package in.sivareddy.graphparser.cli;
 
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.parsing.CreateGroundedLexicon;
+import in.sivareddy.graphparser.parsing.GroundedGraphs;
+import in.sivareddy.graphparser.util.GroundedLexicon;
+import in.sivareddy.graphparser.util.Schema;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
+import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseOnline;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 public class RunPrintDomainLexicon extends AbstractCli {
 
-  private OptionSpec<String> relationLexicalIdentifiers;
-  private OptionSpec<String> argumentLexicalIdentifiers;
-  private OptionSpec<String> relationTypingIdentifiers;
-  private OptionSpec<String> candcIndexFile;
-  private OptionSpec<String> unaryRulesFile;
-  private OptionSpec<String> binaryRulesFile;
-  private OptionSpec<String> specialCasesFile;
+  // Schema File
+  private OptionSpec<String> schema;
+
+  private OptionSpec<String> cachedKB;
 
   // Relations that are potential types
   private OptionSpec<String> relationTypesFile;
-  // Domain file
-  private OptionSpec<String> kbZipFile;
-  // output lexicon
-  private OptionSpec<String> inputFile;
 
-  // Key from which the semantic parse is read from.
+  // Freebase relation to identity the type of an entity.
+  private OptionSpec<String> typeKey;
+
+  // Sparql End point and details
+  private OptionSpec<String> endpoint;
+
+  // CCG Bank co-indexed mapping, non-standard unary rules, and non-standard
+  // binary rules.
+  private OptionSpec<String> ccgIndexedMapping;
+  private OptionSpec<String> unaryRules;
+  private OptionSpec<String> binaryRules;
+
+  // CCG special categories lexicon
+  private OptionSpec<String> ccgLexicon;
+  private OptionSpec<String> ccgLexiconQuestions;
+
   private OptionSpec<String> semanticParseKey;
 
-  // output lexicon
-  private OptionSpec<String> outputLexiconFile;
+  private OptionSpec<Integer> nBestCcgParses;
+
+  private OptionSpec<Integer> nthreads;
+
+  private OptionSpec<Boolean> ignoreTypes;
 
   @Override
   public void initializeOptions(OptionParser parser) {
     parser.acceptsAll(Arrays.asList("help", "h"), "Print this help message.");
-
-    relationLexicalIdentifiers =
-        parser
-            .accepts(
-                "relationLexicalIdentifiers",
-                "lexicalalise a relation using the fields specified e.g. word or lemma:pos or any combination of word, lemma and pos")
+    schema =
+        parser.accepts("schema", "File containing schema of the domain")
             .withRequiredArg().ofType(String.class).required();
 
-    argumentLexicalIdentifiers =
+    cachedKB =
+        parser.accepts("cachedKB", "cached version of KB").withRequiredArg()
+            .ofType(String.class).defaultsTo("");
+
+    endpoint =
+        parser.accepts("endpoint", "SPARQL endpoint").withRequiredArg()
+            .ofType(String.class).defaultsTo("localhost");
+
+    typeKey =
         parser
             .accepts(
-                "argumentLexicalIdentifiers",
-                "lexicalalise the argumunets using the fields specified e.g. word or lemma:pos or any combination of word, lemma, mid, neType and pos")
-            .withRequiredArg().ofType(String.class).required();
-
-    relationTypingIdentifiers =
-        parser
-            .accepts("relationTypingIdentifiers",
-                "type the relation using argument fields specified e.g. neType or empty string")
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-
-    candcIndexFile =
-        parser
-            .accepts("candcIndexFile",
-                "candc markedup file e.g. data/candc_markedup.modified")
-            .withRequiredArg().ofType(String.class)
-            .defaultsTo("lib_data/dummy.txt");
-
-    unaryRulesFile =
-        parser
-            .accepts("unaryRulesFile",
-                "candc parser unary rules file e.g. data/unary_rules.txt")
-            .withRequiredArg().ofType(String.class)
-            .defaultsTo("lib_data/dummy.txt");
-
-    binaryRulesFile =
-        parser
-            .accepts("binaryRulesFile",
-                "candc binary rules file e.g. data/binary_rules.txt")
-            .withRequiredArg().ofType(String.class)
-            .defaultsTo("lib_data/dummy.txt");
-
-    specialCasesFile =
-        parser
-            .accepts("specialCasesFile",
-                "file containing candc special rules e.g. data/lexicon_specialCases.txt")
-            .withRequiredArg().ofType(String.class)
-            .defaultsTo("lib_data/dummy.txt");
+                "typeKey",
+                "Freebase relation name to identify the type of an entity. e.g. rdf:type or fb:type.object.type")
+            .withRequiredArg().ofType(String.class).defaultsTo("rdf:type");
 
     relationTypesFile =
         parser
             .accepts(
                 "relationTypesFile",
                 "File containing relations that may be potential types e.g. data/freebase/stats/business_relation_types.txt")
-            .withRequiredArg().ofType(String.class).required();
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("lib_data/dummy.txt");
 
-    kbZipFile =
+    ccgIndexedMapping =
         parser
-            .accepts(
-                "kbZipFile",
-                "knowledge base of the domain e.g. data/freebase/domain_facts/business_facts.txt.gz")
-            .withRequiredArg().ofType(String.class).required();
+            .accepts("ccgIndexedMapping",
+                "Co-indexation information for categories").withRequiredArg()
+            .ofType(String.class)
+            .defaultsTo("./lib_data/candc_markedup.modified");
 
-    outputLexiconFile =
-        parser
-            .accepts("outputLexiconFile",
-                "Output file where the lexicon will be written")
-            .withRequiredArg().ofType(String.class).required();
+    unaryRules =
+        parser.accepts("unaryRules", "Type-Changing Rules in CCGbank")
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("./lib_data/unary_rules.txt");
 
-    inputFile =
+    binaryRules =
+        parser.accepts("binaryRules", "Binary Type-Changing rules in CCGbank")
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("./lib_data/binary_rules.txt");
+
+    ccgLexicon =
+        parser.accepts("ccgLexicon", "ccg special categories lexicon")
+            .withRequiredArg().ofType(String.class)
+            .defaultsTo("./lib_data/lexicon_specialCases.txt");
+
+    ccgLexiconQuestions =
         parser
-            .accepts("inputFile",
-                "Input file which contains ccgParses and entity annotations")
-            .withRequiredArg().ofType(String.class).defaultsTo("stdin");
+            .accepts("ccgLexiconQuestions",
+                "ccg special categories Questions lexicon")
+            .withRequiredArg()
+            .ofType(String.class)
+            .defaultsTo("./lib_data/lexicon_specialCases_questions_vanilla.txt");
 
     semanticParseKey =
         parser
             .accepts("semanticParseKey",
-                "key from which the semantic parses are read from")
-            .withRequiredArg().ofType(String.class).defaultsTo("synPars");
+                "key from which a semantic parse is read").withRequiredArg()
+            .ofType(String.class).defaultsTo("synPars");
 
+    nBestCcgParses =
+        parser
+            .accepts("nBestCcgParses",
+                "number of syntactic parses to use while training")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+
+    nthreads =
+        parser.accepts("nthreads", "number of threads").withRequiredArg()
+            .ofType(Integer.class).defaultsTo(10);
+
+    ignoreTypes =
+        parser
+            .accepts("ignoreTypes",
+                "ignore types: subsumes groundFreeVariables and useEmptyTypes")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
   }
 
   @Override
   public void run(OptionSet options) {
-
-    ArrayList<String> lexicalFieldsList =
-        Lists.newArrayList(Splitter.on(":").trimResults().omitEmptyStrings()
-            .split(options.valueOf(relationLexicalIdentifiers)));
-
-    String[] lexicalFields =
-        lexicalFieldsList.toArray(new String[lexicalFieldsList.size()]);
-
-    ArrayList<String> argIdentifierFieldsList =
-        Lists.newArrayList(Splitter.on(":").trimResults().omitEmptyStrings()
-            .split(options.valueOf(argumentLexicalIdentifiers)));
-
-    String[] argIdentifierFields =
-        argIdentifierFieldsList.toArray(new String[argIdentifierFieldsList
-            .size()]);
-
-    ArrayList<String> relationTypingFeildsList =
-        Lists.newArrayList(Splitter.on(":").trimResults().omitEmptyStrings()
-            .split(options.valueOf(relationTypingIdentifiers)));
-
-    String[] relationTypingFeilds =
-        relationTypingFeildsList.toArray(new String[relationTypingFeildsList
-            .size()]);
-
-
     try {
+      Schema schemaObj = new Schema(options.valueOf(schema));
       String relationTypesFileName = options.valueOf(relationTypesFile);
-      KnowledgeBaseCached kb =
-          new KnowledgeBaseCached(options.valueOf(kbZipFile), relationTypesFileName);
-
-      CcgAutoLexicon ccgAutoLexicon =
-          new CcgAutoLexicon(options.valueOf(candcIndexFile),
-              options.valueOf(unaryRulesFile),
-              options.valueOf(binaryRulesFile),
-              options.valueOf(specialCasesFile));
-
-      boolean ignorePronouns = true;
-      CreateGroundedLexicon creator =
-          new CreateGroundedLexicon(kb, ccgAutoLexicon, lexicalFields,
-              argIdentifierFields, relationTypingFeilds, ignorePronouns);
-
-      String input = options.valueOf(inputFile);
-      BufferedReader br;
-
-      if (input.equals("stdin")) {
-        br = new BufferedReader(new InputStreamReader(System.in));
+      KnowledgeBase kb = null;
+      if (!options.valueOf(cachedKB).equals("")) {
+        kb =
+            new KnowledgeBaseCached(options.valueOf(cachedKB),
+                relationTypesFileName);
       } else {
-        br = new BufferedReader(new FileReader(input));
+        KnowledgeBaseOnline.TYPE_KEY = options.valueOf(typeKey);
+        kb =
+            new KnowledgeBaseOnline(options.valueOf(endpoint), String.format(
+                "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
+                "dba", 50000, schemaObj);
       }
 
-      Gson gson = new Gson();
-      JsonParser parser = new JsonParser();
-      Set<Integer> sentenceCache = Sets.newHashSet();
-      Integer sentCount = 0;
+      CcgAutoLexicon normalCcgAutoLexicon =
+          new CcgAutoLexicon(options.valueOf(ccgIndexedMapping),
+              options.valueOf(unaryRules), options.valueOf(binaryRules),
+              options.valueOf(ccgLexicon));
 
-      try {
-        sentCount += 1;
-        if (sentenceCache.size() == 50000) {
-          sentenceCache = Sets.newHashSet();
-        }
+      CcgAutoLexicon questionCcgAutoLexicon =
+          new CcgAutoLexicon(options.valueOf(ccgIndexedMapping),
+              options.valueOf(unaryRules), options.valueOf(binaryRules),
+              options.valueOf(ccgLexiconQuestions));
 
-        String line = "";
-        while (line != null) {
-          line = br.readLine();
-          if (line == null || line.equals("") || line.charAt(0) == '#') {
-            continue;
-          }
+      String semanticParseKeyString = options.valueOf(semanticParseKey);
+      int nBestCcgParsesVal = options.valueOf(nBestCcgParses);
+      int threadCount = options.valueOf(nthreads);
+      boolean ignoreTypesVal = options.valueOf(ignoreTypes);
 
-          JsonObject jsonSentence = parser.parse(line).getAsJsonObject();
+      String[] relationLexicalIdentifiers = {"lemma"};
+      String[] relationTypingIdentifiers = {};
 
-          String semanticParseKeyString = options.valueOf(semanticParseKey);
-          List<Set<String>> semanticParses;
-          if (semanticParseKeyString.equals("synPars")) {
-            semanticParses =
-                creator.lexicaliseArgumentsToDomainEntities(jsonSentence, 1);
-          } else {
-            if (!jsonSentence.has(semanticParseKeyString))
-              continue;
-            semanticParses = new ArrayList<>();
-            JsonArray semPars =
-                jsonSentence.get(semanticParseKeyString).getAsJsonArray();
-            Set<String> semanticParse = new HashSet<>();
-            for (JsonElement semPar : semPars) {
-              JsonArray predicates = semPar.getAsJsonArray();
-              for (JsonElement predicate : predicates) {
-                semanticParse.add(predicate.getAsString());
-              }
-              semanticParses.add(semanticParse);
-            }
-          }
+      GroundedLexicon groundedLexicon = new GroundedLexicon(null);
+      GroundedGraphs graphCreator =
+          new GroundedGraphs(schemaObj, kb, groundedLexicon,
+              normalCcgAutoLexicon, questionCcgAutoLexicon,
+              relationLexicalIdentifiers, relationTypingIdentifiers, null, 1,
+              false, false, false, false, false, false, false, false, false,
+              false, false, false, false, false, false, false, false, false,
+              false, false, false, false, false, false, false, false, false,
+              false, false, false, 0.0, 0.0, 0.0, 0.0);
 
-          if (semanticParses.size() == 0) {
-            continue;
-          }
+      CreateGroundedLexicon engine =
+          new CreateGroundedLexicon(graphCreator, kb, semanticParseKeyString,
+              ignoreTypesVal, nBestCcgParsesVal);
 
-          boolean isUsefulSentence = false;
-          for (Set<String> semanticParse : semanticParses) {
-            boolean isUsefulParse =
-                creator.updateLexicon(semanticParse, jsonSentence,
-                    1.0 / semanticParses.size());
-            isUsefulSentence = isUsefulSentence || isUsefulParse;
-          }
-          if (isUsefulSentence) {
-            System.out.println(gson.toJson(jsonSentence));
-          }
-        }
-      } finally {
-        br.close();
-      }
-
-      BufferedWriter bw =
-          new BufferedWriter(new FileWriter(options.valueOf(outputLexiconFile)));
-      creator.printLexicon(bw);
-      bw.close();
-
-    } catch (IOException e) {
+      engine.processStream(System.in, System.out, threadCount);
+    } catch (Exception e) {
       e.printStackTrace();
     }
-
   }
 
   /**
@@ -267,5 +194,4 @@ public class RunPrintDomainLexicon extends AbstractCli {
   public static void main(String[] args) {
     new RunPrintDomainLexicon().run(args);
   }
-
 }

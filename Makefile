@@ -1,3 +1,51 @@
+# Extract clueweb sentences
+extract_sentences_with_multiple_entities:
+	python scripts/freebase/extract_clueweb_sentences_containing_entities.py \
+        ../data/clueweb/CLUEWEB09_1/wiki00/ \
+        ../data/clueweb/freebase_annotated_data/ClueWeb09_English_1 \
+        | gzip > ../data/clueweb/wiki-sentences.json.txt.00.gz
+
+process_clueweb_split_%:
+	#python scripts/freebase/extract_clueweb_sentences_containing_entities.py \
+        #working/clueweb/ClueWeb09_English_1/ \
+        #../data/clueweb/freebase_annotated_data/ClueWeb09_English_1_split$* \
+        #| gzip > ../data/clueweb/ClueWeb09_1-sentences.json.txt.$*.gz
+	# python scripts/freebase/merge_duplicate_sentences.py ../data/clueweb/ClueWeb09_1-sentences.json.txt.$*.gz | gzip > ../data/clueweb/ClueWeb09_1-sentences.cleaned.json.txt.$*.gz
+	zcat ../data0/clueweb/ClueWeb09_1-sentences.cleaned.json.txt.$*.gz \
+		| java -cp lib/*:bin in.sivareddy.scripts.clueweb.RunTokenizerOnEntityTaggedClueweb \
+		| python scripts/cleaning/remove_longer_sentences.py \
+		| python scripts/cleaning/remove_duplicate_sentences.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.clueweb.RunPosTaggerAndNerWithoutTokenizerPipeline \
+		| python scripts/run_batch_process.py "java -cp lib/*:bin in.sivareddy.scripts.RunEasyCCG 1" 100000 \
+		| gzip > ../data0/clueweb/ClueWeb09_1-sentences.cleaned.parsed.json.txt.$*.gz
+
+extract_easyccg_lexicon_clueweb_split_%:
+	zcat ../data0/clueweb/ClueWeb09_1-sentences.cleaned.parsed.json.txt.$*.gz \
+	| python scripts/run_batch_process.py \
+		"java -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+		-endpoint localhost \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-typeKey "fb:type.object.type" \
+		-nthreads 40 \
+		-ignoreTypes true" \
+		100000 \
+	| gzip > ../data0/clueweb/ClueWeb09_1-lexicon.txt.$*.gz
+
+extract_wiki_lexicon:
+	zcat ../data/clueweb/wiki-sentences.cleaned.json.txt.00.gz  ../data/clueweb/wiki-sentences.cleaned.json.txt.01.gz  ../data/clueweb/wiki-sentences.cleaned.json.txt.02.gz ../data/clueweb/wiki-sentences.cleaned.json.txt.03.gz \
+        | java -cp lib/*:bin in.sivareddy.scripts.clueweb.RunTokenizerOnEntityTaggedClueweb \
+        | python scripts/cleaning/remove_longer_sentences.py \
+        | python scripts/cleaning/remove_duplicate_sentences.py \
+        | java -cp lib/*:bin in.sivareddy.scripts.clueweb.RunPosTaggerAndNerWithoutTokenizerPipeline \
+        | python scripts/run_batch_process.py "java -cp lib/*:bin in.sivareddy.scripts.RunEasyCCG 1" 100000 \
+        | gzip > ../data0/clueweb/ClueWeb09_1-sentences.cleaned.parsed.json.txt.wiki.gz
+	make extract_easyccg_lexicon_clueweb_split_wiki
+
+merge_easyccg_lexicon:
+	zcat ../data0/clueweb/ClueWeb09_1-lexicon.txt.1.gz ../data0/clueweb/ClueWeb09_1-lexicon.txt.2.gz ../data0/clueweb/ClueWeb09_1-lexicon.txt.3.gz ../data0/clueweb/ClueWeb09_1-lexicon.txt.wiki.gz \
+		|	python scripts/freebase/merge_lexicon.py \
+	    | gzip > data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz
+
 # Merge schema
 all_domains_schema:
 	python scripts/freebase/merge_schema_folder.py data/freebase/schema/all-domains/ > data/freebase/schema/all_domains_schema.txt
@@ -257,6 +305,12 @@ webq_to_oscar:
 	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt > working/test.txt
 	cat working/test.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.test.split.json.txt
 
+clueweb_to_deplamba_%:
+	zcat ../data0/clueweb/ClueWeb09_1-sentences.cleaned.parsed.json.txt.$*.gz \
+		| python scripts/cleaning/filter_sentences_with_no_parses.py \
+		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
+		| gzip > working/ClueWeb09_1-sentences.$*.gz
+
 convert_deplambda_to_gp_forest:
 	cat working/webquestions.vanilla.freebaseAPIannotations.dev.split.singletype_lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
@@ -333,7 +387,7 @@ extract_tacl_subset_one_best:
 	mkdir -p data/tacl/vanilla_one_best/
 	cat data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.json \
 		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.easyccg.parse.filtered.json \
-		| java -cp lib/*:bin others.RunEasyCCGJsonSentence \
+		| java -cp lib/*:bin others.RunEasyCCG \
 		> data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json
 	head -n915 data/webquestions/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json \
 		> data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.915
@@ -341,7 +395,7 @@ extract_tacl_subset_one_best:
 		> data/tacl/vanilla_one_best/webquestions.examples.train.domains.entity.matches.ranked.1best.merged.tacl.json.200
 	cat data/webquestions/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.json \
 		| python scripts/extract_subset.py data/webquestions/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-		| java -cp lib/*:bin others.RunEasyCCGJsonSentence \
+		| java -cp lib/*:bin others.RunEasyCCG \
 		> data/tacl/vanilla_one_best/webquestions.examples.test.domains.entity.matches.ranked.1best.merged.tacl.json
 
 extact_tacl_subset_vanilla_gold:
@@ -395,9 +449,9 @@ convert_graphparser_to_deplambda_format_tom:
 convert_wq_vanilla_to_deplambda_format:
 	mkdir -p data/complete/vanilla_gold/
 	python scripts/webquestions-preprocessing/training_split.py ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt 
-	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.80 | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt
-	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt
-	cat ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt
+	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.80 | java -cp lib/*:bin others.RunEasyCCG > data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt
+	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 | java -cp lib/*:bin others.RunEasyCCG > data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt
+	cat ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt | java -cp lib/*:bin others.RunEasyCCG > data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt
 	cat ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.train.full.json.txt
 	python scripts/webquestions-preprocessing/training_split.py ../working/webquestions.vanilla.train.full.json.txt 
 	mv ../working/webquestions.vanilla.train.full.json.txt.80 ../working/webquestions.vanilla.train.split.json.txt
@@ -409,9 +463,9 @@ convert_wq_vanilla_to_deplambda_format:
 	head -n915 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.train.business_film_people.json.txt
 	tail -n200 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.dev.business_film_people.json.txt
 	cat data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > ../working/webquestions.vanilla.test.business_film_people.json.txt
-	head -n915 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915
-	tail -n200 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200
-	cat data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCGJsonSentence > data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json
+	head -n915 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCG > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915
+	tail -n200 data/webquestions/webquestions.examples.train.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCG > data/tacl/vanilla_gold/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200
+	cat data/webquestions/webquestions.examples.test.domains.filtered.vanilla.json | java -cp lib/*:bin others.RunEasyCCG > data/tacl/vanilla_gold/webquestions.examples.test.domains.easyccg.parse.filtered.json
 
 convert_deplambda_to_wq_format_vanilla:
 	cat data/deplambda/webquestions.vanilla.train.lambdas.txt \
@@ -1139,7 +1193,7 @@ easyccg_supervised_without_merge:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
-	-wordGrelPartFlag false \
+	-wordGrelPartFlag true \
 	-wordGrelFlag false \
 	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
@@ -1205,10 +1259,163 @@ easyccg_supervised_with_merge:
 	-useEmptyTypes false \
 	-ignoreTypes true \
 	-urelGrelFlag true \
-	-urelPartGrelPartFlag false \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	-goldParsesFile data/gold_graphs/ccg_with_merge.train.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+	-logFile ../working/easyccg_supervised_with_merge/all.log.txt \
+	> ../working/easyccg_supervised_with_merge/all.txt
+
+easyccg_mwg:
+	rm -rf ../working/easyccg_mwg
+	mkdir -p ../working/easyccg_mwg
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 0 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging false \
+	-evaluateBeforeTraining true \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+	-logFile ../working/easyccg_mwg/all.log.txt \
+	> ../working/easyccg_mwg/all.txt
+
+### Paraphrasing experiments ##
+create_paraphrases_gold_graphs:
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_paraphrase_without_merge.dev \
+		false \
+		< data/paraphrasing/webq.paraphrases.dev.txt \
+		> data/outputs/ccg_paraphrase_without_merge.dev.answers.txt
+
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_paraphrase_without_merge.train \
+		false \
+		< data/paraphrasing/webq.paraphrases.train.txt \
+		> data/outputs/ccg_paraphrase_without_merge.train.answers.txt
+
+easyccg_supervised_paraphrase_without_merge:
+	rm -rf ../working/easyccg_supervised_paraphrase_without_merge
+	mkdir -p ../working/easyccg_supervised_paraphrase_without_merge
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
-	-wordGrelPartFlag false \
+	-wordGrelPartFlag true \
 	-wordGrelFlag false \
 	-eventTypeGrelPartFlag true \
 	-argGrelPartFlag true \
@@ -1227,22 +1434,24 @@ easyccg_supervised_with_merge:
 	-useLexiconWeightsType true \
 	-validQueryFlag true \
 	-useGoldRelations true \
-	-allowMerging true \
+	-allowMerging false \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest true \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag true \
+	-forestSize 100 \
 	-initialEdgeWeight -0.5 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
-	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
-	-goldParsesFile data/gold_graphs/ccg_with_merge.train.ser \
-	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
-	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
-	-logFile ../working/easyccg_supervised_with_merge/all.log.txt \
-	> ../working/easyccg_supervised_with_merge/all.txt
+	-supervisedCorpus data/paraphrasing/webq.paraphrases.train.txt \
+	-goldParsesFile data/gold_graphs/ccg_paraphrase_without_merge.train.ser \
+	-devFile data/paraphrasing/webq.paraphrases.dev.txt \
+	-testFile data/paraphrasing/webq.paraphrases.test.txt \
+	-logFile ../working/easyccg_supervised_paraphrase_without_merge/all.log.txt \
+	> ../working/easyccg_supervised_paraphrase_without_merge/all.txt
 
 deplambda_singletype_supervised_without_merge:
 	rm -rf ../working/deplambda_singletype_supervised_without_merge
@@ -1344,7 +1553,7 @@ deplambda_singletype_supervised_with_merge:
 	-useEmptyTypes false \
 	-ignoreTypes true \
 	-urelGrelFlag true \
-	-urelPartGrelPartFlag false \
+	-urelPartGrelPartFlag true \
 	-utypeGtypeFlag false \
 	-gtypeGrelFlag false \
 	-wordGrelPartFlag true \
@@ -2314,6 +2523,113 @@ tacl_unsupervised_loaded_model:
 	-logFile ../working/tacl_unsupervised_loaded_model/business_film_people.log.txt \
 	> ../working/tacl_unsupervised_loaded_model/business_film_people.txt
 
+tacl_supervised:
+	rm -rf ../working/tacl_supervised
+	mkdir -p ../working/tacl_supervised
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 10 \
+	-trainingSampleSize 500 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-ngramLength 2 \
+	-ngramGrelPartFlag true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+	-logFile ../working/tacl_supervised/business_film_people.log.txt \
+	> ../working/tacl_supervised/business_film_people.txt
+
+tacl_supervised_with_unsupervised_lexicon:
+	rm -rf ../working/tacl_supervised_with_unsupervised_lexicon
+	mkdir -p ../working/tacl_supervised_with_unsupervised_lexicon
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 500 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-ngramLength 2 \
+	-ngramGrelPartFlag true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
+	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
+	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
+	-logFile ../working/tacl_supervised_with_unsupervised_lexicon/business_film_people.log.txt \
+	> ../working/tacl_supervised_with_unsupervised_lexicon/business_film_people.txt
 
 tacl_unsupervised_free917:
 	mkdir -p ../working/tacl_unsupervised_free917
@@ -2363,56 +2679,6 @@ tacl_unsupervised_free917:
 	-devFile data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_film_people_parse.txt \
 	-logFile ../working/tacl_unsupervised_free917/business_film_people.log.txt \
 	> ../working/tacl_unsupervised_free917/business_film_people.txt
-
-tacl_supervised:
-	mkdir -p ../working/tacl_supervised
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
-	-schema data/freebase/schema/business_film_people_schema.txt \
-	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-lexicon data/dummy.txt \
-	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
-	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
-	-nthreads 20 \
-	-trainingSampleSize 2000 \
-	-iterations 20 \
-	-nBestTrainSyntacticParses 1 \
-	-nBestTestSyntacticParses 1 \
-	-nbestGraphs 100 \
-	-useSchema true \
-	-useKB true \
-	-groundFreeVariables true \
-	-useEmptyTypes false \
-	-ignoreTypes false \
-	-urelGrelFlag true \
-	-urelPartGrelPartFlag false \
-	-utypeGtypeFlag true \
-	-gtypeGrelFlag false \
-	-wordGrelPartFlag false \
-	-eventTypeGrelPartFlag false \
-	-argGrelPartFlag false \
-	-stemMatchingFlag true \
-	-mediatorStemGrelPartMatchingFlag true \
-	-argumentStemMatchingFlag true \
-	-argumentStemGrelPartMatchingFlag true \
-	-graphIsConnectedFlag false \
-	-graphHasEdgeFlag true \
-	-countNodesFlag false \
-	-edgeNodeCountFlag false \
-	-duplicateEdgesFlag true \
-	-grelGrelFlag true \
-	-useLexiconWeightsRel true \
-	-useLexiconWeightsType true \
-	-validQueryFlag true \
-	-initialEdgeWeight 1.0 \
-	-initialTypeWeight -2.0 \
-	-initialWordWeight -0.05 \
-	-stemFeaturesWeight 0.0 \
-	-endpoint localhost \
-	-supervisedCorpus data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
-	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
-	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-	-logFile ../working/tacl_supervised/business_film_people.log.txt \
-	> ../working/tacl_supervised/business_film_people.txt
 
 tacl_supervised_vanilla_gold:
 	rm -rf ../working/tacl_supervised_vanilla_gold
@@ -2571,56 +2837,6 @@ tacl_supervised_vanilla_gold_full:
 	-logFile ../working/tacl_supervised_vanilla_gold_full/all.log.txt \
 	> ../working/tacl_supervised_vanilla_gold_full/all.txt
 
-
-tacl_supervised_with_unsupervised_lexicon:
-	mkdir -p ../working/tacl_supervised_with_unsupervised_lexicon
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
-	-schema data/freebase/schema/business_film_people_schema.txt \
-	-relationTypesFile data/freebase/stats/business_film_people_relation_types.txt \
-	-lexicon data/tacl/grounded_lexicon/tacl_grounded_lexicon.txt \
-	-cachedKB data/freebase/domain_facts/business_film_people_facts.txt.gz \
-	-domain "http://business.freebase.com;http://film.freebase.com;http://people.freebase.com" \
-	-nthreads 20 \
-	-trainingSampleSize 2000 \
-	-iterations 20 \
-	-nBestTrainSyntacticParses 1 \
-	-nBestTestSyntacticParses 1 \
-	-nbestGraphs 100 \
-	-useSchema true \
-	-useKB true \
-	-groundFreeVariables true \
-	-useEmptyTypes false \
-	-ignoreTypes false \
-	-urelGrelFlag true \
-	-urelPartGrelPartFlag false \
-	-utypeGtypeFlag true \
-	-gtypeGrelFlag false \
-	-wordGrelPartFlag false \
-	-eventTypeGrelPartFlag false \
-	-argGrelPartFlag false \
-	-stemMatchingFlag true \
-	-mediatorStemGrelPartMatchingFlag true \
-	-argumentStemMatchingFlag true \
-	-argumentStemGrelPartMatchingFlag true \
-	-graphIsConnectedFlag false \
-	-graphHasEdgeFlag true \
-	-countNodesFlag false \
-	-edgeNodeCountFlag false \
-	-duplicateEdgesFlag true \
-	-grelGrelFlag true \
-	-useLexiconWeightsRel true \
-	-useLexiconWeightsType true \
-	-validQueryFlag true \
-	-initialEdgeWeight 1.0 \
-	-initialTypeWeight -2.0 \
-	-initialWordWeight -0.05 \
-	-stemFeaturesWeight 0.0 \
-	-endpoint localhost \
-	-supervisedCorpus data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.train.915 \
-	-devFile data/tacl/webquestions.examples.train.domains.easyccg.parse.filtered.json.dev.200 \
-	-testFile data/tacl/webquestions.examples.test.domains.easyccg.parse.filtered.json \
-	-logFile ../working/tacl_supervised_with_unsupervised_lexicon/business_film_people.log.txt \
-	> ../working/tacl_supervised_with_unsupervised_lexicon/business_film_people.txt
 
 tacl_supervised_with_unsupervised_lexicon_vanilla_gold_online:
 	rm -rf ../working/tacl_supervised_with_unsupervised_lexicon_vanilla_gold
@@ -3770,8 +3986,26 @@ create_deplambda_lexicon:
 	cat ~/Downloads/clueweb-subset-academic-lexicon.json | sed -e "s/ u\"/ \"/g" | sed -e "s/ u'/ \"/g" | sed -e "s/{'/{\"/g" | sed -e "s/' /\" /g" | sed -e "s/':/\":/g" | sed -e "s/ '/ \"/g" | sed -e "s/',/\",/g" | java -cp lib/*:bin/ in.sivareddy.scripts.ConvertDepLambdaGroundedLexiconToGraphParser data/freebase/schema/all_domains_schema.txt > data/deplambda/clueweb-subset-academic-grounded_lexicon.txt
 
 create_graphparser_input_from_paraphrases:
-	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/webquestions.examples.test.org-paraphrase.json \
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/sampled-sentence.test.geq5.org-paraphrase.json \
 		| grep  isOriginal \
 		| java -cp lib/*:bin in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
-		> working/paraphrases.test.txt
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		> data/paraphrasing/webq.paraphrases.test.txt
 	
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/sampled-sentence.train.geq5.org-paraphrase.json \
+		| grep  isOriginal \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		| gzip > working/webq.paraphrases.train.txt.gz
+
+	zcat working/webq.paraphrases.train.txt.gz \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		> data/paraphrasing/webq.paraphrases.train.txt 
+
+	zcat working/webq.paraphrases.train.txt.gz \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		> data/paraphrasing/webq.paraphrases.dev.txt 
