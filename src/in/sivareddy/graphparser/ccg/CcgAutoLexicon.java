@@ -280,21 +280,24 @@ public class CcgAutoLexicon {
   public List<Category> getCategory(String lemma, String pos, String synCat) {
     List<Category> cats;
     // synCat = SyntacticCategory.fromString(synCat).toSimpleString();
-    cats = getSpecialCasesCategory(lemma, pos, synCat);
+    cats = getSpecialCasesCategory(lemma, pos, synCat, synCat);
     if (cats == null) {
-      cats = getSpecialCasesCategory(lemma, "*", synCat);
+      cats = getSpecialCasesCategory(lemma, "*", synCat, synCat);
     }
     if (cats == null) {
-      cats = getSpecialCasesCategory(lemma, pos, "*");
+      cats = getSpecialCasesCategory(lemma, pos, "*", synCat);
     }
     if (cats == null) {
-      cats = getSpecialCasesCategory("*", pos, synCat);
+      cats = getSpecialCasesCategory("*", pos, synCat, synCat);
     }
     if (cats == null) {
-      cats = getSpecialCasesCategory(lemma, "*", "*");
+      cats = getSpecialCasesCategory(lemma, "*", "*", synCat);
     }
     if (cats == null) {
-      cats = getSpecialCasesCategory("*", "*", synCat);
+      cats = getSpecialCasesCategory("*", "*", synCat, synCat);
+    }
+    if (cats == null) {
+      cats = getSpecialCasesCategory("*", pos, "*", synCat);
     }
 
     if (cats != null) {
@@ -317,7 +320,7 @@ public class CcgAutoLexicon {
   }
 
   private List<Category> getSpecialCasesCategory(String lemma, String pos,
-      String synCat) {
+      String synCat, String realSynCat) {
     synCat = SyntacticCategory.fromString(synCat).toSimpleString();
     String key = lemma + "\t" + pos + "\t" + synCat;
     if (specialCases.containsKey(key)) {
@@ -326,6 +329,12 @@ public class CcgAutoLexicon {
       for (Pair<String, String> value : values) {
         String synCatString = value.getLeft();
         String semCatString = value.getRight();
+
+        if (synCatString.equals("*")) {
+          synCatString =
+              synCatToIndexSynCatMap.getOrDefault(realSynCat, realSynCat);
+        }
+
         SyntacticCategory mainSynCat =
             SyntacticCategory.fromString(synCatString);
         SemanticCategory mainSemCat = null;

@@ -22,6 +22,11 @@ public class CcgParseTreeTest {
             "./lib_data/lexicon_specialCases_questions_vanilla.txt");
 
     /*-CcgAutoLexicon lexicon =
+        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
+            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
+            "./lib_data/lexicon_specialCases_questions_janie.txt");*/
+    
+    /*-CcgAutoLexicon lexicon =
     new CcgAutoLexicon("./lib_data/ybisk-mapping.txt",
         "./lib_data/dummy.txt", "./lib_data/dummy.txt",
         "./lib_data/dummy.txt");*/
@@ -31,8 +36,8 @@ public class CcgParseTreeTest {
             "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
             "./lib_data/lexicon_specialCases_questions.txt");*/
 
-    String[] relationLexicalIdentifiers = {"lemma"};
-    String[] argumentLexicalIdenfiers = {"lemma"};
+    String[] relationLexicalIdentifiers = {"word"};
+    String[] argumentLexicalIdenfiers = {"word"};
     String[] relationTypingIdentifiers = {};
     boolean ignorePronouns = false;
     CcgParser ccgParser =
@@ -43,11 +48,71 @@ public class CcgParseTreeTest {
 
     Set<Set<String>> relations;
     String sent;
-
+    
     // ccgParseTree =
     // ccgParser.parseFromString("(<L N Adobe Adobe NNP I-ORG I-NP N>)");
     // assertEquals(ccgParseTree.getLeafNodes().size(), 1);
+    
+    sent = "She loved him, except when he snored.";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[dcl] ba 1 2> (<L NP She She PRP O O NP>) (<T S[dcl]\\NP ba 0 2> (<T S[dcl]\\NP ba 0 2> (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP loved love VBD O O (S[dcl]\\NP)/NP>) (<T NP rp 0 2> (<L NP him he PRP O O NP>) (<L , , , , O O ,>) ) ) (<L (S\\NP)\\(S\\NP) except except IN O O (S\\NP)\\(S\\NP)>) ) (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/S[dcl] when when WRB O O ((S\\NP)\\(S\\NP))/S[dcl]>) (<T S[dcl] rp 0 2> (<T S[dcl] ba 1 2> (<L NP he he PRP O O NP>) (<L S[dcl]\\NP snored snore VBD O O S[dcl]\\NP>) ) (<L . . . . O O .>) ) ) ) ) ");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    
+    sent = "Janie is not addicted, however she drinks a coffee every day.";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[dcl] ba 1 2> (<T NP lex 0 1> (<L N Janie Janie NNP PERSON O N>) ) (<T S[dcl]\\NP ba 0 2> (<T S[dcl]\\NP fa 0 2> (<T (S[dcl]\\NP)/(S[adj]\\NP) bx 0 2> (<L (S[dcl]\\NP)/(S[adj]\\NP) is be VBZ O O (S[dcl]\\NP)/(S[adj]\\NP)>) (<L (S\\NP)\\(S\\NP) not not RB O O (S\\NP)\\(S\\NP)>) ) (<T S[adj]\\NP rp 0 2> (<L S[adj]\\NP addicted addict VBN O O S[adj]\\NP>) (<L , , , , O O ,>) ) ) (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/S[dcl] however however RB O O ((S\\NP)\\(S\\NP))/S[dcl]>) (<T S[dcl] ba 1 2> (<L NP she she PRP O O NP>) (<T S[dcl]\\NP ba 0 2> (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP drinks drink VBZ O O (S[dcl]\\NP)/NP>) (<T NP[nb] fa 0 2> (<L NP[nb]/N a a DT O O NP[nb]/N>) (<L N coffee coffee NN O O N>) ) ) (<T (S\\NP)\\(S\\NP) rp 0 2> (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/N every every DT O O ((S\\NP)\\(S\\NP))/N>) (<L N day day NN TIME O N>) ) (<L . . . . O O .>) ) ) ) ) ) )");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    
+    sent = "Every dog";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T NP[nb] fa 0 2> (<L NP[nb]/N Every Every DT O O NP[nb]/N>) (<L N dog dog NN O O N>) )");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    
+    sent = "Janie drinks a coffee every morning.";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[dcl] ba 1 2> (<T NP lex 0 1> (<L N Janie Janie NNP PERSON O N>) ) (<T S[dcl]\\NP ba 0 2> (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/NP drinks drink VBZ O O (S[dcl]\\NP)/NP>) (<T NP[nb] fa 0 2> (<L NP[nb]/N a a DT O O NP[nb]/N>) (<L N coffee coffee NN O O N>) ) ) (<T (S\\NP)\\(S\\NP) rp 0 2> (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/N every every DT O O ((S\\NP)\\(S\\NP))/N>) (<L N morning morning NN TIME O N>) ) (<L . . . . O O .>) ) ) ) ");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    
+    sent = "This is not the problem.";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[dcl] ba 1 2> (<L NP This This DT O O NP>) (<T S[dcl]\\NP fa 0 2> (<T (S[dcl]\\NP)/NP bx 0 2> (<L (S[dcl]\\NP)/NP is be VBZ O O (S[dcl]\\NP)/NP>) (<L (S\\NP)\\(S\\NP) not not RB O O (S\\NP)\\(S\\NP)>) ) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N problem problem NN O O N>) ) (<L . . . . O O .>) ) ) ) ");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    System.out.println();
+    
+    
+    sent = "Janie liked to run with her dog.";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[dcl] ba 1 2> (<T NP lex 0 1> (<L N Janie Janie NNP PERSON O N>) ) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/(S[to]\\NP) liked like VBD O O (S[dcl]\\NP)/(S[to]\\NP)>) (<T S[to]\\NP fa 0 2> (<L (S[to]\\NP)/(S[b]\\NP) to to TO O O (S[to]\\NP)/(S[b]\\NP)>) (<T S[b]\\NP fa 0 2> (<L (S[b]\\NP)/PP run run VB O O (S[b]\\NP)/PP>) (<T PP fa 0 2> (<L PP/NP with with IN O O PP/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N her she PRP$ O O NP[nb]/N>) (<L N dog dog NN O O N>) ) (<L . . . . O O .>) ) ) ) ) ) ) ");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    System.out.println();
 
+    sent = "Janie worked so that she could buy food.";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[dcl] ba 1 2> (<T NP lex 0 1> (<L N Janie Janie NNP PERSON O N>) ) (<T S[dcl]\\NP ba 0 2> (<L S[dcl]\\NP worked work VBD O O S[dcl]\\NP>) (<T (S\\NP)\\(S\\NP) fa 0 2> (<L ((S\\NP)\\(S\\NP))/S[em] so so RB O O ((S\\NP)\\(S\\NP))/S[em]>) (<T S[em] fa 0 2> (<L S[em]/S[dcl] that that IN O O S[em]/S[dcl]>) (<T S[dcl] ba 1 2> (<L NP she she PRP O O NP>) (<T S[dcl]\\NP fa 0 2> (<L (S[dcl]\\NP)/(S[b]\\NP) could could MD O O (S[dcl]\\NP)/(S[b]\\NP)>) (<T S[b]\\NP fa 0 2> (<L (S[b]\\NP)/NP buy buy VB O O (S[b]\\NP)/NP>) (<T NP rp 0 2> (<T NP lex 0 1> (<L N food food NN O O N>) ) (<L . . . . O O .>) ) ) ) ) ) ) ) ) ");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
+    System.out.println(sent);
+    System.out.println(relations);
+    System.out.println();
+    
     sent = "What to do in Laughlin_Nevada?";
     ccgParseTrees =
         ccgParser
@@ -146,10 +211,10 @@ public class CcgParseTreeTest {
     System.out.println(relations);
     System.out.println();
 
-    relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
+    /*relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);
-    System.out.println();
+    System.out.println();*/
 
     /*-relations = ccgParseTrees.get(2).getLexicalisedSemanticPredicates();
     System.out.println(sent);
@@ -643,10 +708,10 @@ public class CcgParseTreeTest {
     System.out.println(sent);
     System.out.println(relations);
     System.out.println();
-    relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
+    /*relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);
-    System.out.println();
+    System.out.println();*/
 
     sent =
         ", HQ_yesterday_morning , Google Co-Founder Sergey_Brin arrived late and looked casually dressed and very windblown .";

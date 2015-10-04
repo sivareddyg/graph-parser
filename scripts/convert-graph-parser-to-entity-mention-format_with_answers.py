@@ -18,7 +18,7 @@ for line in sys.stdin:
             if "ner" in word and word['ner'] == "DATE":
                 word_parts = word['word'].split("_")
             else:
-                word_parts = [word_part[0].upper() + word_part[1:]
+                word_parts = [word_part[0].upper() + word_part[1:] if word_part != "" else "_"
                               for word_part in word['word'].split("_")]
             sent.extend(word_parts)
             word_to_mention[original_index] = {}

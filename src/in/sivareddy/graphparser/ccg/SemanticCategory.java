@@ -465,7 +465,7 @@ public class SemanticCategory extends LambdaExpression {
 
     Preconditions.checkArgument(categoryType == SemanticCategoryType.TYPE
         || categoryType == SemanticCategoryType.EMPTY,
-        "Basic category should either be EMPTY or TYPE types");
+        "Basic category should either be EMPTY or TYPE types: " + synCat);
 
     Set<CategoryIndex> variables = synCat.getAllVariables();
     Preconditions.checkArgument(variables.size() == 1,

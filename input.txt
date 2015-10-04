@@ -1,3 +1,4 @@
+{"sentence" : "Janie loves her dog."}
 {"sentence" : "There is an empty street with no cars on it"}
 {"sentence" : "THERE IS AN EMPTY STREET WITH NO CARS ON IT"}
 {"sentence" : "What did god say to Abraham about circumcision?"}

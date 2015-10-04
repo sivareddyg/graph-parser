@@ -45,7 +45,7 @@ public class CcgParseTree {
   public static String[] RELATION_IDENTIFIERS;
   public static String[] ARGUMENT_IDENTIFIERS;
   public static String[] RELATION_TYPING_IDENTIFIERS;
-  public boolean IGNOREPRONOUNS = true;
+  public static boolean IGNOREPRONOUNS = true;
   private int MAX_SEMANTIC_PARSES = 16;
 
   public static synchronized int getNodeCount() {
@@ -536,7 +536,7 @@ public class CcgParseTree {
    * @return
    */
   public Set<Set<String>> getLexicalisedSemanticPredicates() {
-    return getLexicalisedSemanticPredicates(true);
+    return getLexicalisedSemanticPredicates(false);
   }
 
   /**
