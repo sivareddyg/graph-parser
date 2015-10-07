@@ -3,6 +3,3 @@
 /data
 /.settings
 /scripts/compare_outputs.py
-/lib/
-/test_data/
-/lib_data/
