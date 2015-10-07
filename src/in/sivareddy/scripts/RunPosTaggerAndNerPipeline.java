@@ -52,6 +52,14 @@ public class RunPosTaggerAndNerPipeline {
   private static Gson gson = new Gson();
   private static JsonParser jsonParser = new JsonParser();
 
+  private static boolean storeOriginalSentences = false;
+
+  public RunPosTaggerAndNerPipeline() {}
+
+  public static void storeOriginalSentences(boolean flag) {
+    storeOriginalSentences = flag;
+  }
+
   public List<JsonObject> processText(JsonObject sentence)
       throws ArgumentValidationException, IOException, InterruptedException {
     sentence = processSentence(gson.toJson(sentence));
@@ -163,6 +171,11 @@ public class RunPosTaggerAndNerPipeline {
         if (newSentenceWords.size() != 0) {
           JsonObject newSentence = new JsonObject();
           newSentence.add(SentenceKeys.WORDS_KEY, newSentenceWords);
+          if (storeOriginalSentences
+              && jsonSentence.has(SentenceKeys.SENTENCE_KEY)) {
+            newSentence.add(SentenceKeys.SENTENCE_KEY,
+                jsonSentence.get(SentenceKeys.SENTENCE_KEY));
+          }
           sentences.add(newSentence);
         }
         newSentenceWords = new JsonArray();
@@ -172,6 +185,10 @@ public class RunPosTaggerAndNerPipeline {
     if (newSentenceWords.size() != 0) {
       JsonObject newSentence = new JsonObject();
       newSentence.add(SentenceKeys.WORDS_KEY, newSentenceWords);
+      if (storeOriginalSentences && jsonSentence.has(SentenceKeys.SENTENCE_KEY)) {
+        newSentence.add(SentenceKeys.SENTENCE_KEY,
+            jsonSentence.get(SentenceKeys.SENTENCE_KEY));
+      }
       sentences.add(newSentence);
     }
     return sentences;
@@ -187,6 +204,7 @@ public class RunPosTaggerAndNerPipeline {
     logger.addAppender(stdoutAppender);
 
     RunPosTaggerAndNerPipeline engine = new RunPosTaggerAndNerPipeline();
+    RunPosTaggerAndNerPipeline.storeOriginalSentences(true);
     engine.processStream(System.in, System.out, 40);
   }
 }

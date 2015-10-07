@@ -4097,6 +4097,56 @@ create_graphparser_input_from_paraphrases:
 		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
 		> data/paraphrasing/webq.paraphrases.dev.txt 
 
+create_graphparser_input_from_paraphrases_5best:
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/sampled-sentence.test.geq5.org-paraphrase.json \
+		| grep  isOriginal \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 5 \
+		> data/paraphrasing/webq.paraphrases.5best.test.txt
+	
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/sampled-sentence.train.geq5.org-paraphrase.json \
+		| grep  isOriginal \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 5 \
+		| gzip > working/webq.paraphrases.5best.train.txt.gz
+
+	zcat working/webq.paraphrases.5best.train.txt.gz \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		> data/paraphrasing/webq.paraphrases.5best.train.txt 
+
+	zcat working/webq.paraphrases.5best.train.txt.gz \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		> data/paraphrasing/webq.paraphrases.5best.dev.txt
+
+create_graphparser_input_from_mt_paraphrases_5best:
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/SMT-Generated/webquestions.examples.test.mt.org-paraphrase.json \
+		| grep  isOriginal \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 5 \
+		> data/paraphrasing/webq.mt.paraphrases.5best.test.txt
+	
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/SMT-Generated/webquestions.examples.train.mt.org-paraphrase.json \
+		| grep  isOriginal \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 5 \
+		| gzip > working/webq.mt.paraphrases.5best.train.txt.gz
+
+	zcat working/webq.mt.paraphrases.5best.train.txt.gz \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		> data/paraphrasing/webq.mt.paraphrases.5best.train.txt
+
+	zcat working/webq.mt.paraphrases.train.txt.gz \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		> data/paraphrasing/webq.mt.paraphrases.5best.dev.txt 
+
 create_graphparser_input_from_mt_paraphrases:
 	mkdir -p data/paraphrasing/
 	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/SMT-Generated/webquestions.examples.test.mt.org-paraphrase.json \

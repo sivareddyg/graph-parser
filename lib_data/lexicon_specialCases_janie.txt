@@ -57,8 +57,6 @@ that	*	S[em]/S[dcl]	(S[em]{Y}/S[dcl]{Y}){_};_ 1 Y	CLOSED
 # This program is dedicated "to" providing food.
 *	*	PP/(S[ng]\NP)	(PP{X}/(S[ng]{Y}\NP{Z}){Y}){_};_ 1 Y	EVENT
 
-# "All" of us went to UK.
-*	*	NP	NP{_}	(lambda $_ (TYPE $_ $_))
 
 *	*	((S\NP)\(S\NP))/S[em]	*	EVENT
 *	*	((S\NP)\(S\NP))/S[dcl]	*	EVENT
@@ -86,3 +84,6 @@ not	*	NP[nb]/N	(NP[nb]{Y}/N{Y}){_};_ 1 Y	COMPLEMENT
 *	PRP$	N	*	TYPE
 *	PRP$	*	*	TYPEMOD
 
+# 
+*	*	NP[thr]	*	TYPE
+*	*	NP	*	TYPE

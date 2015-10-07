@@ -5,6 +5,8 @@ import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
 
 import org.junit.Test;
 
+import com.google.common.base.Joiner;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -60,6 +62,7 @@ public class CcgParseTreeTest {
     relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates();
     System.out.println(sent);
     System.out.println(relations);
+    System.out.println(Joiner.on(" ^ ").join(relations.iterator().next()));
     
     sent = "Janie is not addicted, however she drinks a coffee every day.";
     ccgParseTrees =
