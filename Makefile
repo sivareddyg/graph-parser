@@ -4171,3 +4171,108 @@ create_graphparser_input_from_mt_paraphrases:
 	zcat working/webq.mt.paraphrases.train.txt.gz \
 		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
 		> data/paraphrasing/webq.mt.paraphrases.dev.txt 
+
+create_graphparser_input_from_spectral_noppdb_paraphrases_%:
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-NoPPDB/wq-train.noppdb.$*.json \
+		| grep  isOriginal \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:bin in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		| gzip > working/webq.paraphrases.train.$*.txt.gz
+
+	zcat working/webq.paraphrases.train.$*.txt.gz \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		> data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.train.txt 
+
+	zcat working/webq.paraphrases.train.$*.txt.gz \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		> data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.dev.txt 
+
+create_spectral_noppdb_paraphrases_gold_graphs_%:
+	mkdir -p data/oracle/
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/oracle/webq.spectral.noppdb.paraphrases.$*.dev \
+		false \
+		< data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.dev.txt \
+		> data/oracle/webq.spectral.noppdb.paraphrases.$*.dev.answers.txt
+
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/oracle/webq.spectral.noppdb.paraphrases.$*.train \
+		false \
+		< data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.train.txt \
+		> data/oracle/webq.spectral.noppdb.paraphrases.$*.train.answers.txt
+
+easyccg_supervised_spectral_noppdb_paraphrase_%:
+	rm -rf ../working/easyccg_supervised_spectral_noppdb_paraphrase_$*
+	mkdir -p ../working/easyccg_supervised_spectral_noppdb_paraphrase_$*
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 5 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging false \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag true \
+	-forestSize 100 \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.train.txt \
+	-goldParsesFile data/oracle/webq.spectral.noppdb.paraphrases.$*.train.ser \
+	-devFile data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.dev.txt \
+	-logFile ../working/easyccg_supervised_spectral_noppdb_paraphrase_$*/all.log.txt \
+	> ../working/easyccg_supervised_spectral_noppdb_paraphrase_$*/all.txt
+
