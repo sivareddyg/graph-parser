@@ -4176,9 +4176,9 @@ create_graphparser_input_from_spectral_noppdb_paraphrases_%:
 	mkdir -p data/paraphrasing/
 	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-NoPPDB/wq-train.noppdb.$*.json \
 		| grep  isOriginal \
-		| java -cp lib/*:bin in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
-		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
-		| java -cp lib/*:bin in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
 		| gzip > working/webq.paraphrases.train.$*.txt.gz
 
 	zcat working/webq.paraphrases.train.$*.txt.gz \
@@ -4191,7 +4191,7 @@ create_graphparser_input_from_spectral_noppdb_paraphrases_%:
 
 create_spectral_noppdb_paraphrases_gold_graphs_%:
 	mkdir -p data/oracle/
-	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+	java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/oracle/webq.spectral.noppdb.paraphrases.$*.dev \
@@ -4199,7 +4199,7 @@ create_spectral_noppdb_paraphrases_gold_graphs_%:
 		< data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.dev.txt \
 		> data/oracle/webq.spectral.noppdb.paraphrases.$*.dev.answers.txt
 
-	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+	java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/oracle/webq.spectral.noppdb.paraphrases.$*.train \
@@ -4210,7 +4210,7 @@ create_spectral_noppdb_paraphrases_gold_graphs_%:
 easyccg_supervised_spectral_noppdb_paraphrase_%:
 	rm -rf ../working/easyccg_supervised_spectral_noppdb_paraphrase_$*
 	mkdir -p ../working/easyccg_supervised_spectral_noppdb_paraphrase_$*
-	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-pointWiseF1Threshold 0.2 \
 	-semanticParseKey synPars \
 	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
