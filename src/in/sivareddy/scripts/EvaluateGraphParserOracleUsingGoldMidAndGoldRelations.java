@@ -88,7 +88,6 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     this.goldOutputFile = goldOutputFile;
 
     groundedLexicon = new GroundedLexicon("lib_data/dummy.txt");
-    schema = new Schema("data/freebase/schema/all_domains_schema.txt");
     kb =
         new KnowledgeBaseOnline(endPointName, String.format(
             "http://%s:8890/sparql", endPointName), "dba", "dba", 50000, schema);
@@ -228,17 +227,30 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
 
 
   public void evaluate(JsonObject sentence, PrintStream out) {
-    String goldAnswersString =
-        sentence.get(SentenceKeys.TARGET_VALUE).getAsString();
-    Pattern goldAnswerPattern =
-        Pattern.compile("\\(description \"?(.*?)\"?\\)[ \\)]");
-    Matcher matcher = goldAnswerPattern.matcher(goldAnswersString);
-    LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
-    while (matcher.find()) {
-      goldAnswers.add(matcher.group(1));
-    }
     Map<String, LinkedHashSet<String>> goldResultsMap = new HashMap<>();
-    goldResultsMap.put(SentenceKeys.TARGET_VALUE, goldAnswers);
+    LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
+    if (sentence.has(SentenceKeys.TARGET_VALUE)) {
+      String goldAnswersString =
+          sentence.get(SentenceKeys.TARGET_VALUE).getAsString();
+      Pattern goldAnswerPattern =
+          Pattern.compile("\\(description \"?(.*?)\"?\\)[ \\)]");
+      Matcher matcher = goldAnswerPattern.matcher(goldAnswersString);
+      while (matcher.find()) {
+        goldAnswers.add(matcher.group(1));
+      }
+      goldResultsMap.put(SentenceKeys.TARGET_VALUE, goldAnswers);
+    } else if (sentence.has(SentenceKeys.SPARQL_QUERY)) {
+      Map<String, LinkedHashSet<String>> dummyGoldResultsMap = new HashMap<>();
+      dummyGoldResultsMap.put(SentenceKeys.TARGET_VALUE, new LinkedHashSet<>());
+      String goldQuery = sentence.get(SentenceKeys.SPARQL_QUERY).getAsString();
+      Map<String, LinkedHashSet<String>> results =
+          endPoint.runQueryHttp(goldQuery);
+      Pair<Set<String>, Set<String>> cleanedGoldResults =
+          RdfGraphTools.getCleanedResults(dummyGoldResultsMap, results);
+      goldAnswers = new LinkedHashSet<>(cleanedGoldResults.getRight());
+      goldResultsMap.put(SentenceKeys.TARGET_VALUE, new LinkedHashSet<>(
+          goldAnswers));
+    }
 
     String sentenceString =
         sentence.get(SentenceKeys.SENTENCE_KEY).getAsString();

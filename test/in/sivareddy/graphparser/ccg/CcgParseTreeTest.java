@@ -55,6 +55,31 @@ public class CcgParseTreeTest {
     // ccgParser.parseFromString("(<L N Adobe Adobe NNP I-ORG I-NP N>)");
     // assertEquals(ccgParseTree.getLeafNodes().size(), 1);
     
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[wq] fa 0 2> (<T S[wq]/PP fa 0 2> (<T (S[wq]/PP)/((S[q]/PP)/NP) fa 0 2> (<T ((S[wq]/PP)/((S[q]/PP)/NP))/N fa 0 2> (<L (((S[wq]/PP)/((S[q]/PP)/NP))/N)/(NP/N) How How WRB O O (((S[wq]/PP)/((S[q]/PP)/NP))/N)/(NP/N)>) (<L NP/N many many JJ O O NP/N>) ) (<L N countries country NNS O O N>) ) (<L (S[q]/PP)/NP are be VBP O O (S[q]/PP)/NP>) ) (<T PP fa 0 2> (<L PP/NP within within IN O O PP/NP>) (<T NP rp 0 2> (<T NP lex 0 1> (<L N North_America North-America NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) ");
+            relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates(true);
+            System.out.println(relations);
+            
+    
+    sent = "How much protein is in Quinoa?";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[wq] fa 0 2> (<T S[wq]/(S[dcl]\\NP) fa 0 2> (<T (S[wq]/(S[dcl]\\NP))/N fa 0 2> (<L ((S[wq]/(S[dcl]\\NP))/N)/(NP/N) How How WRB O O ((S[wq]/(S[dcl]\\NP))/N)/(NP/N)>) (<L NP/N much much JJ O O NP/N>) ) (<L N protein protein NN O O N>) ) (<T S[dcl]\\NP ba 0 2> (<T (S[dcl]\\NP)/NP fc 0 2> (<L (S[dcl]\\NP)/PP is be VBZ O O (S[dcl]\\NP)/PP>) (<L PP/NP in in IN O O PP/NP>) ) (<T (S[X]\\NP)\\((S[X]\\NP)/NP) rp 0 2> (<T (S[X]\\NP)\\((S[X]\\NP)/NP) tr 0 1> (<T NP lex 0 1> (<L N Quinoa Quinoa NNP O O N>) ) ) (<L . ? ? . O O .>) ) ) ) ");
+    System.out.println(sent);
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates(true);
+    System.out.println(relations);
+    
+    sent = "How many films did Cameron direct?";
+    ccgParseTrees =
+        ccgParser
+            .parseFromString("(<T S[wq] fa 0 2> (<T S[wq]/(S[q]/NP) fa 0 2> (<T (S[wq]/(S[q]/NP))/N fa 0 2> (<L ((S[wq]/(S[q]/NP))/N)/(NP/N) How How WRB O O ((S[wq]/(S[q]/NP))/N)/(NP/N)>) (<L NP/N many many JJ O O NP/N>) ) (<L N films film NNS O O N>) ) (<T S[q]/NP fc 0 2> (<T S[q]/(S[b]\\NP) fa 0 2> (<L (S[q]/(S[b]\\NP))/NP did do VBD O O (S[q]/(S[b]\\NP))/NP>) (<T NP lex 0 1> (<L N Cameron Cameron NNP PERSON O N>) ) ) (<T (S[b]\\NP)/NP rp 0 2> (<L (S[b]\\NP)/NP direct direct VB O O (S[b]\\NP)/NP>) (<L . ? ? . O O .>) ) ) ) ");
+    relations = ccgParseTrees.get(0).getLexicalisedSemanticPredicates(true);
+    System.out.println(sent);
+    System.out.println(relations);
+    relations = ccgParseTrees.get(1).getLexicalisedSemanticPredicates(true);
+    System.out.println(relations);
+    
     sent = "She loved him, except when he snored.";
     ccgParseTrees =
         ccgParser

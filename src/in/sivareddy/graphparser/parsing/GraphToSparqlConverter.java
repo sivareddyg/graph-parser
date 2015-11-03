@@ -196,9 +196,12 @@ public class GraphToSparqlConverter {
       for (Property property : nodeProperties) {
         if (property.getPropertyName().equals("COUNT")) {
           String countNode = property.getArguments().trim().split(":")[0];
+
+          // SEMPRE treats aggregation as DISTINCT count(%s) whereas this should
+          // be count(DISTINCT %s). We imitate SEMPRE here though it is wrong.
           queryString =
               String.format(
-                  "SELECT count(DISTINCT %s) AS ?x%s %s WHERE { %s }",
+                  "SELECT DISTINCT count(%s) AS ?x%s %s WHERE { %s }",
                   getNodeVariable(node, realTargetNode), countNode,
                   graphString, queryString);
           countVars.add(String.format("?x%s", countNode));

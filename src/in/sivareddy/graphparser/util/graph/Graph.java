@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -189,11 +190,21 @@ public class Graph<T> implements Comparable<Graph<T>>, Serializable {
     for (Edge<T> edge : edges) {
       result += edge.hashCode();
     }
+    
     result = prime * result;
-
     for (Type<T> type : types) {
       result += type.hashCode();
     }
+
+    result = prime * result;
+    for (Entry<T, Set<Property>> nodeProperty : nodeProperties.entrySet()) {
+      int propertyCode = 31 * nodeProperty.getKey().hashCode();
+      for (Property property : nodeProperty.getValue()) {
+        propertyCode += property.hashCode();
+      }
+      result += propertyCode;
+    }
+
     return result;
   }
 

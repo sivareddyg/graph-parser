@@ -320,12 +320,17 @@ public class MergeEntity {
   public static void main(String[] args) throws IOException {
     Gson gson = new Gson();
 
+    boolean mergeDateEntity =
+        args.length > 0 ? Boolean.parseBoolean(args[0]) : true;
+
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     try {
       String line = br.readLine();
       while (line != null) {
         JsonObject newSentence = mergeEntityWordsToSingleWord(line);
-        newSentence = mergeDateEntities(gson.toJson(newSentence));
+        if (mergeDateEntity) {
+          newSentence = mergeDateEntities(gson.toJson(newSentence));
+        }
         // newSentences =
         // mergeNamedEntitiesToSingleWord(gson.toJson(newSentences));
         System.out.println(gson.toJson(newSentence));

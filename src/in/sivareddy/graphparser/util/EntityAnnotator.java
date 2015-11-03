@@ -46,24 +46,36 @@ public class EntityAnnotator {
   private Gson gson = new Gson();
   private JsonParser jsonParser = new JsonParser();
 
+  private final boolean ignoreNumbersAndPunctuation;
+  private final boolean useNPPatterns;
+
   @SuppressWarnings("unchecked")
-  public EntityAnnotator(Reader inputReader) throws IOException {
+  public EntityAnnotator(Reader inputReader,
+      boolean ignoreNumbersAndPunctuation, boolean useNPPatterns)
+      throws IOException {
     // line format:
     // m.0101qvm I Think of You
     BufferedReader reader = new BufferedReader(inputReader);
+    this.ignoreNumbersAndPunctuation = ignoreNumbersAndPunctuation;
+    this.useNPPatterns = useNPPatterns;
     while (true) {
       String line = reader.readLine();
       if (line == null)
         break;
       String[] parts = line.split("\t", 2);
-      if (NUMBERS_OR_PUNC.matcher(parts[1]).matches())
+
+      if (ignoreNumbersAndPunctuation
+          && NUMBERS_OR_PUNC.matcher(parts[1]).matches())
         continue;
 
       String[] name = parts[1].split("\\s+");
       Map<String, Object> curMap = nameToEntityMap;
       for (String word : name) {
-        // Trim punctuation.
-        String wordKey = removePunctuation(word).toLowerCase();
+        String wordKey = word.toLowerCase();
+        if (ignoreNumbersAndPunctuation) {
+          // Trim punctuation.
+          wordKey = removePunctuation(wordKey);
+        }
         if (!wordKey.isEmpty()) {
           wordKey = WORD_PREFIX + wordKey;
           curMap.putIfAbsent(wordKey, new HashMap<String, Object>());
@@ -96,7 +108,11 @@ public class EntityAnnotator {
             words.get(j).getAsJsonObject().get(SentenceKeys.WORD_KEY)
                 .getAsString();
 
-        String wordKey = removePunctuation(word).toLowerCase();
+        String wordKey = word.toLowerCase();
+        if (ignoreNumbersAndPunctuation) {
+          wordKey = removePunctuation(wordKey);
+        }
+
         if (wordKey.isEmpty()) {
           continue;
         }
@@ -116,8 +132,8 @@ public class EntityAnnotator {
       }
 
       if (entityEndIndex != -1
-          && matchesNPPattern(getPosSequence(words, entityStartIndex,
-              entityEndIndex))) {
+          && (!useNPPatterns || matchesNPPattern(getPosSequence(words,
+              entityStartIndex, entityEndIndex)))) {
         Map<String, Object> matchedEntity = new HashMap<>();
         matchedEntity.put(SentenceKeys.START, entityStartIndex);
         matchedEntity.put(SentenceKeys.END, entityEndIndex);
@@ -384,7 +400,7 @@ public class EntityAnnotator {
     System.err.println(args[0]);
     EntityAnnotator entityAnnotator =
         new EntityAnnotator(new InputStreamReader(new GZIPInputStream(
-            new FileInputStream(args[0])), "UTF-8"));
+            new FileInputStream(args[0])), "UTF-8"), true, true);
     entityAnnotator.setDefaultNPPattern();
 
     JsonParser jsonParser = new JsonParser();

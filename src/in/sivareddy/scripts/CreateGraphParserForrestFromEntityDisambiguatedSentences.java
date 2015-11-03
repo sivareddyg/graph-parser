@@ -92,7 +92,10 @@ public class CreateGraphParserForrestFromEntityDisambiguatedSentences extends
       JsonObject sentence = forrest.get(0).getAsJsonObject();
       for (Entry<String, JsonElement> entry : sentence.entrySet()) {
         String key = entry.getKey();
-        if (!key.equals(SentenceKeys.ENTITIES)
+        if (key.equals(SentenceKeys.INDEX_KEY)) {
+          forrestObj.addProperty(key,
+              entry.getValue().getAsString().split(":")[0]);
+        } else if (!key.equals(SentenceKeys.ENTITIES)
             && !key.equals(SentenceKeys.WORDS_KEY)
             && !key.equals(SentenceKeys.CCG_PARSES)) {
           forrestObj.add(key, entry.getValue());
@@ -118,7 +121,7 @@ public class CreateGraphParserForrestFromEntityDisambiguatedSentences extends
       sentence.add(entry.getKey(), entry.getValue());
     }
   }
-  
+
   public static void main(String[] args) throws ArgumentValidationException,
       IOException, InterruptedException {
     // Stanford pipeline.

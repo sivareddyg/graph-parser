@@ -209,6 +209,14 @@ public class LexicalGraph extends Graph<LexicalItem> {
     }
   }
 
+  public static class AnswerTypeQuestionWordFeature extends AbstractFeature {
+    private static final long serialVersionUID = 5997194236163353975L;
+
+    public AnswerTypeQuestionWordFeature(List<?> key, Double value) {
+      super(key, value);
+    }
+  }
+
   public static class GraphIsConnectedFeature extends AbstractFeature {
     private static final long serialVersionUID = 6624420194050239749L;
     private static List<String> key = Lists.newArrayList("GraphIsConnected");
@@ -533,6 +541,16 @@ public class LexicalGraph extends Graph<LexicalItem> {
     return false;
   }
 
+  public boolean isCountNode(LexicalItem node) {
+    if (getProperties().get(node) != null) {
+      for (Property property : getProperties().get(node)) {
+        if (property.getPropertyName().equals("COUNT"))
+          return true;
+      }
+    }
+    return false;
+  }
+
   public void removeType(Type<LexicalItem> mergedType) {
     getTypes().remove(mergedType);
     getTypes(mergedType.getParentNode()).remove(mergedType);
@@ -552,6 +570,16 @@ public class LexicalGraph extends Graph<LexicalItem> {
     HashSet<LexicalItem> nodes = new HashSet<>();
     for (LexicalItem node : getNodes()) {
       if (isQuestionNode(node)) {
+        nodes.add(node);
+      }
+    }
+    return nodes;
+  }
+
+  public HashSet<LexicalItem> getCountNode() {
+    HashSet<LexicalItem> nodes = new HashSet<>();
+    for (LexicalItem node : getNodes()) {
+      if (isCountNode(node)) {
         nodes.add(node);
       }
     }

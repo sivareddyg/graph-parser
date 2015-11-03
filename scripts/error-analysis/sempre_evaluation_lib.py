@@ -8,7 +8,11 @@ import sys
 def computeF1(goldList, predictedList):
     """Assume all questions have at least one answer"""
     if len(goldList) == 0:
-        raise Exception("gold list may not be empty")
+        if len(predictedList) == 0:
+            return (1, 1, 1)
+        else:
+            return (0, 0, 0)
+        # raise Exception("gold list may not be empty")
     """If we return an empty list recall is zero and precision is one"""
     if len(predictedList) == 0:
         return (0, 1, 0)

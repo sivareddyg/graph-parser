@@ -25,9 +25,6 @@ for line in open(one_best_file):
     sentence, gold, predicted = line.split("\t")
     gold = set(json.loads(gold))
     predicted = set(json.loads(predicted))
-    if gold == set():
-        sys.stderr.write("Gold answers cannot be empty: " + line)
-        exit()
     r, p, f = computeF1(gold, predicted)
 
     if f >= 0.99:
@@ -40,9 +37,6 @@ for line in open(nbest_file):
     sentence, gold, predicted = line.split("\t")
     gold = set(json.loads(gold))
     predicted = set(json.loads(predicted))
-    if gold == set():
-        sys.stderr.write("Gold answers cannot be empty: " + line)
-        exit()
     r, p, f = computeF1(gold, predicted)
 
     if f >= F1_THRESHOLD:

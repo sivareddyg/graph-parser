@@ -486,8 +486,8 @@ public class GroundedGraphs {
   }
 
   /**
-   * Returns a bag-of-words based ungrounded graph. Current implementation
-   * returns only one graph, i.e. the return list size is 1.
+   * Returns a bag-of-words based ungrounded graph. For questions containing
+   * "how many", this implementation returns two graphs.
    * 
    * @param jsonSentence
    * @return
@@ -498,6 +498,39 @@ public class GroundedGraphs {
     Set<String> parse =
         getBagOfWordsUngroundedSemanticParse(jsonSentence, leaves);
     buildUngroundeGraphFromSemanticParse(parse, leaves, 0.0, graphs);
+
+    StringBuilder sentenceBuilder = new StringBuilder();
+    jsonSentence
+        .get(SentenceKeys.WORDS_KEY)
+        .getAsJsonArray()
+        .forEach(
+            x -> {
+              sentenceBuilder.append(x.getAsJsonObject()
+                  .get(SentenceKeys.WORD_KEY).getAsString().toLowerCase());
+              sentenceBuilder.append(" ");
+            });
+
+    if (sentenceBuilder.toString().contains("how many")) {
+      // If the sentence has "how many", add an additional graph with COUNT.
+      String questionPredicate = null;
+      for (String parsePart : parse) {
+        if (parsePart.startsWith("QUESTION(")) {
+          questionPredicate = parsePart;
+          break;
+        }
+      }
+
+      if (questionPredicate != null) {
+        Set<String> newParse = new HashSet<>(parse);
+        newParse.remove(questionPredicate);
+        String questionVar =
+            questionPredicate.replace("QUESTION(", "").replace(")", "");
+        String countVar = "0:x";
+        newParse.add(String.format("QUESTION(%s)", countVar));
+        newParse.add(String.format("COUNT(%s , %s)", questionVar, countVar));
+        buildUngroundeGraphFromSemanticParse(newParse, leaves, 0.0, graphs);
+      }
+    }
 
     // Add ungrounded graph features.
     addUngroundedGraphFeatures(jsonSentence, graphs);
@@ -1416,10 +1449,11 @@ public class GroundedGraphs {
     // See if there are any question nodes and ignore the graphs that do not
     // have an edge from question node
     Map<LexicalItem, Set<Property>> graphProperties = graph.getProperties();
-    LexicalItem questionNode = null;
+    LexicalItem questionOrCountNode = null;
     for (LexicalItem node : graphProperties.keySet()) {
-      questionNode = graph.isQuestionNode(node) ? node : null;
-      if (questionNode != null)
+      questionOrCountNode =
+          graph.isQuestionNode(node) || graph.isCountNode(node) ? node : null;
+      if (questionOrCountNode != null)
         break;
     }
 
@@ -1509,12 +1543,17 @@ public class GroundedGraphs {
       }
     }
 
-    if (questionNode != null) {
+    if (questionOrCountNode != null) {
       List<LexicalGraph> validGroundedGraphs = Lists.newArrayList();
       for (LexicalGraph gGraph : groundedGraphs) {
-        LexicalItem questionNodeNew = gGraph.getUnifiedNode(questionNode);
+        HashSet<LexicalItem> countNodes = gGraph.getCountNode();
+
+        // If there is a count node, assuming that is the variable of interest.
+        LexicalItem questionOrCountNodeNew =
+            countNodes.size() > 0 ? gGraph.getUnifiedNode(countNodes.iterator()
+                .next()) : gGraph.getUnifiedNode(questionOrCountNode);
         Set<Edge<LexicalItem>> questionNodeEdges =
-            gGraph.getEdges(questionNodeNew);
+            gGraph.getEdges(questionOrCountNodeNew);
         if (questionNodeEdges != null && questionNodeEdges.size() > 0)
           validGroundedGraphs.add(gGraph);
       }
@@ -2176,13 +2215,15 @@ public class GroundedGraphs {
           if (groundEntityEntityEdges) {
             groundedRelationsSet = kb.getRelations(entity1, entity2);
           }
-        } else if ((groundEntityVariableEdges || oldGraph.isQuestionNode(node2) || revisedRestrictedNodes
-            .contains(node2))
+        } else if ((groundEntityVariableEdges || oldGraph.isQuestionNode(node2)
+            || oldGraph.isCountNode(node2) || revisedRestrictedNodes
+              .contains(node2))
             && !standardTypes.contains(entity1)
             && kb.hasEntity(entity1)) {
           groundedRelationsSet = kb.getRelations(entity1);
-        } else if ((groundEntityVariableEdges || oldGraph.isQuestionNode(node1) || revisedRestrictedNodes
-            .contains(node1))
+        } else if ((groundEntityVariableEdges || oldGraph.isQuestionNode(node1)
+            || oldGraph.isCountNode(node1) || revisedRestrictedNodes
+              .contains(node1))
             && !standardTypes.contains(entity2)
             && kb.hasEntity(entity2)) {
           Set<Relation> groundedRelationsSetInverse = kb.getRelations(entity2);
@@ -2308,11 +2349,17 @@ public class GroundedGraphs {
     Double value;
 
     // Graph has question and entity edge feature.
-    if (gGraph.isQuestionNode(node1) || gGraph.isQuestionNode(node2)) {
-      LexicalItem otherNode = gGraph.isQuestionNode(node1) ? node2 : node1;
+    if (gGraph.isQuestionNode(node1) || gGraph.isQuestionNode(node2)
+        || gGraph.isCountNode(node1) || gGraph.isCountNode(node2)) {
+      LexicalItem otherNode =
+          gGraph.isQuestionNode(node1) || gGraph.isCountNode(node1) ? node2
+              : node1;
       if (otherNode.isEntity()) {
         HashSet<LexicalItem> questionEdgeEntityNodes = new HashSet<>();
-        for (LexicalItem qNode : gGraph.getQuestionNode()) {
+        HashSet<LexicalItem> questionOrCountNodes = new HashSet<>();
+        questionOrCountNodes.addAll(gGraph.getQuestionNode());
+        questionOrCountNodes.addAll(gGraph.getCountNode());
+        for (LexicalItem qNode : questionOrCountNodes) {
           TreeSet<Edge<LexicalItem>> questionEdges = gGraph.getEdges(qNode);
           if (questionEdges != null)
             questionEdges.forEach(x -> {

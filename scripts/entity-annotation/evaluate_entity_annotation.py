@@ -17,7 +17,10 @@ MAX_NBEST = 10
 total = 0
 for line in sys.stdin:
     sentence = json.loads(line)
-    sentence_id = sentence['index']
+    if 'index' in sentence:
+        sentence_id = sentence['index']
+    else:
+        sentence_id = total
     sentence_ids.add(sentence_id)
     sentence_id_to_sentence[sentence_id] = sentence['sentence']
     total += 1
@@ -38,7 +41,7 @@ for line in sys.stdin:
                     entity_ids.add(entity["id"].split("/")[-1])
             # print entity_ids
             gold_entity = sentence["goldMid"]
-            gold_entity_id = sentence["url"].split("/")[-1]
+            # gold_entity_id = sentence["url"].split("/")[-1]
             if len(entity_ids) == 0:
                 print sentence['sentence']
             if gold_entity in entity_ids:  # or gold_entity_id in entity_ids:

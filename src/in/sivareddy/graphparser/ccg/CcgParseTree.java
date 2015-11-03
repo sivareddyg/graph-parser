@@ -1059,7 +1059,56 @@ public class CcgParseTree {
           }
         }
         break;
+      case COUNT:
+        // (typemod head current relationName argument) =
+        // head.current.relationName(argument)
+        headVar = relationParts.get(1);
+        lexicalVar = relationParts.get(2);
 
+        headIndexMain = CategoryIndex.getCategoryIndex(headVar);
+        lexicalIndexMain = CategoryIndex.getCategoryIndex(lexicalVar);
+
+        if (headIndexMain == null || lexicalIndexMain == null)
+          return lexicalisedRelation;
+
+        headVars = Sets.newHashSet(headIndexMain);
+        lexicalVars = Sets.newHashSet(lexicalIndexMain);
+
+        if (headIndexMain.isCC()) {
+          headVars = headIndexMain.getCCvars();
+        }
+
+        if (lexicalIndexMain.isCC()) {
+          lexicalVars = lexicalIndexMain.getCCvars();
+        }
+
+        for (CategoryIndex headIndex : headVars) {
+          for (CategoryIndex lexicalIndex : lexicalVars) {
+
+            if (headIndex.getVariableValue() == null
+                || lexicalIndex.getVariableValue() == null)
+              continue;
+
+            if (!headIndex.getVariableValue().isInitialised()
+                || !lexicalIndex.getVariableValue().isInitialised())
+              continue;
+            LexicalItem headNode =
+                nodesIndexMap.get(headIndex.getVariableValue().getValue());
+            LexicalItem lexicalNode =
+                nodesIndexMap.get(lexicalIndex.getVariableValue().getValue());
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("COUNT");
+
+            sb.append("(");
+            sb.append(headNode.wordPosition + ":x");
+            sb.append(" , ");
+            sb.append(lexicalNode.wordPosition + ":" + "x");
+            sb.append(")");
+            lexicalisedRelation.add(sb.toString());
+          }
+        }
+        break;
       case COMPLEMENT:
         // (complement head)
         headVar = relationParts.get(1);

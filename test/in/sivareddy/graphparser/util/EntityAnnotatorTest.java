@@ -31,7 +31,7 @@ public class EntityAnnotatorTest {
         "m.d\tStates\n";
     // @formatter:on
     StringReader entityReader = new StringReader(entities);
-    annotator = new EntityAnnotator(entityReader);
+    annotator = new EntityAnnotator(entityReader, true, true);
     annotator.setDefaultNPPattern();
   }
 

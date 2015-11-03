@@ -22,6 +22,17 @@ where	*	S[qem]/S[dcl]	(S[qem]{X}/S[dcl]{X}){_}	(lambda $f1 $X (exists $_ (and ($
 how	*	S[wq]/S[q]	(S[wq]{X}/S[q]{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X of.2 $_ ENTITY) (QUESTION $_))))
 how	*	S[qem]/S[dcl]	(S[qem]{X}/S[dcl]{X}){_}	(lambda $f1 $X (exists $_ (and ($f1 $X) (EVENT $X $X of.2 $_ ENTITY) (QUESTION $_))))
 
+# "How" many
+how	*	((S[wq]/(S[q]/NP))/N)/(NP/N)	(((S[wq]{Y}/(S[q]{Y}/NP{Z}){Y}){Y}/N{Z}){_}/(NP{W}/N{W}){V}){_}	(lambda $f0 $f1 $f2 $Y (exists $W $Z (and (($f0 $W) $W) ($f1 $Z) (($f2 $Z) $Y) (QUESTION $Z))))
+how	*	((S[wq]/(S[q]/NP))/N)/(NP/N)	(((S[wq]{Y}/(S[q]{Y}/NP{Z}){Y}){Y}/N{Z}){_}/(NP{W}/N{W}){V}){_}	(lambda $f0 $f1 $f2 $Y (exists $W $Z (and (($f0 $W) $W) ($f1 $Z) (($f2 $Z) $Y) (COUNT $Z $Y) (QUESTION $Y))))
+
+how	*	((S[wq]/(S[dcl]\NP))/N)/(NP/N)	(((S[wq]{Y}/(S{Y}\NP{Z}){Y}){Y}/N{Z}){_}/(NP{W}/N{W}){V}){_}	(lambda $f0 $f1 $f2 $Y (exists $W $Z (and (($f0 $W) $W) ($f1 $Z) (($f2 $Z) $Y) (QUESTION $Z))))
+how	*	((S[wq]/(S[dcl]\NP))/N)/(NP/N)	(((S[wq]{Y}/(S{Y}\NP{Z}){Y}){Y}/N{Z}){_}/(NP{W}/N{W}){V}){_}	(lambda $f0 $f1 $f2 $Y (exists $W $Z (and (($f0 $W) $W) ($f1 $Z) (($f2 $Z) $Y) (COUNT $Z $Y) (QUESTION $Y))))
+
+# "how" much protein is in quinoa?
+*	*	(((S[wq]/PP)/((S[q]/PP)/NP))/N)/(NP/N)	((((S[wq]{Z}/PP{Z}){Z}/((S[q]{Z}/PP{Z}){Z}/NP{W}){Z}){Z}/N{W}){_}/(NP{V}/N{V}){U}){_}	(lambda $f0 $f1 $f2 $f3 $Z (exists $V $W (and (($f0 $V) $V) ($f1 $W) ((($f2 $W) $Z) $Z) ($f3 $Z) (QUESTION $W))))
+*	*	(((S[wq]/PP)/((S[q]/PP)/NP))/N)/(NP/N)	((((S[wq]{Z}/PP{Z}){Z}/((S[q]{Z}/PP{Z}){Z}/NP{W}){Z}){Z}/N{W}){_}/(NP{V}/N{V}){U}){_}	(lambda $f0 $f1 $f2 $f3 $Z (exists $V $W (and (($f0 $V) $V) ($f1 $W) ((($f2 $W) $Z) $Z) ($f3 $Z) (COUNT $W $Z) (QUESTION $Z))))
+
 # TODO: contextualization of few categories
 # what is the "name of" the president of US? here "of" should ignore name and return "president" to "is".
 # what is the "kind of" cancer did Bob Marley suffer with? here "of" should ignore "kind" and return "cancer" to "suffer".

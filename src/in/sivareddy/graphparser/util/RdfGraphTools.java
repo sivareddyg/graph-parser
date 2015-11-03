@@ -356,7 +356,7 @@ public class RdfGraphTools {
 
     LinkedHashSet<String> goldAnswers = goldResults.get(goldVarName);
     if (goldVarName != null && goldVarName.equals("targetValue")) {
-      goldAnswers = convertDatesToYears(goldAnswers);
+      goldAnswers = handleXMLSchemaEntries(goldAnswers);
     } else {
       goldAnswers = goldResults.get(goldVar);
     }
@@ -383,7 +383,7 @@ public class RdfGraphTools {
               .get(predVar);
 
       for (String predAnswer : predAnswers) {
-        predAnswersCleaned.add(convertDateToYear(predAnswer));
+        predAnswersCleaned.add(handleXMLSchemaEntry(predAnswer));
         predAnswer = predAnswer.split("\\^\\^")[0];
         predAnswer = predAnswer.replaceAll("@[a-zA-Z\\-]+$", "");
       }
@@ -458,7 +458,7 @@ public class RdfGraphTools {
           (goldAnswers.size() > 0 && goldAnswers.iterator().next()
               .contains("XMLSchema#datetime")) ? true : false;
       if (hasDate) {
-        goldAnswers = convertDatesToYears(goldAnswers);
+        goldAnswers = handleXMLSchemaEntries(goldAnswers);
       }
 
       LinkedHashSet<String> predAnswers =
@@ -544,26 +544,26 @@ public class RdfGraphTools {
     return 0.0;
   }
 
-  public static LinkedHashSet<String> convertDatesToYears(Set<String> results) {
+  public static LinkedHashSet<String> handleXMLSchemaEntries(Set<String> results) {
     if (results == null) {
       return null;
     }
     LinkedHashSet<String> dates = Sets.newLinkedHashSet();
     for (String result : results) {
       // date = 2008-12-31^^http://www.w3.org/2001/XMLSchema#datetime
-      dates.add(convertDateToYear(result));
+      dates.add(handleXMLSchemaEntry(result));
     }
     return dates;
   }
 
-  public static String convertDateToYear(String result) {
+  public static String handleXMLSchemaEntry(String result) {
     // date = 2008-12-31^^http://www.w3.org/2001/XMLSchema#datetime
     if (result.contains("XMLSchema#datetime")) {
       String date = Splitter.on("^^").split(result).iterator().next();
       List<String> dateParts =
           Splitter.on("-").trimResults(CharMatcher.anyOf("-")).trimResults()
               .omitEmptyStrings().splitToList(date);
-      
+
       if (dateParts.size() == 3) {
         date =
             String.format("%d/%d/%d", getNumber(dateParts.get(1)),
@@ -576,6 +576,8 @@ public class RdfGraphTools {
         date = String.format("%d", getNumber(dateParts.get(0)));
         return date;
       }
+    } else if (result.contains("XMLSchema")) {
+      return Splitter.on("^^").split(result).iterator().next();
     }
     return result;
   }

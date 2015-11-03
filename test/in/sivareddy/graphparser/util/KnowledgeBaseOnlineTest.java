@@ -18,12 +18,15 @@ public class KnowledgeBaseOnlineTest {
     KnowledgeBaseOnline.TYPE_KEY = "fb:type.object.type";
     
     Schema schema =
-        new Schema("data/freebase/schema/all_domains_schema.txt");
+        new Schema("data/freebase/schema/all_domains_schema_free917.txt");
     
     KnowledgeBaseOnline kb =
         new KnowledgeBaseOnline("rockall", "http://rockall:8890/sparql", "dba",
             "dba", 100000, schema);
 
+    System.out.println("dennis bergkamp");
+    System.out.println(kb.getRelations("m.0mdqp"));
+    
     System.out.println("Nike");
     System.out.println(kb.getRelations("m.0lwkh", "m.09c7w0"));
     

@@ -23,7 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 public class KnowledgeBaseCached implements KnowledgeBase {
-  
+
   private Map<Integer, Set<Integer>> entity2Types;
   private Map<Pair<Integer, Integer>, Set<Pair<Integer, Integer>>> entityPair2Relations;
   private Map<Integer, Set<Pair<Integer, Integer>>> entity2Relations;

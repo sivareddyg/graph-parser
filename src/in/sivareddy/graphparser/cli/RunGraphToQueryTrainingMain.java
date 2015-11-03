@@ -62,6 +62,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<String> supervisedCorpus;
   private OptionSpec<String> semanticParseKey;
   private OptionSpec<String> goldParsesFile;
+  private OptionSpec<String> mostFrequentTypesFile;
 
   // Optional corpus to be grounded.
   private OptionSpec<String> groundInputCorpora;
@@ -135,6 +136,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
   // Denotation feature
   private OptionSpec<Boolean> validQueryFlag;
+  private OptionSpec<Boolean> useAnswerTypeQuestionWordFlag;
 
   // Other features
   private OptionSpec<Boolean> useNbestGraphsFlag;
@@ -229,6 +231,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
         parser
             .accepts("goldParsesFileVal",
                 "Serialized file containing gold graphs for trianing sentences")
+            .withRequiredArg().ofType(String.class).defaultsTo("");
+
+    mostFrequentTypesFile =
+        parser
+            .accepts("mostFrequentTypesFile",
+                "File containing most frequent Freebase types. Useful to extract answer types")
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
     groundInputCorpora =
@@ -523,6 +531,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "use denotation as feature to see if the graph is valid - good but slow")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
+    useAnswerTypeQuestionWordFlag =
+        parser
+            .accepts("useAnswerTypeQuestionWordFlag",
+                "use answer type and question word feature, e.g., (type.datetime, when)")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
     useNbestGraphsFlag =
         parser
             .accepts(
@@ -653,6 +667,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       String groundInputCorporaFiles = options.valueOf(groundInputCorpora);
       String semanticParseKeyString = options.valueOf(semanticParseKey);
       String goldParsesFileVal = options.valueOf(goldParsesFile);
+      String mostFrequentTypesFileVal = options.valueOf(mostFrequentTypesFile);
 
       String logfile = options.valueOf(logFile);
       String loadModelFromFileVal = options.valueOf(loadModelFromFile);
@@ -732,6 +747,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
       // Denotation feature
       boolean validQueryFlagVal = options.valueOf(validQueryFlag);
+      boolean useAnswerTypeQuestionWordFlagVal =
+          options.valueOf(useAnswerTypeQuestionWordFlag);
 
       // Use n-best graphs for training. Unless you are using supervised
       // training or unsupervised syntactic parser, do not set this flag to
@@ -768,7 +785,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
               kbGraphUri, testfile, devfile, supervisedTrainingFile,
               corupusTrainingFile, groundInputCorporaFiles,
-              semanticParseKeyString, goldParsesFileVal, debugEnabled,
+              semanticParseKeyString, goldParsesFileVal,
+              mostFrequentTypesFileVal, debugEnabled,
               groundTrainingCorpusInTheEndVal, trainingSampleSizeCount,
               logfile, loadModelFromFileVal, nBestTrainSyntacticParsesVal,
               nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal,
@@ -783,7 +801,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
               graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
               duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
-              useLexiconWeightsTypeVal, validQueryFlagVal, useNbestGraphsVal,
+              useLexiconWeightsTypeVal, validQueryFlagVal,
+              useAnswerTypeQuestionWordFlagVal, useNbestGraphsVal,
               addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
               handleNumbersFlagVal, entityScoreFlagVal,
               entityWordOverlapFlagVal, paraphraseScoreFlagVal,
@@ -806,7 +825,6 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-
   }
 
   /**
