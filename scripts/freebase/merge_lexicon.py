@@ -17,6 +17,10 @@ types = {}
 relations_freq = {}
 relations = {}
 
+use_empty_types = False
+if len(sys.argv) > 1:
+    use_empty_types = True
+
 for line in sys.stdin:
     line = line.rstrip()
     if line == "" or line[0] == "#":

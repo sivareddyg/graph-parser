@@ -19,6 +19,9 @@ process_clueweb_split_%:
 		| python scripts/run_batch_process.py "java -cp lib/*:bin in.sivareddy.scripts.RunEasyCCG 1" 100000 \
 		| gzip > ../data0/clueweb/ClueWeb09_1-sentences.cleaned.parsed.json.txt.$*.gz
 
+webq_dev_split:
+	python scripts/webquestions-preprocessing/training_split.py data/webquestions/webquestions.examples.train.domains.entity.matches.json
+
 extract_easyccg_lexicon_clueweb_split_%:
 	zcat ../data0/clueweb/ClueWeb09_1-sentences.cleaned.parsed.json.txt.$*.gz \
 	| python scripts/run_batch_process.py \
@@ -45,6 +48,11 @@ merge_easyccg_lexicon:
 	zcat ../data0/clueweb/ClueWeb09_1-lexicon.txt.1.gz ../data0/clueweb/ClueWeb09_1-lexicon.txt.2.gz ../data0/clueweb/ClueWeb09_1-lexicon.txt.3.gz ../data0/clueweb/ClueWeb09_1-lexicon.txt.wiki.gz \
 		|	python scripts/freebase/merge_lexicon.py \
 	    | gzip > data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz
+
+merge_deplambda_lexicon:
+	zcat ../data0/clueweb/ClueWeb09_1-lexicon.deplambda.txt.0.gz ../data0/clueweb/ClueWeb09_1-lexicon.deplambda.txt.1.gz ../data0/clueweb/ClueWeb09_1-lexicon.deplambda.txt.2.gz ../data0/clueweb/ClueWeb09_1-lexicon.deplambda.txt.3.gz \
+		|	python scripts/freebase/merge_lexicon.py \
+	    | gzip > data/complete/grounded_lexicon/deplambda_grounded_lexicon.txt.gz
 
 # Merge schema
 all_domains_schema:
@@ -103,6 +111,50 @@ entity_span_tag_webq_data:
 	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
 		| java -cp lib/*:bin in.sivareddy.scripts.NounPhraseAnnotator EN_PTB \
 		> data/webquestions/webquestions.examples.test.domains.entity.matches.json
+
+stagg_tag_webq_data:
+	python scripts/webquestions-preprocessing/remove_keys_for_stagg_entity_annotation.py \
+		< data/webquestions/webquestions.examples.test.domains.entity.matches.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.webquestions.ExtractEntitiesFromStagg \
+			data/freebase/mid_to_key.txt.gz \
+			data/complete/stagg/webquestions.examples.test.e2e.top10.filter.sid.tsv \
+		> working/test.tagged.txt
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+        -endpoint localhost \
+        -typeKey "fb:type.object.type" \
+        -schema data/freebase/schema/all_domains_schema.txt \
+        -initialNbest 10 \
+        -intermediateNbest 10 \
+        -finalNbest 10 \
+        -entityHasReadableId false \
+        -nthreads 10 \
+        -noSucceedingNamedEntity false \
+        -noPrecedingNamedEntity false \
+        -containsNamedEntity false \
+        -shouldStartWithNamedEntity false \
+        -inputFile working/test.tagged.txt \
+        -outputFile data/complete/stagg/webquestions.examples.test.entities.forest.txt
+	python scripts/webquestions-preprocessing/remove_keys_for_stagg_entity_annotation.py \
+		< data/webquestions/webquestions.examples.train.domains.entity.matches.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.webquestions.ExtractEntitiesFromStagg \
+			data/freebase/mid_to_key.txt.gz \
+			data/complete/stagg/webquestions.examples.train.e2e.top10.filter.sid.tsv \
+		> working/train.tagged.txt
+	java -cp lib/*:bin in.sivareddy.graphparser.cli.RunDisambiguateEntities \
+        -endpoint localhost \
+        -typeKey "fb:type.object.type" \
+        -schema data/freebase/schema/all_domains_schema.txt \
+        -initialNbest 10 \
+        -intermediateNbest 10 \
+        -finalNbest 10 \
+        -entityHasReadableId false \
+        -nthreads 10 \
+        -noSucceedingNamedEntity false \
+        -noPrecedingNamedEntity false \
+        -containsNamedEntity false \
+        -shouldStartWithNamedEntity false \
+        -inputFile working/train.tagged.txt \
+        -outputFile data/complete/stagg/webquestions.examples.train.entities.forest.txt
 
 free917_print_out_of_domain_relations:
 	cat data/complete/free917/free917.train.json         \
@@ -493,11 +545,11 @@ entity_dismabiguated_webq_to_graphparser_forrest:
 		> working/webquestions.train.full.pass3.txt
 
 	cat working/webquestions.train.full.pass3.txt \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt
 
 	cat working/webquestions.train.full.pass3.txt \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt
 
 	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
@@ -507,6 +559,20 @@ entity_dismabiguated_webq_to_graphparser_forrest:
 	cat working/webquestions.test.full.pass3.txt \
 		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt
+
+stagg_entity_dismabiguated_webq_to_graphparser_forrest:
+	cat data/complete/stagg/webquestions.examples.test.entities.forest.txt \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.stagg.json.txt
+	cat data/complete/stagg/webquestions.examples.train.entities.forest.txt \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.stagg.json.txt
+	cat data/complete/stagg/webquestions.examples.train.entities.forest.txt \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.stagg.json.txt
 
 split_forest_to_sentences:
 	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
@@ -533,26 +599,29 @@ free917_split_forest_to_sentences:
 		> working/free917.test.forest_split.json
 
 full_data_to_xukun:
-	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 > working/dev.txt
-	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.80 > working/training.txt
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 > working/dev.txt
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 > working/training.txt
 	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt > working/test.txt
 
 webq_to_oscar:
-	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.20 > working/dev.txt
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt > working/dev.txt
 	cat working/dev.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.dev.split.json.txt
-	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.train.all.entity_annotated.vanilla.txt.80 > working/training.txt
+	cat working/webquestions.automaticDismabiguation.train.pass3.json.txt | python scripts/extract_subset.py  data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt > working/training.txt
 	cat working/training.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.train.split.json.txt
-	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt | python scripts/extract_subset.py  ../FreePar/data/webquestions/webquestions.test.all.entity_annotated.vanilla.txt > working/test.txt
+	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt | python scripts/extract_subset.py  data/webquestions/webquestions.examples.test.domains.entity.matches.json > working/test.txt
 	cat working/test.txt | python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py > working/webquestions.vanilla.freebaseAPIannotations.test.split.json.txt
 
 free917_to_oscar:
 	cat working/free917.train.forest_split.json \
+		| python scripts/cai-yates-preprocessing/add_answers.py data/complete/free917/free917.answers.txt \
 		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
 		> working/free917.train.gold_entities.json.txt
 	cat working/free917.dev.forest_split.json \
+		| python scripts/cai-yates-preprocessing/add_answers.py data/complete/free917/free917.answers.txt \
 		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
 		> working/free917.dev.gold_entities.json.txt
 	cat working/free917.test.forest_split.json \
+		| python scripts/cai-yates-preprocessing/add_answers.py data/complete/free917/free917.answers.txt \
 		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
 		> working/free917.test.gold_entities.json.txt
 
@@ -562,32 +631,76 @@ clueweb_to_deplamba_%:
 		| python scripts/convert-graph-parser-to-entity-mention-format_with_answers.py \
 		| gzip > working/ClueWeb09_1-sentences.$*.gz
 
+
+convert_deplambda_clueweb_to_gp_forest:
+	zcat working/clueweb-1shard-lambdas.json.txt.gz \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
+		| gzip > data/complete/clueweb/clueweb_deplambda_singletype.txt.gz
+
+extract_deplambda_lexicon_clueweb_split_%:
+	zcat ../data0/clueweb/clueweb_deplambda_singletype.$*.gz \
+	| python scripts/run_batch_process.py \
+		"java -cp lib/*:bin in.sivareddy.graphparser.cli.RunPrintDomainLexicon \
+		-endpoint localhost \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		-semanticParseKey dependency_lambda \
+		-typeKey "fb:type.object.type" \
+		-nthreads 40 \
+		-ignoreTypes true" \
+		100000 \
+	| gzip > ../data0/clueweb/ClueWeb09_1-lexicon.deplambda.txt.$*.gz
+
 convert_deplambda_to_gp_forest:
-	cat working/webquestions.vanilla.freebaseAPIannotations.dev.split.singletype_lambdas.json.txt \
+	cat working/wq-train-lambdas.json.txt working/wq-dev-lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.train.pass3.json.txt \
+		> working/webquestions-train-full-lambdas.json.txt
+	python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
+   		< working/webquestions-train-full-lambdas.json.txt \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt 
-	cat working/webquestions.vanilla.freebaseAPIannotations.training.split.singletype_lambdas.json.txt \
-		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
-		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
+   		< working/webquestions-train-full-lambdas.json.txt \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt 
-	cat working/webquestions.vanilla.freebaseAPIannotations.test.split.singletype_lambdas.json.txt \
+	cat working/wq-test-lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.test.pass3.json.txt \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt 
 
-	cat working/webquestions.vanilla.freebaseAPIannotations.dev.split.old_lambdas.json.txt \
+convert_deplambda_to_gp_forest_with_coupla:
+	cat working/wq-train-lambdas.json.txt working/wq-dev-lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.train.pass3.json.txt \
-		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.old.json.txt 
-	cat working/webquestions.vanilla.freebaseAPIannotations.train.split.old_lambdas.json.txt \
-		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
-		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.train.pass3.json.txt \
-		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.old.json.txt 
-	cat working/webquestions.vanilla.freebaseAPIannotations.test.split.old_lambdas.json.txt \
+		> working/webquestions-train-full-lambdas.json.txt
+	python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
+   		< working/webquestions-train-full-lambdas.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.dev.pass3.deplambda.singletype.json.txt 
+	python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
+   		< working/webquestions-train-full-lambdas.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.train.pass3.deplambda.singletype.json.txt 
+	cat working/wq-test-lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.test.pass3.json.txt \
-		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.old.json.txt 
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.test.pass3.deplambda.singletype.json.txt 
+
+free917_convert_deplambda_to_gp_forest:
+	cat working/free917-dev-lambdas.json.txt \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/free917.dev.forest_split.json \
+		> data/complete/vanilla_gold/free917.dev.deplambda.singletype.json 
+	cat working/free917-train-lambdas.json.txt \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/free917.train.forest_split.json \
+		> data/complete/vanilla_gold/free917.train.deplambda.singletype.json
+	cat working/free917-test-lambdas.json.txt \
+		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
+		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/free917.test.forest_split.json \
+		> data/complete/vanilla_gold/free917.test.deplambda.singletype.json
 
 data_to_xukun:
 	cat working/webquestions.automaticDismabiguation.test.pass3.json.txt \
@@ -1513,125 +1626,274 @@ extract_gold_graphs_deplambda_singletype:
    		data/freebase/schema/all_domains_schema.txt localhost \
 		dependency_lambda \
 		data/gold_graphs/deplambda_singletype_with_merge.dev \
+		lib_data/dummy.txt \
 	   	true \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
-		> data/outputs/deplambda_singletype_with_merge.dev.answers.txt
+		> data/gold_graphs/deplambda_singletype_with_merge.dev.answers.txt
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 	   	dependency_lambda \
 		data/gold_graphs/deplambda_singletype_without_merge.dev \
+		lib_data/dummy.txt \
 	   	false \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
-		> data/outputs/deplambda_singletype_without_merge.dev.answers.txt
+		> data/gold_graphs/deplambda_singletype_without_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/deplambda_singletype_with_merge_no_expand.dev \
+		lib_data/dummy.txt \
+	   	true \
+		false \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+		> data/gold_graphs/deplambda_singletype_with_merge_no_expand.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/deplambda_singletype_without_merge_no_expand.dev \
+		lib_data/dummy.txt \
+	   	false \
+		false \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+		> data/gold_graphs/deplambda_singletype_without_merge_no_expand.dev.answers.txt
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		dependency_lambda \
 		data/gold_graphs/deplambda_singletype_with_merge.full \
+		lib_data/dummy.txt \
 	   	true \
-		> data/outputs/deplambda_singletype_with_merge.full.answers.txt
+		> data/gold_graphs/deplambda_singletype_with_merge.full.answers.txt
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 	   	dependency_lambda \
 		data/gold_graphs/deplambda_singletype_without_merge.full \
+		lib_data/dummy.txt \
 	   	false \
-		> data/outputs/deplambda_singletype_without_merge.full.answers.txt
+		> data/gold_graphs/deplambda_singletype_without_merge.full.answers.txt
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/deplambda_singletype_with_merge_no_expand.full \
+		lib_data/dummy.txt \
+	   	true \
+		false \
+		> data/gold_graphs/deplambda_singletype_with_merge_no_expand.full.answers.txt
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+	   	dependency_lambda \
+		data/gold_graphs/deplambda_singletype_without_merge_no_expand.full \
+		lib_data/dummy.txt \
+	   	false \
+		false \
+		> data/gold_graphs/deplambda_singletype_without_merge_no_expand.full.answers.txt
+
+extract_gold_graphs_deplambda_singletype_with_lexicon:
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+		| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+		data/freebase/schema/all_domains_schema.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/deplambda_singletype_with_merge_with_lexicon.full \
+		data/complete/grounded_lexicon/deplambda_grounded_lexicon.txt.gz \
+		true \
+		> data/gold_graphs/deplambda_singletype_with_merge_with_lexicon.full.answers.txt
 
 extract_gold_graphs_dependency:
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		dependency_question_graph \
 		data/gold_graphs/dependency_without_merge.dev \
+		lib_data/dummy.txt \
 	   	false \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
-		> data/outputs/dependency_without_merge.dev.answers.txt
+		> data/gold_graphs/dependency_without_merge.dev.answers.txt
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		dependency_question_graph \
 		data/gold_graphs/dependency_with_merge.dev \
+		lib_data/dummy.txt \
 	   	true \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
-		> data/outputs/dependency_with_merge.dev.answers.txt
+		> data/gold_graphs/dependency_with_merge.dev.answers.txt
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		dependency_question_graph \
 		data/gold_graphs/dependency_without_merge.full \
+		lib_data/dummy.txt \
 	   	false \
-		> data/outputs/dependency_without_merge.full.answers.txt
+		> data/gold_graphs/dependency_without_merge.full.answers.txt
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		dependency_question_graph \
 		data/gold_graphs/dependency_with_merge.full \
+		lib_data/dummy.txt \
 	   	true \
-		> data/outputs/dependency_with_merge.full.answers.txt
+		> data/gold_graphs/dependency_with_merge.full.answers.txt
 
 extract_gold_graphs_ccg:
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/gold_graphs/ccg_with_merge.dev \
+		lib_data/dummy.txt \
 	   	true \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
-		> data/outputs/ccg_with_merge.dev.answers.txt
+		> data/gold_graphs/ccg_with_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_with_merge_with_expand.dev \
+		lib_data/dummy.txt \
+	   	true \
+		true \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+		> data/gold_graphs/ccg_with_merge_with_expand.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_without_merge_with_expand.dev \
+		lib_data/dummy.txt \
+	   	false \
+		true \
+		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+		> data/gold_graphs/ccg_without_merge_with_expand.dev.answers.txt
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/gold_graphs/ccg_without_merge.dev \
+		lib_data/dummy.txt \
 		false \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
-		> data/outputs/ccg_without_merge.dev.answers.txt
+		> data/gold_graphs/ccg_without_merge.dev.answers.txt
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
 	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/gold_graphs/ccg_with_merge.full \
+		lib_data/dummy.txt \
 	   	true \
-		> data/outputs/ccg_with_merge.full.answers.txt
+		> data/gold_graphs/ccg_with_merge.full.answers.txt
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_with_merge_with_expand.full \
+		lib_data/dummy.txt \
+	   	true \
+		true \
+		> data/gold_graphs/ccg_with_merge_with_expand.full.answers.txt
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
 	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/gold_graphs/ccg_without_merge.full \
+		lib_data/dummy.txt \
 		false \
-		> data/outputs/ccg_without_merge.full.answers.txt
+		> data/gold_graphs/ccg_without_merge.full.answers.txt
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_without_merge_with_expand.full \
+		lib_data/dummy.txt \
+		false \
+		true \
+		> data/gold_graphs/ccg_without_merge_with_expand.full.answers.txt
+
+extract_gold_graphs_ccg_with_lexicon:
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_with_merge_with_expand_with_lexicon.full \
+		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	   	true \
+		true \
+		> data/gold_graphs/ccg_with_merge_with_expand_with_lexicon.full.answers.txt
 
 extract_gold_graphs_bow:
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		bow_question_graph \
 		data/gold_graphs/bow_without_merge.dev \
+		lib_data/dummy.txt \
 	   	false \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
-		> data/outputs/bow_without_merge.dev.answers.txt
+		> data/gold_graphs/bow_without_merge.dev.answers.txt
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		bow_question_graph \
 		data/gold_graphs/bow_with_merge.dev \
+		lib_data/dummy.txt \
 	   	true \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
-		> data/outputs/bow_with_merge.dev.answers.txt
+		> data/gold_graphs/bow_with_merge.dev.answers.txt
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
 	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		bow_question_graph \
 		data/gold_graphs/bow_without_merge.full \
+		lib_data/dummy.txt \
 	   	false \
-		> data/outputs/bow_without_merge.train.answers.txt
+		> data/gold_graphs/bow_without_merge.full.answers.txt
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
 	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		bow_question_graph \
 		data/gold_graphs/bow_with_merge.full \
+		lib_data/dummy.txt \
 	   	true \
-		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.full.pass3.json.txt \
-		> data/outputs/bow_with_merge.full.answers.txt
+		> data/gold_graphs/bow_with_merge.full.answers.txt
+
+stagg_extract_gold_graphs_bow:
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.stagg.json.txt \
+	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.stagg.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		bow_question_graph \
+		data/gold_graphs/stagg_bow_without_merge.full \
+		lib_data/dummy.txt \
+	   	false \
+		> data/gold_graphs/stagg_bow_without_merge.full.answers.txt
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.stagg.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		bow_question_graph \
+		data/gold_graphs/stagg_bow_without_merge.dev \
+		lib_data/dummy.txt \
+	   	false \
+		> data/gold_graphs/stagg_bow_without_merge.dev.answers.txt
+
+stagg_extract_gold_graphs_ccg:
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.stagg.json.txt \
+	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.stagg.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/stagg_ccg_with_merge.full \
+		lib_data/dummy.txt \
+	   	true \
+		> data/gold_graphs/stagg_ccg_with_merge.full.answers.txt
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.stagg.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/stagg_ccg_with_merge.dev \
+		lib_data/dummy.txt \
+	   	true \
+		> data/gold_graphs/stagg_ccg_with_merge.dev.answers.txt
 
 easyccg_supervised_without_merge:
 	rm -rf ../working/easyccg_supervised_without_merge
@@ -1695,12 +1957,80 @@ easyccg_supervised_without_merge:
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
-	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
-	-goldParsesFile data/gold_graphs/ccg_without_merge.train.ser \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/ccg_without_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
-	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
 	-logFile ../working/easyccg_supervised_without_merge/all.log.txt \
 	> ../working/easyccg_supervised_without_merge/all.txt
+
+easyccg_supervised_without_merge_with_expand:
+	rm -rf ../working/easyccg_supervised_without_merge_with_expand
+	mkdir -p ../working/easyccg_supervised_without_merge_with_expand
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging false \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/ccg_without_merge_with_expand.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-logFile ../working/easyccg_supervised_without_merge_with_expand/all.log.txt \
+	> ../working/easyccg_supervised_without_merge_with_expand/all.txt
 
 easyccg_supervised_with_merge:
 	rm -rf ../working/easyccg_supervised_with_merge
@@ -1765,11 +2095,218 @@ easyccg_supervised_with_merge:
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
-	-goldParsesFile data/gold_graphs/ccg_with_merge.train.ser \
+	-goldParsesFile data/gold_graphs/ccg_with_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
-	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
 	-logFile ../working/easyccg_supervised_with_merge/all.log.txt \
 	> ../working/easyccg_supervised_with_merge/all.txt
+
+easyccg_supervised_with_merge_with_expand:
+	rm -rf ../working/easyccg_supervised_with_merge_with_expand
+	mkdir -p ../working/easyccg_supervised_with_merge_with_expand
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	-goldParsesFile data/gold_graphs/ccg_with_merge_with_expand.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-logFile ../working/easyccg_supervised_with_merge_with_expand/all.log.txt \
+	> ../working/easyccg_supervised_with_merge_with_expand/all.txt
+
+easyccg_supervised_with_merge_with_expand_with_lexicon:
+	rm -rf ../working/easyccg_supervised_with_merge_with_expand_with_lexicon
+	mkdir -p ../working/easyccg_supervised_with_merge_with_expand_with_lexicon
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	-goldParsesFile data/gold_graphs/ccg_with_merge_with_expand_with_lexicon.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-logFile ../working/easyccg_supervised_with_merge_with_expand_with_lexicon/all.log.txt \
+	> ../working/easyccg_supervised_with_merge_with_expand_with_lexicon/all.txt
+
+easyccg_supervised_with_merge_full_with_expand:
+	rm -rf ../working/easyccg_supervised_with_merge_full_with_expand
+	mkdir -p ../working/easyccg_supervised_with_merge_full_with_expand
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/ccg_with_merge_with_expand.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+	-logFile ../working/easyccg_supervised_with_merge_full_with_expand/all.log.txt \
+	> ../working/easyccg_supervised_with_merge_full_with_expand/all.txt
 
 easyccg_mwg:
 	rm -rf ../working/easyccg_mwg
@@ -1902,15 +2439,440 @@ deplambda_singletype_supervised_without_merge:
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
-	-goldParsesFile data/gold_graphs/deplambda_singletype_without_merge.train.ser \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_without_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
-	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
 	-logFile ../working/deplambda_singletype_supervised_without_merge/all.log.txt \
 	> ../working/deplambda_singletype_supervised_without_merge/all.txt
 
 deplambda_singletype_supervised_with_merge:
 	rm -rf ../working/deplambda_singletype_supervised_with_merge
 	mkdir -p ../working/deplambda_singletype_supervised_with_merge
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge/all.txt
+
+deplambda_singletype_supervised_with_merge_with_lexicon:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_with_lexicon
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_with_lexicon
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon data/complete/grounded_lexicon/deplambda_grounded_lexicon.txt.gz \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge_with_lexicon.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge_with_lexicon/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_with_lexicon/all.txt
+
+
+
+deplambda_singletype_supervised_with_merge_with_copula:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_with_copula
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_with_copula
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.train.pass3.deplambda.singletype.json.txt \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.dev.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge_with_copula/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_with_copula/all.txt
+
+deplambda_singletype_supervised_with_merge_with_copula_loaded_model:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_with_copula_loaded_model
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_with_copula_loaded_model
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 0 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-loadModelFromFile ../working/deplambda_singletype_supervised_with_merge/all.log.txt.model.bestIteration \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.dev.pass3.deplambda.singletype.json.100.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge_with_copula_loaded_model/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_with_copula_loaded_model/all.txt
+
+deplambda_singletype_supervised_with_merge_with_copula_with_lexicon:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_with_copula_with_lexicon
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_with_copula_with_lexicon
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon data/complete/grounded_lexicon/deplambda_grounded_lexicon.txt.gz \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.train.pass3.deplambda.singletype.json.txt \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge_with_lexicon.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.dev.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge_with_copula_with_lexicon/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_with_copula_with_lexicon/all.txt
+
+
+deplambda_singletype_supervised_without_merge_no_expand:
+	rm -rf ../working/deplambda_singletype_supervised_without_merge_no_expand
+	mkdir -p ../working/deplambda_singletype_supervised_without_merge_no_expand
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging false \
+	-handleEventEventEdges true \
+	-useBackOffGraph false \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_without_merge_no_expand.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_without_merge_no_expand/all.log.txt \
+	> ../working/deplambda_singletype_supervised_without_merge_no_expand/all.txt
+
+deplambda_singletype_supervised_with_merge_no_expand:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_no_expand
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_no_expand
 	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-pointWiseF1Threshold 0.2 \
 	-semanticParseKey dependency_lambda \
@@ -1962,6 +2924,357 @@ deplambda_singletype_supervised_with_merge:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
+	-useBackOffGraph false \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge_no_expand.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge_no_expand/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_no_expand/all.txt
+
+deplambda_singletype_supervised_with_merge_loaded_model:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_loaded_model
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_loaded_model
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 0 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-loadModelFromFile ../working/deplambda_singletype_supervised_with_merge/all.log.txt.model.bestIteration \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge_loaded_model/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_loaded_model/all.txt
+
+deplambda_singletype_supervised_with_merge_full:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_full
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.train.pass3.deplambda.singletype.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.dev.pass3.deplambda.singletype.json.txt" \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.dev.pass3.deplambda.singletype.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.with_copula.test.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge_full/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_full/all.txt
+
+deplambda_singletype_supervised_without_merge_full_no_expand:
+	rm -rf ../working/deplambda_singletype_supervised_without_merge_full_no_expand
+	mkdir -p ../working/deplambda_singletype_supervised_without_merge_full_no_expand
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging false \
+	-handleEventEventEdges true \
+	-useBackOffGraph false \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt" \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_without_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_without_merge_full_no_expand/all.log.txt \
+	> ../working/deplambda_singletype_supervised_without_merge_full_no_expand/all.txt
+
+deplambda_singletype_supervised_with_merge_full_no_expand:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_full_no_expand
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_full_no_expand
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-useBackOffGraph false \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt" \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge_full_no_expand/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_full_no_expand/all.txt
+
+deplambda_singletype_supervised_with_merge_full_with_answertype:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_full_with_answertype
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_full_with_answertype
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
 	-useBackOffGraph true \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
@@ -1975,8 +3288,8 @@ deplambda_singletype_supervised_with_merge:
 	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
-	-logFile ../working/deplambda_singletype_supervised_with_merge/all.log.txt \
-	> ../working/deplambda_singletype_supervised_with_merge/all.txt
+	-logFile ../working/deplambda_singletype_supervised_with_merge_full_with_answertype/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_full_with_answertype/all.txt
 
 deplambda_singletype_supervised_with_merge_with_answertype:
 	rm -rf ../working/deplambda_singletype_supervised_with_merge_with_answertype
@@ -2114,7 +3427,7 @@ deplambda_singletype_supervised_with_merge_wordGrelPart:
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
-	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.train.ser \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
 	-logFile ../working/deplambda_singletype_supervised_with_merge_wordGrelPart/all.log.txt \
@@ -2185,7 +3498,7 @@ deplambda_singletype_supervised_with_merge_eventType:
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
-	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.train.ser \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
 	-logFile ../working/deplambda_singletype_supervised_with_merge_eventType/all.log.txt \
@@ -2255,7 +3568,7 @@ deplambda_singletype_supervised_with_merge_argGrel:
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
-	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.train.ser \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
 	-logFile ../working/deplambda_singletype_supervised_with_merge_argGrel/all.log.txt \
@@ -2325,7 +3638,7 @@ deplambda_singletype_supervised_with_merge_urelGrel:
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
-	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.train.ser \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
 	-logFile ../working/deplambda_singletype_supervised_with_merge_urelGrel.1/all.log.txt \
@@ -2395,11 +3708,12 @@ deplambda_singletype_supervised_with_merge_urelGrelPart:
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt \
-	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.train.ser \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
 	-logFile ../working/deplambda_singletype_supervised_with_merge_urelGrelPart/all.log.txt \
 	> ../working/deplambda_singletype_supervised_with_merge_urelGrelPart/all.txt
+
 
 bow_supervised:
 	rm -rf ../working/bow_supervised
@@ -2462,12 +3776,352 @@ bow_supervised:
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
-	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
-	-goldParsesFile data/gold_graphs/bow_without_merge.train.ser \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/bow_without_merge.full.ser \
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
-	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
 	-logFile ../working/bow_supervised/all.log.txt \
 	> ../working/bow_supervised/all.txt
+
+bow_supervised_with_merge:
+	rm -rf ../working/bow_supervised_with_merge
+	mkdir -p ../working/bow_supervised_with_merge
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph true \
+	-ngramGrelPartFlag true \
+	-addOnlyBagOfWordsGraph true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel false \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-evaluateOnlyTheFirstBest true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/bow_with_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-logFile ../working/bow_supervised_with_merge/all.log.txt \
+	> ../working/bow_supervised_with_merge/all.txt
+
+bow_supervised_full:
+	rm -rf ../working/bow_supervised_full
+	mkdir -p ../working/bow_supervised_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph true \
+	-ngramGrelPartFlag true \
+	-addOnlyBagOfWordsGraph true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel false \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-evaluateOnlyTheFirstBest true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/bow_without_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+	-logFile ../working/bow_supervised_full/all.log.txt \
+	> ../working/bow_supervised_full/all.txt
+
+stagg_bow_supervised_full:
+	rm -rf ../working/stagg_bow_supervised
+	mkdir -p ../working/stagg_bow_supervised
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph true \
+	-ngramGrelPartFlag true \
+	-addOnlyBagOfWordsGraph true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel false \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-evaluateOnlyTheFirstBest true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.stagg.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.stagg.json.txt" \
+	-goldParsesFile data/gold_graphs/stagg_bow_without_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.stagg.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.stagg.json.txt \
+	-logFile ../working/stagg_bow_supervised_full/all.log.txt \
+	> ../working/stagg_bow_supervised_full/all.txt
+
+stagg_easyccg_supervised_with_merge_full:
+	rm -rf ../working/stagg_easyccg_supervised_with_merge_full
+	mkdir -p ../working/stagg_easyccg_supervised_with_merge_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.stagg.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.stagg.json.txt" \
+	-goldParsesFile data/gold_graphs/stagg_ccg_with_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.stagg.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.stagg.json.txt \
+	-logFile ../working/stagg_easyccg_supervised_with_merge_full/all.log.txt \
+	> ../working/stagg_easyccg_supervised_with_merge_full/all.txt
+
+dependency_with_merge_full:
+	rm -rf ../working/dependency_with_merge_full
+	mkdir -p ../working/dependency_with_merge_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_question_graph \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-evaluateOnlyTheFirstBest true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-allowMerging true \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt" \
+	-goldParsesFile data/gold_graphs/dependency_with_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/dependency_with_merge_full/all.log.txt \
+	> ../working/dependency_with_merge_full/all.txt
 
 dependency_with_merge:
 	rm -rf ../working/dependency_with_merge
@@ -2530,10 +4184,9 @@ dependency_with_merge:
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
-	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.old.json.txt \
-	-goldParsesFile data/gold_graphs/dependency_with_merge.train.ser \
-	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.old.json.txt \
-	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.old.json.txt \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt" \
+	-goldParsesFile data/gold_graphs/dependency_with_merge.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	-logFile ../working/dependency_with_merge/all.log.txt \
 	> ../working/dependency_with_merge/all.txt
 
@@ -2589,7 +4242,6 @@ dependency_without_merge:
 	-validQueryFlag true \
 	-useGoldRelations true \
 	-evaluateOnlyTheFirstBest true \
-	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
 	-allowMerging false \
@@ -2598,13 +4250,11 @@ dependency_without_merge:
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
-	-supervisedCorpus data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.old.json.txt \
-	-goldParsesFile data/gold_graphs/dependency_without_merge.train.ser \
-	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.old.json.txt \
-	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.old.json.txt \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt" \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-goldParsesFile data/gold_graphs/dependency_without_merge.full.ser \
 	-logFile ../working/dependency_without_merge/all.log.txt \
 	> ../working/dependency_without_merge/all.txt
-
 
 create_deplambda_lexicon:
 	cat ~/Downloads/clueweb-subset-academic-lexicon.json | sed -e "s/ u\"/ \"/g" | sed -e "s/ u'/ \"/g" | sed -e "s/{'/{\"/g" | sed -e "s/' /\" /g" | sed -e "s/':/\":/g" | sed -e "s/ '/ \"/g" | sed -e "s/',/\",/g" | java -cp lib/*:bin/ in.sivareddy.scripts.ConvertDepLambdaGroundedLexiconToGraphParser data/freebase/schema/all_domains_schema.txt > data/deplambda/clueweb-subset-academic-grounded_lexicon.txt
@@ -2620,46 +4270,164 @@ free917_extract_gold_graphs_ccg:
    		data/freebase/schema/all_domains_schema_free917.txt localhost \
 		synPars \
 		data/gold_graphs/free917_ccg_with_merge.dev \
+		lib_data/dummy.txt \
 	   	true \
 		< data/complete/vanilla_gold/free917.dev.easyccg.json \
-		> data/outputs/free917_ccg_with_merge.dev.answers.txt
+		> data/gold_graphs/free917_ccg_with_merge.dev.answers.txt
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema_free917.txt localhost \
 		synPars \
 		data/gold_graphs/free917_ccg_without_merge.dev \
+		lib_data/dummy.txt \
 		false \
 		< data/complete/vanilla_gold/free917.dev.easyccg.json \
-		> data/outputs/free917_ccg_without_merge.dev.answers.txt
+		> data/gold_graphs/free917_ccg_without_merge.dev.answers.txt
 	cat data/complete/vanilla_gold/free917.train.easyccg.json data/complete/vanilla_gold/free917.dev.easyccg.json \
 		| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema_free917.txt localhost \
 		synPars \
 		data/gold_graphs/free917_ccg_with_merge.full \
+		lib_data/dummy.txt \
 	   	true \
-		> data/outputs/free917_ccg_with_merge.full.answers.txt
+		> data/gold_graphs/free917_ccg_with_merge.full.answers.txt
 	cat data/complete/vanilla_gold/free917.train.easyccg.json data/complete/vanilla_gold/free917.dev.easyccg.json \
     	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema_free917.txt localhost \
 		synPars \
 		data/gold_graphs/free917_ccg_without_merge.full \
+		lib_data/dummy.txt \
 		false \
-		> data/outputs/free917_ccg_without_merge.full.answers.txt
+		> data/gold_graphs/free917_ccg_without_merge.full.answers.txt
+	cat data/complete/vanilla_gold/free917.train.easyccg.json data/complete/vanilla_gold/free917.dev.easyccg.json \
+		| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		synPars \
+		data/gold_graphs/free917_ccg_with_merge_with_expand.full \
+		lib_data/dummy.txt \
+	   	true \
+		true \
+		> data/gold_graphs/free917_ccg_with_merge_with_expand.full.answers.txt
+
+free917_extract_gold_graphs_ccg_with_lexicon:
+	cat data/complete/vanilla_gold/free917.train.easyccg.json data/complete/vanilla_gold/free917.dev.easyccg.json \
+		| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		synPars \
+		data/gold_graphs/free917_ccg_with_merge_with_expand_with_lexicon.full \
+		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	   	true \
+		true \
+		> data/gold_graphs/free917_ccg_with_merge_with_expand_with_lexicon.full.answers.txt
+
+free917_extract_gold_graphs_deplambda_singletype:
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/free917_deplambda_singletype_with_merge.dev \
+		lib_data/dummy.txt \
+	   	true \
+		< data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+		> data/gold_graphs/free917_deplambda_singletype_with_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/free917_deplambda_singletype_without_merge.dev \
+		lib_data/dummy.txt \
+	   	false \
+		< data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+		> data/gold_graphs/free917_deplambda_singletype_without_merge.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/free917_deplambda_singletype_with_merge_no_expand.dev \
+		lib_data/dummy.txt \
+	   	true \
+		false \
+		< data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+		> data/gold_graphs/free917_deplambda_singletype_with_merge_no_expand.dev.answers.txt
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/free917_deplambda_singletype_without_merge_no_expand.dev \
+		lib_data/dummy.txt \
+	   	false \
+		false \
+		< data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+		> data/gold_graphs/free917_deplambda_singletype_without_merge_no_expand.dev.answers.txt
+	cat data/complete/vanilla_gold/free917.train.deplambda.singletype.json \
+		data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/free917_deplambda_singletype_with_merge.full \
+		lib_data/dummy.txt \
+	   	true \
+		> data/gold_graphs/free917_deplambda_singletype_with_merge.full.answers.txt
+	cat data/complete/vanilla_gold/free917.train.deplambda.singletype.json \
+		data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/free917_deplambda_singletype_without_merge.full \
+		lib_data/dummy.txt \
+	   	false \
+		> data/gold_graphs/free917_deplambda_singletype_without_merge.full.answers.txt
+
+free917_extract_gold_graphs_deplambda_singletype_with_lexicon:
+	cat data/complete/vanilla_gold/free917.train.deplambda.singletype.json \
+		data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		dependency_lambda \
+		data/gold_graphs/free917_deplambda_singletype_with_merge_with_lexicon.full \
+		data/complete/grounded_lexicon/deplambda_grounded_lexicon.txt.gz \
+	   	true \
+		> data/gold_graphs/free917_deplambda_singletype_with_merge_with_lexicon.full.answers.txt
+
+free917_extract_gold_graphs_dependency:
+	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		dependency_question_graph \
+		data/gold_graphs/free917_dependency_with_merge.dev \
+		lib_data/dummy.txt \
+	   	true \
+		< data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+		> data/gold_graphs/free917_dependency_with_merge.dev.answers.txt
+	cat data/complete/vanilla_gold/free917.train.deplambda.singletype.json \
+		data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		dependency_question_graph \
+		data/gold_graphs/free917_dependency_with_merge.full \
+		lib_data/dummy.txt \
+	   	true \
+		> data/gold_graphs/free917_dependency_with_merge.full.answers.txt
 
 free917_extract_gold_graphs_bow:
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema_free917.txt localhost \
 		bow_question_graph \
 		data/gold_graphs/free917_bow_without_merge.dev \
+		lib_data/dummy.txt \
 		false \
 		< data/complete/vanilla_gold/free917.dev.easyccg.json \
-		> data/outputs/free917_bow_without_merge.dev.answers.txt
+		> data/gold_graphs/free917_bow_without_merge.dev.answers.txt
 	cat data/complete/vanilla_gold/free917.train.easyccg.json data/complete/vanilla_gold/free917.dev.easyccg.json \
     	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema_free917.txt localhost \
 		bow_question_graph \
 		data/gold_graphs/free917_bow_without_merge.full \
+		lib_data/dummy.txt \
 		false \
-		> data/outputs/free917_bow_without_merge.full.answers.txt
+		> data/gold_graphs/free917_bow_without_merge.full.answers.txt
+	cat data/complete/vanilla_gold/free917.test.easyccg.json \
+    	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema_free917.txt localhost \
+		bow_question_graph \
+		data/gold_graphs/free917_bow_without_merge.test \
+		lib_data/dummy.txt \
+		false \
+		> data/gold_graphs/free917_bow_without_merge.test.answers.txt
 
 free917_bow_supervised:
 	rm -rf ../working/free917_bow_supervised
@@ -2800,6 +4568,150 @@ free917_easyccg_supervised_with_merge:
 	-logFile ../working/free917_easyccg_supervised_with_merge/all.log.txt \
 	> ../working/free917_easyccg_supervised_with_merge/all.txt
 
+free917_easyccg_supervised_with_merge_with_expand_full:
+	rm -rf ../working/free917_easyccg_supervised_with_merge_with_expand_full
+	mkdir -p ../working/free917_easyccg_supervised_with_merge_with_expand_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema_free917.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag false \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag true \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_gold/free917.train.easyccg.json;data/complete/vanilla_gold/free917.dev.easyccg.json" \
+	-goldParsesFile data/gold_graphs/free917_ccg_with_merge_with_expand.full.ser \
+	-devFile data/complete/vanilla_gold/free917.dev.easyccg.json \
+	-testFile data/complete/vanilla_gold/free917.test.easyccg.json \
+	-logFile ../working/free917_easyccg_supervised_with_merge_with_expand_full/all.log.txt \
+	> ../working/free917_easyccg_supervised_with_merge_with_expand_full/all.txt
+
+free917_easyccg_supervised_with_merge_with_expand_with_lexicon_full:
+	rm -rf ../working/free917_easyccg_supervised_with_merge_with_expand_with_lexicon_full
+	mkdir -p ../working/free917_easyccg_supervised_with_merge_with_expand_with_lexicon_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema_free917.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag false \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag true \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_gold/free917.train.easyccg.json;data/complete/vanilla_gold/free917.dev.easyccg.json" \
+	-goldParsesFile data/gold_graphs/free917_ccg_with_merge_with_expand_with_lexicon.full.ser \
+	-devFile data/complete/vanilla_gold/free917.dev.easyccg.json \
+	-testFile data/complete/vanilla_gold/free917.test.easyccg.json \
+	-logFile ../working/free917_easyccg_supervised_with_merge_with_expand_with_lexicon_full/all.log.txt \
+	> ../working/free917_easyccg_supervised_with_merge_with_expand_with_lexicon_full/all.txt
+
 free917_easyccg_supervised_with_merge_with_lexicon:
 	rm -rf ../working/free917_easyccg_supervised_with_merge_with_lexicon
 	mkdir -p ../working/free917_easyccg_supervised_with_merge_with_lexicon
@@ -2939,4 +4851,293 @@ free917_easyccg_supervised_without_merge:
 	-devFile data/complete/vanilla_gold/free917.dev.easyccg.json \
 	-logFile ../working/free917_easyccg_supervised_without_merge/all.log.txt \
 	> ../working/free917_easyccg_supervised_without_merge/all.txt
+
+free917_deplambda_singletype_supervised_with_merge:
+	rm -rf ../working/free917_deplambda_singletype_supervised_with_merge
+	mkdir -p ../working/free917_deplambda_singletype_supervised_with_merge
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema_free917.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag false \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag true \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_gold/free917.train.deplambda.singletype.json;" \
+	-goldParsesFile data/gold_graphs/free917_deplambda_singletype_with_merge.full.ser \
+	-devFile data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+	-logFile ../working/free917_deplambda_singletype_supervised_with_merge/all.log.txt \
+	> ../working/free917_deplambda_singletype_supervised_with_merge/all.txt
+
+free917_deplambda_singletype_supervised_with_merge_full:
+	rm -rf ../working/free917_deplambda_singletype_supervised_with_merge_full
+	mkdir -p ../working/free917_deplambda_singletype_supervised_with_merge_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema_free917.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag false \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag true \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_gold/free917.train.deplambda.singletype.json;data/complete/vanilla_gold/free917.dev.deplambda.singletype.json" \
+	-goldParsesFile data/gold_graphs/free917_deplambda_singletype_with_merge.full.ser \
+	-devFile data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+	-testFile data/complete/vanilla_gold/free917.test.deplambda.singletype.json \
+	-logFile ../working/free917_deplambda_singletype_supervised_with_merge_full/all.log.txt \
+	> ../working/free917_deplambda_singletype_supervised_with_merge_full/all.txt
+
+free917_deplambda_singletype_supervised_with_merge_with_lexicon_full:
+	rm -rf ../working/free917_deplambda_singletype_supervised_with_merge_with_lexicon_full
+	mkdir -p ../working/free917_deplambda_singletype_supervised_with_merge_with_lexicon_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema_free917.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon data/complete/grounded_lexicon/deplambda_grounded_lexicon.txt.gz \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag false \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag true \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_gold/free917.train.deplambda.singletype.json;data/complete/vanilla_gold/free917.dev.deplambda.singletype.json" \
+	-goldParsesFile data/gold_graphs/free917_deplambda_singletype_with_merge_with_lexicon.full.ser \
+	-devFile data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+	-testFile data/complete/vanilla_gold/free917.test.deplambda.singletype.json \
+	-logFile ../working/free917_deplambda_singletype_supervised_with_merge_with_lexicon_full/all.log.txt \
+	> ../working/free917_deplambda_singletype_supervised_with_merge_with_lexicon_full/all.txt
+
+free917_dependency_supervised_with_merge_full:
+	rm -rf ../working/free917_dependency_supervised_with_merge_full
+	mkdir -p ../working/free917_dependency_supervised_with_merge_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_question_graph \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema_free917.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag false \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag true \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_gold/free917.train.deplambda.singletype.json;data/complete/vanilla_gold/free917.dev.deplambda.singletype.json" \
+	-goldParsesFile data/gold_graphs/free917_dependency_with_merge.full.ser \
+	-devFile data/complete/vanilla_gold/free917.dev.deplambda.singletype.json \
+	-testFile data/complete/vanilla_gold/free917.test.deplambda.singletype.json \
+	-logFile ../working/free917_dependency_supervised_with_merge_full/all.log.txt \
+	> ../working/free917_dependency_supervised_with_merge_full/all.txt
 

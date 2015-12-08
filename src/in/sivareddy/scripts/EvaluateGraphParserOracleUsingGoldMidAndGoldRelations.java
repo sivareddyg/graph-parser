@@ -73,8 +73,9 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
 
   public EvaluateGraphParserOracleUsingGoldMidAndGoldRelations(
       String schemaFile, String endPointName, String semanticParseKey,
-      String goldOutputFile, int nthreads, boolean allowMerging,
-      boolean handleEventEventEdges) throws IOException {
+      String goldOutputFile, String lexiconFileName, int nthreads,
+      boolean allowMerging, boolean handleEventEventEdges,
+      boolean useBackoffGraph) throws IOException {
 
     Schema schema = new Schema(schemaFile);
     RdfGraphTools endPoint =
@@ -87,10 +88,11 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     this.schema = schema;
     this.goldOutputFile = goldOutputFile;
 
-    groundedLexicon = new GroundedLexicon("lib_data/dummy.txt");
+    groundedLexicon = new GroundedLexicon(lexiconFileName);
     kb =
         new KnowledgeBaseOnline(endPointName, String.format(
-            "http://%s:8890/sparql", endPointName), "dba", "dba", 50000, schema);
+            "http://%s:8890/sparql", endPointName), "dba", "dba", 500000,
+            schema);
 
     CcgAutoLexicon questionCcgAutoLexicon =
         new CcgAutoLexicon("./lib_data/candc_markedup.modified",
@@ -112,8 +114,8 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
             relationTypingIdentifiers, new StructuredPercepton(), 1, true,
             true, true, true, true, true, true, true, true, true, true, true,
             true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, allowMerging, handleEventEventEdges, true,
-            10.0, 1.0, 0.0, 0.0);
+            true, true, true, true, allowMerging, handleEventEventEdges,
+            useBackoffGraph, 10.0, 1.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
     logger.removeAllAppenders();
@@ -383,8 +385,12 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     String endPointName = args[1];
     String semanticParseKey = args[2];
     String goldOutputFile = args[3];
+    String lexiconFileName = args[4];
     int nthreads = 20;
-    boolean allowMerging = Boolean.parseBoolean(args[4]);
+    boolean allowMerging = Boolean.parseBoolean(args[5]);
+    boolean useBackoffGraph = true;
+    if (args.length > 6)
+      useBackoffGraph = Boolean.parseBoolean(args[6]);
 
     boolean handleEventEventEdges = false;
     if (semanticParseKey.equals(SentenceKeys.DEPENDENCY_LAMBDA)) {
@@ -393,8 +399,8 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
 
     EvaluateGraphParserOracleUsingGoldMidAndGoldRelations engine =
         new EvaluateGraphParserOracleUsingGoldMidAndGoldRelations(schemaFile,
-            endPointName, semanticParseKey, goldOutputFile, nthreads,
-            allowMerging, handleEventEventEdges);
+            endPointName, semanticParseKey, goldOutputFile, lexiconFileName,
+            nthreads, allowMerging, handleEventEventEdges, useBackoffGraph);
     engine.evaluateAll(System.in, System.out);
   }
 }

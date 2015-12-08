@@ -7,6 +7,7 @@ for line in sys.stdin:
     line = json.loads(line)
     word_index = 0
     sent = []
+    pos = []
     entity_mapping = {}
     if 'entities' in line:
         for entity in line['entities']:
@@ -21,6 +22,8 @@ for line in sys.stdin:
                 word_parts = [word_part[0].upper() + word_part[1:] if word_part != "" else "_"
                               for word_part in word['word'].split("_")]
             sent.extend(word_parts)
+            for i in xrange(len(word_parts)):
+                pos.append(word['pos'])
             word_to_mention[original_index] = {}
             word_to_mention[original_index]["start"] = word_index
             word_to_mention[original_index][
@@ -45,6 +48,7 @@ for line in sys.stdin:
             word_index += len(word_parts)
         else:
             sent.append(word['word'])
+            pos.append(word['pos'])
             word_index += 1
     sentence = {}
     if 'index' not in line:
@@ -59,6 +63,7 @@ for line in sys.stdin:
         sentence_index = line['index']
         sentence["index"] = sentence_index
     sentence["sentence"] = " ".join(sent)
+    sentence["posSequence"] = " ".join(pos)
     sentence["entities"] = []
     for word_index in sorted(word_to_mention.keys()):
         sentence["entities"].append(word_to_mention[word_index])

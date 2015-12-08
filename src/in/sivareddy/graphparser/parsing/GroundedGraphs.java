@@ -75,9 +75,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
@@ -94,6 +96,8 @@ public class GroundedGraphs {
   private CcgParser questionCcgParser;
 
   private static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "NNPS");
+  private static Gson gson = new Gson();
+  private static JsonParser jsonParser = new JsonParser();
 
   private boolean urelGrelFlag = true;
   private boolean urelPartGrelPartFlag = true;
@@ -378,28 +382,33 @@ public class GroundedGraphs {
       // Remove multiple question nodes, and retain only the one that appear
       // first.
       graphs.forEach(g -> g.removeMultipleQuestionNodes());
+    }
 
-      if (useBackOffGraph) {
-        // If there is no path found between question and entity nodes, use a
-        // backoff graph.
-        boolean graphHasPath = false;
-        for (LexicalGraph graph : graphs) {
-          graphHasPath |= graph.hasPathBetweenQuestionAndEntityNodes();
-        }
+    if (useBackOffGraph
+        && (key.equals(SentenceKeys.CCG_PARSES) || key
+            .equals(SentenceKeys.DEPENDENCY_LAMBDA))) {
+      // If there is no path found between question and entity nodes, use a
+      // backoff graph.
+      boolean graphHasPath = false;
+      for (LexicalGraph graph : graphs) {
+        graphHasPath |= graph.hasPathBetweenQuestionAndEntityNodes();
+      }
 
-        if (!graphHasPath) {
-          graphs.clear();
-          for (JsonElement semPar : semPars) {
-            JsonArray predicates = semPar.getAsJsonArray();
-            if (predicates.size() == 0)
-              continue;
-            Set<String> semanticParse = new HashSet<>();
-            predicates.forEach(x -> semanticParse.add(x.getAsString()));
-            LexicalGraph backOffGraph =
-                buildBackOffUngroundedGraph(jsonSentence, semanticParse);
-            if (backOffGraph != null) {
-              graphs.add(backOffGraph);
-            }
+      if (!graphHasPath) {
+        JsonArray semPars = new JsonArray();
+        graphs.forEach(x -> semPars.add(jsonParser.parse(gson.toJson(x
+            .getSemanticParse()))));
+        graphs.clear();
+        for (JsonElement semPar : semPars) {
+          JsonArray predicates = semPar.getAsJsonArray();
+          if (predicates.size() == 0)
+            continue;
+          Set<String> semanticParse = new HashSet<>();
+          predicates.forEach(x -> semanticParse.add(x.getAsString()));
+          LexicalGraph backOffGraph =
+              buildBackOffUngroundedGraph(jsonSentence, semanticParse);
+          if (backOffGraph != null) {
+            graphs.add(backOffGraph);
           }
         }
       }
@@ -499,21 +508,34 @@ public class GroundedGraphs {
         getBagOfWordsUngroundedSemanticParse(jsonSentence, leaves);
     buildUngroundeGraphFromSemanticParse(parse, leaves, 0.0, graphs);
 
+    Set<String> countStyledParse =
+        createCountStyledSemanticParse(jsonSentence, parse);
+
+    if (countStyledParse != null) {
+      buildUngroundeGraphFromSemanticParse(countStyledParse, leaves, 0.0,
+          graphs);
+    }
+
+    // Add ungrounded graph features.
+    addUngroundedGraphFeatures(jsonSentence, graphs);
+    return graphs;
+  }
+
+
+  public static Set<String> createCountStyledSemanticParse(
+      JsonObject jsonSentence, Set<String> originalParse) {
     StringBuilder sentenceBuilder = new StringBuilder();
-    jsonSentence
-        .get(SentenceKeys.WORDS_KEY)
-        .getAsJsonArray()
-        .forEach(
-            x -> {
-              sentenceBuilder.append(x.getAsJsonObject()
-                  .get(SentenceKeys.WORD_KEY).getAsString().toLowerCase());
-              sentenceBuilder.append(" ");
-            });
+    JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+    words.forEach(x -> {
+      sentenceBuilder.append(x.getAsJsonObject().get(SentenceKeys.WORD_KEY)
+          .getAsString().toLowerCase());
+      sentenceBuilder.append(" ");
+    });
 
     if (sentenceBuilder.toString().contains("how many")) {
       // If the sentence has "how many", add an additional graph with COUNT.
       String questionPredicate = null;
-      for (String parsePart : parse) {
+      for (String parsePart : originalParse) {
         if (parsePart.startsWith("QUESTION(")) {
           questionPredicate = parsePart;
           break;
@@ -521,20 +543,19 @@ public class GroundedGraphs {
       }
 
       if (questionPredicate != null) {
-        Set<String> newParse = new HashSet<>(parse);
+        Set<String> newParse = new HashSet<>(originalParse);
         newParse.remove(questionPredicate);
         String questionVar =
             questionPredicate.replace("QUESTION(", "").replace(")", "");
-        String countVar = "0:x";
+        String countVar =
+            questionVar.equals("0:x") ? String.format("%d:x", words.size() - 1)
+                : "0:x";
         newParse.add(String.format("QUESTION(%s)", countVar));
         newParse.add(String.format("COUNT(%s , %s)", questionVar, countVar));
-        buildUngroundeGraphFromSemanticParse(newParse, leaves, 0.0, graphs);
+        return newParse;
       }
     }
-
-    // Add ungrounded graph features.
-    addUngroundedGraphFeatures(jsonSentence, graphs);
-    return graphs;
+    return null;
   }
 
   /**
@@ -662,6 +683,15 @@ public class GroundedGraphs {
     }
 
     buildUngroundeGraphFromSemanticParse(semanticParse, leaves, 0.0, graphs);
+
+    if (isQuestion) {
+      Set<String> countStyledParse =
+          createCountStyledSemanticParse(jsonSentence, semanticParse);
+      if (countStyledParse != null) {
+        buildUngroundeGraphFromSemanticParse(countStyledParse, leaves, 0.0,
+            graphs);
+      }
+    }
 
     return graphs;
   }
@@ -1671,12 +1701,17 @@ public class GroundedGraphs {
       LexicalItem node2 = gGraph.getUnifiedNode(node2Old);
 
       if (!node1.isEntity() && !node2.isEntity()) {
-        int node1Size =
-            gGraph.getEdges(node1) != null ? gGraph.getEdges(node1).size() : 0;
-        int node2Size =
-            gGraph.getEdges(node2) != null ? gGraph.getEdges(node2).size() : 0;
-
-        if (node1Size >= node2Size) {
+        // The way you combine two nodes should be consistent, or else you will
+        // end up with conflicting features. This effect is empirically
+        // significant.
+        int order =
+            edge.getRelation().getLeft()
+                .compareTo(edge.getRelation().getRight());
+        if (order == 0) {
+          order = node1.getPos().compareTo(node2.getPos());
+        }
+        
+        if (order <= 0) {
           mergedGraphs.addAll(mergeNodes(gGraph, node1, node2, restrictedNodes,
               edgeGroundingConstraints, nonMergableNodes, graphsSoFar,
               nbestEdges, nbestGraphs, useEntityTypes, useKB,
@@ -1817,12 +1852,19 @@ public class GroundedGraphs {
               .getRelation().getRight(), childIsEntity, parentIsEntity);
       MergedEdgeFeature mergedFeature = new MergedEdgeFeature(key, 1.0);
       mergedGraph.addFeature(mergedFeature);
+      learningModel.setWeightIfAbsent(mergedFeature, -0.5);
 
-      key =
+      /*-key =
           Lists.newArrayList(childNode.getPos(), parentNode.getPos(),
               childIsEntity, parentIsEntity);
       mergedFeature = new MergedEdgeFeature(key, 1.0);
       mergedGraph.addFeature(mergedFeature);
+      learningModel.setWeightIfAbsent(mergedFeature, -2.0);*/
+
+      /*-// Add a feature indicating the edge has been merged.
+      MergedEdgeFeature hasMergedEdge =
+          new MergedEdgeFeature(Lists.newArrayList(Boolean.TRUE), 1.0);
+      mergedGraph.addFeature(hasMergedEdge);*/
     }
 
     // Remove the type grounding features which came from child node.
@@ -1857,6 +1899,36 @@ public class GroundedGraphs {
     if (graphsSoFar.putIfAbsent(Pair.of(mergedGraph.hashCode(), mergedGraph
         .getParallelGraph().hashCode()), true) == null) {
       mergedGraphs.add(mergedGraph);
+    }
+
+    // Revise parent node features.
+    Set<Edge<LexicalItem>> parentEdges = gGraph.getEdges(parentNode);
+    if (parentEdges != null) {
+      parentEdges = new HashSet<>(parentEdges);
+      for (Edge<LexicalItem> parentEdge : parentEdges) {
+        Pair<Edge<LexicalItem>, Edge<LexicalItem>> edgePair =
+            gGraph.getGroundedToUngroundedEdges(parentEdge);
+
+        Edge<LexicalItem> ungroundedEdge = edgePair.getRight();
+        Edge<LexicalItem> groundedEdge = edgePair.getLeft();
+
+        List<Feature> parentFeatures =
+            getEdgeFeatures(gGraph, ungroundedEdge.getLeft(),
+                ungroundedEdge.getRight(), ungroundedEdge.getMediator(),
+                ungroundedEdge.getRelation(), groundedEdge.getRelation());
+        for (Feature feature : parentFeatures) {
+          feature.setFeatureValue(feature.getFeatureValue() * -1.0);
+          mergedGraph.addFeature(feature);
+        }
+
+        List<Feature> parentFeaturesNew =
+            getEdgeFeatures(mergedGraph, ungroundedEdge.getLeft(),
+                ungroundedEdge.getRight(), ungroundedEdge.getMediator(),
+                ungroundedEdge.getRelation(), groundedEdge.getRelation());
+        for (Feature feature : parentFeaturesNew) {
+          mergedGraph.addFeature(feature);
+        }
+      }
     }
 
     for (Edge<LexicalItem> edge : toBeGroundedEgdes) {
@@ -2307,6 +2379,14 @@ public class GroundedGraphs {
         newGraph.addGroundedToUngroundedEdges(groundedEgde, unGroundedEgde);
         newGraph.addEdge(node1, node2, mediator, groundedRelation);
         newGraph.getFeatures().addAll(features);
+
+        /*-// Add an indicator feature for indicating the edge has not been merged.
+        if (allowMerging) {
+          MergedEdgeFeature edgeIsNotMerged =
+              new MergedEdgeFeature(Lists.newArrayList(Boolean.FALSE), 1.0);
+          newGraph.addFeature(edgeIsNotMerged);
+        }*/
+
         Double score = getScore(newGraph, testing);
         newGraph.setScore(score);
 

@@ -1,5 +1,5 @@
 '''
-Created on 26 May 2014
+Created on 26 May 3014
 
 @author: siva
 '''
@@ -9,8 +9,8 @@ import json
 import random
 
 
-training_file = open(sys.argv[1] + ".80", "w")
-dev_file = open(sys.argv[1] + ".20", "w")
+training_file = open(sys.argv[1] + ".70", "w")
+dev_file = open(sys.argv[1] + ".30", "w")
 
 sys.stderr.write("Creating training and dev splits\n");
 
@@ -25,7 +25,7 @@ random.shuffle(data)
 random.shuffle(data)
 random.shuffle(data)
 
-training_data_size = 80 * len(data) / 100
+training_data_size = 70 * len(data) / 100
 
 for line in data[:training_data_size]:
     training_file.write(line)

@@ -4,13 +4,16 @@ import in.sivareddy.graphparser.util.knowledgebase.EntityType;
 import in.sivareddy.graphparser.util.knowledgebase.Relation;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -52,10 +55,22 @@ public class GroundedLexicon {
   private Double relCount = 0.0;
   private Double typeCount = 0.0;
 
+
   public GroundedLexicon(String lexiconFileName) throws IOException {
+    this(lexiconFileName, false);
+  }
+
+  public GroundedLexicon(String lexiconFileName, boolean useEmpty)
+      throws IOException {
     if (lexiconFileName == null)
       return;
-    BufferedReader br = new BufferedReader(new FileReader(lexiconFileName));
+    BufferedReader br = null;
+    if (lexiconFileName.endsWith(".gz"))
+      br =
+          new BufferedReader(new InputStreamReader(new GZIPInputStream(
+              new FileInputStream(lexiconFileName))));
+    else
+      br = new BufferedReader(new FileReader(lexiconFileName));
     try {
       String line = br.readLine();
       boolean isRelation = false;
@@ -130,6 +145,20 @@ public class GroundedLexicon {
             String[] relationParts = parts[0].split(" ");
             targetRelation =
                 new Relation(relationParts[0], relationParts[1], targetFreq);
+
+            if (!useEmpty
+                && (relationParts[0].equals("type.empty") || relationParts[1]
+                    .equals("type.empty"))) {
+              urelFreq.put(sourceRelation, urelFreq.get(sourceRelation)
+                  - targetFreq);
+              urelPartFreq.put(sourceRelation.getLeft(),
+                  urelPartFreq.get(sourceRelation.getLeft()) - targetFreq);
+              urelPartFreq.put(sourceRelation.getRight(),
+                  urelPartFreq.get(sourceRelation.getRight()) - targetFreq);
+              line = br.readLine();
+              continue;
+            }
+
             if (!urelToGrelMap.containsKey(sourceRelation)) {
               urelToGrelMap.put(sourceRelation, new ArrayList<Relation>());
             }

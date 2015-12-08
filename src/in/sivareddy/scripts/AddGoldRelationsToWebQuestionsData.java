@@ -283,7 +283,7 @@ public class AddGoldRelationsToWebQuestionsData {
     KnowledgeBase kb =
         new KnowledgeBaseOnline(String.format("jdbc:virtuoso://%s:1111",
             args[0]), String.format("http://%s:8890/sparql", args[0]), "dba",
-            "dba", 10000, schema);
+            "dba", 500000, schema);
     AddGoldRelationsToWebQuestionsData engine =
         new AddGoldRelationsToWebQuestionsData(endPoint, kb, schema, 20);
 
