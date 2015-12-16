@@ -32,12 +32,13 @@ If you are using GraphParser, please cite
 
 ```
 @article{reddy_largescale_2014,
-  author = {{Reddy}, Siva and {Lapata}, Mirella and {Steedman}, Mark},
-  title = {Large-scale semantic parsing without question-answer pairs},
+  author = {Reddy, Siva and Lapata, Mirella and Steedman, Mark},
+  title = {Large-scale Semantic Parsing without Question-Answer Pairs},
   journal = {Transactions of the Association for Computational Linguistics},
   volume = {2},
   year = {2014},
-  pages = {377--392}
+  pages = {377--392},
+  url = {http://aclweb.org/anthology/Q14-1030}
 }
 
 ```
