@@ -77,6 +77,7 @@ public class GroundTestSentences {
     boolean entityScoreFlag = false;
     boolean entityWordOverlapFlag = false;
     boolean paraphraseScoreFlag = false;
+    boolean paraphraseClassifierScoreFlag = false;
 
     boolean allowMerging = false;
     boolean handleEventEventEdges = false;
@@ -102,9 +103,10 @@ public class GroundTestSentences {
             graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
             edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
             duplicateEdgesFlag, ignorePronouns, handleNumbers, entityScoreFlag,
-            entityWordOverlapFlag, paraphraseScoreFlag, allowMerging,
-            handleEventEventEdges, useBackOffGraph, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
+            entityWordOverlapFlag, paraphraseScoreFlag,
+            paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
+            useBackOffGraph, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));

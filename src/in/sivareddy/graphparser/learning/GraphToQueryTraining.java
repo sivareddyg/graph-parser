@@ -132,7 +132,7 @@ public class GraphToQueryTraining {
       boolean useNbestSurrogateGraphs, boolean addBagOfWordsGraph,
       boolean addOnlyBagOfWordsGraph, boolean handleNumbers,
       boolean entityScoreFlag, boolean entityWordOverlapFlag,
-      boolean paraphraseScoreFlag, boolean allowMerging,
+      boolean paraphraseScoreFlag, boolean paraphraseClassifierScoreFlag, boolean allowMerging,
       boolean useGoldRelations, boolean evaluateOnlyTheFirstBest,
       boolean handleEventEventEdges, boolean useBackOffGraph,
       double initialEdgeWeight, double initialTypeWeight,
@@ -193,9 +193,10 @@ public class GraphToQueryTraining {
             graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
             useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
             ignorePronouns, handleNumbers, entityScoreFlag,
-            entityWordOverlapFlag, paraphraseScoreFlag, allowMerging,
-            handleEventEventEdges, useBackOffGraph, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
+            entityWordOverlapFlag, paraphraseScoreFlag,
+            paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
+            useBackOffGraph, initialEdgeWeight, initialTypeWeight,
+            initialWordWeight, stemFeaturesWeight);
   }
 
 

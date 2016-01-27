@@ -36,6 +36,8 @@ public class SentenceKeys {
   
   public static String PARAPHRASE = "paraphrase";
   public static String PARAPHRASE_SCORE = "paraphraseScore";
+  public static String PARAPHRASE_CLASSIFIER_SCORE = "utteranceParaphraseClassifierScore";
+  public static String IS_ORIGINAL_SENTENCE = "isOriginal";
   
   public static String FOREST = "forest";
   

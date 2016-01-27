@@ -114,7 +114,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
             relationTypingIdentifiers, new StructuredPercepton(), 1, true,
             true, true, true, true, true, true, true, true, true, true, true,
             true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, allowMerging, handleEventEventEdges,
+            true, true, true, true, true, allowMerging, handleEventEventEdges,
             useBackoffGraph, 10.0, 1.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);

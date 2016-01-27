@@ -84,6 +84,19 @@ public class CreateForestFromSpectralParaphrases {
             paraphraseObj.getAsJsonObject().get("utterance").getAsString();
         Double paraphraseScore =
             paraphraseObj.getAsJsonObject().get("utteranceScore").getAsDouble();
+        Double paraphraseClassifierScore = 0.0;
+        if (paraphraseObj.has(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE)) {
+          paraphraseClassifierScore =
+              paraphraseObj.getAsJsonObject()
+                  .get(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE).getAsDouble();
+        }
+
+        Integer isOriginal = 0;
+        if (paraphraseObj.has(SentenceKeys.IS_ORIGINAL_SENTENCE)) {
+          isOriginal =
+              paraphraseObj.getAsJsonObject()
+                  .get(SentenceKeys.IS_ORIGINAL_SENTENCE).getAsInt();
+        }
 
         if (paraphrase.equals(sent)) {
           // Take the tokenization from the original sentence.
@@ -160,6 +173,10 @@ public class CreateForestFromSpectralParaphrases {
             newDisambiguatedEntites);
         newSentObj.add(SentenceKeys.WORDS_KEY, wordsArr);
         newSentObj.addProperty(SentenceKeys.PARAPHRASE_SCORE, paraphraseScore);
+        newSentObj.addProperty(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE,
+            paraphraseClassifierScore);
+
+        newSentObj.addProperty(SentenceKeys.IS_ORIGINAL_SENTENCE, isOriginal);
         newSentObj.addProperty(SentenceKeys.PARAPHRASE,
             Joiner.on(" ").join(words));
         newSentObj.remove(SentenceKeys.MATCHED_ENTITIES);

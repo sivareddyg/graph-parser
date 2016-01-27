@@ -28,6 +28,7 @@ import in.sivareddy.graphparser.parsing.LexicalGraph.HasQuestionEntityEdgeFeatur
 import in.sivareddy.graphparser.parsing.LexicalGraph.MediatorStemGrelPartMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.MergedEdgeFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.NgramGrelFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.ParaphraseClassifierScoreFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.ParaphraseScoreFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.StemMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UrelGrelFeature;
@@ -125,6 +126,7 @@ public class GroundedGraphs {
   private boolean entityScoreFlag = false;
   private boolean entityWordOverlapFlag = false;
   private boolean paraphraseScoreFlag = false;
+  private boolean paraphraseClassifierScoreFlag = false;
   private boolean allowMerging = false;
   private boolean handleEventEventEdges = false;
   private boolean useBackOffGraph = false;
@@ -156,10 +158,10 @@ public class GroundedGraphs {
       boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
       boolean ignorePronouns, boolean handleNumbers, boolean entityScoreFlag,
       boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
-      boolean allowMerging, boolean handleEventEventEdges,
-      boolean useBackOffGraph, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight) throws IOException {
+      boolean paraphraseClassifierScoreFlag, boolean allowMerging,
+      boolean handleEventEventEdges, boolean useBackOffGraph,
+      double initialEdgeWeight, double initialTypeWeight,
+      double initialWordWeight, double stemFeaturesWeight) throws IOException {
 
     // ccg parser initialisation
     String[] argumentLexicalIdenfiers = {"mid"};
@@ -205,6 +207,7 @@ public class GroundedGraphs {
     this.entityScoreFlag = entityScoreFlag;
     this.entityWordOverlapFlag = entityWordOverlapFlag;
     this.paraphraseScoreFlag = paraphraseScoreFlag;
+    this.paraphraseClassifierScoreFlag = paraphraseClassifierScoreFlag;
 
     this.useLexiconWeightsRel = useLexiconWeightsRel;
     this.useLexiconWeightsType = useLexiconWeightsType;
@@ -487,6 +490,19 @@ public class GroundedGraphs {
         double score =
             jsonSentence.get(SentenceKeys.PARAPHRASE_SCORE).getAsDouble();
         ParaphraseScoreFeature feature = new ParaphraseScoreFeature(score);
+        for (LexicalGraph uGraph : graphs) {
+          uGraph.addFeature(feature);
+        }
+      }
+    }
+
+    if (paraphraseClassifierScoreFlag) {
+      if (jsonSentence.has(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE)) {
+        double score =
+            jsonSentence.get(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE)
+                .getAsDouble();
+        ParaphraseClassifierScoreFeature feature =
+            new ParaphraseClassifierScoreFeature(Math.exp(score));
         for (LexicalGraph uGraph : graphs) {
           uGraph.addFeature(feature);
         }
@@ -1710,7 +1726,7 @@ public class GroundedGraphs {
         if (order == 0) {
           order = node1.getPos().compareTo(node2.getPos());
         }
-        
+
         if (order <= 0) {
           mergedGraphs.addAll(mergeNodes(gGraph, node1, node2, restrictedNodes,
               edgeGroundingConstraints, nonMergableNodes, graphsSoFar,

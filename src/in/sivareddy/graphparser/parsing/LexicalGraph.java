@@ -291,6 +291,16 @@ public class LexicalGraph extends Graph<LexicalItem> {
     }
   }
 
+  public static class ParaphraseClassifierScoreFeature extends AbstractFeature {
+    private static final long serialVersionUID = -2627112432390822195L;
+    private static List<String> key = Lists
+        .newArrayList("ParaphraseClassifierScoreFeature");
+
+    public ParaphraseClassifierScoreFeature(Double value) {
+      super(key, value);
+    }
+  }
+
   public static class StemMatchingFeature extends AbstractFeature {
     private static final long serialVersionUID = 8298292895790279274L;
     private static List<String> key = Lists.newArrayList("Stem");

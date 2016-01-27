@@ -87,11 +87,11 @@ public class GraphToQueryTrainingMain {
       boolean addBagOfWordsGraph, boolean addOnlyBagOfWordsGraph,
       boolean handleNumbers, boolean entityScoreFlag,
       boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
-      boolean allowMerging, boolean useGoldRelations,
-      boolean evaluateOnlyTheFirstBest, boolean handleEventEventEdges,
-      boolean useBackOffGraph, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight) throws IOException {
+      boolean paraphraseClassifierScoreFlag, boolean allowMerging,
+      boolean useGoldRelations, boolean evaluateOnlyTheFirstBest,
+      boolean handleEventEventEdges, boolean useBackOffGraph,
+      double initialEdgeWeight, double initialTypeWeight,
+      double initialWordWeight, double stemFeaturesWeight) throws IOException {
 
     this.semanticParseKey = sematicParseKey;
     this.nBestTestSyntacticParses = nBestTestSyntacticParses;
@@ -143,10 +143,10 @@ public class GraphToQueryTrainingMain {
             validQueryFlag, useAnswerTypeQuestionWordFlag, useNbestGraphs,
             addBagOfWordsGraph, addOnlyBagOfWordsGraph, handleNumbers,
             entityScoreFlag, entityWordOverlapFlag, paraphraseScoreFlag,
-            allowMerging, useGoldRelations, evaluateOnlyTheFirstBest,
-            handleEventEventEdges, useBackOffGraph, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight,
-            rdfGraphTools, kbGraphUri);
+            paraphraseClassifierScoreFlag, allowMerging, useGoldRelations,
+            evaluateOnlyTheFirstBest, handleEventEventEdges, useBackOffGraph,
+            initialEdgeWeight, initialTypeWeight, initialWordWeight,
+            stemFeaturesWeight, rdfGraphTools, kbGraphUri);
     bestModelSoFar = currentIterationModel.serialClone();
     currentModelIsTheBestModel = true;
 
@@ -561,6 +561,7 @@ public class GraphToQueryTrainingMain {
     boolean entityScoreFlag = false;
     boolean entityWordOverlapFlag = false;
     boolean paraphraseScoreFlag = false;
+    boolean paraphraseClassifierScoreFlag = false;
 
     boolean allowMerging = false;
     boolean useGoldRelations = false;
@@ -591,10 +592,11 @@ public class GraphToQueryTrainingMain {
             useLexiconWeightsRel, useLexiconWeightsType, validQueryFlag,
             useAnswerTypeQuestionWordFlag, useNbestGraphs, addBagOfWordsGraph,
             addOnlyBagOfWordsGraph, handleNumbers, entityScoreFlag,
-            entityWordOverlapFlag, paraphraseScoreFlag, allowMerging,
-            useGoldRelations, evaluateOnlyTheFirstBest, handleEventEventEdges,
-            useBackOffGraph, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            entityWordOverlapFlag, paraphraseScoreFlag,
+            paraphraseClassifierScoreFlag, allowMerging, useGoldRelations,
+            evaluateOnlyTheFirstBest, handleEventEventEdges, useBackOffGraph,
+            initialEdgeWeight, initialTypeWeight, initialWordWeight,
+            stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;

@@ -4,3 +4,6 @@
 /.settings
 /scripts/compare_outputs.py
 commands*
+/lib_data/
+/lib/
+/test_data/
