@@ -381,11 +381,13 @@ public class GroundedGraphs {
           e.printStackTrace();
         }
       }
-
-      // Remove multiple question nodes, and retain only the one that appear
-      // first.
-      graphs.forEach(g -> g.removeMultipleQuestionNodes());
     }
+
+    // TODO(sivareddyg): Currently, {@link
+    // in.sivareddy.graphparser.parsing.GraphToSparqlConverter} does not
+    // support questions with multiple TARGETs. A hacky solution is to remove
+    // multiple question nodes, and retain only the one that appear first.
+    graphs.forEach(g -> g.removeMultipleQuestionNodes());
 
     if (useBackOffGraph
         && (key.equals(SentenceKeys.CCG_PARSES) || key
@@ -958,10 +960,15 @@ public class GroundedGraphs {
       Map<Integer, Set<Pair<String, Integer>>> eventEventModifiers) {
 
     if (handleEventEventEdges) {
+      // TODO(sivareddyg): This is a hacky! A better way to handle
+      // event-event edges should be explored.
       for (Integer eventIndex : eventEventModifiers.keySet()) {
         for (Pair<String, Integer> type : eventEventModifiers.get(eventIndex)) {
           Integer modifierIndex = type.getRight();
           String entityTypeString = type.getLeft();
+
+          if (eventIndex.equals(modifierIndex))
+            continue;
 
           events.putIfAbsent(eventIndex, new HashSet<>());
           events.get(eventIndex).add(
