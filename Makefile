@@ -4377,7 +4377,6 @@ free917_deplambda_singletype_supervised_with_merge_with_expand:
 	-handleEventEventEdges true \
 	-useBackOffGraph true \
 	-allowMerging true \
-	-handleEventEventEdges true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
 	-entityScoreFlag true \
@@ -4450,7 +4449,6 @@ free917_deplambda_singletype_supervised_without_merge_with_expand:
 	-handleEventEventEdges true \
 	-useBackOffGraph true \
 	-allowMerging false \
-	-handleEventEventEdges true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
 	-entityScoreFlag true \
@@ -4523,7 +4521,6 @@ free917_deplambda_singletype_supervised_without_merge_without_expand:
 	-handleEventEventEdges true \
 	-useBackOffGraph false \
 	-allowMerging false \
-	-handleEventEventEdges true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
 	-entityScoreFlag true \
@@ -4596,7 +4593,6 @@ free917_deplambda_singletype_supervised_with_merge_without_expand:
 	-handleEventEventEdges true \
 	-useBackOffGraph true \
 	-allowMerging false \
-	-handleEventEventEdges true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
 	-entityScoreFlag true \
@@ -4669,7 +4665,6 @@ free917_deplambda_singletype_supervised_with_merge_with_expand_full:
 	-handleEventEventEdges true \
 	-useBackOffGraph true \
 	-allowMerging true \
-	-handleEventEventEdges true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
 	-entityScoreFlag true \
@@ -4743,7 +4738,6 @@ free917_deplambda_singletype_supervised_with_merge_with_expand_with_lexicon_full
 	-handleEventEventEdges true \
 	-useBackOffGraph true \
 	-allowMerging true \
-	-handleEventEventEdges true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
 	-entityScoreFlag true \
