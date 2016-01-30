@@ -577,6 +577,7 @@ clueweb_to_deplamba_%:
 convert_deplambda_clueweb_to_gp_forest:
 	zcat working/clueweb-1shard-lambdas.json.txt.gz \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/remove_spurious_predicates.py \
 		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
 		| gzip > data/complete/clueweb/clueweb_deplambda_singletype.txt.gz
 
@@ -596,6 +597,7 @@ extract_deplambda_lexicon_clueweb_split_%:
 convert_deplambda_to_gp_forest:
 	cat working/wq-train-lambdas.json.txt working/wq-dev-lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/remove_spurious_predicates.py \
 		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.train.pass3.json.txt \
 		> working/webquestions-train-full-lambdas.json.txt
@@ -607,6 +609,7 @@ convert_deplambda_to_gp_forest:
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt 
 	cat working/wq-test-lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/remove_spurious_predicates.py \
 		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/webquestions.automaticDismabiguation.test.pass3.json.txt \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt 
@@ -630,16 +633,19 @@ convert_deplambda_to_gp_forest_with_coupla:
 free917_convert_deplambda_to_gp_forest:
 	cat working/free917-dev-lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/remove_spurious_predicates.py \
 		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/free917.dev.forest_split.json \
 		> data/complete/vanilla_gold/free917.dev.deplambda.singletype.json 
 	cat working/free917-train-lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/remove_spurious_predicates.py \
 		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/free917.train.forest_split.json \
 		> data/complete/vanilla_gold/free917.train.deplambda.singletype.json
 	cat working/free917-test-lambdas.json.txt \
 		| python scripts/dependency_semantic_parser/convert_document_json_graphparser_json_new.py \
+		| python scripts/dependency_semantic_parser/remove_spurious_predicates.py \
 		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.MergeSplitsToForest working/free917.test.forest_split.json \
 		> data/complete/vanilla_gold/free917.test.deplambda.singletype.json
@@ -2163,6 +2169,77 @@ easyccg_supervised_with_merge_with_expand_with_lexicon:
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
 	-logFile ../working/easyccg_supervised_with_merge_with_expand_with_lexicon/all.log.txt \
 	> ../working/easyccg_supervised_with_merge_with_expand_with_lexicon/all.txt
+
+easyccg_supervised_with_merge_with_expand_with_lexicon_full:
+	rm -rf ../working/easyccg_supervised_with_merge_with_expand_with_lexicon_full
+	mkdir -p ../working/easyccg_supervised_with_merge_with_expand_with_lexicon_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 3 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/ccg_with_merge_with_expand_with_lexicon.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+	-logFile ../working/easyccg_supervised_with_merge_with_expand_with_lexicon_full/all.log.txt \
+	> ../working/easyccg_supervised_with_merge_with_expand_with_lexicon_full/all.txt
 
 easyccg_supervised_with_merge_with_expand_full:
 	rm -rf ../working/easyccg_supervised_with_merge_with_expand_full
@@ -4967,4 +5044,79 @@ free917_dependency_supervised_with_merge_without_expand_full:
 	-testFile data/complete/vanilla_gold/free917.test.deplambda.singletype.json \
 	-logFile ../working/free917_dependency_supervised_with_merge_without_expand_full/all.log.txt \
 	> ../working/free917_dependency_supervised_with_merge_without_expand_full/all.txt
+
+# TACL 2015 camera ready experiments
+
+free917_easyccg_dev_table:
+	make free917_extract_gold_graphs_ccg
+	
+	make free917_easyccg_supervised_without_merge_without_expand
+	rm -rf ../working/free917_easyccg_supervised_without_merge_without_expand/*dev.iteration*
+	rm -rf ../working/free917_easyccg_supervised_without_merge_without_expand/*train.iteration*
+	rm -rf ../working/free917_easyccg_supervised_without_merge_without_expand/*model.iteration*
+	
+	make free917_easyccg_supervised_without_merge_with_expand
+	rm -rf ../working/free917_easyccg_supervised_without_merge_with_expand/*dev.iteration*
+	rm -rf ../working/free917_easyccg_supervised_without_merge_with_expand/*train.iteration*
+	rm -rf ../working/free917_easyccg_supervised_without_merge_with_expand/*model.iteration*
+	
+	make free917_easyccg_supervised_with_merge_without_expand
+	rm -rf ../working/free917_easyccg_supervised_with_merge_without_expand/*dev.iteration*
+	rm -rf ../working/free917_easyccg_supervised_with_merge_without_expand/*train.iteration*
+	rm -rf ../working/free917_easyccg_supervised_with_merge_without_expand/*model.iteration*
+	
+	make free917_easyccg_supervised_with_merge_with_expand
+	rm -rf ../working/free917_easyccg_supervised_with_merge_with_expand/*dev.iteration*
+	rm -rf ../working/free917_easyccg_supervised_with_merge_with_expand/*train.iteration*
+	rm -rf ../working/free917_easyccg_supervised_with_merge_with_expand/*model.iteration*
+
+free917_deplambda_singletype_dev_table:
+	make free917_extract_gold_graphs_deplambda_singletype
+
+	make free917_deplambda_singletype_supervised_without_merge_without_expand
+	rm -rf ../working/free917_deplambda_singletype_supervised_without_merge_without_expand/*dev.iteration*
+	rm -rf ../working/free917_deplambda_singletype_supervised_without_merge_without_expand/*train.iteration*
+	rm -rf ../working/free917_deplambda_singletype_supervised_without_merge_without_expand/*model.iteration*
+
+	make free917_deplambda_singletype_supervised_without_merge_with_expand
+	rm -rf ../working/free917_deplambda_singletype_supervised_without_merge_with_expand/*dev.iteration*
+	rm -rf ../working/free917_deplambda_singletype_supervised_without_merge_with_expand/*train.iteration*
+	rm -rf ../working/free917_deplambda_singletype_supervised_without_merge_with_expand/*model.iteration*
+
+	make free917_deplambda_singletype_supervised_with_merge_without_expand
+	rm -rf ../working/free917_easyccg_supervised_with_merge_without_expand/*dev.iteration*
+	rm -rf ../working/free917_easyccg_supervised_with_merge_without_expand/*train.iteration*
+	rm -rf ../working/free917_easyccg_supervised_with_merge_without_expand/*model.iteration*
+
+	make free917_deplambda_singletype_supervised_with_merge_with_expand
+	rm -rf ../working/free917_easyccg_supervised_with_merge_with_expand/*dev.iteration*
+	rm -rf ../working/free917_easyccg_supervised_with_merge_with_expand/*train.iteration*
+	rm -rf ../working/free917_easyccg_supervised_with_merge_with_expand/*model.iteration*
+
+free917_dependency_dev_table:
+	make free917_extract_gold_graphs_dependency
+	
+	make free917_dependency_supervised_without_merge_without_expand
+	rm -rf ../working/free917_dependency_supervised_without_merge_without_expand/*dev.iteration*
+	rm -rf ../working/free917_dependency_supervised_without_merge_without_expand/*train.iteration*
+	rm -rf ../working/free917_dependency_supervised_without_merge_without_expand/*model.iteration*
+
+	make free917_dependency_supervised_with_merge_without_expand
+	rm -rf ../working/free917_dependency_supervised_with_merge_without_expand/*dev.iteration*
+	rm -rf ../working/free917_dependency_supervised_with_merge_without_expand/*train.iteration*
+	rm -rf ../working/free917_dependency_supervised_with_merge_without_expand/*model.iteration*
+
+free917_bow_dev_table:
+	make free917_extract_gold_graphs_bow
+
+	make free917_bow_supervised_without_merge_without_expand
+	rm -rf ../working/free917_bow_supervised_without_merge_without_expand/*dev.iteration*
+	rm -rf ../working/free917_bow_supervised_without_merge_without_expand/*train.iteration*
+	rm -rf ../working/free917_bow_supervised_without_merge_without_expand/*model.iteration*
+
+	make free917_bow_supervised_with_merge_without_expand
+	rm -rf ../working/free917_bow_supervised_with_merge_without_expand/*dev.iteration*
+	rm -rf ../working/free917_bow_supervised_with_merge_without_expand/*train.iteration*
+	rm -rf ../working/free917_bow_supervised_with_merge_without_expand/*model.iteration*
+
 
