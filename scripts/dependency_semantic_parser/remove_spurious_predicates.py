@@ -18,12 +18,13 @@ for line in sys.stdin:
             event_degree = {}
             event_predicates = []
             for element in parse:
-                match = re.search(".*\(([^\)]*):e , [^\)]*:[^e\)]*\)", element)
+                match = re.search(".*\(([^\)]*):e , ([^\)]*):[^e\)]*\)", element)
                 if match:
                     event = match.group(1)
+                    arg = match.group(2)
                     event_degree.setdefault(event, [])
-                    event_degree[event].append(element)
+                    event_degree[event].append([element, arg])
             for event, event_predicates in event_degree.items():
-                if len(event_predicates) == 1:
-                    parse.remove(event_predicates[0])
+                if len(event_predicates) == 1 and event == event_predicates[0][1]:
+                    parse.remove(event_predicates[0][0])
     print json.dumps(sent)

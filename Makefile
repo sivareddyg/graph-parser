@@ -581,6 +581,12 @@ convert_deplambda_clueweb_to_gp_forest:
 		| python scripts/dependency_semantic_parser/collapse_copula_relation.py \
 		| gzip > data/complete/clueweb/clueweb_deplambda_singletype.txt.gz
 
+	zcat data/complete/clueweb/clueweb_deplambda_singletype.txt.gz | python scripts/split_file.py 14740240 4 ../data0/clueweb/clueweb_deplambda_singletype
+	gzip ../data0/clueweb/clueweb_deplambda_singletype.0
+	gzip ../data0/clueweb/clueweb_deplambda_singletype.1
+	gzip ../data0/clueweb/clueweb_deplambda_singletype.2
+	gzip ../data0/clueweb/clueweb_deplambda_singletype.3
+
 extract_deplambda_lexicon_clueweb_split_%:
 	zcat ../data0/clueweb/clueweb_deplambda_singletype.$*.gz \
 	| python scripts/run_batch_process.py \
@@ -1569,7 +1575,7 @@ create_old_to_new_mid_mappings:
 	zcat ../data/freebase_sempre.ttl.gz | cut -f1,3 | python scripts/freebase/extract_entities_from_rdf_freebase.py | less
 
 ### WebQuestions complete data experiments ###
-extract_gold_graphs_deplambda_singletype:
+extract_gold_graphs_deplambda_singletype_dev:
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		dependency_lambda \
@@ -1606,6 +1612,8 @@ extract_gold_graphs_deplambda_singletype:
 		false \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 		> data/gold_graphs/deplambda_singletype_without_merge_without_expand.dev.answers.txt
+
+extract_gold_graphs_deplambda_singletype:
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
@@ -1692,7 +1700,7 @@ extract_gold_graphs_dependency:
 		false \
 		> data/gold_graphs/dependency_with_merge_without_expand.full.answers.txt
 
-extract_gold_graphs_ccg:
+extract_gold_graphs_ccg_dev:
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
@@ -1729,6 +1737,8 @@ extract_gold_graphs_ccg:
 		false \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
 		> data/gold_graphs/ccg_without_merge_without_expand.dev.answers.txt
+
+extract_gold_graphs_ccg:
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
 	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
@@ -2502,7 +2512,6 @@ deplambda_singletype_supervised_with_merge_with_expand:
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
 	-useGoldRelations true \
-	-useAnswerTypeQuestionWordFlag true \
 	-allowMerging true \
 	-handleEventEventEdges true \
 	-useBackOffGraph true \
@@ -2573,7 +2582,6 @@ deplambda_singletype_supervised_with_merge_with_expand_with_lexicon:
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
 	-useGoldRelations true \
-	-useAnswerTypeQuestionWordFlag true \
 	-allowMerging true \
 	-handleEventEventEdges true \
 	-useBackOffGraph true \
@@ -2590,6 +2598,79 @@ deplambda_singletype_supervised_with_merge_with_expand_with_lexicon:
 	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	-logFile ../working/deplambda_singletype_supervised_with_merge_with_expand_with_lexicon/all.log.txt \
 	> ../working/deplambda_singletype_supervised_with_merge_with_expand_with_lexicon/all.txt
+
+deplambda_singletype_supervised_with_merge_with_expand_with_lexicon_full:
+	rm -rf ../working/deplambda_singletype_supervised_with_merge_with_expand_with_lexicon_full
+	mkdir -p ../working/deplambda_singletype_supervised_with_merge_with_expand_with_lexicon_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey dependency_lambda \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon data/complete/grounded_lexicon/deplambda_grounded_lexicon.txt.gz \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 3 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-useBackOffGraph true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt" \
+	-goldParsesFile data/gold_graphs/deplambda_singletype_with_merge_with_expand_with_lexicon.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
+	-testFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.deplambda.singletype.json.txt \
+	-logFile ../working/deplambda_singletype_supervised_with_merge_with_expand_with_lexicon_full/all.log.txt \
+	> ../working/deplambda_singletype_supervised_with_merge_with_expand_with_lexicon_full/all.txt
+
+
 
 deplambda_singletype_supervised_with_merge_with_copulath_expand:
 	rm -rf ../working/deplambda_singletype_supervised_with_merge_with_expand_with_copula
@@ -2643,7 +2724,6 @@ deplambda_singletype_supervised_with_merge_with_copulath_expand:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
@@ -2714,7 +2794,6 @@ deplambda_singletype_supervised_with_merge_with_copula_with_lexicon:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
@@ -2922,7 +3001,6 @@ deplambda_singletype_supervised_with_merge_with_expand_full:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
