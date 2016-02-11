@@ -66,6 +66,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
   Logger logger = Logger.getLogger(this.getClass());
   int totalMerges = 0;
   int totalGraphs = 0;
+  int totalOracleGraphCount = 0;
   int graphsFoundSentCount = 0;
   String goldOutputFile;
   final ConcurrentHashMap<String, Pair<HashSet<LexicalGraph>, Double>> sentenceToGoldGraphs =
@@ -78,10 +79,9 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
       boolean useBackoffGraph) throws IOException {
 
     Schema schema = new Schema(schemaFile);
-    RdfGraphTools endPoint =
-        new RdfGraphTools(
-            String.format("jdbc:virtuoso://%s:1111", endPointName),
-            String.format("http://%s:8890/sparql", endPointName), "dba", "dba");
+    RdfGraphTools endPoint = new RdfGraphTools(
+        String.format("jdbc:virtuoso://%s:1111", endPointName),
+        String.format("http://%s:8890/sparql", endPointName), "dba", "dba");
 
     this.nthreads = nthreads;
     this.endPoint = endPoint;
@@ -89,33 +89,30 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     this.goldOutputFile = goldOutputFile;
 
     groundedLexicon = new GroundedLexicon(lexiconFileName);
-    kb =
-        new KnowledgeBaseOnline(endPointName, String.format(
-            "http://%s:8890/sparql", endPointName), "dba", "dba", 500000,
-            schema);
+    kb = new KnowledgeBaseOnline(endPointName,
+        String.format("http://%s:8890/sparql", endPointName), "dba", "dba",
+        500000, schema);
 
     CcgAutoLexicon questionCcgAutoLexicon =
         new CcgAutoLexicon("./lib_data/candc_markedup.modified",
             "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
             "./lib_data/lexicon_specialCases_questions_vanilla.txt");
 
-    CcgAutoLexicon normalCcgAutoLexicon =
-        new CcgAutoLexicon("./lib_data/candc_markedup.modified",
-            "./lib_data/unary_rules.txt", "./lib_data/binary_rules.txt",
-            "./lib_data/lexicon_specialCases.txt");
+    CcgAutoLexicon normalCcgAutoLexicon = new CcgAutoLexicon(
+        "./lib_data/candc_markedup.modified", "./lib_data/unary_rules.txt",
+        "./lib_data/binary_rules.txt", "./lib_data/lexicon_specialCases.txt");
 
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
 
     this.semanticParseKey = semanticParseKey;
-    this.graphCreator =
-        new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
-            questionCcgAutoLexicon, relationLexicalIdentifiers,
-            relationTypingIdentifiers, new StructuredPercepton(), 1, true,
-            true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, true, allowMerging, handleEventEventEdges,
-            useBackoffGraph, 10.0, 1.0, 0.0, 0.0);
+    this.graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
+        normalCcgAutoLexicon, questionCcgAutoLexicon,
+        relationLexicalIdentifiers, relationTypingIdentifiers,
+        new StructuredPercepton(), 1, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, allowMerging,
+        handleEventEventEdges, useBackoffGraph, 10.0, 1.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
     logger.removeAllAppenders();
@@ -124,8 +121,8 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
   public void evaluateAll(InputStream stream, PrintStream out)
       throws IOException, InterruptedException {
     final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
-    ThreadPoolExecutor threadPool =
-        new ThreadPoolExecutor(nthreads, nthreads, 600, TimeUnit.SECONDS, queue);
+    ThreadPoolExecutor threadPool = new ThreadPoolExecutor(nthreads, nthreads,
+        600, TimeUnit.SECONDS, queue);
 
     threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override
@@ -167,9 +164,12 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
       bw.write("Average Merge Count: " + (totalMerges + 0.0) / sentCount);
       bw.write("\n");
 
-      if (graphsFoundSentCount > 0)
-        bw.write("Average Number of Grounded Graphs: " + (totalGraphs + 0.0)
-            / graphsFoundSentCount);
+      if (graphsFoundSentCount > 0) {
+        bw.write("Average Number of Grounded Graphs: "
+            + (totalGraphs + 0.0) / graphsFoundSentCount);
+        bw.write("Average Number of Oracle Graphs: "
+            + (totalOracleGraphCount + 0.0) / graphsFoundSentCount);
+      }
       bw.write("\n");
     }
 
@@ -229,6 +229,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
 
 
   public void evaluate(JsonObject sentence, PrintStream out) {
+    int sentenceceOracleGraphCount = 0;
     Map<String, LinkedHashSet<String>> goldResultsMap = new HashMap<>();
     LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
     if (sentence.has(SentenceKeys.TARGET_VALUE)) {
@@ -250,8 +251,8 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
       Pair<Set<String>, Set<String>> cleanedGoldResults =
           RdfGraphTools.getCleanedResults(dummyGoldResultsMap, results);
       goldAnswers = new LinkedHashSet<>(cleanedGoldResults.getRight());
-      goldResultsMap.put(SentenceKeys.TARGET_VALUE, new LinkedHashSet<>(
-          goldAnswers));
+      goldResultsMap.put(SentenceKeys.TARGET_VALUE,
+          new LinkedHashSet<>(goldAnswers));
     }
 
     String sentenceString =
@@ -300,35 +301,32 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
             new HashMap<>();
         edgeGroundingConstraints.put(mainEdgeKey, new TreeSet<>());
         edgeGroundingConstraints.put(mainEdgeInverseKey, new TreeSet<>());
-        for (JsonElement goldRelation : instance.get(
-            SentenceKeys.GOLD_RELATIONS).getAsJsonArray()) {
+        for (JsonElement goldRelation : instance
+            .get(SentenceKeys.GOLD_RELATIONS).getAsJsonArray()) {
           JsonObject goldRelationObj = goldRelation.getAsJsonObject();
-          Relation mainRelation =
-              new Relation(goldRelationObj.get(SentenceKeys.RELATION_LEFT)
-                  .getAsString(), goldRelationObj.get(
-                  SentenceKeys.RELATION_RIGHT).getAsString(), goldRelationObj
-                  .get(SentenceKeys.SCORE).getAsDouble());
+          Relation mainRelation = new Relation(
+              goldRelationObj.get(SentenceKeys.RELATION_LEFT).getAsString(),
+              goldRelationObj.get(SentenceKeys.RELATION_RIGHT).getAsString(),
+              goldRelationObj.get(SentenceKeys.SCORE).getAsDouble());
           Relation mainRelationInverse = mainRelation.inverse();
           edgeGroundingConstraints.get(mainEdgeKey).add(mainRelation);
-          edgeGroundingConstraints.get(mainEdgeInverseKey).add(
-              mainRelationInverse);
+          edgeGroundingConstraints.get(mainEdgeInverseKey)
+              .add(mainRelationInverse);
         }
 
         List<LexicalGraph> groundedGraphs = Lists.newArrayList();
         try {
-          groundedGraphs =
-              graphCreator.createGroundedGraph(newGraph, null,
-                  edgeGroundingConstraints, Sets.newHashSet(goldNode), 1000,
-                  10000, true, true, false, false, false, false, true, false);
+          groundedGraphs = graphCreator.createGroundedGraph(newGraph, null,
+              edgeGroundingConstraints, Sets.newHashSet(goldNode), 1000, 10000,
+              true, true, false, false, false, false, true, false);
         } catch (Exception e) {
           System.err.println(instance);
         }
 
         totalGraphs += groundedGraphs.size();
         for (LexicalGraph graph : groundedGraphs) {
-          String query =
-              GraphToSparqlConverter.convertGroundedGraph(graph, schema, null,
-                  30);
+          String query = GraphToSparqlConverter.convertGroundedGraph(graph,
+              schema, null, 30);
           Map<String, LinkedHashSet<String>> predictedResultsMap =
               endPoint.runQueryHttp(query);
           double f1 =
@@ -340,9 +338,14 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
             bestAnswers = predictedResultsMap;
             bestGraphs = new HashSet<>();
             bestGraphs.add(graph);
+            sentenceceOracleGraphCount = 1;
           } else if (f1 > 0.0 && f1 + 0.00000005 > bestSoFar
               && bestGraphs.size() > 0) {
             bestGraphs.add(graph);
+
+            // Note bestGraphs contains only grounded graphs, whereas sentenceOracleGraphCount
+            // represents count of (u,g).
+            sentenceceOracleGraphCount += 1;
           }
         }
 
@@ -357,6 +360,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
 
     // Store gold graphs for serialisation.
     sentenceToGoldGraphs.put(sentenceString, Pair.of(bestGraphs, bestSoFar));
+    totalOracleGraphCount += sentenceceOracleGraphCount;
 
     Pair<Set<String>, Set<String>> cleanedResults =
         RdfGraphTools.getCleanedResults(goldResultsMap, bestAnswers);
@@ -379,8 +383,8 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     }
   }
 
-  public static void main(String[] args) throws IOException,
-      InterruptedException {
+  public static void main(String[] args)
+      throws IOException, InterruptedException {
     String schemaFile = args[0];
     String endPointName = args[1];
     String semanticParseKey = args[2];

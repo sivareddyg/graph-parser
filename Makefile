@@ -1662,7 +1662,7 @@ extract_gold_graphs_deplambda_singletype_with_lexicon:
 		true \
 		> data/gold_graphs/deplambda_singletype_with_merge_with_expand_with_lexicon.full.answers.txt
 
-extract_gold_graphs_dependency:
+extract_gold_graphs_dependency_dev:
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		dependency_question_graph \
@@ -1681,6 +1681,8 @@ extract_gold_graphs_dependency:
 		false \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 		> data/gold_graphs/dependency_with_merge_without_expand.dev.answers.txt
+
+extract_gold_graphs_dependency:
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.deplambda.singletype.json.txt data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.deplambda.singletype.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
@@ -1792,7 +1794,7 @@ extract_gold_graphs_ccg_with_lexicon:
 		true \
 		> data/gold_graphs/ccg_with_merge_with_expand_with_lexicon.full.answers.txt
 
-extract_gold_graphs_bow:
+extract_gold_graphs_bow_dev:
 	java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		bow_question_graph \
@@ -1811,6 +1813,8 @@ extract_gold_graphs_bow:
 		false \
 		< data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
 		> data/gold_graphs/bow_with_merge_without_expand.dev.answers.txt
+
+extract_gold_graphs_bow:
 	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
 	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
 	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
