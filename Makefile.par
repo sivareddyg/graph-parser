@@ -1,88 +1,233 @@
 ### Paraphrasing experiments ##
 create_graphparser_input_from_withoutclassifier_paraphrases_%:
 	mkdir -p data/paraphrasing/ 
-	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/WithoutClassifier-18Oct15/wq-train.$*.json \
+	sed -e 's/,$$//g' Siva-Data/WithoutClassifier-18Oct15/wq-train.$*.json \
 		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
 		| gzip > working/webq.withoutclassifier.paraphrases.train.$*.txt.gz
 
 	zcat working/webq.withoutclassifier.paraphrases.train.$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
 		> data/paraphrasing/webq.withoutclassifier.paraphrases.$*.train.txt 
 
 	zcat working/webq.withoutclassifier.paraphrases.train.$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
 		> data/paraphrasing/webq.withoutclassifier.paraphrases.$*.dev.txt 
 
 create_graphparser_input_from_combined_paraphrases_%:
 	mkdir -p data/paraphrasing/ 
-	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/CombinedModels-18Oct15/wq-train.$*.json \
+	sed -e 's/,$$//g' Siva-Data/CombinedModels-18Oct15/wq-train.$*.json \
 		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
 		| gzip > working/webq.combined.paraphrases.train.$*.txt.gz
 
 	zcat working/webq.combined.paraphrases.train.$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
 		> data/paraphrasing/webq.combined.paraphrases.$*.train.txt 
 
 	zcat working/webq.combined.paraphrases.train.$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
 		> data/paraphrasing/webq.combined.paraphrases.$*.dev.txt 
+
+create_graphparser_test_input_from_combined_paraphrases_%:
+	mkdir -p data/paraphrasing/ 
+	sed -e 's/,$$//g' Siva-Data/CombinedModels-18Oct15/wq-test.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		> data/paraphrasing/webq.combined.paraphrases.$*.test.txt 
+
+create_graphparser_input_from_deep_paraphrases_%:
+	mkdir -p data/paraphrasing/ 
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-Deep/wq-train.deep.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		| gzip > working/webq.deep.paraphrases.train.$*.txt.gz
+
+	zcat working/webq.deep.paraphrases.train.$*.txt.gz \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
+		> data/paraphrasing/webq.deep.paraphrases.$*.train.txt 
+
+	zcat working/webq.deep.paraphrases.train.$*.txt.gz \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
+		> data/paraphrasing/webq.deep.paraphrases.$*.dev.txt 
+
+create_graphparser_test_input_from_deep_paraphrases_%:
+	mkdir -p data/paraphrasing/ 
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-Deep/wq-test.deep.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		> data/paraphrasing/webq.deep.paraphrases.$*.test.txt 
 
 create_graphparser_input_from_spectral_ppdb_paraphrases_%:
 	mkdir -p data/paraphrasing/ 
-	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-PPDB/wq-train.ppdb.$*.json \
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-PPDB/wq-train.ppdb.$*.json \
 		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
 		| gzip > working/webq.spectral.ppdb.paraphrases.train.$*.txt.gz
 
 	zcat working/webq.spectral.ppdb.paraphrases.train.$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
 		> data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.train.txt 
 
 	zcat working/webq.spectral.ppdb.paraphrases.train.$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
 		> data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.dev.txt 
+
+create_graphparser_test_input_from_spectral_ppdb_paraphrases_%:
+	mkdir -p data/paraphrasing/ 
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-PPDB/wq-test.ppdb.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		> data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.test.txt 
+
+extract_train_dev_test_combined_%:
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' Siva-Data/CombinedModels-18Oct15/wq-full.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| sed -e 's/\"original\"/\"sentence\"/g' \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json \
+		| sed -e 's/\"sentence\"/\"original\"/g' \
+		> Siva-Data/CombinedModels-18Oct15/wq-train.$*.json
+
+	sed -e 's/,$$//g' Siva-Data/CombinedModels-18Oct15/wq-full.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| sed -e 's/\"original\"/\"sentence\"/g' \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.test.domains.entity.matches.json \
+		| sed -e 's/\"sentence\"/\"original\"/g' \
+		> Siva-Data/CombinedModels-18Oct15/wq-test.$*.json
+
+extract_train_dev_test_deep_%:
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-Deep/wq-full.deep.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| sed -e 's/\"original\"/\"sentence\"/g' \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json \
+		| sed -e 's/\"sentence\"/\"original\"/g' \
+		> Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-Deep/wq-train.deep.$*.json
+
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-Deep/wq-full.deep.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| sed -e 's/\"original\"/\"sentence\"/g' \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.test.domains.entity.matches.json \
+		| sed -e 's/\"sentence\"/\"original\"/g' \
+		> Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-Deep/wq-test.deep.$*.json 
+
+extract_train_dev_test_ppdb_%:
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-PPDB/wq-full.ppdb.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| sed -e 's/\"original\"/\"sentence\"/g' \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json \
+		| sed -e 's/\"sentence\"/\"original\"/g' \
+		> Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-PPDB/wq-train.ppdb.$*.json
+
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-PPDB/wq-full.ppdb.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| sed -e 's/\"original\"/\"sentence\"/g' \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.test.domains.entity.matches.json \
+		| sed -e 's/\"sentence\"/\"original\"/g' \
+		> Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-PPDB/wq-test.ppdb.$*.json
+
+extract_train_dev_test_noppdb_%:
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-NoPPDB/wq-full.noppdb.$*.json \
+                | grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| sed -e 's/\"original\"/\"sentence\"/g' \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json \
+		| sed -e 's/\"sentence\"/\"original\"/g' \
+		> Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-NoPPDB/wq-train.noppdb.$*.json
+
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-NoPPDB/wq-full.noppdb.$*.json \
+                | grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| sed -e 's/\"original\"/\"sentence\"/g' \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.test.domains.entity.matches.json \
+		| sed -e 's/\"sentence\"/\"original\"/g' \
+		> Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-NoPPDB/wq-test.noppdb.$*.json
 
 create_graphparser_input_from_spectral_noppdb_paraphrases_%:
 	mkdir -p data/paraphrasing/
-	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-NoPPDB/wq-train.noppdb.$*.json \
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-NoPPDB/wq-train.noppdb.$*.json \
 		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
 		| gzip > working/webq.spectral.noppdb.paraphrases.train.$*.txt.gz
 
 	zcat working/webq.spectral.noppdb.paraphrases.train.$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
 		> data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.train.txt 
 
 	zcat working/webq.spectral.noppdb.paraphrases.train.$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
 		> data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.dev.txt 
+
+create_graphparser_test_input_from_spectral_noppdb_paraphrases_%:
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/Spectral-Paraphrases-NoPPDB/wq-test.noppdb.$*.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		> data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.test.txt 
 
 create_graphparser_input_from_mt_paraphrases_%:
 	mkdir -p data/paraphrasing/
-	sed -e 's/,$$//g' /disk/scratch/snarayan/Siva-Data/TuningData-09Oct15/MT-Paraphrases/wq-train.mt.nbest$*.distinct.json \
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/MT-Paraphrases/wq-train.mt.nbest$*.distinct.json \
 		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
 		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
 		| gzip > working/webq.mt.paraphrases.train.nbest$*.txt.gz
 
 	zcat working/webq.mt.paraphrases.train.nbest$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.train.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
 		> data/paraphrasing/webq.mt.paraphrases.nbest$*.train.txt 
 
 	zcat working/webq.mt.paraphrases.train.nbest$*.txt.gz \
-		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.dev.full.easyccg.json.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
 		> data/paraphrasing/webq.mt.paraphrases.nbest$*.dev.txt 
+
+create_graphparser_test_input_from_mt_paraphrases_%:
+	mkdir -p data/paraphrasing/
+	sed -e 's/,$$//g' Siva-Data/TuningData-09Oct15/MT-Paraphrases/wq-test.mt.nbest$*.distinct.json \
+		| grep  isOriginal \
+		| python scripts/paraphrasing/correct_paraphrase_scores.py \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.CreateForestFromSpectralParaphrases data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences \
+		| java -cp lib/*:graph-parser.jar in.sivareddy.paraphrasing.MergeParaphrasesIntoForest 100 \
+		> data/paraphrasing/webq.mt.paraphrases.nbest$*.test.txt
 
 # Gold Graphs
 create_gold_graphs_no_paraphrases:
@@ -92,7 +237,7 @@ create_gold_graphs_no_paraphrases:
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/oracle/webq.noparaphrases.dev \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/dummy.txt \
 		false \
 		false \
 		> data/oracle/webq.noparaphrases.dev.answers.txt
@@ -103,7 +248,7 @@ create_gold_graphs_no_paraphrases:
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/oracle/webq.noparaphrases.full \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/dummy.txt \
 		false \
 		false \
 		> data/oracle/webq.noparaphrases.full.answers.txt
@@ -114,20 +259,20 @@ create_withoutclassifier_paraphrases_gold_graphs_%:
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/oracle/webq.withoutclassifier.paraphrases.$*.dev \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/dummy.txt \
 		false \
 		false \
 		< data/paraphrasing/webq.withoutclassifier.paraphrases.$*.dev.txt \
 		> data/oracle/webq.withoutclassifier.paraphrases.$*.dev.answers.txt
-
-	java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+	cat data/paraphrasing/webq.withoutclassifier.paraphrases.$*.train.txt \
+		data/paraphrasing/webq.withoutclassifier.paraphrases.$*.dev.txt \
+	| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
-		data/oracle/webq.withoutclassifier.paraphrases.$*.train \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/oracle/webq.withoutclassifier.paraphrases.$*.full \
+		data/dummy.txt \
 		false \
 		false \
-		< data/paraphrasing/webq.withoutclassifier.paraphrases.$*.train.txt \
 		> data/oracle/webq.withoutclassifier.paraphrases.$*.train.answers.txt
 
 create_combined_paraphrases_gold_graphs_%:
@@ -136,21 +281,45 @@ create_combined_paraphrases_gold_graphs_%:
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/oracle/webq.combined.paraphrases.$*.dev \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/dummy.txt \
 		false \
 		false \
 		< data/paraphrasing/webq.combined.paraphrases.$*.dev.txt \
 		> data/oracle/webq.combined.paraphrases.$*.dev.answers.txt
 
+	cat data/paraphrasing/webq.combined.paraphrases.$*.train.txt \
+		data/paraphrasing/webq.combined.paraphrases.$*.dev.txt \
+	| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/oracle/webq.combined.paraphrases.$*.full \
+		data/dummy.txt \
+		false \
+		false \
+		> data/oracle/webq.combined.paraphrases.$*.full.answers.txt
+
+create_deep_paraphrases_gold_graphs_%:
+	mkdir -p data/oracle/
 	java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
-		data/oracle/webq.combined.paraphrases.$*.train \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/oracle/webq.deep.paraphrases.$*.dev \
+		data/dummy.txt \
 		false \
 		false \
-		< data/paraphrasing/webq.combined.paraphrases.$*.train.txt \
-		> data/oracle/webq.combined.paraphrases.$*.train.answers.txt
+		< data/paraphrasing/webq.deep.paraphrases.$*.dev.txt \
+		> data/oracle/webq.deep.paraphrases.$*.dev.answers.txt
+
+	cat data/paraphrasing/webq.deep.paraphrases.$*.train.txt \
+		data/paraphrasing/webq.deep.paraphrases.$*.dev.txt \
+	| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/oracle/webq.deep.paraphrases.$*.full \
+		data/dummy.txt \
+		false \
+		false \
+		> data/oracle/webq.deep.paraphrases.$*.full.answers.txt
 
 create_spectral_ppdb_paraphrases_gold_graphs_%:
 	mkdir -p data/oracle/
@@ -158,21 +327,22 @@ create_spectral_ppdb_paraphrases_gold_graphs_%:
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/oracle/webq.spectral.ppdb.paraphrases.$*.dev \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/dummy.txt \
 		false \
 		false \
 		< data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.dev.txt \
 		> data/oracle/webq.spectral.ppdb.paraphrases.$*.dev.answers.txt
 
-	java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+	cat data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.train.txt \
+		 data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.dev.txt \
+	| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
-		data/oracle/webq.spectral.ppdb.paraphrases.$*.train \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/oracle/webq.spectral.ppdb.paraphrases.$*.full \
+		data/dummy.txt \
 		false \
 		false \
-		< data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.train.txt \
-		> data/oracle/webq.spectral.ppdb.paraphrases.$*.train.answers.txt
+		> data/oracle/webq.spectral.ppdb.paraphrases.$*.full.answers.txt
 
 create_spectral_noppdb_paraphrases_gold_graphs_%:
 	mkdir -p data/oracle/
@@ -180,21 +350,34 @@ create_spectral_noppdb_paraphrases_gold_graphs_%:
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/oracle/webq.spectral.noppdb.paraphrases.$*.dev \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/dummy.txt \
 		false \
 		false \
 		< data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.dev.txt \
 		> data/oracle/webq.spectral.noppdb.paraphrases.$*.dev.answers.txt
 
+	cat data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.train.txt \
+	    data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.dev.txt \
+	| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/oracle/webq.spectral.noppdb.paraphrases.$*.full \
+		data/dummy.txt \
+		false \
+		false \
+		> data/oracle/webq.spectral.noppdb.paraphrases.$*.full.answers.txt
+
+test_create_spectral_noppdb_paraphrases_gold_graphs_%:
+	mkdir -p data/oracle/
 	java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
-		data/oracle/webq.spectral.noppdb.paraphrases.$*.train \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/oracle/webq.spectral.noppdb.paraphrases.$*.test \
+		data/dummy.txt \
 		false \
 		false \
-		< data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.train.txt \
-		> data/oracle/webq.spectral.noppdb.paraphrases.$*.train.answers.txt
+		< data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.test.txt \
+		> data/oracle/webq.spectral.noppdb.paraphrases.$*.test.answers.txt
 
 create_mt_paraphrases_gold_graphs_%:
 	mkdir -p data/oracle/
@@ -202,20 +385,21 @@ create_mt_paraphrases_gold_graphs_%:
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
 		data/oracle/webq.mt.paraphrases.nbest$*.dev \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/dummy.txt \
 		false \
 		false \
 		< data/paraphrasing/webq.mt.paraphrases.nbest$*.dev.txt \
 		> data/oracle/webq.mt.paraphrases.nbest$*.dev.answers.txt
 
-	java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+	cat data/paraphrasing/webq.mt.paraphrases.nbest$*.dev.txt \
+		 data/paraphrasing/webq.mt.paraphrases.nbest$*.train.txt \
+	| java -cp lib/*:graph-parser.jar in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
    		data/freebase/schema/all_domains_schema.txt localhost \
 		synPars \
-		data/oracle/webq.mt.paraphrases.nbest$*.train \
-		data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+		data/oracle/webq.mt.paraphrases.nbest$*.full \
+		data/dummy.txt \
 		false \
 		false \
-		< data/paraphrasing/webq.mt.paraphrases.nbest$*.train.txt \
 		> data/oracle/webq.mt.paraphrases.nbest$*.train.answers.txt
 
 
@@ -229,7 +413,7 @@ easyccg_supervised_noparaphrases:
 	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
-	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	-lexicon data/dummy.txt \
 	-domain "http://rdf.freebase.com" \
 	-typeKey "fb:type.object.type" \
 	-nthreads 20 \
@@ -238,7 +422,7 @@ easyccg_supervised_noparaphrases:
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
-	-forestSize 10 \
+	-forestSize 100 \
 	-ngramLength 2 \
 	-useSchema true \
 	-useKB true \
@@ -273,12 +457,14 @@ easyccg_supervised_noparaphrases:
 	-validQueryFlag true \
 	-useBackOffGraph false \
 	-useGoldRelations true \
-	-useAnswerTypeQuestionWordFlag true \
+	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
 	-evaluateBeforeTraining false \
-	-evaluateOnlyTheFirstBest false \
+	-evaluateOnlyTheFirstBest true \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
 	-initialEdgeWeight -0.05 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
@@ -290,6 +476,78 @@ easyccg_supervised_noparaphrases:
 	-logFile ../working/easyccg_supervised_noparaphrases/all.log.txt \
 	> ../working/easyccg_supervised_noparaphrases/all.txt
 
+test_easyccg_supervised_noparaphrases:
+	rm -rf ../working/test_easyccg_supervised_noparaphrases
+	mkdir -p ../working/test_easyccg_supervised_noparaphrases
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 10 \
+	-trainingSampleSize 2000 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag false \
+	-allowMerging false \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt" \
+	-goldParsesFile data/oracle/webq.noparaphrases.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+	-logFile ../working/test_easyccg_supervised_noparaphrases/all.log.txt \
+	> ../working/test_easyccg_supervised_noparaphrases/all.txt
+
 easyccg_supervised_withoutclassifier_paraphrase_%:
 	rm -rf ../working/easyccg_supervised_withoutclassifier_paraphrase_$*
 	mkdir -p ../working/easyccg_supervised_withoutclassifier_paraphrase_$*
@@ -299,7 +557,7 @@ easyccg_supervised_withoutclassifier_paraphrase_%:
 	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
-	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	-lexicon data/dummy.txt \
 	-domain "http://rdf.freebase.com" \
 	-typeKey "fb:type.object.type" \
 	-nthreads 20 \
@@ -308,7 +566,7 @@ easyccg_supervised_withoutclassifier_paraphrase_%:
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
-	-forestSize 10 \
+	-forestSize 100 \
 	-ngramLength 2 \
 	-useSchema true \
 	-useKB true \
@@ -343,43 +601,44 @@ easyccg_supervised_withoutclassifier_paraphrase_%:
 	-validQueryFlag true \
 	-useBackOffGraph false \
 	-useGoldRelations true \
-	-useAnswerTypeQuestionWordFlag true \
+	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
 	-evaluateBeforeTraining false \
-	-evaluateOnlyTheFirstBest false \
+	-evaluateOnlyTheFirstBest true \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
 	-initialEdgeWeight -0.05 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/paraphrasing/webq.withoutclassifier.paraphrases.$*.train.txt \
-	-goldParsesFile data/oracle/webq.withoutclassifier.paraphrases.$*.train.ser \
+	-goldParsesFile data/oracle/webq.withoutclassifier.paraphrases.$*.full.ser \
 	-devFile data/paraphrasing/webq.withoutclassifier.paraphrases.$*.dev.txt \
 	-logFile ../working/easyccg_supervised_withoutclassifier_paraphrase_$*/all.log.txt \
 	> ../working/easyccg_supervised_withoutclassifier_paraphrase_$*/all.txt
 
-easyccg_supervised_combined_paraphrase_%:
-	rm -rf ../working/easyccg_supervised_combined_paraphrase_$*
-	mkdir -p ../working/easyccg_supervised_combined_paraphrase_$*
-	-supervisedCorpus data/paraphrasing/webq.combined.paraphrases.$*.train.txt \
+test_easyccg_supervised_withoutclassifier_paraphrase_%:
+	rm -rf ../working/test_easyccg_supervised_withoutclassifier_paraphrase_$*
+	mkdir -p ../working/test_easyccg_supervised_withoutclassifier_paraphrase_$*
 	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-pointWiseF1Threshold 0.2 \
 	-semanticParseKey synPars \
 	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
-	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	-lexicon data/dummy.txt \
 	-domain "http://rdf.freebase.com" \
 	-typeKey "fb:type.object.type" \
 	-nthreads 20 \
 	-trainingSampleSize 2000 \
-	-iterations 20 \
+	-iterations 10 \
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
-	-forestSize 10 \
+	-forestSize 100 \
 	-ngramLength 2 \
 	-useSchema true \
 	-useKB true \
@@ -414,21 +673,312 @@ easyccg_supervised_combined_paraphrase_%:
 	-validQueryFlag true \
 	-useBackOffGraph false \
 	-useGoldRelations true \
-	-useAnswerTypeQuestionWordFlag true \
+	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
 	-evaluateBeforeTraining false \
-	-evaluateOnlyTheFirstBest false \
+	-evaluateOnlyTheFirstBest true \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
 	-initialEdgeWeight -0.05 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
-	-goldParsesFile data/oracle/webq.combined.paraphrases.$*.train.ser \
+	-supervisedCorpus "data/paraphrasing/webq.withoutclassifier.paraphrases.$*.train.txt;data/paraphrasing/webq.withoutclassifier.paraphrases.$*.dev.txt" \
+	-goldParsesFile data/oracle/webq.withoutclassifier.paraphrases.$*.full.ser \
+	-devFile data/paraphrasing/webq.withoutclassifier.paraphrases.$*.test.txt \
+	-logFile ../working/test_easyccg_supervised_withoutclassifier_paraphrase_$*/all.log.txt \
+	> ../working/test_easyccg_supervised_withoutclassifier_paraphrase_$*/all.txt
+
+easyccg_supervised_combined_paraphrase_%:
+	rm -rf ../working/easyccg_supervised_combined_paraphrase_$*
+	mkdir -p ../working/easyccg_supervised_combined_paraphrase_$*
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag false \
+	-allowMerging false \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/paraphrasing/webq.combined.paraphrases.$*.train.txt \
+	-goldParsesFile data/oracle/webq.combined.paraphrases.$*.full.ser \
 	-devFile data/paraphrasing/webq.combined.paraphrases.$*.dev.txt \
 	-logFile ../working/easyccg_supervised_combined_paraphrase_$*/all.log.txt \
 	> ../working/easyccg_supervised_combined_paraphrase_$*/all.txt
+
+test_easyccg_supervised_combined_paraphrase_%:
+	rm -rf ../working/test_easyccg_supervised_combined_paraphrase_$*
+	mkdir -p ../working/test_easyccg_supervised_combined_paraphrase_$*
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag false \
+	-allowMerging false \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/paraphrasing/webq.combined.paraphrases.$*.train.txt;data/paraphrasing/webq.combined.paraphrases.$*.dev.txt" \
+	-goldParsesFile data/oracle/webq.combined.paraphrases.$*.full.ser \
+	-devFile data/paraphrasing/webq.combined.paraphrases.$*.test.txt \
+	-logFile ../working/test_easyccg_supervised_combined_paraphrase_$*/all.log.txt \
+	> ../working/test_easyccg_supervised_combined_paraphrase_$*/all.txt
+
+easyccg_supervised_deep_paraphrase_%:
+	rm -rf ../working/easyccg_supervised_deep_paraphrase_$*
+	mkdir -p ../working/easyccg_supervised_deep_paraphrase_$*
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 20 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag false \
+	-allowMerging false \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus data/paraphrasing/webq.deep.paraphrases.$*.train.txt \
+	-goldParsesFile data/oracle/webq.deep.paraphrases.$*.full.ser \
+	-devFile data/paraphrasing/webq.deep.paraphrases.$*.dev.txt \
+	-logFile ../working/easyccg_supervised_deep_paraphrase_$*/all.log.txt \
+	> ../working/easyccg_supervised_deep_paraphrase_$*/all.txt
+
+test_easyccg_supervised_deep_paraphrase_%:
+	rm -rf ../working/test_easyccg_supervised_deep_paraphrase_$*
+	mkdir -p ../working/test_easyccg_supervised_deep_paraphrase_$*
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag false \
+	-allowMerging false \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/paraphrasing/webq.deep.paraphrases.$*.train.txt;data/paraphrasing/webq.deep.paraphrases.$*.dev.txt" \
+	-goldParsesFile data/oracle/webq.deep.paraphrases.$*.full.ser \
+	-devFile data/paraphrasing/webq.deep.paraphrases.$*.test.txt \
+	-logFile ../working/test_easyccg_supervised_deep_paraphrase_$*/all.log.txt \
+	> ../working/test_easyccg_supervised_deep_paraphrase_$*/all.txt
 
 easyccg_supervised_spectral_ppdb_paraphrase_%:
 	rm -rf ../working/easyccg_supervised_spectral_ppdb_paraphrase_$*
@@ -439,7 +989,7 @@ easyccg_supervised_spectral_ppdb_paraphrase_%:
 	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
-	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	-lexicon data/dummy.txt \
 	-domain "http://rdf.freebase.com" \
 	-typeKey "fb:type.object.type" \
 	-nthreads 20 \
@@ -448,7 +998,7 @@ easyccg_supervised_spectral_ppdb_paraphrase_%:
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
-	-forestSize 10 \
+	-forestSize 100 \
 	-ngramLength 2 \
 	-useSchema true \
 	-useKB true \
@@ -483,22 +1033,96 @@ easyccg_supervised_spectral_ppdb_paraphrase_%:
 	-validQueryFlag true \
 	-useBackOffGraph false \
 	-useGoldRelations true \
-	-useAnswerTypeQuestionWordFlag true \
+	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
 	-evaluateBeforeTraining false \
-	-evaluateOnlyTheFirstBest false \
+	-evaluateOnlyTheFirstBest true \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
 	-initialEdgeWeight -0.05 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.train.txt \
-	-goldParsesFile data/oracle/webq.spectral.ppdb.paraphrases.$*.train.ser \
+	-goldParsesFile data/oracle/webq.spectral.ppdb.paraphrases.$*.full.ser \
 	-devFile data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.dev.txt \
 	-logFile ../working/easyccg_supervised_spectral_ppdb_paraphrase_$*/all.log.txt \
 	> ../working/easyccg_supervised_spectral_ppdb_paraphrase_$*/all.txt
+
+test_easyccg_supervised_spectral_ppdb_paraphrase_%:
+	rm -rf ../working/test_easyccg_supervised_spectral_ppdb_paraphrase_$*
+	mkdir -p ../working/test_easyccg_supervised_spectral_ppdb_paraphrase_$*
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag false \
+	-allowMerging false \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.train.txt;data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.dev.txt" \
+	-goldParsesFile data/oracle/webq.spectral.ppdb.paraphrases.$*.full.ser \
+	-devFile data/paraphrasing/webq.spectral.ppdb.paraphrases.$*.test.txt \
+	-logFile ../working/test_easyccg_supervised_spectral_ppdb_paraphrase_$*/all.log.txt \
+	> ../working/test_easyccg_supervised_spectral_ppdb_paraphrase_$*/all.txt
 
 easyccg_supervised_spectral_noppdb_paraphrase_%:
 	rm -rf ../working/easyccg_supervised_spectral_noppdb_paraphrase_$*
@@ -509,7 +1133,7 @@ easyccg_supervised_spectral_noppdb_paraphrase_%:
 	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
-	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	-lexicon data/dummy.txt \
 	-domain "http://rdf.freebase.com" \
 	-typeKey "fb:type.object.type" \
 	-nthreads 20 \
@@ -518,7 +1142,7 @@ easyccg_supervised_spectral_noppdb_paraphrase_%:
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
-	-forestSize 10 \
+	-forestSize 100 \
 	-ngramLength 2 \
 	-useSchema true \
 	-useKB true \
@@ -553,22 +1177,96 @@ easyccg_supervised_spectral_noppdb_paraphrase_%:
 	-validQueryFlag true \
 	-useBackOffGraph false \
 	-useGoldRelations true \
-	-useAnswerTypeQuestionWordFlag true \
+	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
 	-evaluateBeforeTraining false \
-	-evaluateOnlyTheFirstBest false \
+	-evaluateOnlyTheFirstBest true \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
 	-initialEdgeWeight -0.05 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.train.txt \
-	-goldParsesFile data/oracle/webq.spectral.noppdb.paraphrases.$*.train.ser \
+	-goldParsesFile data/oracle/webq.spectral.noppdb.paraphrases.$*.full.ser \
 	-devFile data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.dev.txt \
 	-logFile ../working/easyccg_supervised_spectral_noppdb_paraphrase_$*/all.log.txt \
 	> ../working/easyccg_supervised_spectral_noppdb_paraphrase_$*/all.txt
+
+test_easyccg_supervised_spectral_noppdb_paraphrase_%:
+	rm -rf ../working/test_easyccg_supervised_spectral_noppdb_paraphrase_$*
+	mkdir -p ../working/test_easyccg_supervised_spectral_noppdb_paraphrase_$*
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag false \
+	-allowMerging false \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag false \
+	-paraphraseClassifierScoreFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.train.txt;data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.dev.txt" \
+	-goldParsesFile data/oracle/webq.spectral.noppdb.paraphrases.$*.full.ser \
+	-devFile data/paraphrasing/webq.spectral.noppdb.paraphrases.$*.test.txt \
+	-logFile ../working/test_easyccg_supervised_spectral_noppdb_paraphrase_$*/all.log.txt \
+	> ../working/test_easyccg_supervised_spectral_noppdb_paraphrase_$*/all.txt
 
 easyccg_supervised_mt_paraphrase_%:
 	rm -rf ../working/easyccg_supervised_mt_paraphrase_nbest$*
@@ -579,7 +1277,7 @@ easyccg_supervised_mt_paraphrase_%:
 	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
 	-schema data/freebase/schema/all_domains_schema.txt \
 	-relationTypesFile data/dummy.txt \
-	-lexicon data/complete/grounded_lexicon/easyccg_grounded_lexicon.txt.gz \
+	-lexicon data/dummy.txt \
 	-domain "http://rdf.freebase.com" \
 	-typeKey "fb:type.object.type" \
 	-nthreads 20 \
@@ -588,7 +1286,7 @@ easyccg_supervised_mt_paraphrase_%:
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
-	-forestSize 10 \
+	-forestSize 100 \
 	-ngramLength 2 \
 	-useSchema true \
 	-useKB true \
@@ -623,19 +1321,93 @@ easyccg_supervised_mt_paraphrase_%:
 	-validQueryFlag true \
 	-useBackOffGraph false \
 	-useGoldRelations true \
-	-useAnswerTypeQuestionWordFlag true \
+	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
 	-evaluateBeforeTraining false \
-	-evaluateOnlyTheFirstBest false \
+	-evaluateOnlyTheFirstBest true \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag true \
+	-paraphraseClassifierScoreFlag true \
 	-initialEdgeWeight -0.05 \
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.05 \
 	-endpoint localhost \
 	-supervisedCorpus data/paraphrasing/webq.mt.paraphrases.nbest$*.train.txt \
-	-goldParsesFile data/oracle/webq.mt.paraphrases.nbest$*.train.ser \
+	-goldParsesFile data/oracle/webq.mt.paraphrases.nbest$*.full.ser \
 	-devFile data/paraphrasing/webq.mt.paraphrases.nbest$*.dev.txt \
 	-logFile ../working/easyccg_supervised_mt_paraphrase_nbest$*/all.log.txt \
 	> ../working/easyccg_supervised_mt_paraphrase_nbest$*/all.txt
+
+test_easyccg_supervised_mt_paraphrase_%:
+	rm -rf ../working/test_easyccg_supervised_mt_paraphrase_nbest$*
+	mkdir -p ../working/test_easyccg_supervised_mt_paraphrase_nbest$*
+	java -Xms2048m -cp lib/*:graph-parser.jar in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+	-lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 100 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-useAnswerTypeQuestionWordFlag false \
+	-allowMerging false \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest true \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-paraphraseScoreFlag true \
+	-paraphraseClassifierScoreFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/paraphrasing/webq.mt.paraphrases.nbest$*.train.txt;data/paraphrasing/webq.mt.paraphrases.nbest$*.dev.txt" \
+	-goldParsesFile data/oracle/webq.mt.paraphrases.nbest$*.full.ser \
+	-devFile data/paraphrasing/webq.mt.paraphrases.nbest$*.test.txt \
+	-logFile ../working/test_easyccg_supervised_mt_paraphrase_nbest$*/all.log.txt \
+	> ../working/test_easyccg_supervised_mt_paraphrase_nbest$*/all.txt
