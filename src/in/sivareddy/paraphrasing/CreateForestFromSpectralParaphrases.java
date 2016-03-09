@@ -12,9 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import others.StanfordPipeline;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -26,6 +29,8 @@ public class CreateForestFromSpectralParaphrases {
   private Map<String, List<JsonObject>> sentenceToParaphrases = new HashMap<>();
   private JsonParser jsonParser = new JsonParser();
   private Gson gson = new Gson();
+  Map<String, String> options = ImmutableMap.of("annotators", "tokenize");
+  StanfordPipeline englishPipeline = new StanfordPipeline(options);
 
   public CreateForestFromSpectralParaphrases(InputStream entityDisambiguation,
       InputStream paraphrases) throws IOException {
@@ -98,28 +103,20 @@ public class CreateForestFromSpectralParaphrases {
                   .get(SentenceKeys.IS_ORIGINAL_SENTENCE).getAsInt();
         }
 
-        if (paraphrase.equals(sent)) {
+        JsonArray wordsArr;
+        if (isOriginal == 1) {
           // Take the tokenization from the original sentence.
-          List<String> originalWords = new ArrayList<>();
-          sentObj
-              .get(SentenceKeys.WORDS_KEY)
-              .getAsJsonArray()
-              .forEach(
-                  x -> originalWords.add(x.getAsJsonObject()
-                      .get(SentenceKeys.WORD_KEY).getAsString()));
-          paraphrase = Joiner.on(" ").join(originalWords).toString();
+          wordsArr = sentObj.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+        } else {
+          // Otherwise tokenize.
+          JsonObject tokenObj = new JsonObject();
+          tokenObj.addProperty(SentenceKeys.SENTENCE_KEY, paraphrase);
+          englishPipeline.processSentence(tokenObj);
+          wordsArr = tokenObj.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
         }
-
-        List<String> words =
-            Splitter.on(CharMatcher.WHITESPACE).trimResults()
-                .omitEmptyStrings().splitToList(paraphrase);
-
-        JsonArray wordsArr = new JsonArray();
-        for (String word : words) {
-          JsonObject wordObj = new JsonObject();
-          wordObj.addProperty(SentenceKeys.WORD_KEY, word);
-          wordsArr.add(wordObj);
-        }
+        List<String> words = new ArrayList<>();
+        wordsArr.forEach(x -> words.add(x.getAsJsonObject()
+            .get(SentenceKeys.WORD_KEY).getAsString()));
 
         JsonArray newDisambiguatedEntites = new JsonArray();
         for (JsonElement entitiesElm : disambiguatedEntities) {
