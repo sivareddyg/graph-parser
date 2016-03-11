@@ -96,6 +96,7 @@ public class GraphToQueryTraining {
   boolean addOnlyBagOfWordsGraph = false;
   boolean useGoldRelations = false;
   boolean evaluateOnlyTheFirstBest = false;
+  boolean paraphraseClassifierScoreFlag = false;
 
   String semanticParseKey;
 
@@ -132,12 +133,13 @@ public class GraphToQueryTraining {
       boolean useNbestSurrogateGraphs, boolean addBagOfWordsGraph,
       boolean addOnlyBagOfWordsGraph, boolean handleNumbers,
       boolean entityScoreFlag, boolean entityWordOverlapFlag,
-      boolean paraphraseScoreFlag, boolean paraphraseClassifierScoreFlag, boolean allowMerging,
-      boolean useGoldRelations, boolean evaluateOnlyTheFirstBest,
-      boolean handleEventEventEdges, boolean useBackOffGraph,
-      double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double stemFeaturesWeight,
-      RdfGraphTools rdfGraphTools, List<String> kbGraphUri) throws IOException {
+      boolean paraphraseScoreFlag, boolean paraphraseClassifierScoreFlag,
+      boolean allowMerging, boolean useGoldRelations,
+      boolean evaluateOnlyTheFirstBest, boolean handleEventEventEdges,
+      boolean useBackOffGraph, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double stemFeaturesWeight, RdfGraphTools rdfGraphTools,
+      List<String> kbGraphUri) throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
 
@@ -172,6 +174,7 @@ public class GraphToQueryTraining {
     this.addBagOfWordsGraph = addBagOfWordsGraph || addOnlyBagOfWordsGraph;
     this.useGoldRelations = useGoldRelations;
     this.evaluateOnlyTheFirstBest = evaluateOnlyTheFirstBest;
+    this.paraphraseClassifierScoreFlag = paraphraseClassifierScoreFlag;
 
     // Load gold parses for training sentences.
     loadGoldParsesFile(goldParsesFile);
@@ -1222,189 +1225,239 @@ public class GraphToQueryTraining {
     }
     logger.info("Gold Results : " + goldResults);
 
-    List<JsonObject> forrest = new ArrayList<>();
-    if (jsonSentence.has(SentenceKeys.FOREST)) {
-      JsonArray jsonForrest =
-          jsonSentence.get(SentenceKeys.FOREST).getAsJsonArray();
-      int i = 0;
-      for (JsonElement element : jsonForrest) {
-        i++;
-        if (i > forrestSize)
-          break;
-        forrest.add(element.getAsJsonObject());
-      }
-    } else {
-      forrest.add(jsonSentence);
-    }
+    int totalForestSize = 0;
+    while (true) {
+      double currentBatchParaphraseScore = 0;
+      List<JsonObject> forest = new ArrayList<>();
+      if (jsonSentence.has(SentenceKeys.FOREST)) {
+        JsonArray jsonForrest =
+            jsonSentence.get(SentenceKeys.FOREST).getAsJsonArray();
+        List<JsonObject> inputForestArray = new ArrayList<>();
+        jsonForrest.forEach(x -> inputForestArray.add(x.getAsJsonObject()));
 
-    // Get ungrounded graphs.
-    List<LexicalGraph> uGraphs = Lists.newArrayList();
-    for (JsonObject element : forrest) {
-      // Add graphs from syntactic parse/already given semantic parses.
-      if (!addOnlyBagOfWordsGraph) {
-        uGraphs.addAll(graphCreator.buildUngroundedGraph(element,
-            semanticParseKey, nbestParses, logger));
-      }
+        // Sort the entries on paraphrase scores if paraphrase scores are
+        // available.
+        inputForestArray
+            .sort(Comparator.comparing(x -> x
+                .has(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE) ? -1
+                * x.get(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE).getAsDouble()
+                : 0));
+        for (int i = totalForestSize; i < inputForestArray.size(); i++) {
+          JsonObject element = inputForestArray.get(i);
 
-      // Add a bag-of-word graph.
-      if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
-        uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(element));
-      }
-    }
-
-    if (uGraphs.size() < 1) {
-      logger.debug("No uGraphs");
-      return;
-    }
-
-    // Get grounded Graphs
-    List<LexicalGraph> gGraphs = Lists.newArrayList();
-    List<LexicalGraph> filteredGraphs = Lists.newArrayList();
-    for (LexicalGraph uGraph : uGraphs) {
-      if (debugEnabled) {
-        try {
-          logger.debug(uGraph);
-        } catch (Exception e) {
-          // pass.
+          // Consider the paraphrases in a graded fashion. First consider the
+          // batch with the highest
+          // score, next the second highest and so on.
+          if (paraphraseClassifierScoreFlag
+              && element.has(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE)) {
+            if (forest.size() == 0) {
+              currentBatchParaphraseScore =
+                  element.get(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE)
+                      .getAsDouble();
+            } else {
+              double currentParaphraseScore =
+                  element.get(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE)
+                      .getAsDouble();
+              if (currentParaphraseScore < currentBatchParaphraseScore)
+                break;
+            }
+          }
+          forest.add(element);
+          totalForestSize++;
+          if (totalForestSize >= forrestSize)
+            break;
         }
+      } else {
+        forest.add(jsonSentence);
       }
-      if (uGraph.getEdges().size() == 0) {
-        logger.debug("Graph has NO edges. Discard ");
-        continue;
-      }
-      List<LexicalGraph> currentGroundedGraphs =
-          graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
-              useEntityTypes, useKB, groundFreeVariables,
-              groundEntityVariableEdges, groundEntityEntityEdges,
-              useEmtpyTypes, ignoreTypes, false);
 
-      gGraphs.addAll(currentGroundedGraphs);
-      Collections.sort(gGraphs);
-      gGraphs =
-          gGraphs.size() < nbestGraphs ? gGraphs : gGraphs.subList(0,
-              nbestGraphs);
-
-
-      if (useGoldRelations) {
-        if (jsonSentence.get(SentenceKeys.GOLD_MID) == null)
-          continue;
-        String goldMid = jsonSentence.get(SentenceKeys.GOLD_MID).getAsString();
-        HashSet<LexicalItem> mainEntityNodes = uGraph.getMidNode(goldMid);
-        if (mainEntityNodes == null || mainEntityNodes.size() == 0)
-          continue;
-        HashSet<LexicalItem> questionNodes = uGraph.getQuestionNode();
-        if (questionNodes == null || questionNodes.size() == 0)
-          continue;
-        LexicalItem questionNode = questionNodes.iterator().next();
-        LexicalItem goldNode = mainEntityNodes.iterator().next();
-
-        Pair<LexicalItem, LexicalItem> mainEdgeKey =
-            Pair.of(goldNode, questionNode);
-        Pair<LexicalItem, LexicalItem> mainEdgeInverseKey =
-            Pair.of(questionNode, goldNode);
-        Map<Pair<LexicalItem, LexicalItem>, TreeSet<Relation>> edgeGroundingConstraints =
-            new HashMap<>();
-        edgeGroundingConstraints.put(mainEdgeKey, new TreeSet<>());
-        edgeGroundingConstraints.put(mainEdgeInverseKey, new TreeSet<>());
-
-        if (jsonSentence.get(SentenceKeys.GOLD_RELATIONS) == null)
-          continue;
-        for (JsonElement goldRelation : jsonSentence.get(
-            SentenceKeys.GOLD_RELATIONS).getAsJsonArray()) {
-          JsonObject goldRelationObj = goldRelation.getAsJsonObject();
-          Relation mainRelation =
-              new Relation(goldRelationObj.get(SentenceKeys.RELATION_LEFT)
-                  .getAsString(), goldRelationObj.get(
-                  SentenceKeys.RELATION_RIGHT).getAsString(), goldRelationObj
-                  .get(SentenceKeys.SCORE).getAsDouble());
-          Relation mainRelationInverse = mainRelation.inverse();
-          edgeGroundingConstraints.get(mainEdgeKey).add(mainRelation);
-          edgeGroundingConstraints.get(mainEdgeInverseKey).add(
-              mainRelationInverse);
+      // Get ungrounded graphs.
+      List<LexicalGraph> uGraphs = Lists.newArrayList();
+      for (JsonObject element : forest) {
+        // Add graphs from syntactic parse/already given semantic parses.
+        if (!addOnlyBagOfWordsGraph) {
+          uGraphs.addAll(graphCreator.buildUngroundedGraph(element,
+              semanticParseKey, nbestParses, logger));
         }
 
-        List<LexicalGraph> filteredGroundedGraphs =
-            graphCreator.createGroundedGraph(uGraph, null,
-                edgeGroundingConstraints, Sets.newHashSet(goldNode),
-                nbestEdges, 10000, useEntityTypes, useKB, groundFreeVariables,
+        // Add a bag-of-word graph.
+        if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
+          uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(element));
+        }
+      }
+
+      if (uGraphs.size() < 1) {
+        logger.debug("No uGraphs");
+        return;
+      }
+
+      // Get grounded Graphs
+      List<LexicalGraph> gGraphs = Lists.newArrayList();
+      List<LexicalGraph> filteredGraphs = Lists.newArrayList();
+      for (LexicalGraph uGraph : uGraphs) {
+        if (debugEnabled) {
+          try {
+            logger.debug(uGraph);
+          } catch (Exception e) {
+            // pass.
+          }
+        }
+        if (uGraph.getEdges().size() == 0) {
+          logger.debug("Graph has NO edges. Discard ");
+          continue;
+        }
+        List<LexicalGraph> currentGroundedGraphs =
+            graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
+                useEntityTypes, useKB, groundFreeVariables,
                 groundEntityVariableEdges, groundEntityEntityEdges,
                 useEmtpyTypes, ignoreTypes, false);
-        filteredGraphs.addAll(filteredGroundedGraphs);
-        Collections.sort(filteredGraphs);
-      }
-    }
 
-    logger.info("Total number of grounded graphs: " + gGraphs.size());
-    LexicalGraph predictedGraph = getPredictedGraph(gGraphs, false);
+        gGraphs.addAll(currentGroundedGraphs);
+        Collections.sort(gGraphs);
+        gGraphs =
+            gGraphs.size() < nbestGraphs ? gGraphs : gGraphs.subList(0,
+                nbestGraphs);
 
-    LexicalGraph goldGraph = null;
-    if (useGoldRelations) {
-      logger.info("Using gold annotations for training. Total gold graphs: "
-          + filteredGraphs.size());
-      goldGraph = getGoldGraph(jsonSentence, filteredGraphs, goldResults);
-    } else {
-      goldGraph = getGoldGraph(jsonSentence, gGraphs, goldResults);
-    }
 
-    List<Feature> predGraphFeatures =
-        predictedGraph != null ? predictedGraph.getFeatures()
-            : new ArrayList<>();
-    List<Feature> goldGraphFeatures =
-        goldGraph != null ? goldGraph.getFeatures() : new ArrayList<>();
+        if (useGoldRelations) {
+          if (jsonSentence.get(SentenceKeys.GOLD_MID) == null)
+            continue;
+          String goldMid =
+              jsonSentence.get(SentenceKeys.GOLD_MID).getAsString();
+          HashSet<LexicalItem> mainEntityNodes = uGraph.getMidNode(goldMid);
+          if (mainEntityNodes == null || mainEntityNodes.size() == 0)
+            continue;
+          HashSet<LexicalItem> questionNodes = uGraph.getQuestionNode();
+          if (questionNodes == null || questionNodes.size() == 0)
+            continue;
+          LexicalItem questionNode = questionNodes.iterator().next();
+          LexicalItem goldNode = mainEntityNodes.iterator().next();
 
-    if (predictedGraph != null && goldGraph != null) {
-      String query =
-          GraphToSparqlConverter.convertGroundedGraph(predictedGraph, schema,
-              kbGraphUri, 30);
-      logger.debug("Predicted query: " + query);
-      Map<String, LinkedHashSet<String>> predResults =
-          rdfGraphTools.runQueryHttp(query);
+          Pair<LexicalItem, LexicalItem> mainEdgeKey =
+              Pair.of(goldNode, questionNode);
+          Pair<LexicalItem, LexicalItem> mainEdgeInverseKey =
+              Pair.of(questionNode, goldNode);
+          Map<Pair<LexicalItem, LexicalItem>, TreeSet<Relation>> edgeGroundingConstraints =
+              new HashMap<>();
+          edgeGroundingConstraints.put(mainEdgeKey, new TreeSet<>());
+          edgeGroundingConstraints.put(mainEdgeInverseKey, new TreeSet<>());
 
-      goldQuery =
-          GraphToSparqlConverter.convertGroundedGraph(goldGraph, schema,
-              kbGraphUri, 30);
-      logger.debug("Gold query: " + goldQuery);
-      Map<String, LinkedHashSet<String>> goldPredResults =
-          rdfGraphTools.runQueryHttp(goldQuery);
+          if (jsonSentence.get(SentenceKeys.GOLD_RELATIONS) == null)
+            continue;
+          for (JsonElement goldRelation : jsonSentence.get(
+              SentenceKeys.GOLD_RELATIONS).getAsJsonArray()) {
+            JsonObject goldRelationObj = goldRelation.getAsJsonObject();
+            Relation mainRelation =
+                new Relation(goldRelationObj.get(SentenceKeys.RELATION_LEFT)
+                    .getAsString(), goldRelationObj.get(
+                    SentenceKeys.RELATION_RIGHT).getAsString(), goldRelationObj
+                    .get(SentenceKeys.SCORE).getAsDouble());
+            Relation mainRelationInverse = mainRelation.inverse();
+            edgeGroundingConstraints.get(mainEdgeKey).add(mainRelation);
+            edgeGroundingConstraints.get(mainEdgeInverseKey).add(
+                mainRelationInverse);
+          }
 
-      logger.debug("Predicted Results: " + predResults);
-      logger.debug("Gold Prediction Results: " + goldPredResults);
-      logger.debug("Gold Results: " + goldResults);
-
-      logger.debug("Predicted graph is correct with F1: "
-          + RdfGraphTools.getPointWiseF1(goldResults, predResults));
-      logger.debug("Predicted Gold graph is correct with F1: "
-          + RdfGraphTools.getPointWiseF1(goldResults, goldPredResults));
-    }
-
-    if (goldGraph != null) {
-      logger.debug("Sentence: " + sentence);
-      logger.debug("Predicted Graph: " + predictedGraph);
-      logger.debug("Predicted Graph Features: ");
-      learningModel.printFeatureWeights(predGraphFeatures, logger);
-
-      logger.debug("Gold Graph: " + goldGraph);
-      logger.debug("Gold Graph Features: ");
-      learningModel.printFeatureWeights(goldGraphFeatures, logger);
-
-      if (predictedGraph != null)
-        logger.debug("Predicted before update: " + predictedGraph.getScore());
-      logger.debug("Gold before update: " + goldGraph.getScore());
-
-      learningModel.updateWeightVector(1,
-          Lists.newArrayList(goldGraphFeatures), 1,
-          Lists.newArrayList(predGraphFeatures));
-
-      if (predictedGraph != null) {
-        predictedGraph.setScore(learningModel
-            .getScoreTraining(predGraphFeatures));
-        logger.debug("Predicted after update: " + predictedGraph.getScore());
+          List<LexicalGraph> filteredGroundedGraphs =
+              graphCreator.createGroundedGraph(uGraph, null,
+                  edgeGroundingConstraints, Sets.newHashSet(goldNode),
+                  nbestEdges, 10000, useEntityTypes, useKB,
+                  groundFreeVariables, groundEntityVariableEdges,
+                  groundEntityEntityEdges, useEmtpyTypes, ignoreTypes, false);
+          filteredGraphs.addAll(filteredGroundedGraphs);
+          Collections.sort(filteredGraphs);
+        }
       }
 
-      goldGraph.setScore(learningModel.getScoreTraining(goldGraphFeatures));
-      logger.debug("Gold after update: " + goldGraph.getScore());
-    } else {
-      logger.debug("No Gold Graph Found! ");
+      logger.info("Total number of grounded graphs: " + gGraphs.size());
+      LexicalGraph predictedGraph = getPredictedGraph(gGraphs, false);
+
+      LexicalGraph goldGraph = null;
+      if (useGoldRelations) {
+        logger.info("Using gold annotations for training. Total gold graphs: "
+            + filteredGraphs.size());
+        goldGraph = getGoldGraph(jsonSentence, filteredGraphs, goldResults);
+      } else {
+        goldGraph = getGoldGraph(jsonSentence, gGraphs, goldResults);
+      }
+
+      List<Feature> predGraphFeatures =
+          predictedGraph != null ? predictedGraph.getFeatures()
+              : new ArrayList<>();
+      List<Feature> goldGraphFeatures =
+          goldGraph != null ? goldGraph.getFeatures() : new ArrayList<>();
+
+      if (predictedGraph != null && goldGraph != null) {
+        String query =
+            GraphToSparqlConverter.convertGroundedGraph(predictedGraph, schema,
+                kbGraphUri, 30);
+        logger.debug("Predicted query: " + query);
+        Map<String, LinkedHashSet<String>> predResults =
+            rdfGraphTools.runQueryHttp(query);
+
+        goldQuery =
+            GraphToSparqlConverter.convertGroundedGraph(goldGraph, schema,
+                kbGraphUri, 30);
+        logger.debug("Gold query: " + goldQuery);
+        Map<String, LinkedHashSet<String>> goldPredResults =
+            rdfGraphTools.runQueryHttp(goldQuery);
+
+        logger.debug("Predicted Results: " + predResults);
+        logger.debug("Gold Prediction Results: " + goldPredResults);
+        logger.debug("Gold Results: " + goldResults);
+
+        logger.debug("Predicted graph is correct with F1: "
+            + RdfGraphTools.getPointWiseF1(goldResults, predResults));
+        logger.debug("Predicted Gold graph is correct with F1: "
+            + RdfGraphTools.getPointWiseF1(goldResults, goldPredResults));
+      }
+
+      if (goldGraph != null) {
+        logger.debug("Sentence: " + sentence);
+        logger.debug("Predicted Graph: " + predictedGraph);
+        logger.debug("Predicted Graph Features: ");
+        learningModel.printFeatureWeights(predGraphFeatures, logger);
+
+        logger.debug("Gold Graph: " + goldGraph);
+        logger.debug("Gold Graph Features: ");
+        learningModel.printFeatureWeights(goldGraphFeatures, logger);
+
+        if (predictedGraph != null)
+          logger.debug("Predicted before update: " + predictedGraph.getScore());
+        logger.debug("Gold before update: " + goldGraph.getScore());
+
+        learningModel.updateWeightVector(1,
+            Lists.newArrayList(goldGraphFeatures), 1,
+            Lists.newArrayList(predGraphFeatures));
+
+        if (predictedGraph != null) {
+          predictedGraph.setScore(learningModel
+              .getScoreTraining(predGraphFeatures));
+          logger.debug("Predicted after update: " + predictedGraph.getScore());
+        }
+
+        goldGraph.setScore(learningModel.getScoreTraining(goldGraphFeatures));
+        logger.debug("Gold after update: " + goldGraph.getScore());
+      } else {
+        logger.debug("No Gold Graph Found! ");
+      }
+
+      // Consider the next set of paraphrases only if
+      // paraphraseClassifierScoreFlag is set, and a
+      // gold graph is not found.
+      if (!jsonSentence.has(SentenceKeys.FOREST)
+          || !paraphraseClassifierScoreFlag || goldGraph != null) {
+        break;
+      }
+      if (totalForestSize >= forrestSize)
+        break;
+
+      if (jsonSentence.has(SentenceKeys.FOREST)
+          && totalForestSize >= jsonSentence.get(SentenceKeys.FOREST)
+              .getAsJsonArray().size())
+        break;
+
+      logger.info("Considering next set of paraphrases: ");
     }
   }
 
@@ -1950,253 +2003,309 @@ public class GraphToQueryTraining {
       goldResults.put("answerSubset", goldAnswers);
     }
 
-    List<JsonObject> forrest = new ArrayList<>();
-    if (jsonSentence.has(SentenceKeys.FOREST)) {
-      JsonArray jsonForrest =
-          jsonSentence.get(SentenceKeys.FOREST).getAsJsonArray();
-      int i = 0;
-      for (JsonElement element : jsonForrest) {
-        i++;
-        if (i > forrestSize)
-          break;
-        forrest.add(element.getAsJsonObject());
-      }
-    } else {
-      forrest.add(jsonSentence);
-    }
+    int totalForestSize = 0;
+    while (true) {
+      double currentBatchParaphraseScore = 0;
+      List<JsonObject> forest = new ArrayList<>();
+      if (jsonSentence.has(SentenceKeys.FOREST)) {
+        JsonArray jsonForrest =
+            jsonSentence.get(SentenceKeys.FOREST).getAsJsonArray();
+        List<JsonObject> inputForestArray = new ArrayList<>();
+        jsonForrest.forEach(x -> inputForestArray.add(x.getAsJsonObject()));
 
-    // Get ungrounded graphs
-    List<LexicalGraph> uGraphs = Lists.newArrayList();
-    for (JsonObject element : forrest) {
-      // Add graphs from syntactic parse/already given semantic parses.
-      if (!addOnlyBagOfWordsGraph) {
-        uGraphs.addAll(graphCreator.buildUngroundedGraph(element,
-            semanticParseKey, nbestTestSyntacticParses, logger));
-      }
+        // Sort the entries on paraphrase scores if paraphrase scores are
+        // available.
+        inputForestArray
+            .sort(Comparator.comparing(x -> x
+                .has(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE) ? -1
+                * x.get(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE).getAsDouble()
+                : 0));
+        for (int i = totalForestSize; i < inputForestArray.size(); i++) {
+          JsonObject element = inputForestArray.get(i);
 
-      // Add a bag-of-word graph.
-      if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
-        uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(element));
-      }
-
-      if (uGraphs.size() < 1) {
-        logger.debug("No uGraphs");
-
-        // Syntactic parser mistakes. There are no predicted results.
-        firstBestMap.put(sentCount, -1);
-        results.put(sentCount, new HashMap<>());
-        for (Integer nthBest : testingNbestParsesRange) {
-          results.get(sentCount).put(nthBest,
-              RdfGraphTools.getCleanedResults(goldResults, null));
-        }
-        return;
-      }
-    }
-
-    // Get grounded Graphs
-    List<LexicalGraph> gGraphs = Lists.newArrayList();
-
-    for (LexicalGraph uGraph : uGraphs) {
-      if (debugEnabled) {
-        logger.debug("Ungrounded Graph: " + uGraph);
-      }
-      if (uGraph.getEdges().size() == 0) {
-        logger.debug("Graph has NO edges. Discard ");
-        continue;
-      }
-      List<LexicalGraph> currentGroundedGraphs =
-          graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
-              useEntityTypes, useKB, groundFreeVariables,
-              groundEntityVariableEdges, groundEntityEntityEdges,
-              useEmtpyTypes, ignoreTypes, true);
-      gGraphs.addAll(currentGroundedGraphs);
-      Collections.sort(gGraphs);
-      gGraphs =
-          gGraphs.size() < nbestGraphs ? gGraphs : gGraphs.subList(0,
-              nbestGraphs);
-    }
-
-    logger.info("Total number of grounded graphs: " + gGraphs.size());
-
-    List<Pair<LexicalGraph, Map<String, LinkedHashSet<String>>>> gGraphsAndResults =
-        Lists.newArrayList();
-
-    // firstBestGraphScore and validQueryFeatureScore are used for speeding up
-    // testing.
-    double firstBestGraphScore =
-        gGraphs.size() > 0 ? gGraphs.get(0).getScore() : 0.0;
-    double validQueryFeatureScore =
-        learningModel.getScoreTesting(Lists.newArrayList(new ValidQueryFeature(
-            true)));
-    for (LexicalGraph gGraph : gGraphs) {
-      String query =
-          GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
-              kbGraphUri, 30);
-      Map<String, LinkedHashSet<String>> predResults =
-          rdfGraphTools.runQueryHttp(query);
-
-      // adding the feature if the query produces any answer
-      if (validQueryFlag) {
-        String targetVar = null;
-        if (predResults != null) {
-          Set<String> keys = predResults.keySet();
-          for (String key : keys) {
-            if (!key.contains("name")) {
-              targetVar = key;
-              break;
+          // Consider the paraphrases in a graded fashion. First consider the
+          // batch with the highest
+          // score, next the second highest and so on.
+          if (paraphraseClassifierScoreFlag
+              && element.has(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE)) {
+            if (forest.size() == 0) {
+              currentBatchParaphraseScore =
+                  element.get(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE)
+                      .getAsDouble();
+            } else {
+              double currentParaphraseScore =
+                  element.get(SentenceKeys.PARAPHRASE_CLASSIFIER_SCORE)
+                      .getAsDouble();
+              if (currentParaphraseScore < currentBatchParaphraseScore)
+                break;
             }
+          }
+          forest.add(element);
+          totalForestSize++;
+          if (totalForestSize >= forrestSize)
+            break;
+        }
+      } else {
+        forest.add(jsonSentence);
+      }
+
+      // Get ungrounded graphs
+      List<LexicalGraph> uGraphs = Lists.newArrayList();
+      for (JsonObject element : forest) {
+        // Add graphs from syntactic parse/already given semantic parses.
+        if (!addOnlyBagOfWordsGraph) {
+          uGraphs.addAll(graphCreator.buildUngroundedGraph(element,
+              semanticParseKey, nbestTestSyntacticParses, logger));
+        }
+
+        // Add a bag-of-word graph.
+        if (addOnlyBagOfWordsGraph || addBagOfWordsGraph) {
+          uGraphs.addAll(graphCreator.getBagOfWordsUngroundedGraph(element));
+        }
+
+        if (uGraphs.size() < 1) {
+          logger.debug("No uGraphs");
+
+          // Syntactic parser mistakes. There are no predicted results.
+          firstBestMap.put(sentCount, -1);
+          results.put(sentCount, new HashMap<>());
+          for (Integer nthBest : testingNbestParsesRange) {
+            results.get(sentCount).put(nthBest,
+                RdfGraphTools.getCleanedResults(goldResults, null));
+          }
+          return;
+        }
+      }
+
+      // Get grounded Graphs
+      List<LexicalGraph> gGraphs = Lists.newArrayList();
+
+      for (LexicalGraph uGraph : uGraphs) {
+        if (debugEnabled) {
+          logger.debug("Ungrounded Graph: " + uGraph);
+        }
+        if (uGraph.getEdges().size() == 0) {
+          logger.debug("Graph has NO edges. Discard ");
+          continue;
+        }
+        List<LexicalGraph> currentGroundedGraphs =
+            graphCreator.createGroundedGraph(uGraph, nbestEdges, nbestGraphs,
+                useEntityTypes, useKB, groundFreeVariables,
+                groundEntityVariableEdges, groundEntityEntityEdges,
+                useEmtpyTypes, ignoreTypes, true);
+        gGraphs.addAll(currentGroundedGraphs);
+        Collections.sort(gGraphs);
+        gGraphs =
+            gGraphs.size() < nbestGraphs ? gGraphs : gGraphs.subList(0,
+                nbestGraphs);
+      }
+
+      logger.info("Total number of grounded graphs: " + gGraphs.size());
+
+      List<Pair<LexicalGraph, Map<String, LinkedHashSet<String>>>> gGraphsAndResults =
+          Lists.newArrayList();
+
+      // firstBestGraphScore and validQueryFeatureScore are used for speeding up
+      // testing.
+      double firstBestGraphScore =
+          gGraphs.size() > 0 ? gGraphs.get(0).getScore() : 0.0;
+      double validQueryFeatureScore =
+          learningModel.getScoreTesting(Lists
+              .newArrayList(new ValidQueryFeature(true)));
+      for (LexicalGraph gGraph : gGraphs) {
+        String query =
+            GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
+                kbGraphUri, 30);
+        Map<String, LinkedHashSet<String>> predResults =
+            rdfGraphTools.runQueryHttp(query);
+
+        // adding the feature if the query produces any answer
+        if (validQueryFlag) {
+          String targetVar = null;
+          if (predResults != null) {
+            Set<String> keys = predResults.keySet();
+            for (String key : keys) {
+              if (!key.contains("name")) {
+                targetVar = key;
+                break;
+              }
+            }
+          }
+
+          if ((predResults == null || predResults.get(targetVar) == null || predResults
+              .get(targetVar).size() == 0)
+              || (predResults.size() == 1 && predResults.get(targetVar)
+                  .iterator().next().startsWith("0^^"))) {
+            ValidQueryFeature feat = new ValidQueryFeature(false);
+            gGraph.addFeature(feat);
+          } else {
+            // if the query produces answer, update its score
+            ValidQueryFeature feat = new ValidQueryFeature(true);
+            gGraph.addFeature(feat);
+            gGraph.setScore(gGraph.getScore() + validQueryFeatureScore);
           }
         }
 
-        if ((predResults == null || predResults.get(targetVar) == null || predResults
-            .get(targetVar).size() == 0)
-            || (predResults.size() == 1 && predResults.get(targetVar)
-                .iterator().next().startsWith("0^^"))) {
-          ValidQueryFeature feat = new ValidQueryFeature(false);
-          gGraph.addFeature(feat);
-        } else {
-          // if the query produces answer, update its score
-          ValidQueryFeature feat = new ValidQueryFeature(true);
-          gGraph.addFeature(feat);
-          gGraph.setScore(gGraph.getScore() + validQueryFeatureScore);
-        }
-      }
+        if (useAnswerTypeQuestionWordFlag) {
+          String answerType = getMostFrequentAnswerType(predResults);
+          String qword =
+              getQuestionWord(gGraph.getParallelGraph().getActualNodes());
+          if (answerType != null && qword != null) {
+            AnswerTypeQuestionWordFeature answerTypeFeature =
+                new AnswerTypeQuestionWordFeature(Lists.newArrayList(
+                    answerType, qword), 1.0);
+            gGraph.addFeature(answerTypeFeature);
+            gGraph.setScore(gGraph.getScore()
+                + learningModel.getScoreTesting(Lists
+                    .newArrayList(answerTypeFeature)));
+          }
 
-      if (useAnswerTypeQuestionWordFlag) {
-        String answerType = getMostFrequentAnswerType(predResults);
-        String qword =
-            getQuestionWord(gGraph.getParallelGraph().getActualNodes());
-        if (answerType != null && qword != null) {
-          AnswerTypeQuestionWordFeature answerTypeFeature =
-              new AnswerTypeQuestionWordFeature(Lists.newArrayList(answerType,
-                  qword), 1.0);
-          gGraph.addFeature(answerTypeFeature);
-          gGraph.setScore(gGraph.getScore()
-              + learningModel.getScoreTesting(Lists
-                  .newArrayList(answerTypeFeature)));
-        }
-
-        HashSet<LexicalItem> qNodes =
-            gGraph.getParallelGraph().getQuestionNode();
-        if (answerType != null && qNodes != null && qNodes.size() > 0) {
-          for (LexicalItem qNode : qNodes) {
-            TreeSet<Type<LexicalItem>> qTypes =
-                gGraph.getParallelGraph().getTypes(qNode);
-            if (qTypes != null) {
-              for (Type<LexicalItem> qType : qTypes) {
-                AnswerTypeQuestionWordFeature answerTypeFeature =
-                    new AnswerTypeQuestionWordFeature(Lists.newArrayList(
-                        answerType, qType.getModifierNode().getLemma()), 1.0);
-                gGraph.addFeature(answerTypeFeature);
-                gGraph.setScore(gGraph.getScore()
-                    + learningModel.getScoreTesting(Lists
-                        .newArrayList(answerTypeFeature)));
+          HashSet<LexicalItem> qNodes =
+              gGraph.getParallelGraph().getQuestionNode();
+          if (answerType != null && qNodes != null && qNodes.size() > 0) {
+            for (LexicalItem qNode : qNodes) {
+              TreeSet<Type<LexicalItem>> qTypes =
+                  gGraph.getParallelGraph().getTypes(qNode);
+              if (qTypes != null) {
+                for (Type<LexicalItem> qType : qTypes) {
+                  AnswerTypeQuestionWordFeature answerTypeFeature =
+                      new AnswerTypeQuestionWordFeature(Lists.newArrayList(
+                          answerType, qType.getModifierNode().getLemma()), 1.0);
+                  gGraph.addFeature(answerTypeFeature);
+                  gGraph.setScore(gGraph.getScore()
+                      + learningModel.getScoreTesting(Lists
+                          .newArrayList(answerTypeFeature)));
+                }
               }
             }
           }
         }
-      }
 
-      gGraphsAndResults.add(Pair.of(gGraph, predResults));
-      if (evaluateOnlyTheFirstBest && !useAnswerTypeQuestionWordFlag) {
-        if (!validQueryFlag)
-          break;
+        gGraphsAndResults.add(Pair.of(gGraph, predResults));
+        if (evaluateOnlyTheFirstBest && !useAnswerTypeQuestionWordFlag) {
+          if (!validQueryFlag)
+            break;
 
-        // Graph with valid query found.
-        if (firstBestGraphScore + 0.00005 < gGraph.getScore())
-          break;
+          // Graph with valid query found.
+          if (firstBestGraphScore + 0.00005 < gGraph.getScore())
+            break;
 
-        // No other graph can score higher than the first graph.
-        if (firstBestGraphScore > gGraph.getScore() + validQueryFeatureScore)
-          break;
-      }
-    }
-
-    gGraphsAndResults.sort(Comparator.comparing(x -> x.getLeft()));
-    int count = 0;
-
-    Map<String, LinkedHashSet<String>> firstBestPredictions = null;
-    for (Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> gGraphPair : gGraphsAndResults) {
-      LexicalGraph gGraph = gGraphPair.getLeft();
-      Map<String, LinkedHashSet<String>> predResults = gGraphPair.getRight();
-
-      if (count == 0)
-        firstBestPredictions = predResults;
-      count += 1;
-
-      if (debugEnabled) {
-        try {
-          logger.debug(gGraph);
-        } catch (Exception e) {
-          // pass.
+          // No other graph can score higher than the first graph.
+          if (firstBestGraphScore > gGraph.getScore() + validQueryFeatureScore)
+            break;
         }
       }
 
-      String predQuery =
-          GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
-              kbGraphUri, 30);
-      logger.info("Predicted Query: " + predQuery);
-      logger.info("Gold Query: " + goldQuery);
+      gGraphsAndResults.sort(Comparator.comparing(x -> x.getLeft()));
+      int count = 0;
 
-      if (debugEnabled) {
-        learningModel.printFeatureWeightsTesting(gGraph.getFeatures(), logger);
+      Map<String, LinkedHashSet<String>> firstBestPredictions = null;
+      for (Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> gGraphPair : gGraphsAndResults) {
+        LexicalGraph gGraph = gGraphPair.getLeft();
+        Map<String, LinkedHashSet<String>> predResults = gGraphPair.getRight();
+
+        if (count == 0)
+          firstBestPredictions = predResults;
+        count += 1;
+
+        if (debugEnabled) {
+          try {
+            logger.debug(gGraph);
+          } catch (Exception e) {
+            // pass.
+          }
+        }
+
+        String predQuery =
+            GraphToSparqlConverter.convertGroundedGraph(gGraph, schema,
+                kbGraphUri, 30);
+        logger.info("Predicted Query: " + predQuery);
+        logger.info("Gold Query: " + goldQuery);
+
+        if (debugEnabled) {
+          learningModel
+              .printFeatureWeightsTesting(gGraph.getFeatures(), logger);
+        }
+        logger.info("Predicted Results: " + predResults);
+        logger.info("Gold Results: " + goldResults);
+
+        double pointWiseF1 =
+            RdfGraphTools.getPointWiseF1(goldResults, predResults);
+
+        if (count == 1) {
+          avgF1.put(sentCount, pointWiseF1);
+        }
+
+        if (pointWiseF1 > 0.9) {
+          logger.info("CORRECT!!");
+          foundAnswer = true;
+          break;
+        } else {
+          logger.info("WRONG!!");
+        }
       }
-      logger.info("Predicted Results: " + predResults);
-      logger.info("Gold Results: " + goldResults);
 
-      double pointWiseF1 =
-          RdfGraphTools.getPointWiseF1(goldResults, predResults);
-
-      if (count == 1) {
-        avgF1.put(sentCount, pointWiseF1);
-      }
-
-      if (pointWiseF1 > 0.9) {
-        logger.info("CORRECT!!");
-        foundAnswer = true;
-        break;
-      } else {
-        logger.info("WRONG!!");
-      }
-    }
-
-    if (foundAnswer && count == 1) {
-      firstBestMap.put(sentCount, 1);
-    } else if (gGraphs.size() > 0) {
-      firstBestMap.put(sentCount, 0);
-    } else {
-      firstBestMap.put(sentCount, -1);
-    }
-
-    results.put(sentCount, new HashMap<>());
-    for (Integer nthBest : testingNbestParsesRange) {
-      // Store the results.
-      if (foundAnswer && count <= nthBest) {
-        Integer value =
-            positives.containsKey(nthBest) ? positives.get(nthBest) : 0;
-        positives.put(nthBest, value + 1);
-
-        // Store the results.
-        results.get(sentCount).put(nthBest,
-            RdfGraphTools.getCleanedResults(goldResults, goldResults));
+      if (foundAnswer && count == 1) {
+        firstBestMap.put(sentCount, 1);
       } else if (gGraphs.size() > 0) {
-        Integer value =
-            negatives.containsKey(nthBest) ? negatives.get(nthBest) : 0;
-        negatives.put(nthBest, value + 1);
-
-        // Store the results.
-        results.get(sentCount).put(nthBest,
-            RdfGraphTools.getCleanedResults(goldResults, firstBestPredictions));
+        firstBestMap.put(sentCount, 0);
       } else {
-        // Store the results.
-        results.get(sentCount).put(nthBest,
-            RdfGraphTools.getCleanedResults(goldResults, firstBestPredictions));
+        firstBestMap.put(sentCount, -1);
       }
-    }
 
-    logger.info("# Total number of Grounded Graphs: " + gGraphs.size());
-    // System.out.println("# Total number of Connected Grounded Graphs: "
-    // + connectedGraphCount);
+      results.put(sentCount, new HashMap<>());
+      for (Integer nthBest : testingNbestParsesRange) {
+        // Store the results.
+        if (foundAnswer && count <= nthBest) {
+          Integer value =
+              positives.containsKey(nthBest) ? positives.get(nthBest) : 0;
+          positives.put(nthBest, value + 1);
+
+          // Store the results.
+          results.get(sentCount).put(nthBest,
+              RdfGraphTools.getCleanedResults(goldResults, goldResults));
+        } else if (gGraphs.size() > 0) {
+          Integer value =
+              negatives.containsKey(nthBest) ? negatives.get(nthBest) : 0;
+          negatives.put(nthBest, value + 1);
+
+          // Store the results.
+          results.get(sentCount).put(
+              nthBest,
+              RdfGraphTools
+                  .getCleanedResults(goldResults, firstBestPredictions));
+        } else {
+          // Store the results.
+          results.get(sentCount).put(
+              nthBest,
+              RdfGraphTools
+                  .getCleanedResults(goldResults, firstBestPredictions));
+        }
+      }
+
+      logger.info("# Total number of Grounded Graphs: " + gGraphs.size());
+      // System.out.println("# Total number of Connected Grounded Graphs: "
+      // + connectedGraphCount);
+
+      // Consider the next set of paraphrases only if
+      // paraphraseClassifierScoreFlag is set, and
+      // current paraphrase do not predict an answer.
+      if (!jsonSentence.has(SentenceKeys.FOREST)
+          || !paraphraseClassifierScoreFlag
+          || results.get(sentCount).get(1).getRight().size() > 0) {
+        break;
+      }
+
+      if (totalForestSize >= forrestSize)
+        break;
+
+      if (jsonSentence.has(SentenceKeys.FOREST)
+          && totalForestSize >= jsonSentence.get(SentenceKeys.FOREST)
+              .getAsJsonArray().size())
+        break;
+
+      logger.info("Considering next set of paraphrases: ");
+    }
     logger.info("\n###########################\n");
   }
 

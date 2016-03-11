@@ -167,6 +167,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
       if (graphsFoundSentCount > 0) {
         bw.write("Average Number of Grounded Graphs: "
             + (totalGraphs + 0.0) / graphsFoundSentCount);
+        bw.write("\n");
         bw.write("Average Number of Oracle Graphs: "
             + (totalOracleGraphCount + 0.0) / graphsFoundSentCount);
       }
