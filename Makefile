@@ -516,6 +516,27 @@ entity_dismabiguated_webq_to_graphparser_forrest:
 		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt \
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt
 
+entity_dismabiguated_webq_to_graphparser_forrest_easysrl:
+	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences easysrl \
+		> working/webquestions.train.easysrl.full.pass3.txt
+
+	cat working/webquestions.train.easysrl.full.pass3.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.easysrl.pass3.json.txt
+
+	cat working/webquestions.train.easysrl.full.pass3.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.easysrl.pass3.json.txt
+
+	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences easysrl \
+		> working/webquestions.test.easysrl.full.pass3.txt
+
+	cat working/webquestions.test.easysrl.full.pass3.txt \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.easysrl.pass3.json.txt
+
 split_forest_to_sentences:
 	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
 		| java -cp lib/*:bin in.sivareddy.graphparser.util.SplitForrestToSentences \

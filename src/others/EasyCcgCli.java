@@ -27,7 +27,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
-public class EasyCcgCli {
+public class EasyCcgCli implements CcgSyntacticParserCli {
 
   Parser parser;
   ParsePrinter printer;

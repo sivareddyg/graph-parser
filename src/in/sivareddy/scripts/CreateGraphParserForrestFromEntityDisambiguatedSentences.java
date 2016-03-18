@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import others.CcgSyntacticParserCli;
 import others.EasyCcgCli;
+import others.EasySRLCli;
 import others.StanfordPipeline;
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 
@@ -28,10 +30,10 @@ public class CreateGraphParserForrestFromEntityDisambiguatedSentences extends
   private static final Gson gson = new Gson();
 
   private final StanfordPipeline pipeline;
-  private final EasyCcgCli ccgParser;
+  private final CcgSyntacticParserCli ccgParser;
 
   public CreateGraphParserForrestFromEntityDisambiguatedSentences(
-      StanfordPipeline pipeline, EasyCcgCli ccgParser) {
+      StanfordPipeline pipeline, CcgSyntacticParserCli ccgParser) {
     this.pipeline = pipeline;
     this.ccgParser = ccgParser;
   }
@@ -137,16 +139,24 @@ public class CreateGraphParserForrestFromEntityDisambiguatedSentences extends
                 "edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger");
     StanfordPipeline pipeline = new StanfordPipeline(options);
 
-    // CCG Parser.
-    String ccgModelDir =
-        Paths.get("lib_data", "easyccg_model_questions").toString();
+    CcgSyntacticParserCli ccgParser = null;
     int nbestParses = 5;
-    EasyCcgCli ccgParser =
-        new EasyCcgCli(ccgModelDir + " -s -r S[q] S[qem] S[wq]", nbestParses);
+    if (args.length == 0) {
+      // CCG Parser.
+      String ccgModelDir =
+          Paths.get("lib_data", "easyccg_model_questions").toString();
+      ccgParser =
+          new EasyCcgCli(ccgModelDir + " -s -r S[q] S[qem] S[wq]", nbestParses);
+    } else if (args[0].equals("easysrl")) {
+      String ccgModelDir =
+          Paths.get("lib_data", "model_ccgbank_questions").toString();
+      ccgParser =
+          new EasySRLCli(ccgModelDir + " -r S[q] S[qem] S[wq]", nbestParses);
+    }
 
     CreateGraphParserForrestFromEntityDisambiguatedSentences engine =
         new CreateGraphParserForrestFromEntityDisambiguatedSentences(pipeline,
             ccgParser);
-    engine.processStream(System.in, System.out, 30, true);
+    engine.processStream(System.in, System.out, 2, true);
   }
 }
