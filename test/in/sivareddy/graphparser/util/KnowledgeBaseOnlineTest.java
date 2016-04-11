@@ -18,10 +18,10 @@ public class KnowledgeBaseOnlineTest {
     KnowledgeBaseOnline.TYPE_KEY = "fb:type.object.type";
     
     Schema schema =
-        new Schema("data/freebase/schema/all_domains_schema_free917.txt");
+        new Schema("data/freebase/schema/all_domains_schema.txt");
     
     KnowledgeBaseOnline kb =
-        new KnowledgeBaseOnline("rockall", "http://rockall:8890/sparql", "dba",
+        new KnowledgeBaseOnline("buck", "http://buck:8890/sparql", "dba",
             "dba", 100000, schema);
 
     System.out.println("dennis bergkamp");
@@ -32,6 +32,9 @@ public class KnowledgeBaseOnlineTest {
     
     System.out.println("Andrew Jackson");
     System.out.println(kb.getRelations("m.0rlz", "type.datetime"));
+    
+    System.out.println("Obama");
+    System.out.println(kb.getRelations("m.03ryn", "type.int"));
     
     System.out.println(kb.getRelations("m.01ypc"));
     
