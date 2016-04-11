@@ -1,0 +1,345 @@
+entity_dismabiguated_webq_to_graphparser_forrest_easysrl:
+	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
+		| java -cp tools/easysrl.jar:lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences easysrl \
+		> working/webquestions.train.easysrl.full.pass3.txt
+
+	cat working/webquestions.train.easysrl.full.pass3.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.30 \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.easysrl.pass3.json.txt
+
+	cat working/webquestions.train.easysrl.full.pass3.txt \
+		| python scripts/extract_subset.py data/webquestions/webquestions.examples.train.domains.entity.matches.json.70 \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.easysrl.pass3.json.txt
+
+	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
+		| java -cp tools/easysrl.jar:lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences easysrl \
+		> working/webquestions.test.easysrl.full.pass3.txt
+
+	cat working/webquestions.test.easysrl.full.pass3.txt \
+		| python scripts/extract_subset.py data/complete/vanilla_gold/webquestions.vanilla.test.full.easyccg.json.txt \
+		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.easysrl.pass3.json.txt
+
+extract_gold_graphs_ccg:
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_with_merge_with_expand.full \
+		lib_data/dummy.txt \
+	   	true \
+		true \
+		> data/gold_graphs/ccg_with_merge_with_expand.full.answers.txt
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt \
+	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_without_merge_without_expand.full \
+		lib_data/dummy.txt \
+		false \
+		false \
+		> data/gold_graphs/ccg_without_merge_without_expand.full.answers.txt
+
+extract_gold_graphs_ccg_easysrl:
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.easysrl.pass3.json.txt \
+	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.easysrl.pass3.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_with_merge_with_expand.easysrl.full \
+		lib_data/dummy.txt \
+	   	true \
+		true \
+		> data/gold_graphs/ccg_with_merge_with_expand.full.easysrl.answers.txt
+	cat data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.easysrl.pass3.json.txt \
+	data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.easysrl.pass3.json.txt \
+	| java -cp lib/*:bin/ in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations \
+   		data/freebase/schema/all_domains_schema.txt localhost \
+		synPars \
+		data/gold_graphs/ccg_without_merge_without_expand.easysrl.full \
+		lib_data/dummy.txt \
+		false \
+		false \
+		> data/gold_graphs/ccg_without_merge_without_expand.easysrl.full.answers.txt
+
+easyccg_supervised_with_merge_with_expand_full:
+	rm -rf ../working/easyccg_supervised_with_merge_with_expand_full
+	mkdir -p ../working/easyccg_supervised_with_merge_with_expand_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+    -lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 3 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/ccg_with_merge_with_expand.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+	-logFile ../working/easyccg_supervised_with_merge_with_expand_full/all.log.txt \
+	> ../working/easyccg_supervised_with_merge_with_expand_full/all.txt
+
+easysrl_supervised_with_merge_with_expand_full:
+	rm -rf ../working/easysrl_supervised_with_merge_with_expand_full
+	mkdir -p ../working/easysrl_supervised_with_merge_with_expand_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+    -lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 3 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph true \
+	-useGoldRelations true \
+	-allowMerging true \
+	-handleEventEventEdges true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.easysrl.pass3.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.easysrl.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/ccg_with_merge_with_expand.easysrl.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.easysrl.pass3.json.txt \
+	-logFile ../working/easysrl_supervised_with_merge_with_expand_full/all.log.txt \
+	> ../working/easysrl_supervised_with_merge_with_expand_full/all.txt
+
+easyccg_supervised_without_merge_without_expand_full:
+	rm -rf ../working/easyccg_supervised_without_merge_without_expand_full
+	mkdir -p ../working/easyccg_supervised_without_merge_without_expand_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+    -lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 3 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-allowMerging false \
+	-handleEventEventEdges true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.pass3.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/ccg_without_merge_without_expand.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.pass3.json.txt \
+	-logFile ../working/easyccg_supervised_without_merge_without_expand_full/all.log.txt \
+	> ../working/easyccg_supervised_without_merge_without_expand_full/all.txt
+
+easysrl_supervised_without_merge_without_expand_full:
+	rm -rf ../working/easysrl_supervised_without_merge_without_expand_full
+	mkdir -p ../working/easysrl_supervised_without_merge_without_expand_full
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile data/dummy.txt \
+    -lexicon data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 3 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag true \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag true \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useBackOffGraph false \
+	-useGoldRelations true \
+	-allowMerging false \
+	-handleEventEventEdges true \
+	-evaluateBeforeTraining false \
+	-evaluateOnlyTheFirstBest false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag true \
+	-initialEdgeWeight -0.05 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.easysrl.pass3.json.txt;data/complete/vanilla_automatic/webquestions.automaticDismabiguation.dev.easysrl.pass3.json.txt" \
+	-goldParsesFile data/gold_graphs/ccg_without_merge_without_expand.easysrl.full.ser \
+	-devFile data/complete/vanilla_automatic/webquestions.automaticDismabiguation.test.easysrl.pass3.json.txt \
+	-logFile ../working/easysrl_supervised_without_merge_without_expand_full/all.log.txt \
+	> ../working/easysrl_supervised_without_merge_without_expand_full/all.txt
+

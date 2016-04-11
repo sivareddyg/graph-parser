@@ -141,6 +141,7 @@ public class CreateGraphParserForrestFromEntityDisambiguatedSentences extends
 
     CcgSyntacticParserCli ccgParser = null;
     int nbestParses = 5;
+    int nthreads = 20;
     if (args.length == 0) {
       // CCG Parser.
       String ccgModelDir =
@@ -151,12 +152,14 @@ public class CreateGraphParserForrestFromEntityDisambiguatedSentences extends
       String ccgModelDir =
           Paths.get("lib_data", "model_ccgbank_questions").toString();
       ccgParser =
-          new EasySRLCli(ccgModelDir + " -r S[q] S[qem] S[wq]", nbestParses);
+          new EasySRLCli(ccgModelDir + " --rootCategories S[q] S[qem] S[wq]",
+              nbestParses);
+      nthreads = 1;
     }
 
     CreateGraphParserForrestFromEntityDisambiguatedSentences engine =
         new CreateGraphParserForrestFromEntityDisambiguatedSentences(pipeline,
             ccgParser);
-    engine.processStream(System.in, System.out, 2, true);
+    engine.processStream(System.in, System.out, nthreads, true);
   }
 }

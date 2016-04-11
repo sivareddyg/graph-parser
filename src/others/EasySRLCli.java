@@ -103,7 +103,7 @@ public class EasySRLCli implements CcgSyntacticParserCli {
       ArgumentValidationException, InterruptedException {
 
     final EasySRLCli easysrl =
-        new EasySRLCli("model_ccgbank_questions --rootCategories S[wq] S[q]", 2);
+        new EasySRLCli("lib_data/model_ccgbank_questions --rootCategories S[wq] S[q]", 2);
     System.out.println(easysrl.parse("Who|WP|O won|VB|O ?|.|O"));
   }
 }
