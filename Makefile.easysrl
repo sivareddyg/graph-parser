@@ -1,6 +1,6 @@
 entity_dismabiguated_webq_to_graphparser_forrest_easysrl:
 	cat data/webquestions/webquestions.examples.train.domains.entity.disambiguated.3.json \
-		| java -cp tools/easysrl.jar:lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences easysrl \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences easysrl \
 		> working/webquestions.train.easysrl.full.pass3.txt
 
 	cat working/webquestions.train.easysrl.full.pass3.txt \
@@ -12,7 +12,7 @@ entity_dismabiguated_webq_to_graphparser_forrest_easysrl:
 		> data/complete/vanilla_automatic/webquestions.automaticDismabiguation.train.easysrl.pass3.json.txt
 
 	cat data/webquestions/webquestions.examples.test.domains.entity.disambiguated.3.json \
-		| java -cp tools/easysrl.jar:lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences easysrl \
+		| java -cp lib/*:bin in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences easysrl \
 		> working/webquestions.test.easysrl.full.pass3.txt
 
 	cat working/webquestions.test.easysrl.full.pass3.txt \
