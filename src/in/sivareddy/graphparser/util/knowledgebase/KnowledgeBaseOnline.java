@@ -40,8 +40,8 @@ public class KnowledgeBaseOnline implements KnowledgeBase {
   static Set<String> standardTypes = Sets.newHashSet("type.datetime",
       "type.int", "type.float");
   static Map<String, String> fbStandardToRDFStandard = ImmutableMap.of(
-      "type.datetime", "xsd:datetime", "type.float", "xsd:float",
-      "type.integer", "xsd:integer");
+      "type.datetime", "xsd:datetime", "type.float", "xsd:decimal",
+      "type.int", "xsd:int");
 
   private RdfGraphTools endPoint = null;
   private Schema schema;
