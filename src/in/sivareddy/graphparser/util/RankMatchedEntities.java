@@ -36,8 +36,9 @@ public class RankMatchedEntities {
   private static JsonParser jsonParser = new JsonParser();
   private static int ENTITY_LIMIT = 10;
 
-  private LoadingCache<String, String> queryToResults = Caffeine.newBuilder()
-      .maximumSize(100000).build(x -> queryFreebaseAPIPrivate(x));
+  private LoadingCache<Pair<String, String>, String> queryToResults = Caffeine
+      .newBuilder().maximumSize(100000)
+      .build(x -> queryFreebaseAPIPrivate(x.getLeft(), x.getRight()));
   private LoadingCache<Pair<String, String>, String> queryToKGResults =
       Caffeine.newBuilder().maximumSize(100000)
           .build(x -> queryKnowledgeGraphAPIPrivate(x.getLeft(), x.getRight()));
@@ -45,7 +46,7 @@ public class RankMatchedEntities {
   public RankMatchedEntities() {
     disableCertificateValidation();
   }
-  
+
   public RankMatchedEntities(String apiKey) {
     this();
     API_KEY = apiKey;
@@ -169,7 +170,7 @@ public class RankMatchedEntities {
    * @throws IOException
    */
   public void rankSpansUsingFreebaseAPI(JsonObject jsonSentence,
-      boolean useMatchedEntities) throws IOException {
+      String languageCode, boolean useMatchedEntities) throws IOException {
     if (!jsonSentence.has(SentenceKeys.MATCHED_ENTITIES))
       return;
 
@@ -190,7 +191,7 @@ public class RankMatchedEntities {
       }
 
 
-      JsonObject response = queryFreebaseAPI(query);
+      JsonObject response = queryFreebaseAPI(query, languageCode);
       JsonArray rankedEntities = new JsonArray();
       for (JsonElement result : response.get("result").getAsJsonArray()) {
         JsonObject resultObject = result.getAsJsonObject();
@@ -215,8 +216,8 @@ public class RankMatchedEntities {
     }
   }
 
-  protected JsonObject queryFreebaseAPI(String query) {
-    String result = queryToResults.get(query);
+  protected JsonObject queryFreebaseAPI(String query, String languageCode) {
+    String result = queryToResults.get(Pair.of(query, languageCode));
     if (result != null)
       return jsonParser.parse(result).getAsJsonObject();
     return null;
@@ -229,11 +230,11 @@ public class RankMatchedEntities {
     return null;
   }
 
-  private String queryFreebaseAPIPrivate(String query) {
+  private String queryFreebaseAPIPrivate(String query, String languageCode) {
     try {
       String requestQuery =
-          String.format("query=%s&key=%s", URLEncoder.encode(query, charset),
-              API_KEY);
+          String.format("query=%s&key=%s&lang=%s",
+              URLEncoder.encode(query, charset), API_KEY, languageCode);
 
       URL url = new URL(FREEBASE_ENDPOINT + "?" + requestQuery);
       HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
@@ -277,7 +278,7 @@ public class RankMatchedEntities {
       while (line != null) {
         JsonObject sentence = jsonParser.parse(line).getAsJsonObject();
 
-        ranker.rankSpansUsingFreebaseAPI(sentence, false);
+        ranker.rankSpansUsingFreebaseAPI(sentence, "en", false);
         System.out.println(gson.toJson(sentence));
         line = br.readLine();
       }

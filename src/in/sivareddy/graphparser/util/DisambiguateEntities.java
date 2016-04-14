@@ -30,7 +30,8 @@ public class DisambiguateEntities {
 
   private static Gson gson = new Gson();
   private static JsonParser jsonParser = new JsonParser();
-  public static final Set<String> PROPER_NOUNS = Sets.newHashSet("NNP", "NNPS");
+  public static final Set<String> PROPER_NOUNS = Sets.newHashSet("NNP", "NNPS",
+      "PROPN");
 
   public DisambiguateEntities() {
 
@@ -149,7 +150,22 @@ public class DisambiguateEntities {
     return false;
   }
 
-  public static void cykStyledDisambiguation(JsonObject sentence,
+  /**
+   * 
+   * 
+   * 
+   * @param sentence
+   * @param initialNbest
+   * @param intermediateNbest
+   * @param finalNbest
+   * @param entityHasReadableId
+   * @param kb
+   * @param shouldStartWithNamedEntity
+   * @param containsNamedEntity
+   * @param noPrecedingNamedEntity
+   * @param noSucceedingNamedEntity
+   */
+  public static void latticeBasedDisambiguation(JsonObject sentence,
       int initialNbest, int intermediateNbest, int finalNbest,
       boolean entityHasReadableId, KnowledgeBase kb,
       boolean shouldStartWithNamedEntity, boolean containsNamedEntity,
@@ -226,8 +242,7 @@ public class DisambiguateEntities {
 
       if (noPrecedingNamedEntity) {
         // Entity span should not be preceded by an entity that has the same
-        // ner
-        // tag.
+        // ner tag.
         if (spanStart > 0) {
           String prevNer =
               words.get(spanStart - 1).get(SentenceKeys.NER_KEY).getAsString();
@@ -310,7 +325,7 @@ public class DisambiguateEntities {
             if (curSpanEntities.size() > intermediateNbest)
               curSpanEntities = curSpanEntities.subList(0, intermediateNbest);
           }
-          
+
           for (ChartEntry newSpanEntry : potentialEntries) {
             JsonObject newEntity = newSpanEntry.getEntities().get(0);
             Pair<Integer, Integer> newEntitySpan =

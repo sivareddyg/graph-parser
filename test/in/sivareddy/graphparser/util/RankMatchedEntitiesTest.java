@@ -16,7 +16,7 @@ public class RankMatchedEntitiesTest {
 
   @Test
   public final void testRankSpansUsingKnowledgeGraphAPI() throws IOException {
-    System.out.println(ranker.queryFreebaseAPI("taylor swift"));
+    System.out.println(ranker.queryFreebaseAPI("taylor swift", "en"));
     System.out.println(ranker.queryKnowledgeGraphAPI("taylor swift", "en"));
 
     JsonObject sentence =

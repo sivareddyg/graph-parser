@@ -114,33 +114,33 @@ public class RunDisambiguateEntities extends AbstractCli {
     entityHasReadableId =
         parser
             .accepts("entityHasReadableId",
-                "consider an entity as valid only if it has a readble Freebase id")
+                "consider an entity as valid only if it has a readble Freebase id. Use false if you use Knowledge Graph.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     shouldStartWithNamedEntity =
         parser
             .accepts("shouldStartWithNamedEntity",
-                "entity span should start with named entity or a proper noun")
+                "entity span should start with named entity or a proper noun. Use false for universal dependencies.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     containsNamedEntity =
         parser
             .accepts("containsNamedEntity",
-                "entity span should contain at least one named entity")
+                "entity span should contain at least one named entity. Use false for universal dependencies.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     noPrecedingNamedEntity =
         parser
             .accepts(
                 "noPrecedingNamedEntity",
-                "entity span should not be preceeded by a named entity of the same type as current span")
+                "entity span should not be preceeded by a named entity of the same type as current span. Use false for universal dependencies.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     noSucceedingNamedEntity =
         parser
             .accepts(
                 "noSucceedingNamedEntity",
-                "entity span should not be preceeded by a named entity of the same type as current span")
+                "entity span should not be preceeded by a named entity of the same type as current span. Use false for universal dependencies.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
   }
 
@@ -314,7 +314,7 @@ public class RunDisambiguateEntities extends AbstractCli {
 
     @Override
     public void run() {
-      DisambiguateEntities.cykStyledDisambiguation(jsonSentence, initialNbest,
+      DisambiguateEntities.latticeBasedDisambiguation(jsonSentence, initialNbest,
           intermediateNbest, finalNbest, entityHasReadableId, kb,
           shouldStartWithNamedEntity, containsNamedEntity,
           noPrecedingNamedEntity, noSucceedingNamedEntity);
