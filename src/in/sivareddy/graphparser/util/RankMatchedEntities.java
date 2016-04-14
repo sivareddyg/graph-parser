@@ -27,13 +27,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class RankMatchedEntities {
-  public static String API_KEY = "AIzaSyDj-4Sr5TmDuEA8UVOd_89PqK87GABeoFg";
-  public static String FREEBASE_ENDPOINT =
+  private static String API_KEY = "AIzaSyDj-4Sr5TmDuEA8UVOd_89PqK87GABeoFg";
+  private static String FREEBASE_ENDPOINT =
       "https://www.googleapis.com/freebase/v1/search";
-  public static String KNOWLEDGE_GRAPH_ENDPOINT =
+  private static String KNOWLEDGE_GRAPH_ENDPOINT =
       "https://kgsearch.googleapis.com/v1/entities:search";
-  public static String charset = "UTF-8";
-  public static JsonParser jsonParser = new JsonParser();
+  private static String charset = "UTF-8";
+  private static JsonParser jsonParser = new JsonParser();
+  private static int ENTITY_LIMIT = 10;
 
   private LoadingCache<String, String> queryToResults = Caffeine.newBuilder()
       .maximumSize(100000).build(x -> queryFreebaseAPIPrivate(x));
@@ -43,6 +44,11 @@ public class RankMatchedEntities {
 
   public RankMatchedEntities() {
     disableCertificateValidation();
+  }
+  
+  public RankMatchedEntities(String apiKey) {
+    this();
+    API_KEY = apiKey;
   }
 
   /**
@@ -118,18 +124,23 @@ public class RankMatchedEntities {
             .getAsJsonArray()) {
           JsonObject resultObject =
               result.getAsJsonObject().get("result").getAsJsonObject();
+
           String mid =
               resultObject.get("@id").getAsString().replaceFirst("kg:", "")
                   .replaceFirst("/", "").replaceAll("/", ".");
-          
           resultObject.remove("@id");
-          resultObject.remove("description");
-          resultObject.remove("url");
-          if (resultObject.has("image")) 
+
+          resultObject
+              .add("score", result.getAsJsonObject().get("resultScore"));
+          if (resultObject.has("description"))
+            resultObject.remove("description");
+          if (resultObject.has("url"))
+            resultObject.remove("url");
+          if (resultObject.has("image"))
             resultObject.remove("image");
-          if (resultObject.has("detailedDescription")) 
+          if (resultObject.has("detailedDescription"))
             resultObject.remove("detailedDescription");
-          
+
           if (useMatchedEntities) {
             if (matchedEntitySet.contains(mid)) {
               resultObject.addProperty(SentenceKeys.ENTITY, mid);
@@ -239,8 +250,9 @@ public class RankMatchedEntities {
   private String queryKnowledgeGraphAPIPrivate(String query, String languageCode) {
     try {
       String requestQuery =
-          String.format("query=%s&key=%s&languages=%s",
-              URLEncoder.encode(query, charset), API_KEY, languageCode);
+          String.format("query=%s&key=%s&languages=%s&limit=%d",
+              URLEncoder.encode(query, charset), API_KEY, languageCode,
+              ENTITY_LIMIT);
 
       URL url = new URL(KNOWLEDGE_GRAPH_ENDPOINT + "?" + requestQuery);
       HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
