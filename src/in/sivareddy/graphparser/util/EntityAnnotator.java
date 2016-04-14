@@ -26,7 +26,7 @@ import com.google.gson.JsonParser;
 public class EntityAnnotator {
 
   public static enum PosTagCode {
-    EN_PTB,
+    EN_PTB, EN_UD, ES_UD, DE_UD,
   };
 
   private Map<String, Object> nameToEntityMap = new HashMap<>();
@@ -333,7 +333,7 @@ public class EntityAnnotator {
   private static boolean spanIsNP(List<JsonObject> words, int spanStart,
       int spanEnd, PosTagCode code) {
 
-    // Sequence of non-punc pos tags
+    // Sequence of non-punc pos tags.
     String posSequence =
         Joiner.on(" ")
             .join(
@@ -392,7 +392,48 @@ public class EntityAnnotator {
       if (posSequence
           .matches("(I[^ ]* )(V[^ ]* )(D[^ ]* )?([JN][^ ]* |CD |VBG |POS ){1,3}(N[^ ]*|CD)"))
         return true;
+    } else if (code.equals(PosTagCode.EN_UD) || code.equals(PosTagCode.ES_UD)
+        || code.equals(PosTagCode.DE_UD)) {
+      // TODO(sivareddyg) impact of absence of gerunds.
+
+      // If the list is single word and is a proper noun, treat it as NP.
+      if (spanEnd - spanStart == 0) {
+        return posSequence.matches("PROPN");
+      }
+
+      String potentialEntityPos = "(ADJ|NOUN|PROPN|NUM)";
+      String nounPhrase =
+          String.format("(DET )?(%s ){0,3}%s", potentialEntityPos,
+              potentialEntityPos);
+
+      // the big lebowski
+      // james bond
+      // olympics 2012
+      // finding nemo TODO.
+      // star trek the next generation
+      if (posSequence.matches(String.format("%s %s", nounPhrase, nounPhrase)))
+        return true;
+
+      // lord of the rings
+      // obama's country
+      if (posSequence.matches(String.format("%s (ADP|PART) %s", nounPhrase,
+          nounPhrase)))
+        return true;
+
+      // bold and brave
+      if (posSequence.matches(String.format("%s CONJ %s", nounPhrase,
+          nounPhrase)))
+        return true;
+
+      // to kill a mocking bird
+      if (posSequence.matches(String.format("ADP VERB %s", nounPhrase)))
+        return true;
+      
+      // the running horse.
+      if (posSequence.matches(String.format("DET VERB %s", nounPhrase)))
+        return true;
     }
+
     return false;
   }
 

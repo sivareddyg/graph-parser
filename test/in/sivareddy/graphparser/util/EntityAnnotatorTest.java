@@ -112,4 +112,40 @@ public class EntityAnnotatorTest {
         sentence.get(SentenceKeys.MATCHED_ENTITIES).getAsJsonArray();
     System.out.println(sentence);
   }
+
+  @Test
+  public final void getAllSpansUTBtest() {
+    JsonObject sentence =
+        jsonParser
+            .parse(
+                "{\"sentence\":\"who does dominic monaghan play in lord of the rings?\",\"words\":[{\"word\":\"who\",\"lemma\":\"who\",\"pos\":\"PRON\",\"ner\":\"O\",\"index\":1,\"head\":2,\"dep\":\"nsubj\"},{\"word\":\"does\",\"lemma\":\"do\",\"pos\":\"VERB\",\"ner\":\"O\",\"dep\":\"root\",\"head\":0,\"index\":2},{\"word\":\"dominic\",\"lemma\":\"dominic\",\"pos\":\"PROPN\",\"ner\":\"O\",\"index\":3,\"head\":4,\"dep\":\"compound\"},{\"word\":\"monaghan\",\"lemma\":\"monaghan\",\"pos\":\"PROPN\",\"ner\":\"O\",\"index\":4,\"head\":2,\"dep\":\"dobj\"},{\"word\":\"play\",\"lemma\":\"play\",\"pos\":\"VERB\",\"ner\":\"O\",\"index\":5,\"head\":2,\"dep\":\"xcomp\"},{\"word\":\"in\",\"lemma\":\"in\",\"pos\":\"ADP\",\"ner\":\"O\",\"index\":6,\"head\":7,\"dep\":\"case\"},{\"word\":\"lord\",\"lemma\":\"lord\",\"pos\":\"PROPN\",\"ner\":\"O\",\"index\":7,\"head\":5,\"dep\":\"nmod\"},{\"word\":\"of\",\"lemma\":\"of\",\"pos\":\"ADP\",\"ner\":\"O\",\"index\":8,\"head\":10,\"dep\":\"case\"},{\"word\":\"the\",\"lemma\":\"the\",\"pos\":\"DET\",\"ner\":\"O\",\"index\":9,\"head\":10,\"dep\":\"det\"},{\"word\":\"rings\",\"lemma\":\"ring\",\"pos\":\"NOUN\",\"ner\":\"O\",\"index\":10,\"head\":7,\"dep\":\"nmod\"},{\"word\":\"?\",\"lemma\":\"?\",\"pos\":\"PUNCT\",\"ner\":\"O\",\"index\":11,\"head\":2,\"dep\":\"punct\",\"sentEnd\":true}]}")
+            .getAsJsonObject();
+    EntityAnnotator.getAllNounPhrases(sentence, PosTagCode.EN_UD);
+    assertTrue(sentence.has(SentenceKeys.MATCHED_ENTITIES));
+    JsonArray matchedEntities =
+        sentence.get(SentenceKeys.MATCHED_ENTITIES).getAsJsonArray();
+    System.out.println(matchedEntities);
+
+    sentence =
+        jsonParser
+            .parse(
+                "{\"sentence\":\"who plays steffy on bold and the beautiful?\",\"words\":[{\"word\":\"who\",\"lemma\":\"who\",\"pos\":\"PRON\",\"ner\":\"O\",\"index\":1,\"head\":2,\"dep\":\"nsubj\"},{\"word\":\"plays\",\"lemma\":\"play\",\"pos\":\"VERB\",\"ner\":\"O\",\"dep\":\"root\",\"head\":0,\"index\":2},{\"word\":\"steffy\",\"lemma\":\"steffy\",\"pos\":\"PROPN\",\"ner\":\"O\",\"index\":3,\"head\":2,\"dep\":\"dobj\"},{\"word\":\"on\",\"lemma\":\"on\",\"pos\":\"ADP\",\"ner\":\"O\",\"index\":4,\"head\":5,\"dep\":\"case\"},{\"word\":\"bold\",\"lemma\":\"bold\",\"pos\":\"ADJ\",\"ner\":\"O\",\"index\":5,\"head\":2,\"dep\":\"nmod\"},{\"word\":\"and\",\"lemma\":\"and\",\"pos\":\"CONJ\",\"ner\":\"O\",\"index\":6,\"head\":2,\"dep\":\"cc\"},{\"word\":\"the\",\"lemma\":\"the\",\"pos\":\"DET\",\"ner\":\"O\",\"index\":7,\"head\":8,\"dep\":\"det\"},{\"word\":\"beautiful\",\"lemma\":\"beautiful\",\"pos\":\"ADJ\",\"ner\":\"O\",\"index\":8,\"head\":2,\"dep\":\"conj\"},{\"word\":\"?\",\"lemma\":\"?\",\"pos\":\"PUNCT\",\"ner\":\"O\",\"index\":9,\"head\":2,\"dep\":\"punct\",\"sentEnd\":true}]}")
+            .getAsJsonObject();
+    EntityAnnotator.getAllNounPhrases(sentence, PosTagCode.EN_UD);
+    assertTrue(sentence.has(SentenceKeys.MATCHED_ENTITIES));
+    matchedEntities =
+        sentence.get(SentenceKeys.MATCHED_ENTITIES).getAsJsonArray();
+    System.out.println(matchedEntities);
+
+    sentence =
+        jsonParser
+            .parse(
+                "{\"sentence\":\"when does school start in los angeles california 2011?\",\"words\":[{\"word\":\"when\",\"lemma\":\"when\",\"pos\":\"ADV\",\"ner\":\"O\",\"index\":1,\"head\":4,\"dep\":\"mark\"},{\"word\":\"does\",\"lemma\":\"does\",\"pos\":\"AUX\",\"ner\":\"O\",\"index\":2,\"head\":4,\"dep\":\"aux\"},{\"word\":\"school\",\"lemma\":\"school\",\"pos\":\"NOUN\",\"ner\":\"O\",\"index\":3,\"head\":4,\"dep\":\"nsubj\"},{\"word\":\"start\",\"lemma\":\"start\",\"pos\":\"VERB\",\"ner\":\"O\",\"dep\":\"root\",\"head\":0,\"index\":4},{\"word\":\"in\",\"lemma\":\"in\",\"pos\":\"ADP\",\"ner\":\"O\",\"index\":5,\"head\":8,\"dep\":\"case\"},{\"word\":\"los\",\"lemma\":\"los\",\"pos\":\"PROPN\",\"ner\":\"O\",\"index\":6,\"head\":7,\"dep\":\"compound\"},{\"word\":\"angeles\",\"lemma\":\"angeles\",\"pos\":\"PROPN\",\"ner\":\"O\",\"index\":7,\"head\":8,\"dep\":\"compound\"},{\"word\":\"california\",\"lemma\":\"california\",\"pos\":\"PROPN\",\"ner\":\"LOCATION\",\"index\":8,\"head\":4,\"dep\":\"nmod\"},{\"word\":\"2011\",\"lemma\":\"2011\",\"pos\":\"NUM\",\"ner\":\"DATE\",\"index\":9,\"head\":8,\"dep\":\"nummod\"},{\"word\":\"?\",\"lemma\":\"?\",\"pos\":\"PUNCT\",\"ner\":\"O\",\"index\":10,\"head\":4,\"dep\":\"punct\",\"sentEnd\":true}]}")
+            .getAsJsonObject();
+    EntityAnnotator.getAllNounPhrases(sentence, PosTagCode.EN_UD);
+    assertTrue(sentence.has(SentenceKeys.MATCHED_ENTITIES));
+    matchedEntities =
+        sentence.get(SentenceKeys.MATCHED_ENTITIES).getAsJsonArray();
+    System.out.println(matchedEntities);
+  }
 }

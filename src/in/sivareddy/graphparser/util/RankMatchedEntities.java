@@ -11,9 +11,12 @@ import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.*;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -27,11 +30,54 @@ public class RankMatchedEntities {
   public static String API_KEY = "AIzaSyDj-4Sr5TmDuEA8UVOd_89PqK87GABeoFg";
   public static String FREEBASE_ENDPOINT =
       "https://www.googleapis.com/freebase/v1/search";
+  public static String KNOWLEDGE_GRAPH_ENDPOINT =
+      "https://kgsearch.googleapis.com/v1/entities:search";
   public static String charset = "UTF-8";
   public static JsonParser jsonParser = new JsonParser();
 
-  public static LoadingCache<String, String> queryToResults = Caffeine
-      .newBuilder().maximumSize(100000).build(x -> queryFreebaseAPIPrivate(x));
+  private LoadingCache<String, String> queryToResults = Caffeine.newBuilder()
+      .maximumSize(100000).build(x -> queryFreebaseAPIPrivate(x));
+  private LoadingCache<Pair<String, String>, String> queryToKGResults =
+      Caffeine.newBuilder().maximumSize(100000)
+          .build(x -> queryKnowledgeGraphAPIPrivate(x.getLeft(), x.getRight()));
+
+  public RankMatchedEntities() {
+    disableCertificateValidation();
+  }
+
+  /**
+   * Create a trust manager that does not validate certificate chains. Not safe
+   * for production. Source: http://stackoverflow
+   * .com/questions/875467/java-client-certificates-over-https-ssl/876785#876785
+   */
+  public static void disableCertificateValidation() {
+    //
+    TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
+      public X509Certificate[] getAcceptedIssuers() {
+        return new X509Certificate[0];
+      }
+
+      public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+
+      public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+    }};
+
+    // Ignore differences between given hostname and certificate hostname
+    HostnameVerifier hv = new HostnameVerifier() {
+      public boolean verify(String hostname, SSLSession session) {
+        return true;
+      }
+    };
+
+    // Install the all-trusting trust manager
+    try {
+      SSLContext sc = SSLContext.getInstance("SSL");
+      sc.init(null, trustAllCerts, new SecureRandom());
+      HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+      HttpsURLConnection.setDefaultHostnameVerifier(hv);
+    } catch (Exception e) {
+    }
+  }
 
   /**
    * Annotate each span using Freebase API. Additional information from the API
@@ -43,7 +89,75 @@ public class RankMatchedEntities {
    *        ranking.
    * @throws IOException
    */
-  public static void rankSpansUsingFreebaseAPI(JsonObject jsonSentence,
+  public void rankSpansUsingKnowledgeGraphAPI(JsonObject jsonSentence,
+      String languageCode, boolean useMatchedEntities) throws IOException {
+    if (!jsonSentence.has(SentenceKeys.MATCHED_ENTITIES))
+      return;
+
+    for (JsonElement entityMatched : jsonSentence.get(
+        SentenceKeys.MATCHED_ENTITIES).getAsJsonArray()) {
+      JsonObject entityObject = entityMatched.getAsJsonObject();
+      String query =
+          entityObject.has(SentenceKeys.PHRASE) ? entityObject.get(
+              SentenceKeys.PHRASE).getAsString() : EntityAnnotator.getPhrase(
+              jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray(),
+              jsonSentence.get(SentenceKeys.START).getAsInt(), jsonSentence
+                  .get(SentenceKeys.END).getAsInt());
+
+      Set<String> matchedEntitySet = new HashSet<>();
+      if (useMatchedEntities) {
+        entityObject.get(SentenceKeys.ENTITIES).getAsJsonArray()
+            .forEach(x -> matchedEntitySet.add(x.getAsString()));
+      }
+
+
+      JsonObject response = queryKnowledgeGraphAPI(query, languageCode);
+      JsonArray rankedEntities = new JsonArray();
+      if (response != null && response.has("itemListElement"))
+        for (JsonElement result : response.get("itemListElement")
+            .getAsJsonArray()) {
+          JsonObject resultObject =
+              result.getAsJsonObject().get("result").getAsJsonObject();
+          String mid =
+              resultObject.get("@id").getAsString().replaceFirst("kg:", "")
+                  .replaceFirst("/", "").replaceAll("/", ".");
+          
+          resultObject.remove("@id");
+          resultObject.remove("description");
+          resultObject.remove("url");
+          if (resultObject.has("image")) 
+            resultObject.remove("image");
+          if (resultObject.has("detailedDescription")) 
+            resultObject.remove("detailedDescription");
+          
+          if (useMatchedEntities) {
+            if (matchedEntitySet.contains(mid)) {
+              resultObject.addProperty(SentenceKeys.ENTITY, mid);
+              rankedEntities.add(resultObject);
+            }
+          } else {
+            resultObject.remove("mid");
+            resultObject.addProperty(SentenceKeys.ENTITY, mid);
+            rankedEntities.add(resultObject);
+          }
+        }
+      if (rankedEntities.size() > 0) {
+        entityObject.add(SentenceKeys.RANKED_ENTITIES, rankedEntities);
+      }
+    }
+  }
+
+  /**
+   * Annotate each span using Freebase API. Additional information from the API
+   * call is also stored.
+   * 
+   * @param jsonSentence
+   * @param useMatchedEntities if set true, only the entities that are chosen
+   *        both by API and already matched entities, are used for final
+   *        ranking.
+   * @throws IOException
+   */
+  public void rankSpansUsingFreebaseAPI(JsonObject jsonSentence,
       boolean useMatchedEntities) throws IOException {
     if (!jsonSentence.has(SentenceKeys.MATCHED_ENTITIES))
       return;
@@ -90,14 +204,21 @@ public class RankMatchedEntities {
     }
   }
 
-  private static JsonObject queryFreebaseAPI(String query) {
+  protected JsonObject queryFreebaseAPI(String query) {
     String result = queryToResults.get(query);
     if (result != null)
       return jsonParser.parse(result).getAsJsonObject();
     return null;
   }
 
-  private static String queryFreebaseAPIPrivate(String query) {
+  protected JsonObject queryKnowledgeGraphAPI(String query, String languageCode) {
+    String result = queryToKGResults.get(Pair.of(query, languageCode));
+    if (result != null)
+      return jsonParser.parse(result).getAsJsonObject();
+    return null;
+  }
+
+  private String queryFreebaseAPIPrivate(String query) {
     try {
       String requestQuery =
           String.format("query=%s&key=%s", URLEncoder.encode(query, charset),
@@ -115,16 +236,36 @@ public class RankMatchedEntities {
     return null;
   }
 
+  private String queryKnowledgeGraphAPIPrivate(String query, String languageCode) {
+    try {
+      String requestQuery =
+          String.format("query=%s&key=%s&languages=%s",
+              URLEncoder.encode(query, charset), API_KEY, languageCode);
+
+      URL url = new URL(KNOWLEDGE_GRAPH_ENDPOINT + "?" + requestQuery);
+      HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+
+      connection.setRequestProperty("Accept-Charset", charset);
+      InputStream responseRecieved = connection.getInputStream();
+      return IOUtils.toString(responseRecieved, charset);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
   public static void main(String[] args) throws IOException {
     JsonParser jsonParser = new JsonParser();
     Gson gson = new Gson();
+    RankMatchedEntities ranker = new RankMatchedEntities();
 
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     try {
       String line = br.readLine();
       while (line != null) {
         JsonObject sentence = jsonParser.parse(line).getAsJsonObject();
-        rankSpansUsingFreebaseAPI(sentence, false);
+
+        ranker.rankSpansUsingFreebaseAPI(sentence, false);
         System.out.println(gson.toJson(sentence));
         line = br.readLine();
       }
