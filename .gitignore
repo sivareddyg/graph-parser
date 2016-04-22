@@ -6,3 +6,4 @@
 /.settings
 /scripts/compare_outputs.py
 commands*
+lib_data/model_ccgbank_questions
