@@ -39,5 +39,9 @@
 	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0-models.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-corenlp-caseless-2014-02-25-models.jar"/>
+	<classpathentry kind="lib" path="lib/edu.mit.jwi_2.3.0.jar"/>
+	<classpathentry kind="lib" path="lib/jewelcli-0.7.6.jar"/>
+	<classpathentry kind="lib" path="lib/mtj-1.0-snapshot.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-spanish-corenlp-2015-01-08-models.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
