@@ -394,18 +394,19 @@ public class EntityAnnotator {
         return true;
     } else if (code.equals(PosTagCode.EN_UD) || code.equals(PosTagCode.ES_UD)
         || code.equals(PosTagCode.DE_UD)) {
-      // TODO(sivareddyg) impact of absence of gerunds.
-
-      // If the list is single word and is a proper noun, treat it as NP.
+      
+      String potentialEntityPos = "(ADJ|NOUN|PROPN)";
       if (spanEnd - spanStart == 0) {
-        return posSequence.matches("PROPN");
+        return posSequence.matches(potentialEntityPos);
       }
-
-      String potentialEntityPos = "(ADJ|NOUN|PROPN|NUM)";
+      
       String nounPhrase =
           String.format("(DET )?(%s ){0,3}%s", potentialEntityPos,
               potentialEntityPos);
 
+      if (posSequence.matches(String.format("%s", nounPhrase)))
+        return true;
+      
       // the big lebowski
       // james bond
       // olympics 2012
@@ -420,11 +421,14 @@ public class EntityAnnotator {
           nounPhrase)))
         return true;
 
+      /*-
       // bold and brave
       if (posSequence.matches(String.format("%s CONJ %s", nounPhrase,
           nounPhrase)))
         return true;
+      */
 
+      /*-
       // to kill a mocking bird
       if (posSequence.matches(String.format("ADP VERB %s", nounPhrase)))
         return true;
@@ -432,8 +436,8 @@ public class EntityAnnotator {
       // the running horse.
       if (posSequence.matches(String.format("DET VERB %s", nounPhrase)))
         return true;
+      */
     }
-
     return false;
   }
 

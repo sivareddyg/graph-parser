@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -32,6 +33,15 @@ public class DisambiguateEntities {
   private static JsonParser jsonParser = new JsonParser();
   public static final Set<String> PROPER_NOUNS = Sets.newHashSet("NNP", "NNPS",
       "PROPN");
+  public static final Set<String> SINGLE_WORD_ENTITY_TAGS = Sets.newHashSet(
+      "PROPN", "NOUN", "ADJ");
+
+  public static final Set<String> QUESTION_WORDS = Sets.newHashSet("what",
+      "when", "who", "where", "which", "how", "many", "much", "quién?", "qué",
+      "dónde?", "cuándo", "cuánto", "cuánta", "cuántos", "cuántas", "cuál",
+      "quiénes", "cuáles");
+
+  public static final Set<String> VERB_TAGS = Sets.newHashSet("VERB");
 
   public DisambiguateEntities() {
 
@@ -151,9 +161,6 @@ public class DisambiguateEntities {
   }
 
   /**
-   * 
-   * 
-   * 
    * @param sentence
    * @param initialNbest
    * @param intermediateNbest
@@ -164,12 +171,20 @@ public class DisambiguateEntities {
    * @param containsNamedEntity
    * @param noPrecedingNamedEntity
    * @param noSucceedingNamedEntity
+   * @param containsProperNoun
+   * @param noPrecedingProperNoun
+   * @param noSucceedingProperNoun
+   * @param ignoreEntitiesWithVerbs
+   * @param ignoreEntitiesWithQuestionWords
    */
   public static void latticeBasedDisambiguation(JsonObject sentence,
       int initialNbest, int intermediateNbest, int finalNbest,
       boolean entityHasReadableId, KnowledgeBase kb,
       boolean shouldStartWithNamedEntity, boolean containsNamedEntity,
-      boolean noPrecedingNamedEntity, boolean noSucceedingNamedEntity) {
+      boolean noPrecedingNamedEntity, boolean noSucceedingNamedEntity,
+      boolean containsProperNoun, boolean noPrecedingProperNoun,
+      boolean noSucceedingProperNoun, boolean ignoreEntitiesWithVerbs,
+      boolean ignoreEntitiesWithQuestionWords) {
     if (!sentence.has(SentenceKeys.MATCHED_ENTITIES)) {
       return;
     }
@@ -212,11 +227,14 @@ public class DisambiguateEntities {
       String startTag =
           words.get(spanStart).get(SentenceKeys.POS_KEY).getAsString();
       if (spanEnd - spanStart == 0 && !startTag.startsWith("N")
-          && !startTag.startsWith("J"))
+          && !startTag.startsWith("J") && !PROPER_NOUNS.contains(startTag)
+          && !SINGLE_WORD_ENTITY_TAGS.contains(startTag))
         continue;
 
       String startNer =
-          words.get(spanStart).get(SentenceKeys.NER_KEY).getAsString();
+          words.get(spanStart).has(SentenceKeys.NER_KEY) ? words.get(spanStart)
+              .get(SentenceKeys.NER_KEY).getAsString() : "O";
+
       if (shouldStartWithNamedEntity) {
         // Entity span should start with a named entity or with a proper noun.
         if (startNer.equals("O") && !PROPER_NOUNS.contains(startTag))
@@ -224,7 +242,8 @@ public class DisambiguateEntities {
       }
 
       String endNer =
-          words.get(spanEnd).get(SentenceKeys.NER_KEY).getAsString();
+          words.get(spanEnd).has(SentenceKeys.NER_KEY) ? words.get(spanEnd)
+              .get(SentenceKeys.NER_KEY).getAsString() : "O";
 
       if (containsNamedEntity) {
         boolean hasNamedEntity = false;
@@ -237,6 +256,20 @@ public class DisambiguateEntities {
           }
         }
         if (!hasNamedEntity)
+          continue;
+      }
+
+      if (containsProperNoun) {
+        boolean hasProperNoun = false;
+        for (int i = spanStart; i <= spanEnd; i++) {
+          String contextPos =
+              words.get(i).get(SentenceKeys.POS_KEY).getAsString();
+          if (PROPER_NOUNS.contains(contextPos)) {
+            hasProperNoun = true;
+            break;
+          }
+        }
+        if (!hasProperNoun)
           continue;
       }
 
@@ -254,6 +287,16 @@ public class DisambiguateEntities {
         }
       }
 
+      if (noPrecedingProperNoun) {
+        // Entity span should not be preceded by a proper noun.
+        if (spanStart > 0) {
+          String prevTag =
+              words.get(spanStart - 1).get(SentenceKeys.POS_KEY).getAsString();
+          if (PROPER_NOUNS.contains(prevTag))
+            continue;
+        }
+      }
+
       if (noSucceedingNamedEntity) {
         // Entity span should not be succeeded by an entity that has the same
         // ner tag.
@@ -266,6 +309,38 @@ public class DisambiguateEntities {
               && (nextTag.startsWith("N") || nextTag.startsWith("J")))
             continue;
         }
+      }
+
+      if (noSucceedingProperNoun) {
+        // Entity span should not be succeeded by a proper noun.
+        if (spanEnd < words.size() - 1) {
+          String nextTag =
+              words.get(spanEnd + 1).get(SentenceKeys.POS_KEY).getAsString();
+          if (PROPER_NOUNS.contains(nextTag))
+            continue;
+        }
+      }
+
+      if (ignoreEntitiesWithVerbs) {
+        String posTagPattern =
+            matchedEntityObj.get(SentenceKeys.PATTERN).getAsString();
+        Set<String> posTags =
+            Sets.newHashSet(Splitter.on(" ").split(posTagPattern));
+        posTags.retainAll(VERB_TAGS);
+        if (posTags.size() > 0) {
+          continue;
+        }
+      }
+
+      if (ignoreEntitiesWithQuestionWords) {
+        String phrase =
+            matchedEntityObj.get(SentenceKeys.PHRASE).getAsString()
+                .toLowerCase();
+        Set<String> phraseWords =
+            Sets.newHashSet(Splitter.on(" ").split(phrase));
+        phraseWords.retainAll(QUESTION_WORDS);
+        if (phraseWords.size() > 0)
+          continue;
       }
 
       spanToEntities.put(span, new ArrayList<>());

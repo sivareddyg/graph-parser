@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -60,6 +61,38 @@ public abstract class ProcessStreamInterface {
     }
   }
 
+  public void processList(List<JsonObject> jsonSentences, PrintStream out,
+      int nthreads, boolean printOutput) throws IOException,
+      InterruptedException {
+    final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
+    ThreadPoolExecutor threadPool =
+        new ThreadPoolExecutor(nthreads, nthreads, 600, TimeUnit.SECONDS, queue);
+
+    threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
+      @Override
+      public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        // this will block if the queue is full
+        try {
+          executor.getQueue().put(r);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    });
+
+    for (JsonObject jsonSentence : jsonSentences) {
+      Runnable worker =
+          new PipelineRunnable(this, jsonSentence, out, printOutput);
+      threadPool.execute(worker);
+    }
+    threadPool.shutdown();
+
+    // Wait until all threads are finished
+    while (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
+      // pass.
+    }
+  }
+
   public static class PipelineRunnable implements Runnable {
     private final JsonObject sentence;
     private final ProcessStreamInterface engine;
@@ -86,5 +119,4 @@ public abstract class ProcessStreamInterface {
   public synchronized void print(String string, PrintStream out) {
     out.println(string);
   }
-
 }

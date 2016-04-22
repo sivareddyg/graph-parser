@@ -260,6 +260,15 @@ public class RankMatchedEntities {
 
       connection.setRequestProperty("Accept-Charset", charset);
       InputStream responseRecieved = connection.getInputStream();
+      
+      try {
+        // 1000 milliseconds is one second. 10 milliseconds delay is equal to
+        // 100 queries per second, and 10000 queries per 100 milliseconds.
+        Thread.sleep(50);
+      } catch (InterruptedException ex) {
+        Thread.currentThread().interrupt();
+      }
+      
       return IOUtils.toString(responseRecieved, charset);
     } catch (IOException e) {
       e.printStackTrace();

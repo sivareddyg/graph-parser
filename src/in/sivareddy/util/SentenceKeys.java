@@ -33,6 +33,7 @@ public class SentenceKeys {
   public static String START = "start";
   public static String END = "end";
   public static String SCORE = "score";
+  public static String PATTERN = "pattern";
   
   public static String PARAPHRASE = "paraphrase";
   public static String PARAPHRASE_SCORE = "paraphraseScore";

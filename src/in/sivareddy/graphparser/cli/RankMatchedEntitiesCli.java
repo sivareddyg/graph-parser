@@ -24,7 +24,7 @@ public class RankMatchedEntitiesCli extends AbstractCli {
   public void initializeOptions(OptionParser parser) {
     languageCode =
         parser.accepts("langCode", "Knowledge Graph/Freebase Language code.")
-            .withRequiredArg().ofType(String.class).defaultsTo("stdin");
+            .withRequiredArg().ofType(String.class).defaultsTo("en");
 
     apiKey =
         parser.accepts("apiKey", "Knowledge Graph/Freebase API Key")
@@ -73,5 +73,9 @@ public class RankMatchedEntitiesCli extends AbstractCli {
         e.printStackTrace();
       }
     }
+  }
+
+  public static void main(String[] args) throws IOException {
+    new RankMatchedEntitiesCli().run(args);
   }
 }

@@ -30,14 +30,14 @@
 	<classpathentry kind="lib" path="lib/log4j-1.2.17.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-api-1.7.6.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-log4j12-1.7.6.jar"/>
-	<classpathentry kind="lib" path="lib/stanford-corenlp-3.5.0-models.jar"/>
-	<classpathentry kind="lib" path="lib/stanford-corenlp-3.5.0.jar"/>
-	<classpathentry kind="lib" path="lib/stanford-corenlp-caseless-2014-02-25-models.jar"/>
-	<classpathentry kind="lib" path="lib/stanford-spanish-corenlp-2015-01-08-models.jar"/>
 	<classpathentry kind="lib" path="lib/virt_jena2.jar"/>
 	<classpathentry kind="lib" path="lib/virtjdbc4.jar"/>
 	<classpathentry kind="lib" path="lib/xercesImpl-2.11.0.jar"/>
 	<classpathentry kind="lib" path="lib/xml-apis-1.4.01.jar"/>
 	<classpathentry kind="lib" path="lib/easysrl.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0-models-spanish.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0-models.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-caseless-2014-02-25-models.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

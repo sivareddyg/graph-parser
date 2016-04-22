@@ -431,7 +431,7 @@ public class GraphToQueryTrainingMain {
     return trainingSample;
   }
 
-  public void loadExamples(Reader inputReader, List<String> examples)
+  public static void loadExamples(Reader inputReader, List<String> examples)
       throws IOException {
     Preconditions.checkNotNull(examples);
     BufferedReader br = new BufferedReader(inputReader);
@@ -440,6 +440,7 @@ public class GraphToQueryTrainingMain {
       while (line != null) {
         line = line.trim();
         if (line.equals("") || line.charAt(0) == '#') {
+          line = br.readLine();
           continue;
         }
         examples.add(line);

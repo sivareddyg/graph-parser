@@ -86,7 +86,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.trees.GrammaticalRelation;
-import edu.stanford.nlp.trees.GrammaticalRelation.Language;
+import edu.stanford.nlp.international.Language;
 import edu.stanford.nlp.trees.TypedDependency;
 
 public class GroundedGraphs {
