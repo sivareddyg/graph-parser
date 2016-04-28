@@ -222,15 +222,8 @@ public class DisambiguateEntities {
       int spanEnd = matchedEntityObj.get(SentenceKeys.END).getAsInt();
       Pair<Integer, Integer> span = Pair.of(spanStart, spanEnd);
 
-      // If the entity is a single word, it should either be a noun or
-      // adjective.
       String startTag =
           words.get(spanStart).get(SentenceKeys.POS_KEY).getAsString();
-      if (spanEnd - spanStart == 0 && !startTag.startsWith("N")
-          && !startTag.startsWith("J") && !PROPER_NOUNS.contains(startTag)
-          && !SINGLE_WORD_ENTITY_TAGS.contains(startTag))
-        continue;
-
       String startNer =
           words.get(spanStart).has(SentenceKeys.NER_KEY) ? words.get(spanStart)
               .get(SentenceKeys.NER_KEY).getAsString() : "O";
