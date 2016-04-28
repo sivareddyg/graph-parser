@@ -96,7 +96,8 @@ public class GroundedGraphs {
   private CcgParser normalCcgParser;
   private CcgParser questionCcgParser;
 
-  private static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "NNPS");
+  private static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "NNPS",
+      "PROPN");
   private static Gson gson = new Gson();
   private static JsonParser jsonParser = new JsonParser();
 
@@ -714,7 +715,7 @@ public class GroundedGraphs {
     return graphs;
   }
 
-  private static Set<String> stopWords = Sets.newHashSet("do", "be", "have",
+  private static Set<String> stopWordsUniversal = Sets.newHashSet("?", ".",
       SentenceKeys.BLANK_WORD);
 
   public static List<String> getNgrams(List<LexicalItem> words, int nGram) {
@@ -724,25 +725,9 @@ public class GroundedGraphs {
         // Current word is an entity.
         continue;
       }
-
       String wordString = word.getLemma();
-      String posTag = word.getPos();
-
-      if (posTag.startsWith("NNP"))
+      if (stopWordsUniversal.contains(wordString)) {
         continue;
-      if (nGram == 1) {
-        if (!posTag.matches("[NJVR].*") || stopWords.contains(wordString)) {
-          continue;
-        }
-      } else {
-        // This filtering creates ngrams such as "located in", "what country",
-        // "where was"
-        if (!posTag.matches("[NJVRWI].*")) {
-          continue;
-        }
-        if (wordString.equals(SentenceKeys.BLANK_WORD)) {
-          continue;
-        }
       }
       wordStrings.add(wordString);
     }
