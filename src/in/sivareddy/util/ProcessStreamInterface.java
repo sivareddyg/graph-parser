@@ -44,6 +44,10 @@ public abstract class ProcessStreamInterface {
     try {
       String line = br.readLine();
       while (line != null) {
+        if (line.startsWith("#") || line.trim().equals("")) {
+          line = br.readLine();
+          continue;
+        }
         JsonObject jsonSentence = jsonParser.parse(line).getAsJsonObject();
         Runnable worker =
             new PipelineRunnable(this, jsonSentence, out, printOutput);

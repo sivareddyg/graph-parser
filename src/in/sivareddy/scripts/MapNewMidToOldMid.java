@@ -76,7 +76,9 @@ public class MapNewMidToOldMid {
             JsonObject entityObj = entity.getAsJsonObject();
             if (entityObj.has(SentenceKeys.ENTITY)) {
               String mid = entityObj.get(SentenceKeys.ENTITY).getAsString();
-              String[] parts = entityObj.get(SentenceKeys.ENTITY_ID).getAsString().split("/");
+              String[] parts =
+                  entityObj.get(SentenceKeys.ENTITY_ID).getAsString()
+                      .split("/");
               String name = parts[parts.length - 1];
               if (!entities.contains(mid)) {
                 if (nameToMid.containsKey(name)
@@ -168,6 +170,10 @@ public class MapNewMidToOldMid {
     try {
       String line = br.readLine();
       while (line != null) {
+        if (line.startsWith("#") || line.trim().equals("")) {
+          line = br.readLine();
+          continue;
+        }
         JsonObject sentence = jsonParser.parse(line).getAsJsonObject();
         simpleMapping(nameToMid, entities, sentence);
         // convertDisambiguatedEntitiesToOldMids(newKBMappings, oldKBMappings,

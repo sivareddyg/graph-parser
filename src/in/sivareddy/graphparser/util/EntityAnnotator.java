@@ -395,7 +395,7 @@ public class EntityAnnotator {
     } else if (code.equals(PosTagCode.EN_UD) || code.equals(PosTagCode.ES_UD)
         || code.equals(PosTagCode.DE_UD)) {
       
-      String potentialEntityPos = "(ADJ|NOUN|PROPN)";
+      String potentialEntityPos = "(ADJ|NOUN|PROPN|VERB)";
       if (spanEnd - spanStart == 0) {
         return posSequence.matches(potentialEntityPos);
       }
@@ -421,14 +421,11 @@ public class EntityAnnotator {
           nounPhrase)))
         return true;
 
-      /*-
       // bold and brave
       if (posSequence.matches(String.format("%s CONJ %s", nounPhrase,
           nounPhrase)))
         return true;
-      */
 
-      /*-
       // to kill a mocking bird
       if (posSequence.matches(String.format("ADP VERB %s", nounPhrase)))
         return true;
@@ -436,7 +433,6 @@ public class EntityAnnotator {
       // the running horse.
       if (posSequence.matches(String.format("DET VERB %s", nounPhrase)))
         return true;
-      */
     }
     return false;
   }
