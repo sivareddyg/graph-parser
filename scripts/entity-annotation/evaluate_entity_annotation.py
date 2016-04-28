@@ -12,10 +12,12 @@ sentence_ids = set()
 answer_found_sentences = set()
 no_predictions = set()
 sentence_id_to_sentence = {}
-MAX_NBEST = 10
+MAX_NBEST = 20 
 
 total = 0
 for line in sys.stdin:
+    if line.startswith("#") or line.strip() == "":
+        continue
     sentence = json.loads(line)
     if 'index' in sentence:
         sentence_id = sentence['index']
@@ -60,15 +62,16 @@ print "nthBest\tcount\ttotalAccuracy"
 positives = 0.0
 for i in range(1, MAX_NBEST + 1):
     positives += sentence_position_to_accuracy.get(i, 0)
-    print "%d\t%d\t%.3f" % (i, sentence_position_to_accuracy.get(i, 0), positives / len(sentence_ids))
+    print "%d\t%d\t%.2f" % (i, sentence_position_to_accuracy.get(i, 0), positives / len(sentence_ids) * 100)
 
 # print answer_found_sentences
 out_of_beam = sentence_ids - answer_found_sentences - no_predictions
 print "## Out of beam:", len(out_of_beam)
 for sentence_id in out_of_beam:
-    print sentence_id, sentence_id_to_sentence[sentence_id]
+    print sentence_id,
+    print sentence_id_to_sentence[sentence_id].encode("utf-8", "ignore")
 print
 
 print "## No predictions:", len(no_predictions)
 for sentence_id in no_predictions:
-    print sentence_id, sentence_id_to_sentence[sentence_id]
+    print sentence_id, sentence_id_to_sentence[sentence_id].encode("utf-8", "ignore")

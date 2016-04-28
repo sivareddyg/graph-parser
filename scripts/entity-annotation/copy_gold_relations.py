@@ -15,6 +15,7 @@ for line in open(sys.argv[1]):
             sentence['sentence']] = sentence['goldRelations']
 
 for line in sys.stdin:
+    if line.startswith("#") or line.strip() == "": continue
     sentence = json.loads(line)
     if sentence['sentence'] in sentence_to_gold_relations:
         sentence['goldRelations'] = sentence_to_gold_relations[
