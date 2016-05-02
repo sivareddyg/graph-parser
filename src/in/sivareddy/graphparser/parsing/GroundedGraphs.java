@@ -611,6 +611,16 @@ public class GroundedGraphs {
               index, fbEntity);
       parse.add(edge);
     }
+
+    for (LexicalItem leaf : leaves) {
+      if (leaf.getMid().startsWith("type.")) {
+        String edge =
+            String.format("dummy.edge.entity(%d:e , %d:%s)", questionWordIndex,
+                leaf.getWordPosition(), leaf.getMid());
+        parse.add(edge);
+      }
+    }
+
     parse.add(String.format("dummy.edge.question(%d:e , %d:x)",
         questionWordIndex, questionWordIndex));
     parse.add(String.format("QUESTION(%d:x)", questionWordIndex));
@@ -715,8 +725,9 @@ public class GroundedGraphs {
     return graphs;
   }
 
-  private static Set<String> stopWordsUniversal = Sets.newHashSet("?", ".",
-      SentenceKeys.BLANK_WORD);
+  private static Set<String> stopWordsUniversal = Sets
+      .newHashSet(SentenceKeys.BLANK_WORD);
+  private static Pattern punctuation = Pattern.compile("[\\p{Punct}]+");
 
   public static List<String> getNgrams(List<LexicalItem> words, int nGram) {
     List<String> wordStrings = new ArrayList<>();
@@ -726,7 +737,8 @@ public class GroundedGraphs {
         continue;
       }
       String wordString = word.getLemma();
-      if (stopWordsUniversal.contains(wordString)) {
+      if (stopWordsUniversal.contains(wordString)
+          || punctuation.matcher(wordString).matches()) {
         continue;
       }
       wordStrings.add(wordString);

@@ -4,6 +4,10 @@
 # data/distant_eval/parses/semi_supervised_syntax_pos 
 # data/distant_eval/parses/unsupervised_syntax
 
+run_pipeline_bow:
+	make -f Makefile.induction distant_eval_bow
+	make -f Makefile.induction loaded_model_distant_eval_bow 
+
 run_pipeline_%:
 	make -f Makefile.induction clean_data_$*
 	make -f Makefile.induction create_grounded_lexicon_$* 
@@ -33,11 +37,13 @@ clean_data_%:
 		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
 		| python scripts/cleaning/unannonate_named_entities.py \
+		| java -cp lib/*:bin others.AddLemma 1 \
 		| gzip > data/distant_eval/parses/$*/train.json.blank.cleaned.gz
 	zcat data/distant_eval/parses/$*/dev.json.gz \
 		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
 		| python scripts/cleaning/unannonate_named_entities.py \
+		| java -cp lib/*:bin others.AddLemma 1 \
 		| gzip > data/distant_eval/parses/$*/dev.json.blank.cleaned.gz
 	zcat data/distant_eval/parses/$*/dev.json.blank.cleaned.gz \
 		| head -n1000 \
@@ -46,6 +52,7 @@ clean_data_%:
 		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
 		| python scripts/cleaning/unannonate_named_entities.py \
+		| java -cp lib/*:bin others.AddLemma 1 \
 		| gzip > data/distant_eval/parses/$*/test.json.blank.cleaned.gz
 
 create_grounded_lexicon_%:
@@ -60,6 +67,133 @@ create_grounded_lexicon_%:
 	--unaryRules data/distant_eval/semantic_markup_files/unary_rules_$*.txt  \
 	--binaryRules data/distant_eval/semantic_markup_files/binary_rules_$*.txt \
 	> data/distant_eval/grounded_lexicon/lexicon_$*.txt 
+
+distant_eval_bow:
+	mkdir -p ../working/distant_eval
+	rm -rf ../working/distant_eval/bow
+	mkdir -p ../working/distant_eval/bow
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-endpoint localhost \
+	-typeKey "fb:type.object.type" \
+	-domain "http://rdf.freebase.com" \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-ccgIndexedMapping lib_data/dummy.txt \
+	-ccgLexicon lib_data/dummy.txt \
+	-ccgLexiconQuestions lib_data/dummy.txt \
+	-unaryRules lib_data/dummy.txt \
+	-binaryRules lib_data/dummy.txt \
+	-lexicon lib_data/dummy.txt \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 100 \
+	-ngramLength 2 \
+	-ngramGrelPartFlag true \
+	-nBestTrainSyntacticParses 5 \
+	-nBestTestSyntacticParses 5 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -1.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.00 \
+	-addBagOfWordsGraph true \
+	-addOnlyBagOfWordsGraph true \
+	-trainingCorpora data/distant_eval/parses/easyccg/train.json.blank.cleaned.gz \
+	-devFile data/distant_eval/parses/easyccg/dev.json.blank.cleaned.1000.gz \
+	-logFile ../working/distant_eval/bow/business_film_people.log.txt \
+	> ../working/distant_eval/bow/business_film_people.txt
+
+loaded_model_distant_eval_bow:
+	mkdir -p ../working/distant_eval/loaded_model_bow
+	rm -rf ../working/distant_eval/loaded_model_bow
+	mkdir -p ../working/distant_eval/loaded_model_bow
+	java -Xms2048m -cp lib/*:bin in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-endpoint localhost \
+	-typeKey "fb:type.object.type" \
+	-domain "http://rdf.freebase.com" \
+	-schema data/freebase/schema/business_film_people_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-ccgIndexedMapping lib_data/dummy.txt \
+	-ccgLexicon lib_data/dummy.txt \
+	-ccgLexiconQuestions lib_data/dummy.txt \
+	-unaryRules lib_data/dummy.txt \
+	-binaryRules lib_data/dummy.txt \
+	-lexicon lib_data/dummy.txt \
+	-nthreads 20 \
+	-timeout 3000 \
+	-trainingSampleSize 1000 \
+	-iterations 0 \
+	-ngramLength 2 \
+	-ngramGrelPartFlag true \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-useSchema true \
+	-useKB true \
+	-groundFreeVariables false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag true \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag true \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel true \
+	-useLexiconWeightsType true \
+	-validQueryFlag true \
+	-initialEdgeWeight -1.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.00 \
+	-addBagOfWordsGraph true \
+	-addOnlyBagOfWordsGraph true \
+	-loadModelFromFile ../working/distant_eval/bow/business_film_people.log.txt.model.bestIteration \
+	-devFile data/distant_eval/parses/easyccg/dev.json.blank.cleaned.gz \
+	-testFile data/distant_eval/parses/easyccg/test.json.blank.cleaned.gz \
+	-logFile ../working/distant_eval/loaded_model_bow/business_film_people.log.txt \
+	> ../working/distant_eval/loaded_model_bow/business_film_people.txt
 
 distant_eval_%:
 	mkdir -p ../working/distant_eval
@@ -81,6 +215,8 @@ distant_eval_%:
 	-timeout 3000 \
 	-trainingSampleSize 1000 \
 	-iterations 100 \
+	-ngramLength 2 \
+	-ngramGrelPartFlag true \
 	-nBestTrainSyntacticParses 5 \
 	-nBestTestSyntacticParses 5 \
 	-nbestGraphs 100 \
@@ -93,7 +229,6 @@ distant_eval_%:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
-	-ngramGrelPartFlag false \
 	-wordGrelPartFlag false \
 	-wordGrelFlag false \
 	-eventTypeGrelPartFlag false \
@@ -140,6 +275,8 @@ loaded_model_distant_eval_%:
 	-timeout 3000 \
 	-trainingSampleSize 1000 \
 	-iterations 0 \
+	-ngramLength 2 \
+	-ngramGrelPartFlag true \
 	-nBestTrainSyntacticParses 5 \
 	-nBestTestSyntacticParses 5 \
 	-nbestGraphs 100 \
@@ -152,7 +289,6 @@ loaded_model_distant_eval_%:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
-	-ngramGrelPartFlag false \
 	-wordGrelPartFlag false \
 	-wordGrelFlag false \
 	-eventTypeGrelPartFlag false \
@@ -175,7 +311,7 @@ loaded_model_distant_eval_%:
 	-initialTypeWeight -2.0 \
 	-initialWordWeight -0.05 \
 	-stemFeaturesWeight 0.00 \
-	-loadModelFromFile ../working/distant_eval/$*/business_film_people.log.txt.model.iteration13 \
+	-loadModelFromFile ../working/distant_eval/$*/business_film_people.log.txt.model.bestIteration \
 	-devFile data/distant_eval/parses/$*/dev.json.blank.cleaned.gz \
 	-testFile data/distant_eval/parses/$*/test.json.blank.cleaned.gz \
 	-logFile ../working/distant_eval/loaded_model_$*/business_film_people.log.txt \
@@ -184,7 +320,7 @@ loaded_model_distant_eval_%:
 distant_evaluation_dev_%:
 	python scripts/error-analysis/entity_wise_results.py \
 		data/distant_eval/parses/$*/dev.json.blank.cleaned.1000.gz \
-		../working/distant_eval/$*/business_film_people.log.txt.eval.dev.iteration13.1best.answers.txt
+		../working/distant_eval/$*/business_film_people.log.txt.eval.dev.bestIteration.1best.answers.txt
 
 # Spanish Experiments
 
@@ -230,11 +366,14 @@ spanish_bow_distant_eval:
 	-timeout 3000 \
 	-trainingSampleSize 1000 \
 	-iterations 30 \
+	-ngramLength 2 \
+	-ngramGrelPartFlag true \
 	-nBestTrainSyntacticParses 1 \
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-useSchema true \
 	-useKB true \
+	-addBagOfWordsGraph true \
 	-addOnlyBagOfWordsGraph true \
 	-groundFreeVariables false \
 	-useEmptyTypes false \
@@ -243,7 +382,6 @@ spanish_bow_distant_eval:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
-	-ngramGrelPartFlag true \
 	-wordGrelPartFlag false \
 	-wordGrelFlag false \
 	-eventTypeGrelPartFlag false \
@@ -290,6 +428,8 @@ spanish_semisup_specialcases_distant_eval:
 	-timeout 3000 \
 	-trainingSampleSize 1000 \
 	-iterations 30 \
+	-ngramLength 2 \
+	-ngramGrelPartFlag true \
 	-nBestTrainSyntacticParses 5 \
 	-nBestTestSyntacticParses 5 \
 	-nbestGraphs 100 \
@@ -302,7 +442,6 @@ spanish_semisup_specialcases_distant_eval:
 	-urelPartGrelPartFlag false \
 	-utypeGtypeFlag true \
 	-gtypeGrelFlag false \
-	-ngramGrelPartFlag false \
 	-wordGrelPartFlag false \
 	-wordGrelFlag false \
 	-eventTypeGrelPartFlag false \
