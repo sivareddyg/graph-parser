@@ -82,9 +82,10 @@ public class RunEasyCCG extends ProcessStreamInterface {
   public static void main(String[] args) throws IOException,
       ArgumentValidationException, InterruptedException {
     int nbest = args.length > 0 ? Integer.parseInt(args[0]) : 10;
-    RunEasyCCG easyCCG =
+    int nthreads = args.length > 1 ? Integer.parseInt(args[1]) : 30;
+    RunEasyCCG easyCCG = 
         new RunEasyCCG("lib_data/", " -r S[dcl] S[pss] S[pt] S[b] S[ng] S",
             nbest, false);
-    easyCCG.processStream(System.in, System.out, 30, true);
+    easyCCG.processStream(System.in, System.out, nthreads, true);
   }
 }

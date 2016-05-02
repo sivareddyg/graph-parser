@@ -392,8 +392,11 @@ public class RdfGraphTools {
       for (String predAnswer : predAnswers) {
         boolean answerIsDate = predAnswer.contains("XMLSchema#datetime");
         predAnswer = predAnswer.split("\\^\\^")[0];
+        
         String[] answers = predAnswer.split("/");
-        predAnswer = answers[answers.length - 1];
+        if (answers.length > 0)
+          predAnswer = answers[answers.length - 1];
+
         if (answerIsDate) {
           Matcher matcher = Pattern.compile("([0-9]{3,4})").matcher(predAnswer);
           if (matcher.find()) {
