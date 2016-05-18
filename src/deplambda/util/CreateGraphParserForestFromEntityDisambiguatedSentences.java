@@ -3,7 +3,6 @@ package deplambda.util;
 import in.sivareddy.graphparser.util.MergeEntity;
 import in.sivareddy.graphparser.util.SplitForrestToSentences;
 import in.sivareddy.util.ProcessStreamInterface;
-import in.sivareddy.util.SentenceKeys;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,6 +16,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import deplambda.others.NlpPipeline;
+import deplambda.others.SentenceKeys;
 
 public class CreateGraphParserForestFromEntityDisambiguatedSentences extends
     ProcessStreamInterface {
@@ -53,7 +53,12 @@ public class CreateGraphParserForestFromEntityDisambiguatedSentences extends
                     .getAsJsonObject();
             if (word.has(SentenceKeys.POS_KEY)) {
               word.addProperty(SentenceKeys.POS_KEY,
-                  deplambda.others.SentenceKeys.UD_PROPER_NOUN_TAG);
+                  SentenceKeys.UD_PROPER_NOUN_TAG);
+            }
+
+            if (word.has(SentenceKeys.LEMMA_KEY)) {
+              word.addProperty(SentenceKeys.LEMMA_KEY,
+                  word.get(SentenceKeys.WORD_KEY).getAsString().toLowerCase());
             }
           }
         }
