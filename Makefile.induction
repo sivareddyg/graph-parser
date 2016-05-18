@@ -215,8 +215,7 @@ distant_eval_%:
 	-timeout 3000 \
 	-trainingSampleSize 1000 \
 	-iterations 100 \
-	-ngramLength 2 \
-	-ngramGrelPartFlag true \
+	-ngramGrelPartFlag false \
 	-nBestTrainSyntacticParses 5 \
 	-nBestTestSyntacticParses 5 \
 	-nbestGraphs 100 \
@@ -275,8 +274,7 @@ loaded_model_distant_eval_%:
 	-timeout 3000 \
 	-trainingSampleSize 1000 \
 	-iterations 0 \
-	-ngramLength 2 \
-	-ngramGrelPartFlag true \
+	-ngramGrelPartFlag false \
 	-nBestTrainSyntacticParses 5 \
 	-nBestTestSyntacticParses 5 \
 	-nbestGraphs 100 \

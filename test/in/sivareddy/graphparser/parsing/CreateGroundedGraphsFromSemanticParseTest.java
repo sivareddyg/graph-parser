@@ -58,7 +58,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     groundedLexicon = new GroundedLexicon("lib_data/dummy.txt");
     schema = new Schema("data/freebase/schema/all_domains_schema.txt");
     kb =
-        new KnowledgeBaseOnline("rockall", "http://rockall:8890/sparql", "dba",
+        new KnowledgeBaseOnline("buck", "http://buck:8890/sparql", "dba",
             "dba", 50000, schema);
 
     questionCcgAutoLexicon =
@@ -387,6 +387,31 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     }
   }
 
+  @Test
+  public void testUngroundedFromDependencyUD() throws IOException {
+    JsonObject sentence =
+        jsonParser
+            .parse(
+                "{\"url\":\"http://www.freebase.com/view/en/benjamin_franklin\",\"targetValue\":\"(list (description Boston))\",\"goldMid\":\"m.019fz\",\"original\":\"where was ben franklin born?\",\"sentence\":\"where was ben franklin born?\",\"index\":\"b6410085a1f26218e64f62d534203d4c:1\",\"goldRelations\":[{\"relationLeft\":\"people.person.place_of_birth.1\",\"relationRight\":\"people.person.place_of_birth.2\",\"score\":1.0},{\"relationLeft\":\"people.place_lived.person\",\"relationRight\":\"people.place_lived.location\",\"score\":0.4}],\"entities\":[{\"entity\":\"m.019fz\",\"score\":59.339392289757676,\"phrase\":\"ben franklin\",\"name\":\"Benjamin Franklin\",\"id\":\"/en/benjamin_franklin\",\"index\":2}],\"words\":[{\"word\":\"Where\",\"lemma\":\"where\",\"pos\":\"ADV\",\"index\":1,\"head\":3,\"dep\":\"advmod\"},{\"word\":\"was\",\"lemma\":\"be\",\"pos\":\"VERB\",\"index\":2,\"head\":3,\"dep\":\"cop\"},{\"word\":\"Ben_Franklin\",\"lemma\":\"ben_franklin\",\"pos\":\"PROPN\",\"dep\":\"root\",\"head\":0,\"index\":3},{\"word\":\"born\",\"lemma\":\"bear\",\"pos\":\"VERB\",\"index\":4,\"head\":3,\"dep\":\"acl\"},{\"word\":\"?\",\"lemma\":\"?\",\"pos\":\"PUNCT\",\"sentEnd\":true,\"index\":5,\"head\":3,\"dep\":\"punct\"}]}")
+            .getAsJsonObject();
+
+    List<JsonObject> jsonSentences = Lists.newArrayList();
+    jsonSentences.add(sentence);
+
+    for (JsonObject jsonSentence : jsonSentences) {
+      List<LexicalGraph> graphs =
+          graphCreator.buildUngroundedGraph(jsonSentence,
+              SentenceKeys.DEPENDENCY_QUESTION_GRAPH, 1, logger);
+
+      System.out.println("# Ungrounded Graphs");
+      if (graphs.size() > 0) {
+        for (LexicalGraph ungroundedGraph : graphs) {
+          System.out.println("Ungrounded Graph: ");
+          System.out.println(ungroundedGraph);
+        }
+      }
+    }
+  }
 
   @Test
   public void testBackoffGroundedGraphsWithMerge() throws IOException {

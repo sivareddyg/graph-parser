@@ -653,9 +653,9 @@ public class GroundedGraphs {
       JsonObject wordObj = word.getAsJsonObject();
       if (wordObj.has(SentenceKeys.HEAD_KEY)
           && wordObj.has(SentenceKeys.DEPENDENCY_KEY)) {
-        int head = wordObj.get(SentenceKeys.HEAD_KEY).getAsInt();
+        int head = wordObj.get(SentenceKeys.HEAD_KEY).getAsInt() - 1;
 
-        if (head <= 0) {
+        if (head < 0) {
           continue;
         }
 
