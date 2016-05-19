@@ -41,8 +41,9 @@ public abstract class ProcessStreamInterface {
     });
 
     BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+    String line = null;
     try {
-      String line = br.readLine();
+      line = br.readLine();
       while (line != null) {
         if (line.startsWith("#") || line.trim().equals("")) {
           line = br.readLine();
@@ -54,6 +55,9 @@ public abstract class ProcessStreamInterface {
         threadPool.execute(worker);
         line = br.readLine();
       }
+    } catch (Exception e) {
+      System.err.println("Could not process line: ");
+      System.err.println(line);
     } finally {
       br.close();
     }
