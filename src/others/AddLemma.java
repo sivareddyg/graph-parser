@@ -1,6 +1,7 @@
 package others;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import uk.ac.ed.easyccg.lemmatizer.Lemmatizer;
 
@@ -13,20 +14,49 @@ import in.sivareddy.util.SentenceKeys;
 
 public class AddLemma extends ProcessStreamInterface {
 
+  private static HashMap<String, String> udToPtb = new HashMap<>();
+  static {
+    udToPtb.put("ADJ", "JJ");
+    udToPtb.put("ADV", "RB");
+    udToPtb.put("INTJ", "UH");
+    udToPtb.put("NOUN", "NN");
+    udToPtb.put("PROPN", "NNP");
+    udToPtb.put("VERB", "VB");
+    udToPtb.put("ADP", "IN");
+    udToPtb.put("AUX", "VB");
+    udToPtb.put("CONJ", "CC");
+    udToPtb.put("DET", "DT");
+    udToPtb.put("NUM", "CD");
+    udToPtb.put("PART", "RP");
+    udToPtb.put("SCONJ", "CC");
+    udToPtb.put("PUNCT", "SYM");
+    udToPtb.put("SYM", "SYM");
+    udToPtb.put("X", "SYM");
+  }
+
   @Override
   public void processSentence(JsonObject sentence) {
-    JsonArray words = sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
-    for (JsonElement word : words) {
-      JsonObject wordObj = word.getAsJsonObject();
-      String wordString = wordObj.get(SentenceKeys.WORD_KEY).getAsString();
-      String posString = wordObj.get(SentenceKeys.POS_KEY).getAsString();
-      String lemma = wordString;
-      try {
-        lemma = Lemmatizer.lemmatize(wordString, posString);
-      } catch (Exception e) {
-        // pass.
+    if (sentence.has(SentenceKeys.FOREST)) {
+      for (JsonElement sentElm : sentence.get(SentenceKeys.FOREST)
+          .getAsJsonArray()) {
+        JsonObject sentObj = sentElm.getAsJsonObject();
+        processSentence(sentObj);
       }
-      wordObj.addProperty(SentenceKeys.LEMMA_KEY, lemma);
+    } else {
+      JsonArray words = sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+      for (JsonElement word : words) {
+        JsonObject wordObj = word.getAsJsonObject();
+        String wordString = wordObj.get(SentenceKeys.WORD_KEY).getAsString();
+        String posString = wordObj.get(SentenceKeys.POS_KEY).getAsString();
+        posString = udToPtb.getOrDefault(posString, posString);
+        String lemma = wordString;
+        try {
+          lemma = Lemmatizer.lemmatize(wordString, posString);
+        } catch (Exception e) {
+          // pass.
+        }
+        wordObj.addProperty(SentenceKeys.LEMMA_KEY, lemma);
+      }
     }
   }
 

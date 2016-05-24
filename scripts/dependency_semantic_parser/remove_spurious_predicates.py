@@ -9,7 +9,7 @@ import re
 import sys
 
 for line in sys.stdin:
-    if line.startswith("#"):
+    if line.startswith("#") or line.strip() == "":
         continue
     sent = json.loads(line)
     if "dependency_lambda" in sent:
@@ -18,7 +18,10 @@ for line in sys.stdin:
             event_degree = {}
             event_predicates = []
             for element in parse:
-                match = re.search(".*\(([^\)]*):e , ([^\)]*):[^e\)]*\)", element)
+                if re.match(".*\(([^\)]*):e , ([^\)]*):e\)", element):
+                    continue
+                match = re.search(
+                    ".*\(([^\)]*):e , ([^\)]*):.*\)", element)
                 if match:
                     event = match.group(1)
                     arg = match.group(2)

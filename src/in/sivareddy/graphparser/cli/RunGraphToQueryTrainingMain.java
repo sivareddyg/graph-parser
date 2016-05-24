@@ -4,6 +4,7 @@ import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.learning.GraphToQueryTraining;
 import in.sivareddy.graphparser.learning.GraphToQueryTrainingMain;
 import in.sivareddy.graphparser.parsing.GraphToSparqlConverter;
+import in.sivareddy.graphparser.parsing.GroundedGraphs;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
@@ -21,6 +22,7 @@ import joptsimple.OptionSpec;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class RunGraphToQueryTrainingMain extends AbstractCli {
 
@@ -56,6 +58,9 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
   // Domain Name
   private OptionSpec<String> domain;
+
+  // Content Pos Tags
+  private OptionSpec<String> contentWordPosTags;
 
   // Training Corpora
   private OptionSpec<String> trainingCorpora;
@@ -214,6 +219,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("domain",
                 "uri of the graph e.g. http://film.freebase.com. Specify multiple Uri using ;")
             .withRequiredArg().ofType(String.class).required();
+
+    contentWordPosTags =
+        parser
+            .accepts("contentWordPosTags",
+                "content Word Pos tags for extracting ngram features. Seperate each tag with ;")
+            .withRequiredArg().ofType(String.class).defaultsTo("");
 
     trainingCorpora =
         parser
@@ -650,6 +661,9 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
               "dba", options.valueOf(timeout));
       GraphToSparqlConverter.TYPE_KEY = options.valueOf(typeKey);
+      GroundedGraphs.CONTENT_WORD_POS =
+          Sets.newHashSet(Splitter.on(";").trimResults().omitEmptyStrings()
+              .split(options.valueOf(contentWordPosTags)));
 
       List<String> kbGraphUri =
           Lists.newArrayList(Splitter.on(";").split(options.valueOf(domain)));

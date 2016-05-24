@@ -729,6 +729,12 @@ public class GroundedGraphs {
       .newHashSet(SentenceKeys.BLANK_WORD);
   private static Pattern punctuation = Pattern.compile("[\\p{Punct}]+");
 
+  public static Set<String> CONTENT_WORD_POS = Sets.newHashSet();
+
+  // Sets.newHashSet("NOUN", "VERB",
+  // "ADJ", "NN", "NNS", "JJ", "JJR", "JJS", "VB", "VBD", "VBN", "VBP", "VBZ",
+  // "VBG", "NNP", "NNPS");
+
   public static List<String> getNgrams(List<LexicalItem> words, int nGram) {
     List<String> wordStrings = new ArrayList<>();
     for (LexicalItem word : words) {
@@ -736,6 +742,13 @@ public class GroundedGraphs {
         // Current word is an entity.
         continue;
       }
+
+      if (CONTENT_WORD_POS.size() > 0
+          && !CONTENT_WORD_POS.contains(word.getPos())) {
+        // Current word is not content word.
+        continue;
+      }
+
       String wordString = word.getLemma();
       if (stopWordsUniversal.contains(wordString)
           || punctuation.matcher(wordString).matches()) {
@@ -1128,7 +1141,8 @@ public class GroundedGraphs {
 
     semanticParseCopy.removeAll(questionStrings);
     if (questionIndices.size() == 0) {
-      questionIndices.add(0);
+      questionIndices.add(sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray()
+          .size() - 1);
     }
     Integer questionIndex = questionIndices.iterator().next();
     semanticParseCopy.add(String.format("%s(%d:x)",
@@ -1872,7 +1886,7 @@ public class GroundedGraphs {
               .getRelation().getRight(), childIsEntity, parentIsEntity);
       MergedEdgeFeature mergedFeature = new MergedEdgeFeature(key, 1.0);
       mergedGraph.addFeature(mergedFeature);
-      learningModel.setWeightIfAbsent(mergedFeature, -0.5);
+      learningModel.setWeightIfAbsent(mergedFeature, -3.0);
 
       /*-key =
           Lists.newArrayList(childNode.getPos(), parentNode.getPos(),
@@ -2727,7 +2741,7 @@ public class GroundedGraphs {
       }
     }
 
-    if (wordGrelPartFlag) {
+    if (wordGrelPartFlag && !mediator.isEntity()) {
       String mediatorWord = mediator.getLemma();
       key = Lists.newArrayList(mediatorWord, grelLeft);
       WordGrelPartFeature wordGrelPartFeature =
@@ -2740,7 +2754,7 @@ public class GroundedGraphs {
       learningModel.setWeightIfAbsent(wordGrelPartFeature, initialWordWeight);
     }
 
-    if (wordGrelFlag) {
+    if (wordGrelFlag && !mediator.isEntity()) {
       String mediatorWord = mediator.getLemma();
       if (node1.getWordPosition() <= node2.getWordPosition()) {
         key = Lists.newArrayList(mediatorWord, grelLeft, grelRight);

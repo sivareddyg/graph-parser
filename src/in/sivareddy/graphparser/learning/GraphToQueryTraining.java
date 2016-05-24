@@ -1522,20 +1522,6 @@ public class GraphToQueryTraining {
 
       if (useAnswerTypeQuestionWordFlag) {
         String answerType = getMostFrequentAnswerType(predResults);
-        String qword =
-            getQuestionWord(gGraphCopy.getParallelGraph().getActualNodes());
-        if (answerType != null && qword != null) {
-          AnswerTypeQuestionWordFeature answerTypeFeature =
-              new AnswerTypeQuestionWordFeature(Lists.newArrayList(answerType,
-                  qword), 1.0);
-          Double featureWeight =
-              testing ? learningModel.getScoreTesting(Lists
-                  .newArrayList(answerTypeFeature)) : learningModel
-                  .getScoreTraining(Lists.newArrayList(answerTypeFeature));
-          gGraphCopy.addFeature(answerTypeFeature);
-          gGraphCopy.setScore(gGraphCopy.getScore() + featureWeight);
-        }
-
         HashSet<LexicalItem> qNodes =
             gGraphCopy.getParallelGraph().getQuestionNode();
         if (answerType != null && qNodes != null && qNodes.size() > 0) {
@@ -1625,18 +1611,7 @@ public class GraphToQueryTraining {
         Map<String, LinkedHashSet<String>> queryResults =
             rdfGraphTools.runQueryHttp(query);
         String answerType = getMostFrequentAnswerType(queryResults);
-        String qword =
-            getQuestionWord(returnGraph.getParallelGraph().getActualNodes());
-        if (answerType != null && qword != null) {
-          AnswerTypeQuestionWordFeature answerTypeFeature =
-              new AnswerTypeQuestionWordFeature(Lists.newArrayList(answerType,
-                  qword), 1.0);
-          returnGraph.addFeature(answerTypeFeature);
-          returnGraph.setScore(returnGraph.getScore()
-              + learningModel.getScoreTraining(Lists
-                  .newArrayList(answerTypeFeature)));
-        }
-
+        
         HashSet<LexicalItem> qNodes =
             returnGraph.getParallelGraph().getQuestionNode();
         if (answerType != null && qNodes != null && qNodes.size() > 0) {
@@ -2148,18 +2123,7 @@ public class GraphToQueryTraining {
 
         if (useAnswerTypeQuestionWordFlag) {
           String answerType = getMostFrequentAnswerType(predResults);
-          String qword =
-              getQuestionWord(gGraph.getParallelGraph().getActualNodes());
-          if (answerType != null && qword != null) {
-            AnswerTypeQuestionWordFeature answerTypeFeature =
-                new AnswerTypeQuestionWordFeature(Lists.newArrayList(
-                    answerType, qword), 1.0);
-            gGraph.addFeature(answerTypeFeature);
-            gGraph.setScore(gGraph.getScore()
-                + learningModel.getScoreTesting(Lists
-                    .newArrayList(answerTypeFeature)));
-          }
-
+          
           HashSet<LexicalItem> qNodes =
               gGraph.getParallelGraph().getQuestionNode();
           if (answerType != null && qNodes != null && qNodes.size() > 0) {
