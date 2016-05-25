@@ -1886,7 +1886,7 @@ public class GroundedGraphs {
               .getRelation().getRight(), childIsEntity, parentIsEntity);
       MergedEdgeFeature mergedFeature = new MergedEdgeFeature(key, 1.0);
       mergedGraph.addFeature(mergedFeature);
-      learningModel.setWeightIfAbsent(mergedFeature, -3.0);
+      learningModel.setWeightIfAbsent(mergedFeature, -0.5);
 
       /*-key =
           Lists.newArrayList(childNode.getPos(), parentNode.getPos(),

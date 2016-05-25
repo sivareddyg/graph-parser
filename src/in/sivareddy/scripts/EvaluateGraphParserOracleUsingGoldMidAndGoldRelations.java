@@ -397,7 +397,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     if (args.length > 6)
       useBackoffGraph = Boolean.parseBoolean(args[6]);
 
-    boolean handleEventEventEdges = false;
+    boolean handleEventEventEdges = true;
     EvaluateGraphParserOracleUsingGoldMidAndGoldRelations engine =
         new EvaluateGraphParserOracleUsingGoldMidAndGoldRelations(schemaFile,
             endPointName, semanticParseKey, goldOutputFile, lexiconFileName,
