@@ -655,6 +655,11 @@ public class GroundedGraphs {
           && wordObj.has(SentenceKeys.DEPENDENCY_KEY)) {
         int head = wordObj.get(SentenceKeys.HEAD_KEY).getAsInt() - 1;
 
+        if (wordObj.has(SentenceKeys.POS_KEY)
+            && SentenceKeys.PUNCTUATION_TAGS.contains(wordObj.get(
+                SentenceKeys.POS_KEY).getAsString()))
+          continue;
+
         if (head < 0) {
           continue;
         }

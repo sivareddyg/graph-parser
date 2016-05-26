@@ -1,5 +1,9 @@
 package in.sivareddy.util;
 
+import java.util.HashSet;
+
+import com.google.common.collect.Sets;
+
 public class SentenceKeys {
   public static String WORDS_KEY = "words";
   public static String WORD_KEY = "word";
@@ -55,5 +59,7 @@ public class SentenceKeys {
   public static String ENTITY_PAIR = "entity_pair";
   public static String COUNT = "count";
   public static String RELATIONS = "relations";
+  
+  public static HashSet<String> PUNCTUATION_TAGS = Sets.newHashSet("PUNCT", "SYM", "P");
 }
 
