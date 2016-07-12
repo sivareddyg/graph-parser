@@ -28,5 +28,6 @@ for ind in [0,1,2]:
 print "-------"
 prec = 1.0*sum(c)/sum(p) #(p[0]*n[0] + p[1]*n[1] + p[2]*n[2]) / sum(n)
 rec = 1.0*sum(c)/sum(n)
-f = 2*prec*rec/(prec+rec)
+f = 2.0*prec*rec/(prec+rec)
+print n
 print "all\t",100.0*prec,100.0*rec,100.0*f

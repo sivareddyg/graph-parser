@@ -3,6 +3,8 @@ import md5
 import sys
 
 for line in sys.stdin:
+    if line.startswith("#") or line.strip() == "":
+        continue
     word_to_mention = {}
     line = json.loads(line)
     word_index = 0

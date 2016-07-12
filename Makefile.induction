@@ -9,9 +9,9 @@ run_pipeline_bow:
 	make -f Makefile.induction loaded_model_distant_eval_bow 
 
 run_pipeline_%:
-	make -f Makefile.induction clean_data_$*
-	make -f Makefile.induction create_grounded_lexicon_$* 
-	make -f Makefile.induction distant_eval_$* 
+	#make -f Makefile.induction clean_data_$*
+	#make -f Makefile.induction create_grounded_lexicon_$* 
+	#make -f Makefile.induction distant_eval_$* 
 	make -f Makefile.induction loaded_model_distant_eval_$* 
 
 create_data_easyccg:
