@@ -53,6 +53,7 @@ public class RunEntityDisambiguator extends AbstractCli {
 
   private OptionSpec<Integer> nbestEntities;
 
+  private OptionSpec<Boolean> entitiesHasRelation;
 
   @Override
   public void initializeOptions(OptionParser parser) {
@@ -158,6 +159,12 @@ public class RunEntityDisambiguator extends AbstractCli {
             .accepts("nbestEntities",
                 "the number of final disambiguation possibilities")
             .withRequiredArg().ofType(Integer.class).defaultsTo(10);
+
+    entitiesHasRelation =
+        parser
+            .accepts("entitiesHasRelation",
+                "lattice path should comprise only of entities that are in relation")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
   }
 
   @Override
@@ -216,7 +223,8 @@ public class RunEntityDisambiguator extends AbstractCli {
     }
 
     EntityDisambiguator disambiguator =
-        new EntityDisambiguator(scorer, kb, options.valueOf(nbestEntities));
+        new EntityDisambiguator(scorer, kb, options.valueOf(nbestEntities),
+            options.valueOf(entitiesHasRelation));
 
     try {
       disambiguator.processList(inputSentences, System.out,
