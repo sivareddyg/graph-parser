@@ -23,11 +23,14 @@ public class EntityDisambiguator extends ProcessStreamInterface {
   private final int nbest;
   private final EntityScorer scorer;
   private final KnowledgeBase kb;
+  private final Boolean entitiesHasRelation;
 
-  public EntityDisambiguator(EntityScorer scorer, KnowledgeBase kb, int nbest) {
+  public EntityDisambiguator(EntityScorer scorer, KnowledgeBase kb, int nbest,
+      boolean entitiesHasRelation) {
     this.scorer = scorer;
     this.nbest = nbest;
     this.kb = kb;
+    this.entitiesHasRelation = entitiesHasRelation;
   }
 
   @Override
@@ -70,14 +73,16 @@ public class EntityDisambiguator extends ProcessStreamInterface {
 
     jsonSentence.add(SentenceKeys.MATCHED_ENTITIES, newMatchedEntities);
 
-    // Use this if you want to allow multiple entities in the sentence that may
-    // not have any relation.
-    // latticeBasedDisambiguation(jsonSentence, nbest);
 
-
-    DisambiguateEntities.latticeBasedDisambiguation(jsonSentence, nbest, nbest,
-        nbest, false, kb, false, false, false, false, false, false, false,
-        false, false);
+    if (entitiesHasRelation) {
+      DisambiguateEntities.latticeBasedDisambiguation(jsonSentence, nbest,
+          nbest, nbest, false, kb, false, false, false, false, false, false,
+          false, false, false);
+    } else {
+      // Use this if you want to allow multiple entities in the sentence that
+      // may not have any relation.
+      latticeBasedDisambiguation(jsonSentence, nbest);
+    }
   }
 
   private static class LatticeEntry {
@@ -158,6 +163,10 @@ public class EntityDisambiguator extends ProcessStreamInterface {
 
       latticeEntries.addAll(newLatticeEntries);
     }
+
+    // Averaging out the score per entity.
+    latticeEntries.forEach(x -> x.score =
+        x.score / (x.matchedAndRankedEntities.size() + 0.0));
 
     latticeEntries.sort(Comparator.comparing(x -> -1 * x.score));
     JsonArray disambiguatedEntities = new JsonArray();
