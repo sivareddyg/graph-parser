@@ -1,5 +1,7 @@
 package deplambda.others;
 
+import in.sivareddy.graphparser.util.EntityAnnotator;
+import in.sivareddy.graphparser.util.MergeEntity;
 import in.sivareddy.util.ProcessStreamInterface;
 
 import java.io.File;
@@ -11,6 +13,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,6 +23,7 @@ import org.maltparser.concurrent.ConcurrentMaltParserService;
 import org.maltparser.core.exception.MaltChainedException;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -53,7 +57,18 @@ public class NlpPipeline extends ProcessStreamInterface {
   public static String SENTENCE_SPLIT_ANNOTATOR = "ssplit";
   public static String LEMMA_ANNOTATOR = "lemma";
 
+  // Pre-processing
+  public static String PREPROCESS_CAPITALIZE_USING_POSTAGS =
+      "preprocess.capitalizeUsingPosTags";
+  public static String PREPROCESS_ADD_DATE_ENTITIES =
+      "preprocess.addDateEntities";
+  public static String PREPROCESS_CAPITALIZE_ENTITIES =
+      "preprocess.capitalizeEntities";
+  public static String PREPROCESS_MERGE_ENTITY_WORDS =
+      "preprocess.mergeEntityWords";
+
   public static String LANGUAGE_KEY = "languageCode";
+  public static String POS_TAG_KEY = "posTagKey";
   public static String MALT_PARSER_KEY = "maltparser";
   public static String STANFORD_DEP_PARSER_KEY = "depparse";
   public static String DRAW_SVG_TREES = "drawSvgTrees";
@@ -62,6 +77,9 @@ public class NlpPipeline extends ProcessStreamInterface {
   public static String SENTENCE_EOL_SPLITTER = "ssplit.eolonly";
   public static String NEW_LINE_IS_SENTENCE_BREAK =
       "ssplit.newlineIsSentenceBreak";
+
+  public static String POSTPROCESS_CORRECT_POS_TAGS =
+      "postprocess.correctPosTags";
 
   public static String DEPLAMBDA = "deplambda";
   public static String DEPLAMBDA_LEXICALIZE_PREDICATES =
@@ -75,6 +93,8 @@ public class NlpPipeline extends ProcessStreamInterface {
   public static String DEPLAMBDA_LAMBDA_ASSIGNMENT_RULES_FILE =
       "deplambda.lambdaAssignmentRulesFile";
   public static String DEPLAMBDA_DEBUG = "deplambda.debug";
+
+  private static Gson gson = new Gson();
 
   private StanfordCoreNLP pipeline;
   private Map<String, String> options;
@@ -174,6 +194,44 @@ public class NlpPipeline extends ProcessStreamInterface {
   public void processSentence(JsonObject jsonSentence) {
     String sentence;
     JsonArray words;
+
+    // Capitalize using PoS tags before running the pipeline.
+    if (options.containsKey(PREPROCESS_CAPITALIZE_USING_POSTAGS)
+        && options.get(PREPROCESS_CAPITALIZE_USING_POSTAGS).equals("true")) {
+      Preconditions.checkArgument(options.containsKey(WHITESPACE_TOKENIZER)
+          && options.get(WHITESPACE_TOKENIZER).equals("true"),
+          "Capitalization requires whitespace tokenizer");
+      Preconditions.checkArgument(options.containsKey(POS_TAG_KEY),
+          String.format("Capitalization requires %s key", POS_TAG_KEY));
+      Preconditions.checkArgument(options.containsKey(LANGUAGE_KEY),
+          "Capitalization requires languageCode argument");
+      String posTagCode = options.get(POS_TAG_KEY);
+      String languageCode = options.get(LANGUAGE_KEY);
+      capitalizeUsingPosTags(jsonSentence, posTagCode, languageCode);
+    }
+
+    // Capitalize before running the pipeline.
+    if (options.containsKey(PREPROCESS_CAPITALIZE_ENTITIES)
+        && options.get(PREPROCESS_CAPITALIZE_ENTITIES).equals("true")) {
+      capitalizeEntities(jsonSentence);
+    }
+
+    // Add dates.
+    if (options.containsKey(PREPROCESS_ADD_DATE_ENTITIES)
+        && options.get(PREPROCESS_ADD_DATE_ENTITIES).equals("true")) {
+      EntityAnnotator.addDateEntities(jsonSentence);
+    }
+
+    // Merge entity words to single sentence.
+    if (options.containsKey(PREPROCESS_MERGE_ENTITY_WORDS)
+        && options.get(PREPROCESS_MERGE_ENTITY_WORDS).equals("true")) {
+      JsonObject mergedSentence =
+          MergeEntity.mergeEntityWordsToSingleWord(gson.toJson(jsonSentence));
+      for (Entry<String, JsonElement> entry : mergedSentence.entrySet()) {
+        jsonSentence.add(entry.getKey(), entry.getValue());
+      }
+    }
+
     if (jsonSentence.has(SentenceKeys.WORDS_KEY)) {
       words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
       Preconditions
@@ -333,17 +391,112 @@ public class NlpPipeline extends ProcessStreamInterface {
       }
     }
 
+    // Correct PoS Tags
+    if (options.containsKey(POSTPROCESS_CORRECT_POS_TAGS)
+        && options.get(POSTPROCESS_CORRECT_POS_TAGS).equals("true")) {
+      Preconditions.checkArgument(options.containsKey(POS_TAG_KEY),
+          String.format("Correcting POS tag requires %s key", POS_TAG_KEY));
+      String posTagCode = options.get(POS_TAG_KEY);
+      correctPosTags(jsonSentence, posTagCode);
+    }
+
     if (options.containsKey(DEPLAMBDA)) {
-      System.err.println("Runnning deplambda");
+      System.err.println("Runnning deplambda ...");
       treeTransformer.processSentence(jsonSentence);
     }
+  }
+
+  private void correctPosTags(JsonObject sentence, String posTagCode) {
+    JsonArray words = sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+
+    for (JsonElement entityElm : sentence.get(SentenceKeys.ENTITIES)
+        .getAsJsonArray()) {
+      JsonObject entityObj = entityElm.getAsJsonObject();
+      if (!entityObj.get(SentenceKeys.ENTITY).getAsString().matches("type.*")) {
+        if (entityObj.has(SentenceKeys.END)) {
+          makeProperNoun(words.get(entityObj.get(SentenceKeys.END).getAsInt())
+              .getAsJsonObject(), posTagCode);
+        }
+
+        if (entityObj.has(SentenceKeys.START)) {
+          makeProperNoun(words
+              .get(entityObj.get(SentenceKeys.START).getAsInt())
+              .getAsJsonObject(), posTagCode);
+        }
+
+        if (entityObj.has(SentenceKeys.ENTITY_INDEX)) {
+          makeProperNoun(
+              words.get(entityObj.get(SentenceKeys.ENTITY_INDEX).getAsInt())
+                  .getAsJsonObject(), posTagCode);
+        }
+      }
+    }
+  }
+
+  private void makeProperNoun(JsonObject word, String posTagCode) {
+    if (word.has(SentenceKeys.POS_KEY)) {
+      if (posTagCode.equals(SentenceKeys.UNIVERSAL_DEPENDENCIES_POS_TAG_CODE)) {
+        word.addProperty(SentenceKeys.POS_KEY, SentenceKeys.UD_PROPER_NOUN_TAG);
+      } else if (posTagCode.equals(SentenceKeys.PENN_DEPENDENCIES_POS_TAG_CODE)) {
+        word.addProperty(SentenceKeys.POS_KEY,
+            SentenceKeys.PENN_PROPER_NOUN_TAG);
+      }
+    }
+  }
+
+  /**
+   * Capitalization based on entity annotation.
+   * 
+   * @param jsonSentence
+   */
+  private void capitalizeEntities(JsonObject jsonSentence) {
+    if (!jsonSentence.has(SentenceKeys.ENTITIES))
+      return;
+
+    JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+    for (JsonElement entityElm : jsonSentence.get(SentenceKeys.ENTITIES)
+        .getAsJsonArray()) {
+      JsonObject entity = entityElm.getAsJsonObject();
+      for (int i = entity.get(SentenceKeys.START).getAsInt(); i <= entity.get(
+          SentenceKeys.END).getAsInt(); i++) {
+        JsonObject word = words.get(i).getAsJsonObject();
+        String wordStr = word.get(SentenceKeys.WORD_KEY).getAsString();
+        word.addProperty(SentenceKeys.WORD_KEY, getCasedWord(wordStr));
+      }
+    }
+  }
+
+  private void capitalizeUsingPosTags(JsonObject jsonSentence,
+      String posTagCode, String languageCode) {
+    JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+
+    // Capitalization based on POS tags.
+    for (JsonElement wordElm : words) {
+      JsonObject word = wordElm.getAsJsonObject();
+      if (!word.has(SentenceKeys.POS_KEY))
+        break;
+      String posTag = word.get(SentenceKeys.POS_KEY).getAsString();
+      if (posTagCode.equals(SentenceKeys.UNIVERSAL_DEPENDENCIES_POS_TAG_CODE)) {
+        if (posTag.equals(SentenceKeys.UD_PROPER_NOUN_TAG)
+            || (languageCode.equals(SentenceKeys.GERMAN_LANGUAGE_CODE) && posTag
+                .equals(SentenceKeys.UD_NOUN_TAG))) {
+          String wordStr = word.get(SentenceKeys.WORD_KEY).getAsString();
+          word.addProperty(SentenceKeys.WORD_KEY, getCasedWord(wordStr));
+        }
+      }
+    }
+  }
+
+  private String getCasedWord(String wordStr) {
+    return wordStr.equals("") ? wordStr : String.format("%s%s", wordStr
+        .substring(0, 1).toUpperCase(), wordStr.substring(1));
   }
 
   public static void main(String[] args) throws IOException,
       InterruptedException {
     if (args.length == 0 || args.length % 2 != 0) {
       System.err
-          .println("Specify pipeline arguments, e.g., annotator, languageCode. See the NlpPipelineTest file.");
+          .println("Specify pipeline arguments, e.g., annotator, languageCode, preprocess.capitalize. See the NlpPipelineTest file.");
     }
 
     Map<String, String> options = new HashMap<>();
