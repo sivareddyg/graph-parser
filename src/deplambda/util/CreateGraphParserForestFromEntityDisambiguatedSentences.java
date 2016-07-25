@@ -1,6 +1,5 @@
 package deplambda.util;
 
-import in.sivareddy.graphparser.util.MergeEntity;
 import in.sivareddy.graphparser.util.SplitForrestToSentences;
 import in.sivareddy.util.ProcessStreamInterface;
 
@@ -35,35 +34,8 @@ public class CreateGraphParserForestFromEntityDisambiguatedSentences extends
     List<JsonObject> sentences =
         SplitForrestToSentences.split(disambiguatedSentence);
     for (JsonObject sentence : sentences) {
-      JsonObject mergedSentence =
-          MergeEntity.mergeEntityWordsToSingleWord(gson.toJson(sentence));
-      mergedSentence =
-          MergeEntity.mergeDateEntities(gson.toJson(mergedSentence));
-      pipeline.processSentence(mergedSentence);
-      JsonArray words =
-          mergedSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
-      if (mergedSentence.has(SentenceKeys.ENTITIES)) {
-        for (JsonElement entityElm : mergedSentence.get(SentenceKeys.ENTITIES)
-            .getAsJsonArray()) {
-          JsonObject entityObj = entityElm.getAsJsonObject();
-          if (!entityObj.get(SentenceKeys.ENTITY).getAsString()
-              .matches("type.*")) {
-            JsonObject word =
-                words.get(entityObj.get(SentenceKeys.INDEX_KEY).getAsInt())
-                    .getAsJsonObject();
-            if (word.has(SentenceKeys.POS_KEY)) {
-              word.addProperty(SentenceKeys.POS_KEY,
-                  SentenceKeys.UD_PROPER_NOUN_TAG);
-            }
-
-            if (word.has(SentenceKeys.LEMMA_KEY)) {
-              word.addProperty(SentenceKeys.LEMMA_KEY,
-                  word.get(SentenceKeys.WORD_KEY).getAsString().toLowerCase());
-            }
-          }
-        }
-      }
-      forrest.add(mergedSentence);
+      pipeline.processSentence(sentence);
+      forrest.add(sentence);
     }
     JsonObject forrestObj = new JsonObject();
     forrestObj.add(SentenceKeys.FOREST, forrest);
