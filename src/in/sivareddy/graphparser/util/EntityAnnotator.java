@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -394,19 +396,19 @@ public class EntityAnnotator {
         return true;
     } else if (code.equals(PosTagCode.EN_UD) || code.equals(PosTagCode.ES_UD)
         || code.equals(PosTagCode.DE_UD)) {
-      
+
       String potentialEntityPos = "(ADJ|NOUN|PROPN|VERB)";
       if (spanEnd - spanStart == 0) {
         return posSequence.matches(potentialEntityPos);
       }
-      
+
       String nounPhrase =
           String.format("(DET )?(%s ){0,3}%s", potentialEntityPos,
               potentialEntityPos);
 
       if (posSequence.matches(String.format("%s", nounPhrase)))
         return true;
-      
+
       // the big lebowski
       // james bond
       // olympics 2012
@@ -429,12 +431,66 @@ public class EntityAnnotator {
       // to kill a mocking bird
       if (posSequence.matches(String.format("ADP VERB %s", nounPhrase)))
         return true;
-      
+
       // the running horse.
       if (posSequence.matches(String.format("DET VERB %s", nounPhrase)))
         return true;
     }
     return false;
+  }
+
+  public static void addDateEntities(JsonObject sentenceObj) {
+    Set<Integer> positionIsEntity = new HashSet<>();
+    List<JsonObject> entities = new ArrayList<>();
+    if (sentenceObj.has(SentenceKeys.ENTITIES)) {
+      for (JsonElement entity : sentenceObj.get(SentenceKeys.ENTITIES)
+          .getAsJsonArray()) {
+        JsonObject entityObj = entity.getAsJsonObject();
+        for (int i = entityObj.get(SentenceKeys.START).getAsInt(); i <= entityObj
+            .get(SentenceKeys.END).getAsInt(); i++) {
+          positionIsEntity.add(i);
+        }
+        entities.add(entityObj);
+      }
+    }
+
+    JsonArray words = sentenceObj.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+
+    for (int i = 0; i < words.size(); i++) {
+      JsonObject word = words.get(i).getAsJsonObject();
+      if (!positionIsEntity.contains(i) && MergeEntity.isDate(word)) {
+        StringBuilder phraseBuilder = new StringBuilder();
+        phraseBuilder.append(word.get(SentenceKeys.WORD_KEY).getAsString());
+        int entityEnd = i;
+        for (int j = i + 1; j < words.size(); j++) {
+          JsonObject nextWord = words.get(j).getAsJsonObject();
+          if (positionIsEntity.contains(j) || !MergeEntity.isDate(nextWord)) {
+            break;
+          } else {
+            phraseBuilder.append(" ");
+            phraseBuilder.append(nextWord.get(SentenceKeys.WORD_KEY)
+                .getAsString());
+            entityEnd = j;
+          }
+        }
+
+        String phrase = phraseBuilder.toString();
+        JsonObject entityObj = new JsonObject();
+        entityObj.addProperty(SentenceKeys.PHRASE, phrase);
+        entityObj.addProperty(SentenceKeys.ENTITY, "type.datetime");
+        entityObj.addProperty(SentenceKeys.START, i);
+        entityObj.addProperty(SentenceKeys.END, entityEnd);
+        entities.add(entityObj);
+
+        i = entityEnd;
+      }
+    }
+
+    entities.sort(Comparator.comparing(x -> x.get(SentenceKeys.START)
+        .getAsInt()));
+    JsonArray entitiesArr = new JsonArray();
+    entities.forEach(x -> entitiesArr.add(x));
+    sentenceObj.add(SentenceKeys.ENTITIES, entitiesArr);
   }
 
   public static void main(String[] args) throws IOException {

@@ -37,15 +37,6 @@ public class MergeEntity {
     JsonArray oldWords =
         sentenceObj.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
 
-    if (oldWords.size() > 0) {
-      JsonObject oldWordObj = oldWords.get(0).getAsJsonObject();
-      String oldWord = oldWordObj.get(SentenceKeys.WORD_KEY).getAsString();
-      oldWord =
-          oldWord.substring(0, 1).toUpperCase()
-              + oldWord.substring(1, oldWord.length());
-      oldWordObj.addProperty(SentenceKeys.WORD_KEY, oldWord);
-    }
-
     JsonArray newWords = new JsonArray();
     JsonArray newEntities = new JsonArray();
     int wordIndex = 0;
@@ -195,7 +186,7 @@ public class MergeEntity {
   private static Set<String> timeEntities = Sets.newHashSet("TIME", "DATE");
   private static Pattern yearPattern = Pattern.compile("[0-9]{3,4}");
 
-  private static boolean isDate(JsonObject wordObject) {
+  public static boolean isDate(JsonObject wordObject) {
     String word = wordObject.get(SentenceKeys.WORD_KEY).getAsString();
     if (yearPattern.matcher(word).matches()) {
       return true;
@@ -299,8 +290,6 @@ public class MergeEntity {
               .getAsString();
       sb.append(word.substring(0, 1).toUpperCase());
       sb.append(word.substring(1, word.length()));
-      if (i < entityEnd)
-        sb.append("_");
     }
     return sb.toString();
   }
