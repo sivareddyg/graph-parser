@@ -42,7 +42,7 @@
 	<classpathentry kind="lib" path="lib/jewelcli-0.7.6.jar"/>
 	<classpathentry kind="lib" path="lib/mtj-1.0-snapshot.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-spanish-corenlp-2015-01-08-models.jar"/>
-	<classpathentry kind="lib" path="/home/siva/SemanticParsing/code/graph-parser/lib/junit-4.11.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.11.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
