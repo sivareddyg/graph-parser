@@ -64,6 +64,8 @@ public class NlpPipeline extends ProcessStreamInterface {
       "preprocess.addDateEntities";
   public static String PREPROCESS_CAPITALIZE_ENTITIES =
       "preprocess.capitalizeEntities";
+  public static String PREPROCESS_CAPITALIZE_FIRST_WORD =
+      "preprocess.capitalizeFirstWord";
   public static String PREPROCESS_MERGE_ENTITY_WORDS =
       "preprocess.mergeEntityWords";
 
@@ -214,6 +216,12 @@ public class NlpPipeline extends ProcessStreamInterface {
     if (options.containsKey(PREPROCESS_CAPITALIZE_ENTITIES)
         && options.get(PREPROCESS_CAPITALIZE_ENTITIES).equals("true")) {
       capitalizeEntities(jsonSentence);
+    }
+
+    // Capitalize first word
+    if (options.containsKey(PREPROCESS_CAPITALIZE_FIRST_WORD)
+        && options.get(PREPROCESS_CAPITALIZE_FIRST_WORD).equals("true")) {
+      capitalizeFirstWord(jsonSentence);
     }
 
     // Add dates.
@@ -470,6 +478,8 @@ public class NlpPipeline extends ProcessStreamInterface {
       String posTagCode, String languageCode) {
     JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
 
+
+
     // Capitalization based on POS tags.
     for (JsonElement wordElm : words) {
       JsonObject word = wordElm.getAsJsonObject();
@@ -486,6 +496,18 @@ public class NlpPipeline extends ProcessStreamInterface {
       }
     }
   }
+
+  private void capitalizeFirstWord(JsonObject jsonSentence) {
+    JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+
+    // Capitalize first word
+    if (words.size() > 0) {
+      JsonObject word = words.get(0).getAsJsonObject();
+      word.addProperty(SentenceKeys.WORD_KEY,
+          getCasedWord(word.get(SentenceKeys.WORD_KEY).getAsString()));
+    }
+  }
+
 
   private String getCasedWord(String wordStr) {
     return wordStr.equals("") ? wordStr : String.format("%s%s", wordStr
