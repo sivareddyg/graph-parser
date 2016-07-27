@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -82,6 +83,8 @@ public class NlpPipeline extends ProcessStreamInterface {
 
   public static String POSTPROCESS_CORRECT_POS_TAGS =
       "postprocess.correctPosTags";
+  public static String POSTPROCESS_REMOVE_MULTIPLE_ROOTS =
+      "postprocess.removeMultipleRoots";
 
   public static String DEPLAMBDA = "deplambda";
   public static String DEPLAMBDA_LEXICALIZE_PREDICATES =
@@ -158,8 +161,9 @@ public class NlpPipeline extends ProcessStreamInterface {
 
     Properties props = new Properties();
     annotators =
-        Arrays.asList(options.get(ANNOTATORS_KEY).split(",")).stream()
-            .map(String::trim).collect(Collectors.toSet());
+        options.containsKey(ANNOTATORS_KEY) ? Arrays
+            .asList(options.get(ANNOTATORS_KEY).split(",")).stream()
+            .map(String::trim).collect(Collectors.toSet()) : new HashSet<>();
 
     if (annotators.contains(STANFORD_DEP_PARSER_KEY)) {
       // Stanford parser picks up default parsing model if
@@ -194,6 +198,17 @@ public class NlpPipeline extends ProcessStreamInterface {
 
   @Override
   public void processSentence(JsonObject jsonSentence) {
+    if (jsonSentence.has(SentenceKeys.FOREST)) {
+      for (JsonElement individualSentence : jsonSentence.get(
+          SentenceKeys.FOREST).getAsJsonArray()) {
+        processIndividualSentence(individualSentence.getAsJsonObject());
+      }
+    } else {
+      processIndividualSentence(jsonSentence);
+    }
+  }
+
+  public void processIndividualSentence(JsonObject jsonSentence) {
     String sentence;
     JsonArray words;
 
@@ -408,9 +423,60 @@ public class NlpPipeline extends ProcessStreamInterface {
       correctPosTags(jsonSentence, posTagCode);
     }
 
+    // Remove multiple roots
+    if (options.containsKey(POSTPROCESS_REMOVE_MULTIPLE_ROOTS)
+        && options.get(POSTPROCESS_REMOVE_MULTIPLE_ROOTS).equals("true")) {
+      removeMultipleRoots(jsonSentence);
+    }
+
     if (options.containsKey(DEPLAMBDA)) {
       System.err.println("Runnning deplambda ...");
       treeTransformer.processSentence(jsonSentence);
+    }
+
+    if (options.containsKey(DEPLAMBDA)) {
+      System.err.println("Runnning deplambda ...");
+      treeTransformer.processSentence(jsonSentence);
+    }
+
+
+  }
+
+  private void removeMultipleRoots(JsonObject jsonSentence) {
+    JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+    Set<Integer> roots = new HashSet<>();
+    Integer lastRootIndex = -1;
+    for (JsonElement wordElm : words) {
+      JsonObject word = wordElm.getAsJsonObject();
+      if (!word.has(SentenceKeys.HEAD_KEY))
+        continue;
+
+      if (word.get(SentenceKeys.HEAD_KEY).getAsString().endsWith("_"))
+        continue;
+
+      int head = word.get(SentenceKeys.HEAD_KEY).getAsInt();
+      if (head <= 0) {
+        int currentIndex = word.get(SentenceKeys.INDEX_KEY).getAsInt();
+        roots.add(currentIndex);
+        lastRootIndex = currentIndex;
+      }
+    }
+
+    if (roots.size() > 1) {
+      for (JsonElement wordElm : words) {
+        JsonObject word = wordElm.getAsJsonObject();
+        int head = word.get(SentenceKeys.HEAD_KEY).getAsInt();
+        int currentIndex = word.get(SentenceKeys.INDEX_KEY).getAsInt();
+        if (roots.contains(head)) {
+          word.addProperty(SentenceKeys.HEAD_KEY, lastRootIndex);
+        }
+
+        if (roots.contains(currentIndex) && currentIndex != lastRootIndex) {
+          word.addProperty(SentenceKeys.HEAD_KEY, lastRootIndex);
+          word.addProperty(SentenceKeys.DEPENDENCY_KEY,
+              SentenceKeys.DEFAULT_DEPENDENCY_KEY);
+        }
+      }
     }
   }
 
