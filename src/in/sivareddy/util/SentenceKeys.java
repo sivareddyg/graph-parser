@@ -55,10 +55,12 @@ public class SentenceKeys {
   public static String SPARQL_QUERY = "sparqlQuery";
   
   public static String BLANK_WORD = "_blank_";
+  public static String DUMMY_WORD = "_dummy_";
   
   public static String ENTITY_PAIR = "entity_pair";
   public static String COUNT = "count";
   public static String RELATIONS = "relations";
+  
   
   public static HashSet<String> PUNCTUATION_TAGS = Sets.newHashSet("PUNCT", "SYM", "P");
 }

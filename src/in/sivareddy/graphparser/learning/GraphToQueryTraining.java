@@ -122,8 +122,9 @@ public class GraphToQueryTraining {
       boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
       boolean gtypeGrelFlag, boolean grelGrelFlag, boolean ngramGrelPartFlag,
       boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
-      boolean argGrelFlag, boolean eventTypeGrelPartFlag,
-      boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
+      boolean argGrelFlag, boolean questionTypeGrelPartFlag,
+      boolean eventTypeGrelPartFlag, boolean stemMatchingFlag,
+      boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean graphIsConnectedFlag,
       boolean graphHasEdgeFlag, boolean countNodesFlag,
@@ -136,10 +137,10 @@ public class GraphToQueryTraining {
       boolean paraphraseScoreFlag, boolean paraphraseClassifierScoreFlag,
       boolean allowMerging, boolean useGoldRelations,
       boolean evaluateOnlyTheFirstBest, boolean handleEventEventEdges,
-      boolean useBackOffGraph, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight, RdfGraphTools rdfGraphTools,
-      List<String> kbGraphUri) throws IOException {
+      boolean useBackOffGraph, boolean useHyperExpand,
+      double initialEdgeWeight, double initialTypeWeight,
+      double initialWordWeight, double stemFeaturesWeight,
+      RdfGraphTools rdfGraphTools, List<String> kbGraphUri) throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
 
@@ -190,16 +191,16 @@ public class GraphToQueryTraining {
             this.learningModel, ngramLength, urelGrelFlag,
             urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
             ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
-            argGrelFlag, eventTypeGrelPartFlag, stemMatchingFlag,
-            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
-            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
-            useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            ignorePronouns, handleNumbers, entityScoreFlag,
+            argGrelFlag, questionTypeGrelPartFlag, eventTypeGrelPartFlag,
+            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
+            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
+            graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
+            edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
+            duplicateEdgesFlag, ignorePronouns, handleNumbers, entityScoreFlag,
             entityWordOverlapFlag, paraphraseScoreFlag,
             paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
-            useBackOffGraph, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            useBackOffGraph, useHyperExpand, initialEdgeWeight,
+            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
   }
 
 
@@ -1611,7 +1612,7 @@ public class GraphToQueryTraining {
         Map<String, LinkedHashSet<String>> queryResults =
             rdfGraphTools.runQueryHttp(query);
         String answerType = getMostFrequentAnswerType(queryResults);
-        
+
         HashSet<LexicalItem> qNodes =
             returnGraph.getParallelGraph().getQuestionNode();
         if (answerType != null && qNodes != null && qNodes.size() > 0) {
@@ -2123,7 +2124,7 @@ public class GraphToQueryTraining {
 
         if (useAnswerTypeQuestionWordFlag) {
           String answerType = getMostFrequentAnswerType(predResults);
-          
+
           HashSet<LexicalItem> qNodes =
               gGraph.getParallelGraph().getQuestionNode();
           if (answerType != null && qNodes != null && qNodes.size() > 0) {

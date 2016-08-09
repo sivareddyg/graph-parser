@@ -111,6 +111,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> eventTypeGrelPartFlag;
   private OptionSpec<Boolean> argGrelPartFlag;
   private OptionSpec<Boolean> argGrelFlag;
+  private OptionSpec<Boolean> questionTypeGrelPartFlag;
 
   // Stem features
   private OptionSpec<Boolean> stemMatchingFlag;
@@ -158,6 +159,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> evaluateBeforeTraining;
   private OptionSpec<Boolean> handleEventEventEdges;
   private OptionSpec<Boolean> useBackOffGraph;
+  private OptionSpec<Boolean> useHyperExpand;
 
   @Override
   public void initializeOptions(OptionParser parser) {
@@ -440,6 +442,11 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("argGrelFlag",
                 "argument word and edge feature - a good feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+    questionTypeGrelPartFlag =
+        parser
+            .accepts("questionTypeGrelPartFlag",
+                "question types and edge part feature").withRequiredArg()
+            .ofType(Boolean.class).defaultsTo(false);
 
     // Stem features
     stemMatchingFlag =
@@ -635,6 +642,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "useBackOffGraph",
                 "Adds a back off graph if there is no path between question node and entity nodes.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
+    useHyperExpand =
+        parser
+            .accepts("useHyperExpand",
+                "Connects every entity with the question word if there is no direct path")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
   }
 
   @Override
@@ -733,6 +746,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       boolean eventTypeGrelPartFlagVal = options.valueOf(eventTypeGrelPartFlag);
       boolean argGrelPartFlagVal = options.valueOf(argGrelPartFlag);
       boolean argGrelFlagVal = options.valueOf(argGrelFlag);
+      boolean questionTypeGrelPartFlagVal =
+          options.valueOf(questionTypeGrelPartFlag);
 
       // Stem features
       boolean stemMatchingFlagVal = options.valueOf(stemMatchingFlag);
@@ -795,6 +810,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           options.valueOf(evaluateBeforeTraining);
       boolean handleEventEventEdgesVal = options.valueOf(handleEventEventEdges);
       boolean useBackOffGraphVal = options.valueOf(useBackOffGraph);
+      boolean useHyperExpandVal = options.valueOf(useHyperExpand);
 
       boolean groundTrainingCorpusInTheEndVal =
           options.valueOf(groundTrainingCorpusInTheEnd);
@@ -819,7 +835,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               urelGrelFlagVal, urelPartGrelPartFlagVal, utypeGtypeFlagVal,
               gtypeGrelFlagVal, ngramGrelPartFlagVal, wordGrelPartFlagVal,
               wordGrelFlagVal, eventTypeGrelPartFlagVal, argGrelPartFlagVal,
-              argGrelFlagVal, stemMatchingFlagVal,
+              argGrelFlagVal, questionTypeGrelPartFlagVal, stemMatchingFlagVal,
               mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
               argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
               graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
@@ -831,7 +847,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
               entityWordOverlapFlagVal, paraphraseScoreFlagVal,
               paraphraseClassifierScoreFlagVal, allowMergingVal,
               useGoldRelationsVal, evaluateOnlyTheFirstBestVal,
-              handleEventEventEdgesVal, useBackOffGraphVal,
+              handleEventEventEdgesVal, useBackOffGraphVal, useHyperExpandVal,
               initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
               stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount,

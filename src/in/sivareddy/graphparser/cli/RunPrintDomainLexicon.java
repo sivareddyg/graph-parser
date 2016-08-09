@@ -176,7 +176,7 @@ public class RunPrintDomainLexicon extends AbstractCli {
               false, false, false, false, false, false, false, false, false,
               false, false, false, false, false, false, false, false, false,
               false, false, false, false, false, false, false, false, false,
-              false, false, false, false, 0.0, 0.0, 0.0, 0.0);
+              false, false, false, false, false, false, 0.0, 0.0, 0.0, 0.0);
 
       CreateGroundedLexicon engine =
           new CreateGroundedLexicon(graphCreator, kb, semanticParseKeyString,

@@ -6,8 +6,10 @@ import in.sivareddy.graphparser.util.graph.Edge;
 import in.sivareddy.graphparser.util.graph.Graph;
 import in.sivareddy.graphparser.util.graph.Type;
 import in.sivareddy.graphparser.util.knowledgebase.Property;
+import in.sivareddy.graphparser.util.knowledgebase.Relation;
 import in.sivareddy.ml.basic.AbstractFeature;
 import in.sivareddy.ml.basic.Feature;
+import in.sivareddy.util.SentenceKeys;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -670,5 +672,123 @@ public class LexicalGraph extends Graph<LexicalItem> {
       }
     }
     return true;
+  }
+
+  public Set<Edge<LexicalItem>> getMergeableEdges() {
+    Set<Edge<LexicalItem>> mergeableEdges = new HashSet<>();
+    HashSet<LexicalItem> questionNodes = getQuestionNode();
+    if (questionNodes.size() == 0)
+      return mergeableEdges;
+    LexicalItem questionNode = questionNodes.iterator().next();
+    Map<LexicalItem, Edge<LexicalItem>> shortestPathEdges = new HashMap<>();
+    Set<LexicalItem> graphNodes = getNodes();
+
+    Set<LexicalItem> nodesVisited = new HashSet<>();
+    LinkedList<LexicalItem> toVisitNodes = new LinkedList<>();
+    toVisitNodes.add(questionNode);
+    while (toVisitNodes.peek() != null) {
+      LexicalItem node = toVisitNodes.poll();
+      nodesVisited.add(node);
+      TreeSet<Edge<LexicalItem>> edges = getEdges(node);
+      if (edges == null)
+        continue;
+      for (Edge<LexicalItem> edge : edges) {
+        LexicalItem newNode = edge.getRight();
+        if (!nodesVisited.contains(newNode)) {
+          shortestPathEdges.put(newNode, edge);
+          toVisitNodes.add(newNode);
+        }
+      }
+    }
+
+    for (LexicalItem node : graphNodes) {
+      if (node.isEntity()) {
+        LexicalItem tempNode = node;
+        while (shortestPathEdges.containsKey(tempNode)) {
+          Edge<LexicalItem> edge = shortestPathEdges.get(tempNode);
+          mergeableEdges.add(edge);
+          tempNode = edge.getLeft();
+        }
+      }
+    }
+
+    return mergeableEdges;
+  }
+
+  public List<Edge<LexicalItem>> getShortestPath(LexicalItem node1,
+      LexicalItem node2) {
+    Map<LexicalItem, Edge<LexicalItem>> shortestPathEdges = new HashMap<>();
+
+    Set<LexicalItem> nodesVisited = new HashSet<>();
+    LinkedList<LexicalItem> toVisitNodes = new LinkedList<>();
+    toVisitNodes.add(node1);
+    while (toVisitNodes.peek() != null) {
+      LexicalItem node = toVisitNodes.poll();
+      nodesVisited.add(node);
+      TreeSet<Edge<LexicalItem>> edges = getEdges(node);
+      if (edges == null)
+        continue;
+      for (Edge<LexicalItem> edge : edges) {
+        LexicalItem newNode = edge.getRight();
+        if (!nodesVisited.contains(newNode)) {
+          shortestPathEdges.put(newNode, edge);
+          toVisitNodes.add(newNode);
+          if (newNode.equals(node2))
+            break;
+        }
+      }
+    }
+
+    List<Edge<LexicalItem>> shortestPath = new ArrayList<>();
+    LexicalItem tempNode = node2;
+    while (shortestPathEdges.containsKey(tempNode)) {
+      Edge<LexicalItem> edge = shortestPathEdges.get(tempNode);
+      shortestPath.add(0, edge);
+      tempNode = edge.getLeft();
+    }
+
+    return shortestPath;
+  }
+
+  public void hyperExpand() {
+    List<LexicalItem> graphNodes = Lists.newArrayList(getActualNodes());
+    HashSet<LexicalItem> questionNodes = getQuestionNode();
+    if (questionNodes.size() == 0) {
+      LexicalItem firstItem = getActualNodes().get(0);
+      this.addProperty(firstItem,
+          new Property(SemanticCategoryType.QUESTION.toString()));
+      questionNodes.add(firstItem);
+    }
+    LexicalItem questionNode = questionNodes.iterator().next();
+
+    for (LexicalItem entityNode : graphNodes) {
+      if (entityNode.isEntity()) {
+        List<Edge<LexicalItem>> shortestPath =
+            getShortestPath(questionNode, entityNode);
+
+        if (shortestPath.size() == 0) {
+          LexicalItem dummyNode =
+              new LexicalItem("", SentenceKeys.DUMMY_WORD,
+                  SentenceKeys.DUMMY_WORD, SentenceKeys.PUNCTUATION_TAGS
+                      .iterator().next(), "", null);
+          dummyNode.setWordPosition(getActualNodes().size());
+          getActualNodes().add(dummyNode);
+          Edge<LexicalItem> directEdge =
+              new Edge<>(questionNode, entityNode, dummyNode, new Relation(
+                  SentenceKeys.DUMMY_WORD, SentenceKeys.DUMMY_WORD));
+          addEdge(directEdge);
+          shortestPath.add(directEdge);
+        }
+
+        Edge<LexicalItem> mainEdge = shortestPath.get(shortestPath.size() - 1);
+        List<Edge<LexicalItem>> entityEdges =
+            Lists.newArrayList(getEdges(entityNode));
+        for (Edge<LexicalItem> entityEdge : entityEdges) {
+          removeEdge(entityEdge);
+        }
+        addEdge(new Edge<>(questionNode, entityNode, mainEdge.getMediator(),
+            mainEdge.getRelation()));
+      }
+    }
   }
 }

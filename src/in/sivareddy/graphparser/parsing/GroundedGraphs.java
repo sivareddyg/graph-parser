@@ -110,6 +110,7 @@ public class GroundedGraphs {
   private boolean ngramGrelPartFlag = true;
   private boolean wordGrelFlag = true;
   private boolean argGrelPartFlag = true;
+  private boolean questionTypeGrelPartFlag = false;
   private boolean argGrelFlag = true;
   private boolean eventTypeGrelPartFlag = false;
   private boolean stemMatchingFlag = true;
@@ -131,6 +132,7 @@ public class GroundedGraphs {
   private boolean allowMerging = false;
   private boolean handleEventEventEdges = false;
   private boolean useBackOffGraph = false;
+  private boolean useHyperExpand = false;
 
   private StructuredPercepton learningModel;
   private int ngramLength = 2;
@@ -150,8 +152,9 @@ public class GroundedGraphs {
       boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
       boolean gtypeGrelPartFlag, boolean grelGrelFlag, boolean ngramGrelFlag,
       boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
-      boolean argGrelFlag, boolean eventTypeGrelPartFlag,
-      boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
+      boolean argGrelFlag, boolean questionTypeGrelPartFlag,
+      boolean eventTypeGrelPartFlag, boolean stemMatchingFlag,
+      boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean graphIsConnectedFlag,
       boolean graphHasEdgeFlag, boolean countNodesFlag,
@@ -161,8 +164,9 @@ public class GroundedGraphs {
       boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
       boolean paraphraseClassifierScoreFlag, boolean allowMerging,
       boolean handleEventEventEdges, boolean useBackOffGraph,
-      double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double stemFeaturesWeight) throws IOException {
+      boolean useHyperExpand, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double stemFeaturesWeight) throws IOException {
 
     // ccg parser initialisation
     String[] argumentLexicalIdenfiers = {"mid"};
@@ -189,6 +193,7 @@ public class GroundedGraphs {
     this.ngramGrelPartFlag = ngramGrelFlag;
     this.wordGrelFlag = wordGrelFlag;
     this.argGrelPartFlag = argGrelPartFlag;
+    this.questionTypeGrelPartFlag = questionTypeGrelPartFlag;
     this.argGrelFlag = argGrelFlag;
     this.eventTypeGrelPartFlag = eventTypeGrelPartFlag;
     this.stemMatchingFlag = stemMatchingFlag;
@@ -204,6 +209,7 @@ public class GroundedGraphs {
     this.allowMerging = allowMerging;
     this.handleEventEventEdges = handleEventEventEdges;
     this.useBackOffGraph = useBackOffGraph;
+    this.useHyperExpand = useHyperExpand;
 
     this.entityScoreFlag = entityScoreFlag;
     this.entityWordOverlapFlag = entityWordOverlapFlag;
@@ -390,7 +396,7 @@ public class GroundedGraphs {
     // multiple question nodes, and retain only the one that appear first.
     graphs.forEach(g -> g.removeMultipleQuestionNodes());
 
-    if (useBackOffGraph
+    if ((useBackOffGraph)
         && (key.equals(SentenceKeys.CCG_PARSES) || key
             .equals(SentenceKeys.DEPENDENCY_LAMBDA))) {
       // If there is no path found between question and entity nodes, use a
@@ -417,6 +423,17 @@ public class GroundedGraphs {
             graphs.add(backOffGraph);
           }
         }
+      }
+    }
+
+    if (useHyperExpand
+        && (key.equals(SentenceKeys.CCG_PARSES) || key
+            .equals(SentenceKeys.DEPENDENCY_LAMBDA))) {
+      // If there is no path found between question and entity nodes, use a
+      // backoff graph.
+      List<LexicalGraph> newGraphs = new ArrayList<>();
+      for (LexicalGraph graph : graphs) {
+        graph.hyperExpand();
       }
     }
 
@@ -1537,6 +1554,8 @@ public class GroundedGraphs {
         .getParallelGraph().hashCode()), true);
     // graphsSoFar.add(groundedGraph);
 
+    Set<Edge<LexicalItem>> mergableEdges = graph.getMergeableEdges();
+
     Set<LexicalItem> nodesCovered = Sets.newHashSet();
     for (Edge<LexicalItem> edge : edges) {
       LexicalItem node1 = edge.getLeft();
@@ -1544,7 +1563,7 @@ public class GroundedGraphs {
 
       // Graphs formed using MERGE operation.
       List<LexicalGraph> mergedGraphs = new ArrayList<>();
-      if (allowMerging) {
+      if (allowMerging && mergableEdges.contains(edge)) {
         mergedGraphs =
             mergeEdge(groundedGraphs, edge, restrictedNodes,
                 edgeGroundingConstraints, nonMergableNodes, graphsSoFar,
@@ -1891,14 +1910,14 @@ public class GroundedGraphs {
               .getRelation().getRight(), childIsEntity, parentIsEntity);
       MergedEdgeFeature mergedFeature = new MergedEdgeFeature(key, 1.0);
       mergedGraph.addFeature(mergedFeature);
-      learningModel.setWeightIfAbsent(mergedFeature, -0.5);
+      learningModel.setWeightIfAbsent(mergedFeature, -3.0);
 
       /*-key =
           Lists.newArrayList(childNode.getPos(), parentNode.getPos(),
               childIsEntity, parentIsEntity);
       mergedFeature = new MergedEdgeFeature(key, 1.0);
       mergedGraph.addFeature(mergedFeature);
-      learningModel.setWeightIfAbsent(mergedFeature, -2.0);*/
+      learningModel.setWeightIfAbsent(mergedFeature, -0.5);*/
 
       /*-// Add a feature indicating the edge has been merged.
       MergedEdgeFeature hasMergedEdge =
@@ -2494,7 +2513,8 @@ public class GroundedGraphs {
       }
     }
 
-    if (urelPartGrelPartFlag) {
+    if (urelPartGrelPartFlag && !urelLeft.equals(SentenceKeys.DUMMY_WORD)
+        && !urelRight.equals(SentenceKeys.DUMMY_WORD)) {
       // adding prob urel part grel part feature
       key = Lists.newArrayList(urelLeft, grelLeft);
       UrelPartGrelPartFeature urelPartGrelPartFeature =
@@ -2524,7 +2544,8 @@ public class GroundedGraphs {
       }
     }
 
-    if (urelGrelFlag) {
+    if (urelGrelFlag && !urelLeft.equals(SentenceKeys.DUMMY_WORD)
+        && !urelRight.equals(SentenceKeys.DUMMY_WORD)) {
       // adding prob urel grel feature
       int urelGrelFound =
           groundedLexicon.hasUrelGrel(ungroundedRelation, groundedRelation);
@@ -2666,6 +2687,45 @@ public class GroundedGraphs {
       }
     }
 
+    if (questionTypeGrelPartFlag) {
+      if (uGraph.isQuestionNode(node1)) {
+        // adding argument word, grel feature
+        Set<Type<LexicalItem>> nodeTypes = uGraph.getTypes(node1);
+        if (nodeTypes != null) {
+          for (Type<LexicalItem> nodeType : nodeTypes) {
+            LexicalItem modifierNode = nodeType.getModifierNode();
+            String modifierWord = modifierNode.getLemma();
+            if (modifierWord.equals(SentenceKeys.DUMMY_WORD))
+              continue;
+            key = Lists.newArrayList(modifierWord, grelLeft);
+            ArgGrelPartFeature argGrelPartFeature =
+                new ArgGrelPartFeature(key, 1.0);
+            features.add(argGrelPartFeature);
+            learningModel.setWeightIfAbsent(argGrelPartFeature,
+                initialWordWeight);
+          }
+        }
+      }
+
+      if (uGraph.isQuestionNode(node2)) {
+        Set<Type<LexicalItem>> nodeTypes = uGraph.getTypes(node2);
+        if (nodeTypes != null) {
+          for (Type<LexicalItem> nodeType : nodeTypes) {
+            LexicalItem modifierNode = nodeType.getModifierNode();
+            String modifierWord = modifierNode.getLemma();
+            if (modifierWord.equals(SentenceKeys.DUMMY_WORD))
+              continue;
+            key = Lists.newArrayList(modifierWord, grelRight);
+            ArgGrelPartFeature argGrelPartFeature =
+                new ArgGrelPartFeature(key, 1.0);
+            features.add(argGrelPartFeature);
+            learningModel.setWeightIfAbsent(argGrelPartFeature,
+                initialWordWeight);
+          }
+        }
+      }
+    }
+
     if (argGrelPartFlag) {
       // adding argument word, grel feature
       Set<Type<LexicalItem>> nodeTypes = uGraph.getTypes(node1);
@@ -2673,6 +2733,8 @@ public class GroundedGraphs {
         for (Type<LexicalItem> nodeType : nodeTypes) {
           LexicalItem modifierNode = nodeType.getModifierNode();
           String modifierWord = modifierNode.getLemma();
+          if (modifierWord.equals(SentenceKeys.DUMMY_WORD))
+            continue;
           key = Lists.newArrayList(modifierWord, grelLeft);
           ArgGrelPartFeature argGrelPartFeature =
               new ArgGrelPartFeature(key, 1.0);
@@ -2682,11 +2744,14 @@ public class GroundedGraphs {
         }
       }
 
+
       nodeTypes = uGraph.getTypes(node2);
       if (nodeTypes != null) {
         for (Type<LexicalItem> nodeType : nodeTypes) {
           LexicalItem modifierNode = nodeType.getModifierNode();
           String modifierWord = modifierNode.getLemma();
+          if (modifierWord.equals(SentenceKeys.DUMMY_WORD))
+            continue;
           key = Lists.newArrayList(modifierWord, grelRight);
           ArgGrelPartFeature argGrelPartFeature =
               new ArgGrelPartFeature(key, 1.0);
@@ -2704,6 +2769,8 @@ public class GroundedGraphs {
         for (Type<LexicalItem> nodeType : nodeTypes) {
           LexicalItem modifierNode = nodeType.getModifierNode();
           String modifierWord = modifierNode.getLemma();
+          if (modifierWord.equals(SentenceKeys.DUMMY_WORD))
+            continue;
           key = Lists.newArrayList(modifierWord, grelLeft, grelRight);
           ArgGrelFeature argGrelFeature = new ArgGrelFeature(key, 1.0);
           features.add(argGrelFeature);
@@ -2716,6 +2783,8 @@ public class GroundedGraphs {
         for (Type<LexicalItem> nodeType : nodeTypes) {
           LexicalItem modifierNode = nodeType.getModifierNode();
           String modifierWord = modifierNode.getLemma();
+          if (modifierWord.equals(SentenceKeys.DUMMY_WORD))
+            continue;
           key = Lists.newArrayList(modifierWord, grelRight, grelLeft);
           ArgGrelFeature argGrelFeature = new ArgGrelFeature(key, 1.0);
           features.add(argGrelFeature);
@@ -2746,8 +2815,10 @@ public class GroundedGraphs {
       }
     }
 
-    if (wordGrelPartFlag && !mediator.isEntity()) {
+    if (wordGrelPartFlag && !mediator.isEntity()
+        && !mediator.getLemma().equals(SentenceKeys.DUMMY_WORD)) {
       String mediatorWord = mediator.getLemma();
+
       key = Lists.newArrayList(mediatorWord, grelLeft);
       WordGrelPartFeature wordGrelPartFeature =
           new WordGrelPartFeature(key, 1.0);
@@ -2759,7 +2830,8 @@ public class GroundedGraphs {
       learningModel.setWeightIfAbsent(wordGrelPartFeature, initialWordWeight);
     }
 
-    if (wordGrelFlag && !mediator.isEntity()) {
+    if (wordGrelFlag && !mediator.isEntity()
+        && !mediator.getLemma().equals(SentenceKeys.DUMMY_WORD)) {
       String mediatorWord = mediator.getLemma();
       if (node1.getWordPosition() <= node2.getWordPosition()) {
         key = Lists.newArrayList(mediatorWord, grelLeft, grelRight);
@@ -2780,7 +2852,8 @@ public class GroundedGraphs {
         for (Type<LexicalItem> type : mediatorTypes) {
           LexicalItem modifierNode = type.getModifierNode();
           String modifierNodeString = modifierNode.getLemma();
-          if (modifierNodeString.equals(mediatorWord))
+          if (modifierNodeString.equals(mediatorWord)
+              || modifierNodeString.equals(SentenceKeys.DUMMY_WORD))
             // (place, place , grelLeft) feature is useless
             // since (place, grelLeft) is already present
             continue;
@@ -2807,7 +2880,8 @@ public class GroundedGraphs {
         for (Type<LexicalItem> type : mediatorTypes) {
           LexicalItem modifierNode = type.getModifierNode();
           String modifierNodeString = modifierNode.getLemma();
-          if (modifierNodeString.equals(mediatorWord))
+          if (modifierNodeString.equals(mediatorWord)
+              || modifierNodeString.equals(SentenceKeys.DUMMY_WORD))
             // (place, place , grelLeft) feature is useless
             // since (place, grelLeft) is already present
             continue;
@@ -2833,6 +2907,8 @@ public class GroundedGraphs {
         for (Type<LexicalItem> type : eventModifierNodes) {
           LexicalItem modifierNode = type.getModifierNode();
           String modifierNodeString = modifierNode.getLemma();
+          if (modifierNodeString.equals(SentenceKeys.DUMMY_WORD))
+            continue;
           key = Lists.newArrayList(modifierNodeString, grelLeft);
           EventTypeGrelPartFeature eventTypeGrelPartFeature =
               new EventTypeGrelPartFeature(key, 1.0);

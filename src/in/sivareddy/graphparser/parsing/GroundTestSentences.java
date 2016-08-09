@@ -56,6 +56,7 @@ public class GroundTestSentences {
     boolean wordGrelFlag = true;
     boolean argGrelPartFlag = true;
     boolean argGrelFlag = true;
+    boolean questionTypeGrelPartFlag = false;
     boolean wordBigramGrelPartFlag = true;
     boolean stemMatchingFlag = true;
     boolean mediatorStemGrelPartMatchingFlag = true;
@@ -82,7 +83,8 @@ public class GroundTestSentences {
     boolean allowMerging = false;
     boolean handleEventEventEdges = false;
     boolean useBackOffGraph = false;
-
+    boolean useHyperExpand = false;
+    
     double initialEdgeWeight = -1.0;
     double initialTypeWeight = -1.0;
     double initialWordWeight = -1.0;
@@ -97,16 +99,17 @@ public class GroundTestSentences {
             relationTypingIdentifiers, learningModel, ngramLength,
             urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
             grelGrelFlag, ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag,
-            argGrelPartFlag, argGrelFlag, wordBigramGrelPartFlag,
-            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
-            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
-            graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
-            edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
-            duplicateEdgesFlag, ignorePronouns, handleNumbers, entityScoreFlag,
+            argGrelPartFlag, argGrelFlag, questionTypeGrelPartFlag,
+            wordBigramGrelPartFlag, stemMatchingFlag,
+            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
+            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
+            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
+            useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
+            ignorePronouns, handleNumbers, entityScoreFlag,
             entityWordOverlapFlag, paraphraseScoreFlag,
             paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
-            useBackOffGraph, initialEdgeWeight, initialTypeWeight,
-            initialWordWeight, stemFeaturesWeight);
+            useBackOffGraph, useHyperExpand, initialEdgeWeight,
+            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));

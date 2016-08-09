@@ -93,7 +93,7 @@ public class CcgParseToUngroundedGraphs {
             false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
             false, false, false, false, false, false, false, false, false,
-            10.0, 1.0, 0.0, 0.0);
+            false, false, 10.0, 1.0, 0.0, 0.0);
   }
 
   public List<List<LexicalGraph>> processText(String line)
