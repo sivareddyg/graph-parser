@@ -773,7 +773,8 @@ public class GroundedGraphs {
 
       String wordString = word.getLemma();
       if (stopWordsUniversal.contains(wordString)
-          || punctuation.matcher(wordString).matches()) {
+          || punctuation.matcher(wordString).matches()
+          || SentenceKeys.PUNCTUATION_TAGS.contains(word.getPos())) {
         continue;
       }
       wordStrings.add(wordString);
