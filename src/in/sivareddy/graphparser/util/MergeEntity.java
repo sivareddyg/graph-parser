@@ -72,11 +72,6 @@ public class MergeEntity {
         newWord.addProperty(SentenceKeys.LEMMA_KEY, entityPhrase);
       }
 
-      if (newWord.has(SentenceKeys.POS_KEY)) {
-        newWord.remove(SentenceKeys.POS_KEY);
-        newWord.addProperty(SentenceKeys.POS_KEY, PROPER_NOUN_TAG);
-      }
-
       if (newWord.has(SentenceKeys.NER_KEY)) {
         newWord.remove(SentenceKeys.NER_KEY);
         newWord.addProperty(SentenceKeys.NER_KEY,

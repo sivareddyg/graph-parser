@@ -674,6 +674,13 @@ public class LexicalGraph extends Graph<LexicalItem> {
     return true;
   }
 
+  /**
+   * Returns edges that are in-between a question node and an entity. There is
+   * no use at least on WebQuestions or Free917 to merge other hanging edges in
+   * the graph.
+   * 
+   * @return
+   */
   public Set<Edge<LexicalItem>> getMergeableEdges() {
     Set<Edge<LexicalItem>> mergeableEdges = new HashSet<>();
     HashSet<LexicalItem> questionNodes = getQuestionNode();
