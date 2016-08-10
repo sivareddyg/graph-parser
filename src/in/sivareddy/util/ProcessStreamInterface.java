@@ -1,10 +1,13 @@
 package in.sivareddy.util;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.Writer;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -24,9 +27,12 @@ public abstract class ProcessStreamInterface {
 
   public void processStream(InputStream stream, PrintStream out, int nthreads,
       boolean printOutput) throws IOException, InterruptedException {
+    Writer writer = new OutputStreamWriter(out, "UTF-8");
+    BufferedWriter fout = new BufferedWriter(writer);
+
     final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
-    ThreadPoolExecutor threadPool =
-        new ThreadPoolExecutor(nthreads, nthreads, 600, TimeUnit.SECONDS, queue);
+    ThreadPoolExecutor threadPool = new ThreadPoolExecutor(nthreads, nthreads,
+        600, TimeUnit.SECONDS, queue);
 
     threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override
@@ -40,7 +46,8 @@ public abstract class ProcessStreamInterface {
       }
     });
 
-    BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+    BufferedReader br =
+        new BufferedReader(new InputStreamReader(stream, "UTF8"));
     String line = null;
     try {
       line = br.readLine();
@@ -51,7 +58,7 @@ public abstract class ProcessStreamInterface {
         }
         JsonObject jsonSentence = jsonParser.parse(line).getAsJsonObject();
         Runnable worker =
-            new PipelineRunnable(this, jsonSentence, out, printOutput);
+            new PipelineRunnable(this, jsonSentence, fout, printOutput);
         threadPool.execute(worker);
         line = br.readLine();
       }
@@ -67,14 +74,17 @@ public abstract class ProcessStreamInterface {
     while (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
       // pass.
     }
+    fout.close();
   }
 
   public void processList(List<JsonObject> jsonSentences, PrintStream out,
-      int nthreads, boolean printOutput) throws IOException,
-      InterruptedException {
+      int nthreads, boolean printOutput)
+          throws IOException, InterruptedException {
+    Writer writer = new OutputStreamWriter(out, "UTF-8");
+    BufferedWriter fout = new BufferedWriter(writer);
     final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
-    ThreadPoolExecutor threadPool =
-        new ThreadPoolExecutor(nthreads, nthreads, 600, TimeUnit.SECONDS, queue);
+    ThreadPoolExecutor threadPool = new ThreadPoolExecutor(nthreads, nthreads,
+        600, TimeUnit.SECONDS, queue);
 
     threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override
@@ -90,7 +100,7 @@ public abstract class ProcessStreamInterface {
 
     for (JsonObject jsonSentence : jsonSentences) {
       Runnable worker =
-          new PipelineRunnable(this, jsonSentence, out, printOutput);
+          new PipelineRunnable(this, jsonSentence, fout, printOutput);
       threadPool.execute(worker);
     }
     threadPool.shutdown();
@@ -99,19 +109,20 @@ public abstract class ProcessStreamInterface {
     while (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
       // pass.
     }
+    fout.close();
   }
 
   public static class PipelineRunnable implements Runnable {
     private final JsonObject sentence;
     private final ProcessStreamInterface engine;
-    private final PrintStream out;
+    private final BufferedWriter fout;
     private final boolean printOutput;
 
     public PipelineRunnable(ProcessStreamInterface engine, JsonObject sentence,
-        PrintStream out, boolean printOutput) {
+        BufferedWriter fout, boolean printOutput) {
       this.engine = engine;
       this.sentence = sentence;
-      this.out = out;
+      this.fout = fout;
       this.printOutput = printOutput;
     }
 
@@ -119,12 +130,17 @@ public abstract class ProcessStreamInterface {
     public void run() {
       engine.processSentence(sentence);
       if (printOutput) {
-        engine.print(gson.toJson(sentence), out);
+        engine.print(gson.toJson(sentence), fout);
       }
     }
   }
 
-  public synchronized void print(String string, PrintStream out) {
-    out.println(string);
+  public synchronized void print(String string, BufferedWriter fout) {
+    try {
+      fout.write(string);
+      fout.newLine();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }

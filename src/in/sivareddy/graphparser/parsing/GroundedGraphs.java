@@ -431,7 +431,6 @@ public class GroundedGraphs {
             .equals(SentenceKeys.DEPENDENCY_LAMBDA))) {
       // If there is no path found between question and entity nodes, use a
       // backoff graph.
-      List<LexicalGraph> newGraphs = new ArrayList<>();
       for (LexicalGraph graph : graphs) {
         graph.hyperExpand();
       }
