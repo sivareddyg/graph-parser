@@ -373,8 +373,6 @@ public class GroundedGraphs {
 
       for (JsonElement semPar : semPars) {
         JsonArray predicates = semPar.getAsJsonArray();
-        if (predicates.size() == 0)
-          continue;
         Set<String> semanticParse = new HashSet<>();
         predicates.forEach(x -> semanticParse.add(x.getAsString()));
 
@@ -387,6 +385,11 @@ public class GroundedGraphs {
               + Joiner.on(" ").join(words));
           e.printStackTrace();
         }
+      }
+
+      if (semPars.size() == 0) {
+        buildUngroundeGraphFromSemanticParse(new HashSet<>(), leaves, 0.0,
+            graphs);
       }
     }
 
@@ -413,8 +416,6 @@ public class GroundedGraphs {
         graphs.clear();
         for (JsonElement semPar : semPars) {
           JsonArray predicates = semPar.getAsJsonArray();
-          if (predicates.size() == 0)
-            continue;
           Set<String> semanticParse = new HashSet<>();
           predicates.forEach(x -> semanticParse.add(x.getAsString()));
           LexicalGraph backOffGraph =
@@ -426,9 +427,7 @@ public class GroundedGraphs {
       }
     }
 
-    if (useHyperExpand
-        && (key.equals(SentenceKeys.CCG_PARSES) || key
-            .equals(SentenceKeys.DEPENDENCY_LAMBDA))) {
+    if (useHyperExpand) {
       // If there is no path found between question and entity nodes, use a
       // backoff graph.
       for (LexicalGraph graph : graphs) {
@@ -1126,6 +1125,7 @@ public class GroundedGraphs {
     if (entities.size() == 0)
       return null;
 
+    List<LexicalItem> leaves = buildLexicalItemsFromWords(sentence);
     Set<Integer> entityPositions = new HashSet<>();
     entities.forEach(x -> entityPositions.add(x.getAsJsonObject()
         .get(SentenceKeys.INDEX_KEY).getAsInt()));
@@ -1163,8 +1163,12 @@ public class GroundedGraphs {
 
     semanticParseCopy.removeAll(questionStrings);
     if (questionIndices.size() == 0) {
-      questionIndices.add(sentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray()
-          .size() - 1);
+      LexicalItem dummyNode =
+          new LexicalItem("", SentenceKeys.DUMMY_WORD, SentenceKeys.DUMMY_WORD,
+              SentenceKeys.PUNCTUATION_TAGS.iterator().next(), "", null);
+      dummyNode.setWordPosition(leaves.size());
+      leaves.add(dummyNode);
+      questionIndices.add(leaves.size() - 1);
     }
     Integer questionIndex = questionIndices.iterator().next();
     semanticParseCopy.add(String.format("%s(%d:x)",
@@ -1186,8 +1190,8 @@ public class GroundedGraphs {
           if (lastIndex < 0)
             lastIndex = predicate.length() - 1;
           predicate = predicate.substring(0, lastIndex);
-          semanticParseCopy.add(String.format("%s.dep_arg2(%d:e , %d:x)",
-              predicate, eventIndex, questionIndex));
+          semanticParseCopy.add(String.format("%s.%s(%d:e , %d:x)", predicate,
+              SentenceKeys.DUMMY_WORD, eventIndex, questionIndex));
         }
       }
     } else {
@@ -1218,8 +1222,9 @@ public class GroundedGraphs {
               continue;
 
             String entity = entityObj.get(SentenceKeys.ENTITY).getAsString();
-            semanticParseCopy.add(String.format("%s.dep_arg2(%d:e , %d:%s)",
-                predicate, eventIndex, entityIndex, entity));
+            semanticParseCopy.add(String.format("%s.%s(%d:e , %d:%s)",
+                predicate, SentenceKeys.DUMMY_WORD, eventIndex, entityIndex,
+                entity));
           }
         }
       }
@@ -1234,15 +1239,14 @@ public class GroundedGraphs {
           if (eventToEntities.containsKey(questionIndex)
               && eventToEntities.get(questionIndex).contains(entityIndex))
             continue;
-          semanticParseCopy.add(String.format("dep_arg2(%d:e , %d:%s)",
-              questionIndex, entityIndex, entity));
+          semanticParseCopy.add(String.format("%s(%d:e , %d:%s)",
+              SentenceKeys.DUMMY_WORD, questionIndex, entityIndex, entity));
         }
-        semanticParseCopy.add(String.format(String.format(
-            "dep_arg2(%d:e , %d:x)", questionIndex, questionIndex)));
+        semanticParseCopy.add(String.format(String.format("%s(%d:e , %d:x)",
+            SentenceKeys.DUMMY_WORD, questionIndex, questionIndex)));
       }
     }
 
-    List<LexicalItem> leaves = buildLexicalItemsFromWords(sentence);
     List<LexicalGraph> graphs = new ArrayList<>();
     buildUngroundeGraphFromSemanticParse(semanticParseCopy, leaves, 0.0, graphs);
     Preconditions.checkArgument(graphs.size() == 1);
