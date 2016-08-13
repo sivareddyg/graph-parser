@@ -63,6 +63,7 @@ public class NlpPipeline extends ProcessStreamInterface {
       "preprocess.capitalizeUsingPosTags";
   public static String PREPROCESS_ADD_DATE_ENTITIES =
       "preprocess.addDateEntities";
+  public static String PREPROCESS_LOWERCASE = "preprocess.lowerCase";
   public static String PREPROCESS_CAPITALIZE_ENTITIES =
       "preprocess.capitalizeEntities";
   public static String PREPROCESS_CAPITALIZE_FIRST_WORD =
@@ -211,6 +212,12 @@ public class NlpPipeline extends ProcessStreamInterface {
   public void processIndividualSentence(JsonObject jsonSentence) {
     String sentence;
     JsonArray words;
+
+    // Capitalize first word
+    if (options.containsKey(PREPROCESS_LOWERCASE)
+        && options.get(PREPROCESS_LOWERCASE).equals("true")) {
+      lowerCase(jsonSentence);
+    }
 
     // Capitalize using PoS tags before running the pipeline.
     if (options.containsKey(PREPROCESS_CAPITALIZE_USING_POSTAGS)
@@ -440,6 +447,15 @@ public class NlpPipeline extends ProcessStreamInterface {
     }
 
 
+  }
+
+  private void lowerCase(JsonObject jsonSentence) {
+    JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+    for (JsonElement wordElm : words) {
+      JsonObject word = wordElm.getAsJsonObject();
+      word.addProperty(SentenceKeys.WORD_KEY, word.get(SentenceKeys.WORD_KEY)
+          .getAsString().toLowerCase());
+    }
   }
 
   private void removeMultipleRoots(JsonObject jsonSentence) {
