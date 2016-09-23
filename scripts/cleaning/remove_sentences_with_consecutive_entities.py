@@ -13,6 +13,7 @@ for line in sys.stdin:
     try:
         line = json.loads(line)
         sentence = " ".join(word['word'] for word in line['words'])
+	sentence = sentence.strip(". ")
         if re.search("[^\s]+ , [^\s]+ , ", sentence):
             sys.stderr.write(sentence + "\n")
             continue

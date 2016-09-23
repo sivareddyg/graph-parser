@@ -10,8 +10,8 @@ run_pipeline_bow:
 
 run_pipeline_%:
 	#make -f Makefile.induction clean_data_$*
-	#make -f Makefile.induction create_grounded_lexicon_$* 
-	#make -f Makefile.induction distant_eval_$* 
+	make -f Makefile.induction create_grounded_lexicon_$* 
+	make -f Makefile.induction distant_eval_$* 
 	make -f Makefile.induction loaded_model_distant_eval_$* 
 
 create_data_easyccg:
@@ -52,8 +52,8 @@ clean_data_%:
 		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
 		| python scripts/cleaning/unannonate_named_entities.py \
-		| java -cp lib/*:bin others.AddLemma 1 \
-		| gzip > data/distant_eval/parses/$*/test.json.blank.cleaned.gz
+	        | java -cp lib/*:bin others.AddLemma 1 \
+	        | gzip > data/distant_eval/parses/$*/test.json.blank.cleaned.gz
 
 create_grounded_lexicon_%:
 	mkdir -p data/distant_eval/grounded_lexicon

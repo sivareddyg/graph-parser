@@ -12,7 +12,9 @@ for line in open(sys.argv[2],'r'):
   line = line.strip().split("\t")
   sentence = line[0]
   correct = set(json.loads(line[1]))
-  predicted = set(json.loads(line[2]))
+
+  # Taking only the first prediction
+  predicted = set(json.loads(line[2])[:1])
   D = predicted.intersection(correct)
 
   if sentence not in N:
