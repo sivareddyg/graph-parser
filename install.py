@@ -4,8 +4,11 @@ import os
 
 def install_ungrounded_parser():
     os.system("git clone https://sivareddyg@bitbucket.org/sivareddyg/graph-parser-data.git && cd graph-parser-data && git checkout -b temp c68a7199cc3846f6a0512bb96c24e93889935d68")
-    os.system("mv graph-parser-data/* .")
+    os.system("cp -r graph-parser-data/* .")
     os.system("rm -rf graph-parser-data")
+
+    os.system("ant clean")
+    os.system("ant build")
 
     os.system("wget https://bitbucket.org/sivareddyg/public/downloads/easyccg_model_questions.tgz")
     os.system("wget https://bitbucket.org/sivareddyg/public/downloads/easyccg_model.tgz")
