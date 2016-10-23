@@ -1,4 +1,4 @@
-package deplambda.entityannotator;
+package in.sivareddy.graphparser.util.entityannotator;
 
 import java.io.IOException;
 import java.util.ArrayList;
