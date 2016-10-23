@@ -47,6 +47,7 @@ public class SentenceKeys {
   public static String FOREST = "forest";
   
   public static String GOLD_MID = "goldMid";
+  public static String GOLD_MIDS = "goldMids";
   public static String GOLD_RELATIONS = "goldRelations";
   public static String RELATION = "relation";
   public static String RELATION_LEFT = "relationLeft";
