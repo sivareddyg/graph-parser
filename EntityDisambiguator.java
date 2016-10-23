@@ -13,10 +13,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import deplambda.entityannotator.EntityScorer.EntityCandidate;
-import deplambda.others.SentenceKeys;
 import in.sivareddy.graphparser.util.DisambiguateEntities;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBase;
 import in.sivareddy.util.ProcessStreamInterface;
+import in.sivareddy.util.SentenceKeys;
 
 public class EntityDisambiguator extends ProcessStreamInterface {
 

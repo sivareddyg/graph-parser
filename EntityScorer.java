@@ -15,11 +15,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import deplambda.others.SentenceKeys;
 import in.sivareddy.ml.basic.AbstractFeature;
 import in.sivareddy.ml.basic.Feature;
 import in.sivareddy.ml.learning.StructuredPercepton;
 import in.sivareddy.util.ProcessStreamInterface;
+import in.sivareddy.util.SentenceKeys;
 
 public class EntityScorer extends ProcessStreamInterface {
   public StructuredPercepton ranker;
@@ -290,8 +290,17 @@ public class EntityScorer extends ProcessStreamInterface {
         new EntityCandidate(matchedEntity, rankedEntity);
 
     String currentEntity = rankedEntity.get(SentenceKeys.ENTITY).getAsString();
-    String goldEntity = jsonSentence.get(SentenceKeys.GOLD_MID).getAsString();
-    candidate.setIsGold(goldEntity.equals(currentEntity));
+
+    Set<String> goldEntities = new HashSet<>();
+    if (jsonSentence.has(SentenceKeys.GOLD_MID)) {
+      goldEntities.add(jsonSentence.get(SentenceKeys.GOLD_MID).getAsString());
+    }
+
+    if (jsonSentence.has(SentenceKeys.GOLD_MIDS)) {
+      jsonSentence.get(SentenceKeys.GOLD_MIDS).getAsJsonArray()
+          .forEach(x -> goldEntities.add(x.getAsString()));
+    }
+    candidate.setIsGold(goldEntities.contains(currentEntity));
 
     List<Feature> features = candidate.getFeatures();
 
@@ -492,9 +501,19 @@ public class EntityScorer extends ProcessStreamInterface {
         String predictedMid =
             bestPrediction.getRankedEntity().get(SentenceKeys.ENTITY)
                 .getAsString();
-        String goldMid = jsonSentence.get(SentenceKeys.GOLD_MID).getAsString();
 
-        if (predictedMid.equals(goldMid)) {
+        Set<String> goldEntities = new HashSet<>();
+        if (jsonSentence.has(SentenceKeys.GOLD_MID)) {
+          goldEntities.add(jsonSentence.get(SentenceKeys.GOLD_MID)
+              .getAsString());
+        }
+
+        if (jsonSentence.has(SentenceKeys.GOLD_MIDS)) {
+          jsonSentence.get(SentenceKeys.GOLD_MIDS).getAsJsonArray()
+              .forEach(x -> goldEntities.add(x.getAsString()));
+        }
+
+        if (goldEntities.contains(predictedMid)) {
           updatePositive(sentence);
         }
       }
@@ -527,7 +546,7 @@ public class EntityScorer extends ProcessStreamInterface {
     evaluator.processList(jsonSentences, null, nthreads, false);
     return evaluator.getAccuracy();
   }
-  
+
   public void saveModel(String fileName) throws IOException {
     ranker.saveModel(fileName);
   }
