@@ -1,4 +1,6 @@
-package deplambda.others;
+package others;
+
+import in.sivareddy.util.SentenceKeys;
 
 import java.awt.Dimension;
 import java.io.IOException;

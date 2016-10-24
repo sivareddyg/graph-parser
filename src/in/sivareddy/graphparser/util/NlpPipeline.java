@@ -1,8 +1,9 @@
-package deplambda.others;
+package in.sivareddy.graphparser.util;
 
 import in.sivareddy.graphparser.util.EntityAnnotator;
 import in.sivareddy.graphparser.util.MergeEntity;
 import in.sivareddy.util.ProcessStreamInterface;
+import in.sivareddy.util.SentenceKeys;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,23 +24,20 @@ import org.maltparser.concurrent.ConcurrentMaltParserModel;
 import org.maltparser.concurrent.ConcurrentMaltParserService;
 import org.maltparser.core.exception.MaltChainedException;
 
+import others.RenderSVG;
+
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import deplambda.parser.TreeTransformerMain;
-import deplambda.util.TransformationRuleGroups;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
-import edu.cornell.cs.nlp.spf.mr.lambda.FlexibleTypeComparator;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
-import edu.cornell.cs.nlp.spf.mr.language.type.MutableTypeRepository;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -107,58 +105,10 @@ public class NlpPipeline extends ProcessStreamInterface {
   private Set<String> annotators;
   ConcurrentMaltParserModel maltModel = null;
   RenderSVG svgRenderer = null;
-  TreeTransformerMain treeTransformer = null;
 
   public NlpPipeline(Map<String, String> options) {
     System.err.println(options);
     this.options = options;
-
-    if (options.containsKey(DEPLAMBDA)) {
-      System.err.println("Loading DepLambda Model.. ");
-      try {
-        MutableTypeRepository types =
-            new MutableTypeRepository(options.get(DEPLAMBDA_DEFINED_TYPES_FILE));
-        System.err.println(String.format("%s=%s", DEPLAMBDA_DEFINED_TYPES_FILE,
-            options.get(DEPLAMBDA_DEFINED_TYPES_FILE)));
-
-        LogicLanguageServices.setInstance(new LogicLanguageServices.Builder(
-            types, new FlexibleTypeComparator()).closeOntology(false)
-            .setNumeralTypeName("i").build());
-
-        TransformationRuleGroups treeTransformationRules;
-        treeTransformationRules =
-            new TransformationRuleGroups(
-                options.get(DEPLAMBDA_TREE_TRANSFORMATIONS_FILE));
-        System.err.println(String.format("%s=%s",
-            DEPLAMBDA_TREE_TRANSFORMATIONS_FILE,
-            options.get(DEPLAMBDA_TREE_TRANSFORMATIONS_FILE)));
-
-        TransformationRuleGroups relationPrioritiesRules =
-            new TransformationRuleGroups(
-                options.get(DEPLAMBDA_RELATION_PRORITIES_FILE));
-        System.err.println(String.format("%s=%s",
-            DEPLAMBDA_RELATION_PRORITIES_FILE,
-            options.get(DEPLAMBDA_RELATION_PRORITIES_FILE)));
-
-        TransformationRuleGroups lambdaAssignmentRules =
-            new TransformationRuleGroups(
-                options.get(DEPLAMBDA_LAMBDA_ASSIGNMENT_RULES_FILE));
-        System.err.println(String.format("%s=%s",
-            DEPLAMBDA_LAMBDA_ASSIGNMENT_RULES_FILE,
-            options.get(DEPLAMBDA_LAMBDA_ASSIGNMENT_RULES_FILE)));
-        Boolean lexicalizePredicates =
-            Boolean.parseBoolean(options.getOrDefault(
-                DEPLAMBDA_LEXICALIZE_PREDICATES, "true"));
-
-        treeTransformer =
-            new TreeTransformerMain(treeTransformationRules,
-                relationPrioritiesRules, lambdaAssignmentRules, null,
-                lexicalizePredicates);
-        System.err.println("Loaded DepLambda Model.. ");
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
 
     Properties props = new Properties();
     annotators =
@@ -435,18 +385,6 @@ public class NlpPipeline extends ProcessStreamInterface {
         && options.get(POSTPROCESS_REMOVE_MULTIPLE_ROOTS).equals("true")) {
       removeMultipleRoots(jsonSentence);
     }
-
-    if (options.containsKey(DEPLAMBDA)) {
-      System.err.println("Runnning deplambda ...");
-      treeTransformer.processSentence(jsonSentence);
-    }
-
-    if (options.containsKey(DEPLAMBDA)) {
-      System.err.println("Runnning deplambda ...");
-      treeTransformer.processSentence(jsonSentence);
-    }
-
-
   }
 
   private void lowerCase(JsonObject jsonSentence) {
