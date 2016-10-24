@@ -1,4 +1,4 @@
-package deplambda.others;
+package in.sivareddy.util;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
