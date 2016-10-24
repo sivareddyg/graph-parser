@@ -5,14 +5,15 @@
               directory with the processing instruction <?eclipse.ant.import?>
               as the first entry and export the buildfile again. --><project basedir="." default="build" name="graph-parser">
     <property environment="env"/>
-    <property name="ECLIPSE_HOME" value="../../../../Applications/Eclipse.app/Contents/Eclipse/"/>
+    <property name="ECLIPSE_HOME" value="../../../../../opt/eclipse"/>
     <property name="deplambda.location" value="../deplambda"/>
+    <property name="junit.output.dir" value="junit"/>
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.8"/>
     <property name="source" value="1.8"/>
     <path id="JUnit 4.libraryclasspath">
-        <pathelement location="${ECLIPSE_HOME}plugins/org.junit_4.12.0.v201504281640/junit.jar"/>
-        <pathelement location="${ECLIPSE_HOME}plugins/org.hamcrest.core_1.3.0.v201303031735.jar"/>
+        <pathelement location="${ECLIPSE_HOME}/plugins/org.junit_4.11.0.v201303080030/junit.jar"/>
+        <pathelement location="${ECLIPSE_HOME}/plugins/org.hamcrest.core_1.3.0.v201303031735.jar"/>
     </path>
     <path id="graph-parser.classpath">
         <pathelement location="bin"/>
@@ -57,6 +58,14 @@
         <pathelement location="lib/stanford-spanish-corenlp-2015-01-08-models.jar"/>
         <pathelement location="lib/junit-4.11.jar"/>
         <path refid="JUnit 4.libraryclasspath"/>
+        <pathelement location="lib/maltparser-1.8.1.jar"/>
+        <pathelement location="lib/whatswrong-0.2.5-SNAPSHOT-standalone.jar"/>
+        <pathelement location="lib/batik-awt-util-1.8.jar"/>
+        <pathelement location="lib/batik-dom-1.8.jar"/>
+        <pathelement location="lib/batik-ext-1.8.jar"/>
+        <pathelement location="lib/batik-svggen-1.8.jar"/>
+        <pathelement location="lib/batik-util-1.8.jar"/>
+        <pathelement location="lib/batik-xml-1.8.jar"/>
     </path>
     <target name="init">
         <mkdir dir="bin"/>
@@ -115,5 +124,444 @@
     <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
         <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
         <antcall target="build"/>
+    </target>
+    <target name="RunGraphToQueryTrainingMain (1)">
+        <java classname="in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain" failonerror="true" fork="yes">
+            <jvmarg line="-Xmx4096m"/>
+            <arg line="-pointWiseF1Threshold 0.2 \&#10;    -semanticParseKey synPars \&#10;    -ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \&#10;    -schema data/freebase/schema/all_domains_schema_free917.txt \&#10;    -relationTypesFile data/dummy.txt \&#10;    -mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \&#10;    -lexicon data/dummy.txt \&#10;    -domain &quot;http://rdf.freebase.com&quot; \&#10;    -typeKey &quot;fb:type.object.type&quot; \&#10;    -nthreads 20 \&#10;    -trainingSampleSize 2000 \&#10;    -iterations 20 \&#10;    -nBestTrainSyntacticParses 1 \&#10;    -nBestTestSyntacticParses 1 \&#10;    -nbestGraphs 100 \&#10;    -forestSize 10 \&#10;    -ngramLength 2 \&#10;    -useSchema true \&#10;    -useKB true \&#10;    -addBagOfWordsGraph false \&#10;    -ngramGrelPartFlag false \&#10;    -groundFreeVariables false \&#10;    -groundEntityVariableEdges false \&#10;    -groundEntityEntityEdges false \&#10;    -useEmptyTypes false \&#10;    -ignoreTypes true \&#10;    -urelGrelFlag true \&#10;    -urelPartGrelPartFlag true \&#10;    -utypeGtypeFlag false \&#10;    -gtypeGrelFlag false \&#10;    -wordGrelPartFlag true \&#10;    -wordGrelFlag false \&#10;    -eventTypeGrelPartFlag true \&#10;    -argGrelPartFlag true \&#10;    -argGrelFlag false \&#10;    -stemMatchingFlag true \&#10;    -mediatorStemGrelPartMatchingFlag true \&#10;    -argumentStemMatchingFlag true \&#10;    -argumentStemGrelPartMatchingFlag true \&#10;    -graphIsConnectedFlag false \&#10;    -graphHasEdgeFlag true \&#10;    -countNodesFlag false \&#10;    -edgeNodeCountFlag false \&#10;    -duplicateEdgesFlag true \&#10;    -grelGrelFlag true \&#10;    -useLexiconWeightsRel true \&#10;    -useLexiconWeightsType false \&#10;    -validQueryFlag true \&#10;    -useAnswerTypeQuestionWordFlag true \&#10;    -useGoldRelations true \&#10;    -allowMerging true \&#10;    -evaluateBeforeTraining false \&#10;    -evaluateOnlyTheFirstBest false \&#10;    -entityScoreFlag true \&#10;    -entityWordOverlapFlag false \&#10;    -initialEdgeWeight -0.05 \&#10;    -initialTypeWeight -2.0 \&#10;    -initialWordWeight -0.05 \&#10;    -stemFeaturesWeight 0.05 \&#10;    -endpoint stkilda \&#10;    -supervisedCorpus working/long.txt \&#10;    -devFile working/long.txt \&#10;    -logFile ./working/long.log.txt"/>
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="DisambiguateEntitiesTest">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.util.DisambiguateEntitiesTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="ReadPatternMetricProto">
+        <java classname="in.sivareddy.graphparser.util.ReadPatternMetricProto" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="EntityAnnotatorTest.tearDown">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.util.EntityAnnotatorTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="SpanishPosNerParser">
+        <java classname="others.SpanishPosNerParser" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="RankMatchedEntitiesTest">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.util.RankMatchedEntitiesTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="EntityAnnotatorTest.getAllSpansUTBtest">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.util.EntityAnnotatorTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="GraphToQueryTrainingUnsupervised">
+        <java classname="in.sivareddy.graphparser.learning.GraphToQueryTrainingUnsupervised" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="CcgParseTreeTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.tests.CcgParseTreeTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="ExpressionTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.lambda.ExpressionTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="SyntacticCategoryTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.SyntacticCategoryTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="SpanishPosAndNer">
+        <java classname="others.SpanishPosAndNer" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="src">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CcgParseTreeTest (2)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.CcgParseTreeTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="DisambiguateEntitiesTest.testCykStyledDisambiguation">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.util.DisambiguateEntitiesTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="SpanishTokenizer">
+        <java classname="others.SpanishTokenizer" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="CategoryTest (2)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.CategoryTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest.testGraphPaths">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="SpanishEntityTokenizer">
+        <java classname="others.SpanishEntityTokenizer" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest.testUngroundedFromDependencyUD">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest.testBackoffGroundedGraphsWithMerge">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="KnowledgeBaseOnlineTest">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.util.KnowledgeBaseOnlineTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CreateGroundedLexiconTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedLexiconTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CreateGroundedGraphsTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest.testGroundedGraphsWithMerge">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="in.sivareddy.graphparser.ccg">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.CategoryTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.CcgAutoLexiconTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.CcgParseTreeTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.CcgParseTreeTestSpanish" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.SemanticCategoryTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.SyntacticCategoryTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="EntityAnnotator">
+        <java classname="in.sivareddy.graphparser.util.EntityAnnotator" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="EvaluateGraphParserOracleUsingGoldMidAndGoldRelations">
+        <java classname="in.sivareddy.scripts.EvaluateGraphParserOracleUsingGoldMidAndGoldRelations" failonerror="true" fork="yes">
+            <arg line="data/freebase/schema/all_domains_schema.txt kinloch dependency_lambda working/gold true"/>
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="GraphToQueryTrainingMain (1)">
+        <java classname="in.sivareddy.graphparser.learning.GraphToQueryTrainingMain" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="StanfordEnglishPipelineCaseless">
+        <java classname="others.StanfordEnglishPipelineCaseless" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="CcgAutoLexiconTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.CcgAutoLexiconTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest.testGroundedGraphs">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CcgParseTreeTestSpanish">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.CcgParseTreeTestSpanish" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="RunPrintDomainLexicon (1)">
+        <java classname="in.sivareddy.graphparser.cli.RunPrintDomainLexicon" failonerror="true" fork="yes">
+            <arg line="-schema data/freebase/schema/all_domains_schema.txt -outputLexiconFile working/lexicon.txt -endpoint rockall"/>
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="DisambiguateEntities">
+        <java classname="in.sivareddy.graphparser.util.DisambiguateEntities" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="RankMatchedEntities">
+        <java classname="in.sivareddy.graphparser.util.RankMatchedEntities" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest.testGroundedGraphsWithMergeAndFiltering">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="SemanticCategoryTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.SemanticCategoryTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="StrcuturedPerceptronSerializationTest">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.ml.learning.StrcuturedPerceptronSerializationTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CcgParseToUngroundedSemanticParse (1)">
+        <java classname="in.sivareddy.graphparser.ccg.tests.CcgParseToUngroundedSemanticParse" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="EasyCcgCli">
+        <java classname="others.EasyCcgCli" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="EntityAnnotatorTest">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.util.EntityAnnotatorTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="Schema (1)">
+        <java classname="in.sivareddy.graphparser.util.Schema" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="KnowledgeBaseTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.util.KnowledgeBaseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="JavaPractice">
+        <java classname="others.JavaPractice" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="EntityAnnotatorTest.MaximalMatchtest">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.util.EntityAnnotatorTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="NerJsonInputData">
+        <java classname="in.sivareddy.scripts.NerJsonInputData" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="CreateGraphParserForrestFromEntityDisambiguatedSentences">
+        <java classname="in.sivareddy.scripts.CreateGraphParserForrestFromEntityDisambiguatedSentences" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="PrintAllEntities">
+        <java classname="in.sivareddy.scripts.PrintAllEntities" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="StanfordEnglishPipeline">
+        <java classname="others.StanfordEnglishPipeline" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="RdfGraphTools (1)">
+        <java classname="in.sivareddy.graphparser.util.RdfGraphTools" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="EasySRLCli">
+        <java classname="others.EasySRLCli" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="CategoryTest (1)">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.tests.CategoryTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest.testUngroundedFromDependency">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest.testGroundedGraphsWithCollapse">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="StanfordCoreNlpDemo">
+        <java classname="others.StanfordCoreNlpDemo" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
+    <target name="BagOfWordsSemanticParseTest">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.BagOfWordsSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="CreateGroundedGraphsFromSemanticParseTest.testGroundedGraphsWithCollapseAndFiltering">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="test">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="in.sivareddy.graphparser.ccg.CategoryTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.CcgAutoLexiconTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.CcgParseTreeTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.CcgParseTreeTestSpanish" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.SemanticCategoryTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.ccg.SyntacticCategoryTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.parsing.BagOfWordsSemanticParseTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsFromSemanticParseTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedGraphsTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.parsing.CreateGroundedLexiconTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.util.DisambiguateEntitiesTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.util.EntityAnnotatorTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.util.GroundedLexiconTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.util.KnowledgeBaseOnlineTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.util.KnowledgeBaseTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.graphparser.util.RankMatchedEntitiesTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.lambda.ExpressionParserTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.lambda.ExpressionTest" todir="${junit.output.dir}"/>
+            <test name="in.sivareddy.ml.learning.StrcuturedPerceptronSerializationTest" todir="${junit.output.dir}"/>
+            <classpath refid="graph-parser.classpath"/>
+        </junit>
+    </target>
+    <target name="junitreport">
+        <junitreport todir="${junit.output.dir}">
+            <fileset dir="${junit.output.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${junit.output.dir}"/>
+        </junitreport>
     </target>
 </project>
