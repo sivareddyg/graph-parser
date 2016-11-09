@@ -1,7 +1,9 @@
 package deplambda.util;
 
+import in.sivareddy.graphparser.util.NlpPipeline;
 import in.sivareddy.graphparser.util.SplitForrestToSentences;
 import in.sivareddy.util.ProcessStreamInterface;
+import in.sivareddy.util.SentenceKeys;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,9 +15,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import deplambda.others.NlpPipeline;
-import deplambda.others.SentenceKeys;
 
 public class CreateGraphParserForestFromEntityDisambiguatedSentences extends
     ProcessStreamInterface {
