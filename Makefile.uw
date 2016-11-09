@@ -72,3 +72,53 @@ disambiguate_entities:
 		-hasId false \
 		-schema data/freebase/schema/all_domains_schema.txt \
 		> working/graphquestions.testing.mid.disambiguated.json
+
+entity_dismabiguated_to_plain_forest:
+	cat working/graphquestions.training.mid.disambiguated.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.CreateGraphParserForestFromEntityDisambiguatedSentences \
+		preprocess.lowerCase true \
+		annotators tokenize,ssplit,pos,lemma \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		posTagKey UD \
+		pos.model lib_data/ud-models-v1.3/en/pos-tagger/utb-caseless-en-bidirectional-glove-distsim-lower.tagger \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		preprocess.addDateEntities true \
+		preprocess.mergeEntityWords true \
+		annotators tokenize,ssplit \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		posTagKey UD \
+		postprocess.correctPosTags true \
+		> working/graphquestions.training.plain.forest.json
+	cat working/graphquestions.testing.mid.disambiguated.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.CreateGraphParserForestFromEntityDisambiguatedSentences \
+		preprocess.lowerCase true \
+		annotators tokenize,ssplit,pos,lemma \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		posTagKey UD \
+		pos.model lib_data/ud-models-v1.3/en/pos-tagger/utb-caseless-en-bidirectional-glove-distsim-lower.tagger \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		preprocess.addDateEntities true \
+		preprocess.mergeEntityWords true \
+		annotators tokenize,ssplit \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		posTagKey UD \
+		postprocess.correctPosTags true \
+		> working/graphquestions.testing.plain.forest.json
