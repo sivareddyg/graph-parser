@@ -1,13 +1,12 @@
 package in.sivareddy.scripts.clueweb;
 
 import in.sivareddy.graphparser.util.MergeEntity;
+import in.sivareddy.others.StanfordPipeline;
 import in.sivareddy.util.ProcessStreamInterface;
 import in.sivareddy.util.SentenceKeys;
 
 import java.io.IOException;
 import java.util.Map;
-
-import others.StanfordPipeline;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;

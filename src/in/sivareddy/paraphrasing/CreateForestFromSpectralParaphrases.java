@@ -1,5 +1,6 @@
 package in.sivareddy.paraphrasing;
 
+import in.sivareddy.others.StanfordPipeline;
 import in.sivareddy.util.SentenceKeys;
 
 import java.io.BufferedReader;
@@ -11,8 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import others.StanfordPipeline;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;

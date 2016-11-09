@@ -1,4 +1,4 @@
-package others;
+package in.sivareddy.others;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,19 +21,20 @@ import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.util.CoreMap;
 
-public class SpanishPosAndNer {
+public class SpanishPosNerParser {
   private StanfordCoreNLP pipeline;
   private JsonParser jsonParser;
   private Gson gson;
 
-  public SpanishPosAndNer() {
+  public SpanishPosNerParser() {
     jsonParser = new JsonParser();
     gson = new Gson();
 
     Properties props = new Properties();
-    props.put("annotators", "tokenize, ssplit, pos, ner");
+    props.put("annotators", "tokenize, ssplit, pos, ner, parse");
 
     // Spanish settings.
     props.setProperty("tokenize.whitespace", "true");
@@ -43,6 +44,8 @@ public class SpanishPosAndNer {
     props.setProperty("ner.model",
         "edu/stanford/nlp/models/ner/spanish.ancora.distsim.s512.crf.ser.gz");
     props.setProperty("ner.applyNumericClassifiers", "false");
+    props.setProperty("parse.model",
+        "edu/stanford/nlp/models/lexparser/spanishPCFG.ser.gz");
     props.setProperty("ner.useSUTime", "false");
 
     pipeline = new StanfordCoreNLP(props);
@@ -66,6 +69,7 @@ public class SpanishPosAndNer {
         word_map.put("ner", ne);
         words.add(word_map);
       }
+      System.out.println(sentenceAnnotation.get(TreeAnnotation.class));
     }
     String words_string = gson.toJson(words);
     jsonSentence.add("words", jsonParser.parse(words_string));
@@ -74,7 +78,7 @@ public class SpanishPosAndNer {
 
   public static void main(String[] args) throws IOException {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    SpanishPosAndNer spanishPipeline = new SpanishPosAndNer();
+    SpanishPosNerParser spanishPipeline = new SpanishPosNerParser();
     try {
       String line = br.readLine();
       while (line != null) {

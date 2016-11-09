@@ -7,6 +7,8 @@ import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.MergeEntity;
 import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.graphparser.util.knowledgebase.KnowledgeBaseCached;
+import in.sivareddy.others.EasyCcgCli;
+import in.sivareddy.others.StanfordPipeline;
 import in.sivareddy.util.SentenceKeys;
 
 import java.io.BufferedReader;
@@ -24,8 +26,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
-import others.EasyCcgCli;
-import others.StanfordPipeline;
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 
 import com.google.common.base.CharMatcher;

@@ -1,6 +1,7 @@
 package in.sivareddy.scripts;
 
 import in.sivareddy.graphparser.util.MergeEntity;
+import in.sivareddy.others.StanfordPipeline;
 import in.sivareddy.util.SentenceKeys;
 
 import java.io.BufferedReader;
@@ -23,7 +24,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
-import others.StanfordPipeline;
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 
 import com.google.common.base.CharMatcher;

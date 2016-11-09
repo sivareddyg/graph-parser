@@ -1,5 +1,6 @@
 package in.sivareddy.scripts;
 
+import in.sivareddy.others.EasyCcgCli;
 import in.sivareddy.util.ProcessStreamInterface;
 import in.sivareddy.util.SentenceKeys;
 
@@ -10,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import others.EasyCcgCli;
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 
 import com.google.common.base.Joiner;

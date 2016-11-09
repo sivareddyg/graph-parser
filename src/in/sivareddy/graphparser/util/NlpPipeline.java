@@ -2,6 +2,7 @@ package in.sivareddy.graphparser.util;
 
 import in.sivareddy.graphparser.util.EntityAnnotator;
 import in.sivareddy.graphparser.util.MergeEntity;
+import in.sivareddy.others.RenderSVG;
 import in.sivareddy.util.ProcessStreamInterface;
 import in.sivareddy.util.SentenceKeys;
 
@@ -23,8 +24,6 @@ import java.util.stream.Collectors;
 import org.maltparser.concurrent.ConcurrentMaltParserModel;
 import org.maltparser.concurrent.ConcurrentMaltParserService;
 import org.maltparser.core.exception.MaltChainedException;
-
-import others.RenderSVG;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;

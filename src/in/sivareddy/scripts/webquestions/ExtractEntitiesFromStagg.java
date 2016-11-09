@@ -1,6 +1,7 @@
 package in.sivareddy.scripts.webquestions;
 
 import in.sivareddy.graphparser.util.EntityAnnotator;
+import in.sivareddy.others.StanfordPipeline;
 import in.sivareddy.scripts.MapNewMidToOldMid;
 import in.sivareddy.util.ProcessStreamInterface;
 import in.sivareddy.util.SentenceKeys;
@@ -22,8 +23,6 @@ import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-
-import others.StanfordPipeline;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;

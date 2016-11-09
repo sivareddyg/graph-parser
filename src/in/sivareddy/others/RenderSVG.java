@@ -1,4 +1,4 @@
-package others;
+package in.sivareddy.others;
 
 import in.sivareddy.util.SentenceKeys;
 

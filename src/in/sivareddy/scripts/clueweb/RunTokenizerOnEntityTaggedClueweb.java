@@ -1,5 +1,6 @@
 package in.sivareddy.scripts.clueweb;
 
+import in.sivareddy.others.StanfordPipeline;
 import in.sivareddy.util.SentenceKeys;
 
 import java.io.BufferedReader;
@@ -16,8 +17,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import others.StanfordPipeline;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableMap;

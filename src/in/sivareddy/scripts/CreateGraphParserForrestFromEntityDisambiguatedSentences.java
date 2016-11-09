@@ -2,6 +2,10 @@ package in.sivareddy.scripts;
 
 import in.sivareddy.graphparser.util.MergeEntity;
 import in.sivareddy.graphparser.util.SplitForrestToSentences;
+import in.sivareddy.others.CcgSyntacticParserCli;
+import in.sivareddy.others.EasyCcgCli;
+import in.sivareddy.others.EasySRLCli;
+import in.sivareddy.others.StanfordPipeline;
 import in.sivareddy.util.ProcessStreamInterface;
 import in.sivareddy.util.SentenceKeys;
 
@@ -12,10 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import others.CcgSyntacticParserCli;
-import others.EasyCcgCli;
-import others.EasySRLCli;
-import others.StanfordPipeline;
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 
 import com.google.common.base.Joiner;

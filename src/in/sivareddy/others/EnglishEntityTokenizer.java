@@ -1,14 +1,12 @@
 /**
  * 
  */
-package others;
+package in.sivareddy.others;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
@@ -19,33 +17,25 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 /**
  * Takes input of the following format
  * 
- * m.01_6xcx "Connie's Pizza, 2373 S. Archer Ave., Chicago, IL"@en
+ * m.01_6xcx    Connie's Pizza, 2373 S. Archer Ave., Chicago, IL
  * 
  * and converts it into
  * 
- * m.01_6xcx "Connie 's Pizza , 2373 S. Archer Ave. , Chicago , IL"@en
+ * m.01_6xcx    Connie 's Pizza , 2373 S. Archer Ave. , Chicago , IL
  * 
  * @author siva
  *
  */
-public class SpanishEntityTokenizer {
+public class EnglishEntityTokenizer {
   private StanfordCoreNLP pipeline;
 
-  public SpanishEntityTokenizer() {
+  public EnglishEntityTokenizer() {
     Properties props = new Properties();
     props.put("annotators", "tokenize");
-
-    // Tokenize using Spanish settings
-    props.setProperty("tokenize.language", "es");
+    
     pipeline = new StanfordCoreNLP(props);
   }
 
-  /**
-   * Tokenizes a spanish string.
-   * 
-   * @param text
-   * @return
-   */
   public String processText(String text) {
     Annotation annotation = new Annotation(text);
     pipeline.annotate(annotation);
@@ -73,29 +63,18 @@ public class SpanishEntityTokenizer {
    */
   public static void main(String[] args) throws IOException {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    SpanishEntityTokenizer spanishPipeline = new SpanishEntityTokenizer();
+    EnglishEntityTokenizer englishPipeline = new EnglishEntityTokenizer();
 
     try {
       String line = br.readLine();
-      Pattern entityPattern = Pattern.compile("([^\\s]+) \"(.*)\"@([^\"]+)$");
       while (line != null) {
-        Matcher matcher = entityPattern.matcher(line);
-        matcher.matches();
         try {
-          String entityString = matcher.group(2);
-          try {
-            String tokenisedEntity = spanishPipeline.processText(entityString);
-            System.out.println(String.format("%s \"%s\"@%s", matcher.group(1),
-                tokenisedEntity, matcher.group(3)));
-          } catch (Exception e) {
-            // Error in tokenization.
-            System.out.println(String.format("%s \"%s\"@%s", matcher.group(1),
-                matcher.group(2), matcher.group(3)));
-            System.err.println("Cannot tokenize: " + line);
-          }
-        } catch (java.lang.IllegalStateException a) {
-          // Error in format.
-          System.err.println("Wrong format: " + line);
+        String[] parts = line.split("\t", 2);
+        String tokenized = englishPipeline.processText(parts[1]);
+        System.out.println(String.format("%s\t%s", parts[0], tokenized));
+        } catch (Exception e) {
+          System.err.println("Cannot tokenize: " + line);
+          e.printStackTrace();
         }
         line = br.readLine();
       }
