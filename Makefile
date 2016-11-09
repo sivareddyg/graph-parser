@@ -79,7 +79,7 @@ extract_sempre_entities_list:
 
 create_entity_dict:
 	zcat /disk/scratch/users/s1051585/data/freebase-cleaned.rdf-2013-08-11-00-00.gz | python scripts/entity-annotation/extract_entities_based_on_langcode.py en,en-gb \
-	| java -cp lib/*:bin others.EnglishEntityTokenizer \
+	| java -cp lib/*:bin in.sivareddy.others.EnglishEntityTokenizer \
 	| sed -e 's/\-LRB\-/\(/g' \
 	| sed -e 's/\-RRB\-/\)/g' \
 	| sed -e 's/\-LSB\-/\[/g' \
@@ -88,7 +88,7 @@ create_entity_dict:
 
 tokenize_entity_dict:
 	zcat data/freebase/en_entity_lexicon.gz \
-	| java -cp lib/*:bin others.EnglishEntityTokenizer \
+	| java -cp lib/*:bin in.sivareddy.others.EnglishEntityTokenizer \
 	| sed -e 's/\-LRB\-/\(/g' \
 	| sed -e 's/\-RRB\-/\)/g' \
 	| sed -e 's/\-LSB\-/\[/g' \
@@ -101,14 +101,14 @@ entity_span_tag_webq_data:
 		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
 		| python scripts/webquestions-preprocessing/add_gold_mid_using_gold_url.py data/freebase/mid_to_key.txt.gz \
 		| java -cp lib/*:bin/ in.sivareddy.scripts.AddGoldRelationsToWebQuestionsData localhost data/freebase/schema/all_domains_schema.txt \
-	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
+	   	| java -cp lib/*:bin in.sivareddy.others.StanfordEnglishPipelineCaseless \
 		| java -cp lib/*:bin in.sivareddy.scripts.NounPhraseAnnotator EN_PTB \
 		> data/webquestions/webquestions.examples.train.domains.entity.matches.json
 	cat data/webquestions/webquestions.examples.test.domains.json \
 		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
 		| python scripts/webquestions-preprocessing/add_gold_mid_using_gold_url.py data/freebase/mid_to_key.txt.gz \
 		| java -cp lib/*:bin/ in.sivareddy.scripts.AddGoldRelationsToWebQuestionsData localhost data/freebase/schema/all_domains_schema.txt \
-	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
+	   	| java -cp lib/*:bin in.sivareddy.others.StanfordEnglishPipelineCaseless \
 		| java -cp lib/*:bin in.sivareddy.scripts.NounPhraseAnnotator EN_PTB \
 		> data/webquestions/webquestions.examples.test.domains.entity.matches.json
 
@@ -137,7 +137,7 @@ free917_add_gold_relations_and_process:
 		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
 		| python scripts/cai-yates-preprocessing/rename_targetSparql_to_sparqlQuery.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.free917.AddGoldRelationsAndMidToFree917Data data/freebase/schema/all_domains_schema_free917.txt \
-	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
+	   	| java -cp lib/*:bin in.sivareddy.others.StanfordEnglishPipelineCaseless \
 		| python scripts/cai-yates-preprocessing/add_question_word.py \
 		> data/complete/free917/free917.train.tokenized.json
 	cat data/complete/free917/free917.test.json \
@@ -145,7 +145,7 @@ free917_add_gold_relations_and_process:
 		| python scripts/entity-annotation/convert_utterance_to_sentence.py \
 		| python scripts/cai-yates-preprocessing/rename_targetSparql_to_sparqlQuery.py \
 		| java -cp lib/*:bin in.sivareddy.scripts.free917.AddGoldRelationsAndMidToFree917Data data/freebase/schema/all_domains_schema_free917.txt \
-	   	| java -cp lib/*:bin others.StanfordEnglishPipelineCaseless \
+	   	| java -cp lib/*:bin in.sivareddy.others.StanfordEnglishPipelineCaseless \
 		| python scripts/cai-yates-preprocessing/add_question_word.py \
 		> data/complete/free917/free917.test.tokenized.json
 
@@ -159,7 +159,7 @@ free917_tag_entities_using_manual_lexicon:
 		< data/complete/free917/free917_entities.txt \
 		> data/complete/free917/free917_entities_gp_format.txt
 	cat data/complete/free917/free917_entities_gp_format.txt \
-		| java -cp lib/*:bin others.EnglishEntityTokenizer \
+		| java -cp lib/*:bin in.sivareddy.others.EnglishEntityTokenizer \
 		| sed -e 's/\-LRB\-/\(/g' \
 		| sed -e 's/\-RRB\-/\)/g' \
 		| sed -e 's/\-LSB\-/\[/g' \
@@ -692,19 +692,19 @@ data_to_xukun:
 
 # Tokenize Entities
 tokenize_spanish_entities:
-	zcat data/freebase/spanish/spanish_business_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_business_entities.tokenized.txt.gz
-	zcat data/freebase/spanish/spanish_film_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_film_entities.tokenized.txt.gz
-	zcat data/freebase/spanish/spanish_people_entities.txt.gz | java -cp lib/*:bin others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_people_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_business_entities.txt.gz | java -cp lib/*:bin in.sivareddy.others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_business_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_film_entities.txt.gz | java -cp lib/*:bin in.sivareddy.others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_film_entities.tokenized.txt.gz
+	zcat data/freebase/spanish/spanish_people_entities.txt.gz | java -cp lib/*:bin in.sivareddy.others.SpanishEntityTokenizer | gzip > data/freebase/spanish/spanish_people_entities.tokenized.txt.gz
 	zcat data/freebase/spanish/spanish_business_entities.tokenized.txt.gz data/freebase/spanish/spanish_film_entities.tokenized.txt.gz data/freebase/spanish/spanish_people_entities.tokenized.txt.gz | gzip > data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz
 
 extract_spanish_sentences:
 	bzcat data/bravas/extracted/AA/wiki_00.bz2 \
-		| java -cp lib/*:bin others.SpanishTokenizer                 \
+		| java -cp lib/*:bin in.sivareddy.others.SpanishTokenizer                 \
 		| perl -pe 's|=LRB=.*?=RRB=||g'                 \
 		| grep -v =LRB= | grep -v =RRB=                 \
 		| python scripts/spanish/select_sentences_with_entities_in_relation.py data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt                 \
 		| python scripts/spanish/select_sentences_with_non_adjacent_main_relation.py data/freebase/domain_facts/business_film_people_facts.txt.gz data/freebase/schema/business_film_people_schema.txt \
-		| java -cp lib/*:bin others.SpanishPosAndNer \
+		| java -cp lib/*:bin in.sivareddy.others.SpanishPosAndNer \
 		| python scripts/spanish/process_named_entities.py \
 		| gzip > data/freebase/spanish/spanish_wikipedia_business_film_people_sentences.json.txt.gz
 
@@ -718,19 +718,19 @@ create_spanish_deplambda_format:
 entity_tag_spanish:
 	python scripts/spanish/combine_wq_entities_spanish_english.py data/spanish_webquestions/webquestions.lexicon.txt data/freebase/spanish/spanish_business_film_people_entities.tokenized.txt.gz > data/spanish_webquestions/webquestions.lexicon.extended.txt
 	cat data/spanish_webquestions/webquestions.examples.test.utterances_es \
-		| java -cp lib/*:bin others.SpanishTokenizerEol \
+		| java -cp lib/*:bin in.sivareddy.others.SpanishTokenizerEol \
 		| python scripts/spanish/annotate_entities_maximal_string_matching.py data/spanish_webquestions/webquestions.lexicon.extended.txt \
 		| python scripts/spanish/add_sentences.py data/spanish_webquestions/webquestions.examples.test.utterances data/spanish_webquestions/webquestions.examples.test.utterances_es \
 		| python scripts/spanish/merge_english_annotations.py data/webquestions/webquestions.examples.test.domains.json \
-		| java -cp lib/*:bin others.SpanishPosAndNer \
+		| java -cp lib/*:bin in.sivareddy.others.SpanishPosAndNer \
 		| python scripts/spanish/process_named_entities.py \
 		> data/spanish_webquestions/webquestions.examples.test.es.json
 	cat data/spanish_webquestions/webquestions.examples.train.utterances_es \
-		| java -cp lib/*:bin others.SpanishTokenizerEol \
+		| java -cp lib/*:bin in.sivareddy.others.SpanishTokenizerEol \
 		| python scripts/spanish/annotate_entities_maximal_string_matching.py data/spanish_webquestions/webquestions.lexicon.extended.txt \
 		| python scripts/spanish/add_sentences.py data/spanish_webquestions/webquestions.examples.train.utterances data/spanish_webquestions/webquestions.examples.train.utterances_es \
 		| python scripts/spanish/merge_english_annotations.py data/webquestions/webquestions.examples.train.domains.json \
-		| java -cp lib/*:bin others.SpanishPosAndNer \
+		| java -cp lib/*:bin in.sivareddy.others.SpanishPosAndNer \
 		| python scripts/spanish/process_named_entities.py \
 		> data/spanish_webquestions/webquestions.examples.train.es.json
 

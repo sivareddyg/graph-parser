@@ -37,13 +37,13 @@ clean_data_%:
 		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
 		| python scripts/cleaning/unannonate_named_entities.py \
-		| java -cp lib/*:bin others.AddLemma 1 \
+		| java -cp lib/*:bin in.sivareddy.others.AddLemma 1 \
 		| gzip > data/distant_eval/parses/$*/train.json.blank.cleaned.gz
 	zcat data/distant_eval/parses/$*/dev.json.gz \
 		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
 		| python scripts/cleaning/unannonate_named_entities.py \
-		| java -cp lib/*:bin others.AddLemma 1 \
+		| java -cp lib/*:bin in.sivareddy.others.AddLemma 1 \
 		| gzip > data/distant_eval/parses/$*/dev.json.blank.cleaned.gz
 	zcat data/distant_eval/parses/$*/dev.json.blank.cleaned.gz \
 		| head -n1000 \
@@ -52,7 +52,7 @@ clean_data_%:
 		| sed -e 's/ _blank_ NN / _blank_ NNP /g' \
 		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
 		| python scripts/cleaning/unannonate_named_entities.py \
-	        | java -cp lib/*:bin others.AddLemma 1 \
+	        | java -cp lib/*:bin in.sivareddy.others.AddLemma 1 \
 	        | gzip > data/distant_eval/parses/$*/test.json.blank.cleaned.gz
 
 create_grounded_lexicon_%:
