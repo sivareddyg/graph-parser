@@ -360,6 +360,7 @@ public class GraphToQueryTraining {
       log.info("##### Sentence count: " + sentCount);
       boolean hasGoldQuery =
           jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue")
+              || jsonSentence.has(SentenceKeys.ANSWER_F1)
               || jsonSentence.has("answerSubset") || jsonSentence.has("answer");
       if (hasGoldQuery) {
         // Supervised training can make use of more number of syntactic
@@ -1158,6 +1159,7 @@ public class GraphToQueryTraining {
     logger.debug("Sentence: " + sentence);
     boolean hasGoldQuery =
         jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue")
+            || jsonSentence.has(SentenceKeys.ANSWER_F1)
             || jsonSentence.has("answerSubset") || jsonSentence.has("answer");
     logger.debug("Supervised Example");
     if (!hasGoldQuery) {
