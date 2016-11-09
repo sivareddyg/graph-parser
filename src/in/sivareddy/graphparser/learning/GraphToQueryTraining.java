@@ -1905,9 +1905,11 @@ public class GraphToQueryTraining {
     Preconditions
         .checkArgument(
             jsonSentence.has("sparqlQuery") || jsonSentence.has("targetValue")
+                || jsonSentence.has(SentenceKeys.ANSWER_F1)
                 || jsonSentence.has("answerSubset")
-                || jsonSentence.has("answer"),
-            "Test sentence should either have a gold query or targetValue or answer values");
+                || jsonSentence
+                    .has("answer"),
+        "Test sentence should either have a gold query or targetValue or answer values");
     String sentence = jsonSentence.get("sentence").getAsString();
 
     logger.info("Sentence " + sentCount + ": " + sentence);
