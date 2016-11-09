@@ -1,4 +1,4 @@
-package deplambda.util;
+package in.sivareddy.graphparser.util;
 
 import in.sivareddy.graphparser.util.NlpPipeline;
 import in.sivareddy.graphparser.util.SplitForrestToSentences;
