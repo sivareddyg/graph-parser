@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.output.NullOutputStream;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -324,8 +326,8 @@ public class EntityScorer extends ProcessStreamInterface {
       String phrase =
           matchedEntity.get(SentenceKeys.PHRASE).getAsString().toLowerCase();
       String name =
-          rankedEntity.get(SentenceKeys.ENTITY_NAME).getAsString()
-              .toLowerCase();
+          rankedEntity.has(SentenceKeys.ENTITY_NAME) ? rankedEntity
+              .get(SentenceKeys.ENTITY_NAME).getAsString().toLowerCase() : "";
       features.add(new NameOverlapFeature(getF1Overlap(phrase, name)));
     }
 

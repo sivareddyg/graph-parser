@@ -1,0 +1,74 @@
+process_gq:
+	python scripts/graphquestions/convert_to_graph_parser_format.py \
+		< data/GraphQuestions/freebase13/graphquestions.training.json data/freebase/mid_to_key.txt.gz \
+		> data/GraphQuestions/freebase13/graphquestions.training.mid.json
+	python scripts/graphquestions/convert_to_graph_parser_format.py \
+		< data/GraphQuestions/freebase13/graphquestions.testing.json data/freebase/mid_to_key.txt.gz \
+		> data/GraphQuestions/freebase13/graphquestions.testing.mid.json
+
+annotate_entity_spans:
+	cat data/GraphQuestions/freebase13/graphquestions.training.mid.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos,lemma \
+		ssplit.newlineIsSentenceBreak always \
+		languageCode en \
+		pos.model lib_data/ud-models-v1.3/en/pos-tagger/utb-caseless-en-bidirectional-glove-distsim-lower.tagger \
+		| java -cp bin:lib/* in.sivareddy.scripts.NounPhraseAnnotator en_ud \
+		> working/graphquestions.training.mid.json
+	cat data/GraphQuestions/freebase13/graphquestions.testing.mid.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos,lemma \
+		ssplit.newlineIsSentenceBreak always \
+		languageCode en \
+		pos.model lib_data/ud-models-v1.3/en/pos-tagger/utb-caseless-en-bidirectional-glove-distsim-lower.tagger \
+		| java -cp bin:lib/* in.sivareddy.scripts.NounPhraseAnnotator en_ud \
+		> working/graphquestions.testing.mid.json
+
+entity_annotate:
+	# Entity Annotations
+	cat working/graphquestions.training.mid.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.cli.RankMatchedEntitiesCli \
+		--useKG true \
+		--apiKey AIzaSyDj-4Sr5TmDuEA8UVOd_89PqK87GABeoFg \
+		--langCode en \
+		> working/graphquestions.training.mid.ranked.json
+	cat working/graphquestions.testing.mid.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.cli.RankMatchedEntitiesCli \
+		--useKG true \
+		--apiKey AIzaSyDj-4Sr5TmDuEA8UVOd_89PqK87GABeoFg \
+		--langCode en \
+		> working/graphquestions.testing.mid.ranked.json
+
+evaluate_entity_annotation_upperbound:
+	cat working/graphquestions.training.mid.ranked.json \
+		| python scripts/entity-annotation/get_entity_patterns.py
+
+train_entity_annotator:
+	mkdir -p data/entity-models
+	java -cp bin:lib/* in.sivareddy.graphparser.cli.RunTrainEntityScorer \
+		-nthreads 20 \
+		-iterations 100 \
+		-hasId false \
+		-trainFile working/graphquestions.training.mid.ranked.json \
+		-devFile working/graphquestions.testing.mid.ranked.json \
+		-saveToFile data/entity-models/graph-questions.ser
+
+disambiguate_entities:
+	cat working/graphquestions.training.mid.ranked.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.cli.RunEntityDisambiguator \
+		-loadModelFromFile data/entity-models/graph-questions.ser \
+		-endpoint localhost \
+		-nthreads 20 \
+		-nbestEntities 10 \
+		-hasId false \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		> working/graphquestions.training.mid.disambiguated.json 
+	cat working/graphquestions.testing.mid.ranked.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.cli.RunEntityDisambiguator \
+		-loadModelFromFile data/entity-models/graph-questions.ser \
+		-endpoint localhost \
+		-nthreads 20 \
+		-nbestEntities 10 \
+		-hasId false \
+		-schema data/freebase/schema/all_domains_schema.txt \
+		> working/graphquestions.testing.mid.disambiguated.json

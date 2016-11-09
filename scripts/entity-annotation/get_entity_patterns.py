@@ -19,7 +19,11 @@ for line in sys.stdin:
 
     total += 1.0
     sent = json.loads(line)
-    goldMid = sent['goldMid']
+    goldMids = []
+    if 'goldMid' in sent:
+        goldMids.append(sent['goldMid'])
+    elif 'goldMids' in sent:
+        goldMids = sent['goldMids']
 
     matchFound = False
     if "matchedEntities" not in sent:
@@ -30,7 +34,7 @@ for line in sys.stdin:
             continue
         for rankedEntity in matchedEntity["rankedEntities"]:
             mid = rankedEntity["entity"]
-            if mid == goldMid:
+            if mid in goldMids:
                 matchFound = True
                 matches.add(matchedEntity["pattern"])
 

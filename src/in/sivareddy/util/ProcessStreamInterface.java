@@ -15,6 +15,8 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.output.NullOutputStream;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -31,8 +33,8 @@ public abstract class ProcessStreamInterface {
     BufferedWriter fout = new BufferedWriter(writer);
 
     final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
-    ThreadPoolExecutor threadPool = new ThreadPoolExecutor(nthreads, nthreads,
-        600, TimeUnit.SECONDS, queue);
+    ThreadPoolExecutor threadPool =
+        new ThreadPoolExecutor(nthreads, nthreads, 600, TimeUnit.SECONDS, queue);
 
     threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override
@@ -78,13 +80,19 @@ public abstract class ProcessStreamInterface {
   }
 
   public void processList(List<JsonObject> jsonSentences, PrintStream out,
-      int nthreads, boolean printOutput)
-          throws IOException, InterruptedException {
-    Writer writer = new OutputStreamWriter(out, "UTF-8");
+      int nthreads, boolean printOutput) throws IOException,
+      InterruptedException {
+    Writer writer = null;
+    if (out != null) {
+      writer = new OutputStreamWriter(out, "UTF-8");
+    } else {
+      writer = new OutputStreamWriter(new NullOutputStream(), "UTF-8");
+    }
+
     BufferedWriter fout = new BufferedWriter(writer);
     final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
-    ThreadPoolExecutor threadPool = new ThreadPoolExecutor(nthreads, nthreads,
-        600, TimeUnit.SECONDS, queue);
+    ThreadPoolExecutor threadPool =
+        new ThreadPoolExecutor(nthreads, nthreads, 600, TimeUnit.SECONDS, queue);
 
     threadPool.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override
