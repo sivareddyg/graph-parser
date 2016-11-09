@@ -53,6 +53,7 @@ public class SentenceKeys {
   public static String RELATION_LEFT = "relationLeft";
   public static String RELATION_RIGHT = "relationRight";
   public static String TARGET_VALUE = "targetValue";
+  public static String ANSWER_F1 = "answerF1";
   public static String SPARQL_QUERY = "sparqlQuery";
   
   public static String BLANK_WORD = "_blank_";

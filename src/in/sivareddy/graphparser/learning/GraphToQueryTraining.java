@@ -1210,6 +1210,13 @@ public class GraphToQueryTraining {
         logger.info("Gold Results empty. Ignoring this sentence");
         return;
       }
+    } else if (jsonSentence.has(SentenceKeys.ANSWER_F1)) {
+      JsonArray goldAnswersArray =
+          jsonSentence.get(SentenceKeys.ANSWER_F1).getAsJsonArray();
+      LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
+      goldAnswersArray.forEach(answer -> goldAnswers.add(answer.getAsString()));
+      goldResults = new HashMap<>();
+      goldResults.put(SentenceKeys.TARGET_VALUE, goldAnswers);
     } else if (jsonSentence.has("answer")) {
       JsonArray goldAnswersArray = jsonSentence.get("answer").getAsJsonArray();
       LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
@@ -1959,6 +1966,29 @@ public class GraphToQueryTraining {
         for (Integer nthBest : testingNbestParsesRange) {
           results.get(sentCount)
               .put(nthBest, Pair.of(goldAnswers, goldAnswers));
+          positives.put(nthBest, positives.getOrDefault(nthBest, 0) + 1);
+        }
+        logger.info("Gold Results empty. Ignoring this sentence");
+        return;
+      }
+    } else if (jsonSentence.has(SentenceKeys.ANSWER_F1)) {
+      JsonArray goldAnswersArray =
+          jsonSentence.get(SentenceKeys.ANSWER_F1).getAsJsonArray();
+      LinkedHashSet<String> goldAnswers = new LinkedHashSet<>();
+      goldAnswersArray.forEach(answer -> goldAnswers.add(answer.getAsString()));
+      goldResults = new HashMap<>();
+      goldResults.put(SentenceKeys.TARGET_VALUE, goldAnswers);
+
+      // If there is no gold answer, return.
+      if (goldAnswers == null || goldAnswers.size() == 0
+          || (goldAnswers.size() == 1
+              && (goldAnswers.iterator().next().equals("0")
+                  || goldAnswers.iterator().next().equals("")))) {
+        results.put(sentCount, new HashMap<>());
+        avgF1.put(sentCount, 1.0);
+        for (Integer nthBest : testingNbestParsesRange) {
+          results.get(sentCount).put(nthBest,
+              Pair.of(goldAnswers, goldAnswers));
           positives.put(nthBest, positives.getOrDefault(nthBest, 0) + 1);
         }
         logger.info("Gold Results empty. Ignoring this sentence");

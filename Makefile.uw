@@ -122,3 +122,70 @@ entity_dismabiguated_to_plain_forest:
 		posTagKey UD \
 		postprocess.correctPosTags true \
 		> working/graphquestions.testing.plain.forest.json
+
+gq_bow_supervised_without_merge_without_expand:
+	rm -rf ../working/gq_bow_supervised_without_merge_without_expand
+	mkdir -p ../working/gq_bow_supervised_without_merge_without_expand
+	java -Xms2048m -cp bin:lib/* in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey bow_question_graph \
+	-schema data/freebase/schema/all_domains_schema.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 2 \
+	-useSchema true \
+	-useKB true \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes false \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag false \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag false \
+	-argGrelFlag false \
+	-stemMatchingFlag false \
+	-mediatorStemGrelPartMatchingFlag false \
+	-argumentStemMatchingFlag false \
+	-argumentStemGrelPartMatchingFlag false \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel false \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useGoldRelations false \
+	-evaluateOnlyTheFirstBest true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight -0.05 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+	-supervisedCorpus "working/graphquestions.training.plain.forest.json" \
+	-contentWordPosTags "NOUN;VERB;ADJ;ADP;ADV;PRON" \
+	-devFile working/graphquestions.testing.plain.forest.json \
+	-logFile ../working/gq_bow_supervised_without_merge_without_expand/all.log.txt \
+	> ../working/gq_bow_supervised_without_merge_without_expand/all.txt
+
+
