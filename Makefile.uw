@@ -129,7 +129,7 @@ gq_bow_supervised_without_merge_without_expand:
 	java -Xms2048m -cp bin:lib/* in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
 	-pointWiseF1Threshold 0.2 \
 	-semanticParseKey bow_question_graph \
-	-schema data/freebase/schema/all_domains_schema.txt \
+	-schema data/freebase/schema/sempre2_schema_gp_format.txt \
 	-relationTypesFile lib_data/dummy.txt \
 	-lexicon lib_data/dummy.txt \
 	-domain "http://rdf.freebase.com" \
@@ -141,7 +141,7 @@ gq_bow_supervised_without_merge_without_expand:
 	-nBestTestSyntacticParses 1 \
 	-nbestGraphs 100 \
 	-forestSize 10 \
-	-ngramLength 2 \
+	-ngramLength 1 \
 	-useSchema true \
 	-useKB true \
 	-ngramGrelPartFlag true \
@@ -168,12 +168,12 @@ gq_bow_supervised_without_merge_without_expand:
 	-countNodesFlag false \
 	-edgeNodeCountFlag false \
 	-duplicateEdgesFlag true \
-	-grelGrelFlag true \
+	-grelGrelFlag false \
 	-useLexiconWeightsRel false \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
 	-useGoldRelations false \
-	-evaluateOnlyTheFirstBest true \
+	-evaluateOnlyTheFirstBest false \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag false \
