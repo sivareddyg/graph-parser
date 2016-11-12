@@ -123,6 +123,64 @@ entity_dismabiguated_to_plain_forest:
 		postprocess.correctPosTags true \
 		> working/graphquestions.testing.plain.forest.json
 
+gq_ccg_parse:
+	cat working/graphquestions.training.plain.forest.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		posTagKey UD \
+		preprocess.capitalizeUsingPosTags true \
+		preprocess.capitalizeFirstWord true \
+		ccgParser easyccg \
+		ccgParser.modelFolder lib_data/easyccg_model_questions \
+		ccgParser.parserArguments -s,-r,S[q],S[qem],S[wq] \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		ccgParser easyccg \
+		ccgParser.modelFolder lib_data/easyccg_model \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		posTagKey UD \
+		pos.model lib_data/ud-models-v1.3/en/pos-tagger/utb-caseless-en-bidirectional-glove-distsim-lower.tagger \
+		postprocess.correctPosTags true \
+		> working/graphquestions.training.easyccg.forest.json
+	cat working/graphquestions.testing.plain.forest.json \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		posTagKey UD \
+		preprocess.capitalizeUsingPosTags true \
+		preprocess.capitalizeFirstWord true \
+		ccgParser easyccg \
+		ccgParser.modelFolder lib_data/easyccg_model_questions \
+		ccgParser.parserArguments -s,-r,S[q],S[qem],S[wq] \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		ccgParser easyccg \
+		ccgParser.modelFolder lib_data/easyccg_model \
+		| java -cp bin:lib/* in.sivareddy.graphparser.util.NlpPipeline \
+		annotators tokenize,ssplit,pos \
+		tokenize.whitespace true \
+		ssplit.eolonly true \
+		languageCode en \
+		posTagKey UD \
+		pos.model lib_data/ud-models-v1.3/en/pos-tagger/utb-caseless-en-bidirectional-glove-distsim-lower.tagger \
+		postprocess.correctPosTags true \
+		> working/graphquestions.testing.easyccg.forest.json
+
 gq_bow_supervised_without_merge_without_expand:
 	rm -rf ../working/gq_bow_supervised_without_merge_without_expand
 	mkdir -p ../working/gq_bow_supervised_without_merge_without_expand
