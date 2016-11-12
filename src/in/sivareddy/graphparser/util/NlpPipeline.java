@@ -2,6 +2,9 @@ package in.sivareddy.graphparser.util;
 
 import in.sivareddy.graphparser.util.EntityAnnotator;
 import in.sivareddy.graphparser.util.MergeEntity;
+import in.sivareddy.others.CcgSyntacticParserCli;
+import in.sivareddy.others.EasyCcgCli;
+import in.sivareddy.others.EasySRLCli;
 import in.sivareddy.others.RenderSVG;
 import in.sivareddy.util.ProcessStreamInterface;
 import in.sivareddy.util.SentenceKeys;
@@ -25,6 +28,7 @@ import org.maltparser.concurrent.ConcurrentMaltParserModel;
 import org.maltparser.concurrent.ConcurrentMaltParserService;
 import org.maltparser.core.exception.MaltChainedException;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -97,15 +101,25 @@ public class NlpPipeline extends ProcessStreamInterface {
       "deplambda.lambdaAssignmentRulesFile";
   public static String DEPLAMBDA_DEBUG = "deplambda.debug";
 
+  // Accepted values for ccgParser are easyccg and easysrl
+  public static String CCGPARSER_KEY = "ccgParser";
+  public static String CCGPARSER_NBEST_KEY = "ccgParser.nbest";
+  public static String CCGPARSER_MODEL_FOLDER_KEY = "ccgParser.modelFolder";
+
+  // Easyccg question model takes these arguments -s,-r,S[q],S[qem],S[wq]
+  // EasySRL question model arguments are --rootCategories,S[q],S[qem],S[wq]
+  public static String CCGPARSER_ARGUMENTS = "ccgParser.parserArguments";
+
   private static Gson gson = new Gson();
 
   private StanfordCoreNLP pipeline;
   private Map<String, String> options;
   private Set<String> annotators;
   ConcurrentMaltParserModel maltModel = null;
+  private CcgSyntacticParserCli ccgParser = null;
   RenderSVG svgRenderer = null;
 
-  public NlpPipeline(Map<String, String> options) {
+  public NlpPipeline(Map<String, String> options) throws Exception {
     System.err.println(options);
     this.options = options;
 
@@ -134,6 +148,20 @@ public class NlpPipeline extends ProcessStreamInterface {
         maltModel = ConcurrentMaltParserService.initializeParserModel(modelURL);
       } catch (MalformedURLException | MaltChainedException e) {
         e.printStackTrace();
+      }
+    }
+    
+    if (options.containsKey(CCGPARSER_KEY)) {
+      int nbestParses =
+          Integer.parseInt(options.getOrDefault(CCGPARSER_NBEST_KEY, "1"));
+      // CCG Parser.
+      String ccgModelDir = options.get(CCGPARSER_MODEL_FOLDER_KEY);
+      String parserArgs = Joiner.on(" ")
+          .join(options.getOrDefault(CCGPARSER_ARGUMENTS, "").split(","));
+      if (options.get(CCGPARSER_KEY).equals("easyccg")) {
+        ccgParser = new EasyCcgCli(ccgModelDir + " " + parserArgs, nbestParses);
+      } else if (options.get(CCGPARSER_KEY).equals("easysrl")) {
+        ccgParser = new EasySRLCli(ccgModelDir + " " + parserArgs, nbestParses);
       }
     }
 
@@ -356,6 +384,36 @@ public class NlpPipeline extends ProcessStreamInterface {
         }
       }
     }
+    
+    // Annotate with CCG Parses only if the sentence does not have a CCG Parse.
+    if (options.containsKey(CCGPARSER_KEY)
+        && !jsonSentence.has(SentenceKeys.CCG_PARSES)) {
+      List<String> processedWords = new ArrayList<>();
+      for (JsonElement word : words) {
+        JsonObject wordObj = word.getAsJsonObject();
+        processedWords.add(String.format("%s|%s|O",
+            wordObj.get(SentenceKeys.WORD_KEY).getAsString(),
+            wordObj.get(SentenceKeys.POS_KEY).getAsString()));
+      }
+      
+      try {
+        List<String> parses =
+            ccgParser.parse(Joiner.on(" ").join(processedWords));
+
+        JsonArray jsonParses = new JsonArray();
+        for (String parse : parses) {
+          JsonObject synPar = new JsonObject();
+          synPar.addProperty(SentenceKeys.CCG_PARSE, parse);
+          synPar.addProperty(SentenceKeys.SCORE, 1.0);
+          jsonParses.add(synPar);
+        }
+        
+        if (parses.size() > 0)
+          jsonSentence.add(SentenceKeys.CCG_PARSES, jsonParses);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
 
     if (!jsonSentence.has(SentenceKeys.WORDS_KEY))
       jsonSentence.add(SentenceKeys.WORDS_KEY, words);
@@ -533,11 +591,11 @@ public class NlpPipeline extends ProcessStreamInterface {
         .substring(0, 1).toUpperCase(), wordStr.substring(1));
   }
 
-  public static void main(String[] args) throws IOException,
-      InterruptedException {
+  public static void main(String[] args) throws Exception {
     if (args.length == 0 || args.length % 2 != 0) {
       System.err
           .println("Specify pipeline arguments, e.g., annotator, languageCode, preprocess.capitalize. See the NlpPipelineTest file.");
+      System.exit(0);
     }
 
     Map<String, String> options = new HashMap<>();

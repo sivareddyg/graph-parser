@@ -74,8 +74,7 @@ public class CreateGraphParserForestFromEntityDisambiguatedSentences extends
     }
   }
 
-  public static void main(String[] args) throws IOException,
-      InterruptedException {
+  public static void main(String[] args) throws Exception {
     if (args.length == 0 || args.length % 2 != 0) {
       System.err
           .println("Specify pipeline arguments, e.g., annotator, languageCode. See the NlpPipelineTest file.");
