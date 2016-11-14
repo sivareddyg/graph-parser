@@ -651,6 +651,28 @@ public class LexicalGraph extends Graph<LexicalItem> {
 
   public boolean removeMultipleQuestionNodes() {
     List<LexicalItem> questionNodes = new ArrayList<>(getQuestionNode());
+    List<LexicalItem> newQuestionNodes = new ArrayList<>(questionNodes);
+    for (LexicalItem questionNode : newQuestionNodes) {
+      // Entity nodes cannot be question nodes.
+      if (questionNode.isEntity()) {
+        Set<Property> nodeProps = getProperties(questionNode);
+        Set<Property> questionProps =
+            nodeProps
+                .stream()
+                .filter(
+                    x -> x.getPropertyName().equals(
+                        SemanticCategoryType.QUESTION.toString()))
+                .collect(Collectors.toSet());
+
+        if (nodeProps.size() == questionProps.size()) {
+          getProperties().remove(questionNode);
+        } else {
+          nodeProps.removeAll(questionProps);
+        }
+        questionNodes.remove(questionNode);
+      }
+    }
+    
     if (questionNodes.size() < 2)
       return false;
     questionNodes.sort(Comparator.comparing(x -> x.getWordPosition()));
@@ -761,10 +783,16 @@ public class LexicalGraph extends Graph<LexicalItem> {
     List<LexicalItem> graphNodes = Lists.newArrayList(getActualNodes());
     HashSet<LexicalItem> questionNodes = getQuestionNode();
     if (questionNodes.size() == 0) {
-      LexicalItem firstItem = getActualNodes().get(0);
-      this.addProperty(firstItem,
+      // Add a dummy question node.
+      LexicalItem dummyNode =
+          new LexicalItem("", SentenceKeys.DUMMY_WORD,
+              SentenceKeys.DUMMY_WORD, SentenceKeys.PUNCTUATION_TAGS
+                  .iterator().next(), "", null);
+      dummyNode.setWordPosition(getActualNodes().size());
+      getActualNodes().add(dummyNode);
+      this.addProperty(dummyNode,
           new Property(SemanticCategoryType.QUESTION.toString()));
-      questionNodes.add(firstItem);
+      questionNodes.add(dummyNode);
     }
     LexicalItem questionNode = questionNodes.iterator().next();
 

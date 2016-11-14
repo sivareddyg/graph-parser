@@ -58,7 +58,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     groundedLexicon = new GroundedLexicon("lib_data/dummy.txt");
     schema = new Schema("data/freebase/schema/all_domains_schema.txt");
     kb =
-        new KnowledgeBaseOnline("buck", "http://buck:8890/sparql", "dba",
+        new KnowledgeBaseOnline("buck.inf.ed.ac.uk", "http://buck.inf.ed.ac.uk:8890/sparql", "dba",
             "dba", 50000, schema);
 
     questionCcgAutoLexicon =
@@ -395,6 +395,42 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     }
   }
 
+  
+  @Test
+  public void testHyperExpand() throws IOException {
+    String[] relationLexicalIdentifiers = {"lemma"};
+    String[] relationTypingIdentifiers = {};
+    graphCreator = new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
+        questionCcgAutoLexicon, relationLexicalIdentifiers,
+        relationTypingIdentifiers, new StructuredPercepton(), 1, true,
+        true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, false, false, false, false, false, false, true, 10.0,
+        1.0, 0.0, 0.0);
+    JsonObject sentence =
+        jsonParser
+            .parse(
+                "{\"function\":\"none\",\"commonness\":-18.42626988711012,\"sparql_query\":\"PREFIX rdf: \\u003chttp://www.w3.org/1999/02/22-rdf-syntax-ns#\\u003e PREFIX rdfs: \\u003chttp://www.w3.org/2000/01/rdf-schema#\\u003e PREFIX : \\u003chttp://rdf.freebase.com/ns/\\u003e \\nSELECT (?x0 AS ?value) WHERE {\\nSELECT DISTINCT ?x0  WHERE { \\n?x0 :type.object.type :base.peleton.cycling_team_staff . \\nVALUES ?x1 { :en.team_csc } \\n?x1 :base.peleton.cycling_team_professional.general_manager ?x0 . \\nFILTER ( ?x0 !\\u003d ?x1  )\\n}\\n}\",\"graph_query\":{\"nodes\":[{\"function\":\"none\",\"question_node\":1,\"friendly_name\":\"Cycling Team Staff\",\"nid\":0,\"class\":\"base.peleton.cycling_team_staff\",\"node_type\":\"class\",\"id\":\"base.peleton.cycling_team_staff\"},{\"function\":\"none\",\"question_node\":0,\"friendly_name\":\"Team Saxo Bank-SunGard\",\"nid\":1,\"class\":\"base.peleton.cycling_team_professional\",\"node_type\":\"entity\",\"id\":\"en.team_csc\"}],\"edges\":[{\"start\":1,\"end\":0,\"friendly_name\":\"General Manager\",\"relation\":\"base.peleton.cycling_team_professional.general_manager\"}]},\"sentence\":\"team saxo bank-sungard\\u0027s general manager is who?\",\"qid\":24000300,\"num_node\":2,\"num_edge\":1,\"answerF1\":[\"Bjarne Riis\"],\"goldMids\":[\"m.06s1mb\"],\"id\":24000300,\"words\":[{\"pos\":\"PROPN\",\"word\":\"TeamSaxo\",\"lemma\":\"TeamSaxo\"},{\"pos\":\"PROPN\",\"word\":\"Bank-sungard\",\"lemma\":\"Bank-sungard\"},{\"word\":\"\\u0027s\",\"lemma\":\"\\u0027s\",\"pos\":\"PART\"},{\"word\":\"general\",\"lemma\":\"general\",\"pos\":\"ADJ\"},{\"word\":\"manager\",\"lemma\":\"manager\",\"pos\":\"NOUN\"},{\"word\":\"is\",\"lemma\":\"be\",\"pos\":\"VERB\"},{\"word\":\"who\",\"lemma\":\"who\",\"pos\":\"PRON\"},{\"word\":\"?\",\"lemma\":\"?\",\"pos\":\"PUNCT\",\"sentEnd\":true}],\"index\":\"8603baca89e44aeb56e2ef264d77b6f5:1\",\"entities\":[{\"entity\":\"m.09rsrj6\",\"score\":24.111584164826308,\"phrase\":\"team saxo\",\"name\":\"2010 Team Saxo Bank season\",\"index\":0},{\"entity\":\"m.06s1mb\",\"score\":23.674190536504206,\"phrase\":\"bank-sungard\",\"name\":\"Team Saxo Bank-SunGard\",\"index\":1}],\"synPars\":[{\"synPar\":\"(\\u003cT S[wq] fa 0 2\\u003e (\\u003cT S[wq]/(S[dcl]\\\\NP) fa 0 2\\u003e (\\u003cT (S[wq]/(S[dcl]\\\\NP))/N ba 1 2\\u003e (\\u003cT S[X]/(S[X]\\\\NP) tr 0 1\\u003e (\\u003cT NP lex 0 1\\u003e (\\u003cT N fa 1 2\\u003e (\\u003cL N/N TeamSaxo TeamSaxo NNP O O N/N\\u003e) (\\u003cL N Bank-sungard Bank-sungard NNP O O N\\u003e) ) ) ) (\\u003cL ((S[wq]/(S[dcl]\\\\NP))/N)\\\\(S[wq]/(S[dcl]\\\\NP)) \\u0027s \\u0027s POS O O ((S[wq]/(S[dcl]\\\\NP))/N)\\\\(S[wq]/(S[dcl]\\\\NP))\\u003e) ) (\\u003cT N fa 1 2\\u003e (\\u003cL N/N general general JJ O O N/N\\u003e) (\\u003cL N manager manager NN O O N\\u003e) ) ) (\\u003cT S[dcl]\\\\NP fa 0 2\\u003e (\\u003cL (S[dcl]\\\\NP)/(S[pss]\\\\NP) is be VBZ O O (S[dcl]\\\\NP)/(S[pss]\\\\NP)\\u003e) (\\u003cT S[pss]\\\\NP rp 0 2\\u003e (\\u003cL S[pss]\\\\NP who who WP O O S[pss]\\\\NP\\u003e) (\\u003cL . ? ? . O O .\\u003e) ) ) ) \",\"score\":1.0}]}")
+            .getAsJsonObject();
+
+    List<JsonObject> jsonSentences = Lists.newArrayList();
+    jsonSentences.add(sentence);
+
+    for (JsonObject jsonSentence : jsonSentences) {
+      List<LexicalGraph> graphs =
+          graphCreator.buildUngroundedGraph(jsonSentence,
+              SentenceKeys.CCG_PARSES, 1, logger);
+
+      System.out.println("# Ungrounded Graphs");
+      if (graphs.size() > 0) {
+        for (LexicalGraph ungroundedGraph : graphs) {
+          System.out.println("Ungrounded Graph: ");
+          System.out.println(ungroundedGraph);
+        }
+      }
+    }
+  }
+
   @Test
   public void testUngroundedFromDependencyUD() throws IOException {
     JsonObject sentence =
@@ -420,7 +456,8 @@ public class CreateGroundedGraphsFromSemanticParseTest {
       }
     }
   }
-
+  
+  
   @Test
   public void testBackoffGroundedGraphsWithMerge() throws IOException {
     List<JsonObject> jsonSentences = Lists.newArrayList();
