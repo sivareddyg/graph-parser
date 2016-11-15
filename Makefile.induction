@@ -31,6 +31,36 @@ create_data_easyccg:
 		| python scripts/createBLANK.py \
 		| gzip > data/distant_eval/parses/easyccg/test.json.gz
 
+clean_unparsed_data:
+	zcat data/distant_eval/original/train.json.gz \
+		| python scripts/createBLANK.py \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		| java -cp lib/*:bin in.sivareddy.others.AddLemma 1 \
+		| python scripts/cleaning/remove_fields.py freeVarCount,freeEntityCount,boundedVarCount,negationCount,foreignEntityCount,parses,synPars \
+		| python scripts/cleaning/remove_word_fields.py supertags \
+		| gzip > data/distant_eval/data/train.json.blank.cleaned.gz
+	zcat data/distant_eval/original/dev.json.gz \
+		| python scripts/createBLANK.py \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		| java -cp lib/*:bin in.sivareddy.others.AddLemma 1 \
+		| python scripts/cleaning/remove_fields.py freeVarCount,freeEntityCount,boundedVarCount,negationCount,foreignEntityCount,parses,synPars \
+		| python scripts/cleaning/remove_word_fields.py supertags \
+		| gzip > data/distant_eval/data/dev.json.blank.cleaned.gz
+	zcat data/distant_eval/original/test.json.gz \
+		| python scripts/createBLANK.py \
+		| python scripts/cleaning/remove_sentences_with_consecutive_entities.py \
+		| python scripts/cleaning/unannonate_named_entities.py \
+		| java -cp lib/*:bin in.sivareddy.others.AddLemma 1 \
+		| python scripts/cleaning/remove_fields.py freeVarCount,freeEntityCount,boundedVarCount,negationCount,foreignEntityCount,parses,synPars \
+		| python scripts/cleaning/remove_word_fields.py supertags \
+		| gzip > data/distant_eval/data/test.json.blank.cleaned.gz
+	mkdir -p data/spades
+	cp data/distant_eval/data/test.json.blank.cleaned.gz data/spades/test.json.gz
+	cp data/distant_eval/data/train.json.blank.cleaned.gz data/spades/train.json.gz
+	cp data/distant_eval/data/dev.json.blank.cleaned.gz data/spades/dev.json.gz
+
 clean_data_%:
 	zcat data/distant_eval/parses/$*/train.json.gz \
 		| python scripts/createBLANK.py \

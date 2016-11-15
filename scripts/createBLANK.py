@@ -31,8 +31,10 @@ def replace(e,j):
   else:
     j["answer"] = entity["entity"]
   word = j["words"][int(entity["index"])]["word"]
+  j["answerString"] = [word]
   # Set word to blank
   j["words"][int(entity["index"])]["word"] = "_blank_"
+  j["words"][int(entity["index"])]["ner"] = "O"
   j["words"][int(entity["index"])]["pos"] = "NNP"
   j["words"][int(entity["index"])]["supertags"] = ["N"]
   if withParses and "synPars" in j:
