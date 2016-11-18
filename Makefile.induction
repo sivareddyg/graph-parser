@@ -61,6 +61,14 @@ clean_unparsed_data:
 	cp data/distant_eval/data/train.json.blank.cleaned.gz data/spades/train.json.gz
 	cp data/distant_eval/data/dev.json.blank.cleaned.gz data/spades/dev.json.gz
 
+dump_entities:
+	zcat data/spades/train.json.gz data/spades/dev.json.gz data/spades/test.json.gz \
+	| python scripts/distant-eval/list_entities.py \
+	> data/spades/entities.tmp.txt
+	java -cp bin:lib/* in.sivareddy.scripts.DumpDatabaseFromEntities \
+	< data/spades/entities.txt \
+	> working/freebase.tmp.txt
+
 clean_data_%:
 	zcat data/distant_eval/parses/$*/train.json.gz \
 		| python scripts/createBLANK.py \
