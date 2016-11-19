@@ -64,10 +64,14 @@ clean_unparsed_data:
 dump_entities:
 	zcat data/spades/train.json.gz data/spades/dev.json.gz data/spades/test.json.gz \
 	| python scripts/distant-eval/list_entities.py \
-	> data/spades/entities.tmp.txt
+	> ../working/entities.tmp.txt
 	java -cp bin:lib/* in.sivareddy.scripts.DumpDatabaseFromEntities \
-	< data/spades/entities.txt \
-	> working/freebase.tmp.txt
+	< ../working/entities.tmp.txt \
+	> ../working/freebase.tmp.txt
+	python scripts/distant-eval/dump_triples.py \
+	< ../working/freebase.tmp.txt \
+	> ../working/freebase.tmp.triples.txt
+	sort -u ../working/freebase.tmp.triples.txt | gzip > data/spades/freebase.spades.txt.gz
 
 clean_data_%:
 	zcat data/distant_eval/parses/$*/train.json.gz \
