@@ -779,6 +779,30 @@ public class LexicalGraph extends Graph<LexicalItem> {
     return shortestPath;
   }
 
+  
+  /**
+   * Returns the count node attached to the current node.
+   * 
+   * @param node
+   * @return
+   */
+  public LexicalItem nodeToCountNode(LexicalItem node) {
+    HashSet<LexicalItem> countNodes = getCountNode();
+    for (LexicalItem countNode : countNodes) {
+      Set<Property> countProperties = getProperties(countNode);
+      for (Property countProperty : countProperties) {
+        if (countProperty.getPropertyName()
+            .equals(SemanticCategoryType.COUNT.toString())) {
+          String value = countProperty.getArguments();
+          if (node.getWordPosition() == Integer.valueOf(value.split(":")[0])) {
+            return countNode;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   public void hyperExpand() {
     List<LexicalItem> graphNodes = Lists.newArrayList(getActualNodes());
     HashSet<LexicalItem> questionNodes = getQuestionNode();
@@ -794,12 +818,18 @@ public class LexicalGraph extends Graph<LexicalItem> {
           new Property(SemanticCategoryType.QUESTION.toString()));
       questionNodes.add(dummyNode);
     }
-    LexicalItem questionNode = questionNodes.iterator().next();
+    LexicalItem mainNode = questionNodes.iterator().next();
+    
+    // If the question node indicates a count, treat the count node as mainNode. 
+    LexicalItem countNode = nodeToCountNode(mainNode);
+    if (countNode != null) {
+      mainNode = countNode;
+    }
 
     for (LexicalItem entityNode : graphNodes) {
       if (entityNode.isEntity()) {
         List<Edge<LexicalItem>> shortestPath =
-            getShortestPath(questionNode, entityNode);
+            getShortestPath(mainNode, entityNode);
 
         if (shortestPath.size() == 0) {
           LexicalItem dummyNode =
@@ -809,7 +839,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
           dummyNode.setWordPosition(getActualNodes().size());
           getActualNodes().add(dummyNode);
           Edge<LexicalItem> directEdge =
-              new Edge<>(questionNode, entityNode, dummyNode, new Relation(
+              new Edge<>(mainNode, entityNode, dummyNode, new Relation(
                   SentenceKeys.DUMMY_WORD, SentenceKeys.DUMMY_WORD));
           addEdge(directEdge);
           shortestPath.add(directEdge);
@@ -821,7 +851,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
         for (Edge<LexicalItem> entityEdge : entityEdges) {
           removeEdge(entityEdge);
         }
-        addEdge(new Edge<>(questionNode, entityNode, mainEdge.getMediator(),
+        addEdge(new Edge<>(mainNode, entityNode, mainEdge.getMediator(),
             mainEdge.getRelation()));
       }
     }

@@ -430,6 +430,41 @@ public class CreateGroundedGraphsFromSemanticParseTest {
       }
     }
   }
+  
+  @Test
+  public void testHyperExpandWithCount() throws IOException {
+    String[] relationLexicalIdentifiers = {"lemma"};
+    String[] relationTypingIdentifiers = {};
+    graphCreator = new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
+        questionCcgAutoLexicon, relationLexicalIdentifiers,
+        relationTypingIdentifiers, new StructuredPercepton(), 1, true,
+        true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, false, false, false, false, false, false, true, 10.0,
+        1.0, 0.0, 0.0);
+    JsonObject sentence =
+        jsonParser
+            .parse(
+                "{\"entities\": [{\"index\": 0, \"end\": 0, \"name\": \"Portable document format reference manual\", \"entity\": \"m.050_gqz\", \"start\": 0, \"score\": 22.863161010229465, \"phrase\": \"portable document format\"}], \"words\": [{\"index\": 1, \"head\": \"2\", \"word\": \"portabledocumentformat\", \"dep\": \"nsubj\", \"fpos\": \"PROPN\", \"pos\": \"PROPN\", \"lemma\": \"PortableDocumentFormat\", \"phead\": \"_\", \"feats\": \"_\", \"pdep\": \"_\"}, {\"index\": 2, \"head\": \"0\", \"word\": \"supports\", \"dep\": \"root\", \"fpos\": \"VERB\", \"pos\": \"VERB\", \"lemma\": \"support\", \"phead\": \"_\", \"feats\": \"_\", \"pdep\": \"_\"}, {\"index\": 3, \"head\": \"4\", \"word\": \"how\", \"dep\": \"advmod\", \"fpos\": \"ADV\", \"pos\": \"ADV\", \"lemma\": \"how\", \"phead\": \"_\", \"feats\": \"_\", \"pdep\": \"_\"}, {\"index\": 4, \"head\": \"6\", \"word\": \"many\", \"dep\": \"amod\", \"fpos\": \"ADJ\", \"pos\": \"ADJ\", \"lemma\": \"many\", \"phead\": \"_\", \"feats\": \"_\", \"pdep\": \"_\"}, {\"index\": 5, \"head\": \"6\", \"word\": \"computing\", \"dep\": \"compound\", \"fpos\": \"NOUN\", \"pos\": \"NOUN\", \"lemma\": \"compute\", \"phead\": \"_\", \"feats\": \"_\", \"pdep\": \"_\"}, {\"index\": 6, \"head\": \"2\", \"word\": \"platforms\", \"dep\": \"dobj\", \"fpos\": \"NOUN\", \"pos\": \"NOUN\", \"lemma\": \"platform\", \"phead\": \"_\", \"feats\": \"_\", \"pdep\": \"_\"}, {\"index\": 7, \"head\": \"2\", \"word\": \"?\", \"dep\": \"punct\", \"fpos\": \"PUNCT\", \"pos\": \"PUNCT\", \"sentEnd\": true, \"lemma\": \"?\", \"phead\": \"_\", \"feats\": \"_\", \"pdep\": \"_\"}], \"dependency_lambda\": [[\"COUNT(5:x , 2:x)\", \"computing.platforms(4:s , 5:x)\", \"how(2:s , 2:x)\", \"QUESTION(2:x)\", \"support.arg2(1:e , 5:x)\", \"many(3:s , 2:x)\", \"platforms(5:s , 5:x)\"], [\"many(3:s , 5:x)\", \"support.arg1(1:e , 0:m.portabledocumentformat)\", \"how(2:s , 5:x)\", \"computing.platforms(4:s , 5:x)\", \"QUESTION(5:x)\", \"support.arg2(1:e , 5:x)\", \"platforms(5:s , 5:x)\"]]}")
+            .getAsJsonObject();
+
+    List<JsonObject> jsonSentences = Lists.newArrayList();
+    jsonSentences.add(sentence);
+
+    for (JsonObject jsonSentence : jsonSentences) {
+      List<LexicalGraph> graphs =
+          graphCreator.buildUngroundedGraph(jsonSentence,
+              SentenceKeys.DEPENDENCY_LAMBDA, 1, logger);
+
+      System.out.println("# Ungrounded Graphs");
+      if (graphs.size() > 0) {
+        for (LexicalGraph ungroundedGraph : graphs) {
+          System.out.println("Ungrounded Graph: ");
+          System.out.println(ungroundedGraph);
+        }
+      }
+    }
+  }
 
   @Test
   public void testUngroundedFromDependencyUD() throws IOException {
