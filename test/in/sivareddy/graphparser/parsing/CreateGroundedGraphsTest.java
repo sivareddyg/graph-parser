@@ -37,7 +37,7 @@ public class CreateGroundedGraphsTest {
     groundedLexicon = new GroundedLexicon("lib_data/dummy.txt");
     schema = new Schema("data/freebase/schema/all_domains_schema.txt");
     kb =
-        new KnowledgeBaseOnline("kinloch", "http://kinloch:8890/sparql", "dba",
+        new KnowledgeBaseOnline("buck.inf.ed.ac.uk", "http://buck.inf.ed.ac.uk:8890/sparql", "dba",
             "dba", 0, schema);
     questionCcgAutoLexicon =
         new CcgAutoLexicon("./lib_data/candc_markedup.modified",

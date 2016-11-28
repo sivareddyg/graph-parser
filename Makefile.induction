@@ -72,6 +72,7 @@ dump_entities:
 	< ../working/freebase.tmp.txt \
 	> ../working/freebase.tmp.triples.txt
 	sort -u ../working/freebase.tmp.triples.txt | gzip > data/spades/freebase.spades.txt.gz
+	rm ../working/freebase.tmp.txt ../working/freebase.tmp.triples.txt
 
 clean_data_%:
 	zcat data/distant_eval/parses/$*/train.json.gz \

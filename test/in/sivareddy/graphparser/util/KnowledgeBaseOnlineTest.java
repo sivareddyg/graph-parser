@@ -21,7 +21,7 @@ public class KnowledgeBaseOnlineTest {
         new Schema("data/freebase/schema/all_domains_schema.txt");
     
     KnowledgeBaseOnline kb =
-        new KnowledgeBaseOnline("buck", "http://buck:8890/sparql", "dba",
+        new KnowledgeBaseOnline("buck.inf.ed.ac.uk", "http://buck.inf.ed.ac.uk:8890/sparql", "dba",
             "dba", 100000, schema);
 
     System.out.println("dennis bergkamp");
