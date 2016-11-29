@@ -158,7 +158,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> evaluateOnlyTheFirstBest;
   private OptionSpec<Boolean> evaluateBeforeTraining;
   private OptionSpec<Boolean> handleEventEventEdges;
-  private OptionSpec<Boolean> useBackOffGraph;
+  private OptionSpec<Boolean> useExpand;
   private OptionSpec<Boolean> useHyperExpand;
 
   @Override
@@ -636,11 +636,11 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
                 "Split event-event edge to event-entity, event-entity edges. Use only when the representation cannot handle control cases. ")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
-    useBackOffGraph =
+    useExpand =
         parser
             .accepts(
-                "useBackOffGraph",
-                "Adds a back off graph if there is no path between question node and entity nodes.")
+                "useExpand",
+                "Allow graph expansion when there is no path between question node and an entity node.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     useHyperExpand =
@@ -809,7 +809,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       boolean evaluateBeforeTrainingVal =
           options.valueOf(evaluateBeforeTraining);
       boolean handleEventEventEdgesVal = options.valueOf(handleEventEventEdges);
-      boolean useBackOffGraphVal = options.valueOf(useBackOffGraph);
+      boolean useBackOffGraphVal = options.valueOf(useExpand);
       boolean useHyperExpandVal = options.valueOf(useHyperExpand);
 
       boolean groundTrainingCorpusInTheEndVal =

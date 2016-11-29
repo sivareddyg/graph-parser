@@ -1138,7 +1138,7 @@ easyccg_supervised_without_merge_with_expand:
 	-useGoldRelations true \
 	-allowMerging false \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest true \
 	-entityScoreFlag true \
@@ -1274,7 +1274,7 @@ easyccg_supervised_with_merge_with_expand:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
@@ -1344,7 +1344,7 @@ easyccg_supervised_with_merge_with_expand_with_lexicon:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
@@ -1414,7 +1414,7 @@ easyccg_supervised_with_merge_with_expand_with_lexicon_full:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
@@ -1488,7 +1488,7 @@ easyccg_supervised_with_merge_with_expand_full:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
 	-entityScoreFlag true \
@@ -1627,7 +1627,7 @@ deplambda_singletype_supervised_without_merge_with_expand:
 	-useGoldRelations true \
 	-allowMerging false \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -1697,7 +1697,7 @@ deplambda_singletype_supervised_with_merge_with_expand:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -1767,7 +1767,7 @@ deplambda_singletype_supervised_with_merge_with_expand_with_lexicon:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -1837,7 +1837,7 @@ deplambda_singletype_supervised_with_merge_with_expand_with_lexicon_full:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -1910,7 +1910,7 @@ deplambda_singletype_supervised_with_merge_with_copulath_expand:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -1980,7 +1980,7 @@ deplambda_singletype_supervised_with_merge_with_copula_with_lexicon:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -2049,7 +2049,7 @@ deplambda_singletype_supervised_without_merge_without_expand:
 	-useGoldRelations true \
 	-allowMerging false \
 	-handleEventEventEdges true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -2118,7 +2118,7 @@ deplambda_singletype_supervised_with_merge_without_expand:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -2187,7 +2187,7 @@ deplambda_singletype_supervised_with_merge_with_expand_full:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -2257,7 +2257,7 @@ deplambda_singletype_supervised_without_merge_without_expand_full:
 	-useGoldRelations true \
 	-allowMerging false \
 	-handleEventEventEdges true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -2327,7 +2327,7 @@ deplambda_singletype_supervised_with_merge_without_expand_full:
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
 	-entityWordOverlapFlag true \
@@ -3278,7 +3278,7 @@ free917_easyccg_supervised_with_merge_with_expand_full:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-allowMerging true \
@@ -3351,7 +3351,7 @@ free917_easyccg_supervised_with_merge_with_expand:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-allowMerging true \
@@ -3423,7 +3423,7 @@ free917_easyccg_supervised_with_merge_with_expand_with_lexicon_full:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-allowMerging true \
@@ -3642,7 +3642,7 @@ free917_easyccg_supervised_without_merge_with_expand:
 	-useGoldRelations true \
 	-allowMerging false \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
 	-entityScoreFlag true \
@@ -3713,7 +3713,7 @@ free917_deplambda_singletype_supervised_with_merge_with_expand:
 	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-allowMerging true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
@@ -3785,7 +3785,7 @@ free917_deplambda_singletype_supervised_without_merge_with_expand:
 	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-allowMerging false \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
@@ -3857,7 +3857,7 @@ free917_deplambda_singletype_supervised_without_merge_without_expand:
 	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-handleEventEventEdges true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-allowMerging false \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
@@ -3929,7 +3929,7 @@ free917_deplambda_singletype_supervised_with_merge_without_expand:
 	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-allowMerging false \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
@@ -4001,7 +4001,7 @@ free917_deplambda_singletype_supervised_with_merge_with_expand_full:
 	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-allowMerging true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \
@@ -4074,7 +4074,7 @@ free917_deplambda_singletype_supervised_with_merge_with_expand_with_lexicon_full
 	-useAnswerTypeQuestionWordFlag true \
 	-useGoldRelations true \
 	-handleEventEventEdges true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-allowMerging true \
 	-evaluateBeforeTraining false \
 	-evaluateOnlyTheFirstBest false \

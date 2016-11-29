@@ -114,7 +114,7 @@ easyccg_supervised_with_merge_with_expand_full:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
@@ -184,7 +184,7 @@ easysrl_supervised_with_merge_with_expand_full:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph true \
+	-useExpand true \
 	-useGoldRelations true \
 	-allowMerging true \
 	-handleEventEventEdges true \
@@ -254,7 +254,7 @@ easyccg_supervised_without_merge_without_expand_full:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-allowMerging false \
 	-handleEventEventEdges true \
@@ -324,7 +324,7 @@ easysrl_supervised_without_merge_without_expand_full:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-allowMerging false \
 	-handleEventEventEdges true \

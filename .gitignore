@@ -9,3 +9,5 @@ commands*
 lib
 lib_data/easyccg_model/
 lib_data/easyccg_model_questions/
+*.jar
+.ant-targets-build.xml

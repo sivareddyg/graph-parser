@@ -455,7 +455,7 @@ easyccg_supervised_noparaphrases:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -527,7 +527,7 @@ test_easyccg_supervised_noparaphrases:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -599,7 +599,7 @@ easyccg_supervised_withoutclassifier_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -671,7 +671,7 @@ test_easyccg_supervised_withoutclassifier_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -743,7 +743,7 @@ easyccg_supervised_combined_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -815,7 +815,7 @@ test_easyccg_supervised_combined_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -887,7 +887,7 @@ easyccg_supervised_deep_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -959,7 +959,7 @@ test_easyccg_supervised_deep_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -1031,7 +1031,7 @@ easyccg_supervised_spectral_ppdb_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -1103,7 +1103,7 @@ test_easyccg_supervised_spectral_ppdb_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -1175,7 +1175,7 @@ easyccg_supervised_spectral_noppdb_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -1247,7 +1247,7 @@ test_easyccg_supervised_spectral_noppdb_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -1319,7 +1319,7 @@ easyccg_supervised_mt_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \
@@ -1391,7 +1391,7 @@ test_easyccg_supervised_mt_paraphrase_%:
 	-useLexiconWeightsRel true \
 	-useLexiconWeightsType false \
 	-validQueryFlag true \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useGoldRelations true \
 	-useAnswerTypeQuestionWordFlag false \
 	-allowMerging false \

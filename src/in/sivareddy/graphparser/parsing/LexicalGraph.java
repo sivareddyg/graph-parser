@@ -598,7 +598,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
     return nodes;
   }
 
-  public boolean hasPath(LexicalItem node1, LexicalItem node2) {
+  public boolean hasPathWithNoIntermediateEntity(LexicalItem node1, LexicalItem node2) {
     // Check if a path exists.
     Set<LexicalItem> nodesVisited = new HashSet<>();
     LinkedList<LexicalItem> toVisitNodes = new LinkedList<>();
@@ -611,42 +611,14 @@ public class LexicalGraph extends Graph<LexicalItem> {
         continue;
       for (Edge<LexicalItem> edge : edges) {
         LexicalItem newNode = edge.getRight();
-        if (!nodesVisited.contains(newNode)) {
-          if (newNode.equals(node2)) {
-            return true;
-          }
+        if (newNode.equals(node2))
+          return true;
+        if (!nodesVisited.contains(newNode) && !newNode.isEntity()) {
           toVisitNodes.add(newNode);
         }
       }
     }
     return false;
-  }
-
-  public boolean hasPathBetweenQuestionAndEntityNodes() {
-    Set<LexicalItem> realQuestionNodes = getQuestionNode();
-    Set<LexicalItem> questionNodes =
-        realQuestionNodes.stream().filter(x -> !x.isEntity())
-            .collect(Collectors.toSet());
-
-    if (questionNodes.size() == 0) {
-      return false;
-    }
-
-    Set<LexicalItem> entityNodes =
-        this.getActualNodes().stream().filter(x -> x.isEntity())
-            .collect(Collectors.toSet());
-
-    if (entityNodes.size() == 0)
-      return false;
-
-    boolean hasPath = true;
-    for (LexicalItem questionNode : questionNodes) {
-      for (LexicalItem entityNode : entityNodes) {
-        hasPath &= hasPath(questionNode, entityNode);
-      }
-    }
-
-    return hasPath;
   }
 
   public boolean removeMultipleQuestionNodes() {
@@ -697,46 +669,27 @@ public class LexicalGraph extends Graph<LexicalItem> {
   }
 
   /**
-   * Returns edges that are in-between a question node and an entity. There is
-   * no use at least on WebQuestions or Free917 to merge other hanging edges in
-   * the graph.
+   * Returns edges that are in-between a source node and an entity. For
+   * WebQuestions and Free917, the source node is always a question node. There
+   * is no use (at least on WebQuestions or Free917) to merge other edges in the
+   * graph.
    * 
    * @return
    */
-  public Set<Edge<LexicalItem>> getMergeableEdges() {
-    Set<Edge<LexicalItem>> mergeableEdges = new HashSet<>();
-    HashSet<LexicalItem> questionNodes = getQuestionNode();
-    if (questionNodes.size() == 0)
-      return mergeableEdges;
-    LexicalItem questionNode = questionNodes.iterator().next();
-    Map<LexicalItem, Edge<LexicalItem>> shortestPathEdges = new HashMap<>();
+  public Map<Edge<LexicalItem>, Edge<LexicalItem>> getMergeableEdges(
+      LexicalItem sourceNode) {
+    Map<Edge<LexicalItem>, Edge<LexicalItem>> mergeableEdges = new HashMap<>();
     Set<LexicalItem> graphNodes = getNodes();
-
-    Set<LexicalItem> nodesVisited = new HashSet<>();
-    LinkedList<LexicalItem> toVisitNodes = new LinkedList<>();
-    toVisitNodes.add(questionNode);
-    while (toVisitNodes.peek() != null) {
-      LexicalItem node = toVisitNodes.poll();
-      nodesVisited.add(node);
-      TreeSet<Edge<LexicalItem>> edges = getEdges(node);
-      if (edges == null)
-        continue;
-      for (Edge<LexicalItem> edge : edges) {
-        LexicalItem newNode = edge.getRight();
-        if (!nodesVisited.contains(newNode)) {
-          shortestPathEdges.put(newNode, edge);
-          toVisitNodes.add(newNode);
-        }
-      }
-    }
 
     for (LexicalItem node : graphNodes) {
       if (node.isEntity()) {
-        LexicalItem tempNode = node;
-        while (shortestPathEdges.containsKey(tempNode)) {
-          Edge<LexicalItem> edge = shortestPathEdges.get(tempNode);
-          mergeableEdges.add(edge);
-          tempNode = edge.getLeft();
+        List<Edge<LexicalItem>> path =
+            getShortestPathWithNoEntity(sourceNode, node);
+
+        // Add all edges except the edge containing the entity.
+        if (path.size() > 0) {
+          path.subList(0, path.size() - 1)
+              .forEach(x -> mergeableEdges.put(x, x));
         }
       }
     }
@@ -744,7 +697,14 @@ public class LexicalGraph extends Graph<LexicalItem> {
     return mergeableEdges;
   }
 
-  public List<Edge<LexicalItem>> getShortestPath(LexicalItem node1,
+  /**
+   * Gets shortest path between node1 and node2 without any entities in between.
+   * 
+   * @param node1
+   * @param node2
+   * @return
+   */
+  public List<Edge<LexicalItem>> getShortestPathWithNoEntity(LexicalItem node1,
       LexicalItem node2) {
     Map<LexicalItem, Edge<LexicalItem>> shortestPathEdges = new HashMap<>();
 
@@ -760,10 +720,13 @@ public class LexicalGraph extends Graph<LexicalItem> {
       for (Edge<LexicalItem> edge : edges) {
         LexicalItem newNode = edge.getRight();
         if (!nodesVisited.contains(newNode)) {
-          shortestPathEdges.put(newNode, edge);
-          toVisitNodes.add(newNode);
-          if (newNode.equals(node2))
-            break;
+          // newNode should not be an entity other than the target entity.
+          if (newNode.equals(node2) || !newNode.isEntity()) {
+            shortestPathEdges.put(newNode, edge);
+            toVisitNodes.add(newNode);
+            if (newNode.equals(node2))
+              break;
+          }
         }
       }
     }
@@ -782,6 +745,9 @@ public class LexicalGraph extends Graph<LexicalItem> {
   
   /**
    * Returns the count node attached to the current node.
+   * 
+   * TODO(sivareddyg): In future, similar method has to be implemented for other
+   * mathematical operations such as comparatives, superlatives.
    * 
    * @param node
    * @return
@@ -803,15 +769,14 @@ public class LexicalGraph extends Graph<LexicalItem> {
     return null;
   }
 
-  public void hyperExpand() {
+  public void expand(boolean hyperExpand) {
     List<LexicalItem> graphNodes = Lists.newArrayList(getActualNodes());
     HashSet<LexicalItem> questionNodes = getQuestionNode();
     if (questionNodes.size() == 0) {
       // Add a dummy question node.
       LexicalItem dummyNode =
-          new LexicalItem("", SentenceKeys.DUMMY_WORD,
-              SentenceKeys.DUMMY_WORD, SentenceKeys.PUNCTUATION_TAGS
-                  .iterator().next(), "", null);
+          new LexicalItem("", SentenceKeys.DUMMY_WORD, SentenceKeys.DUMMY_WORD,
+              SentenceKeys.PUNCTUATION_TAGS.iterator().next(), "", null);
       dummyNode.setWordPosition(getActualNodes().size());
       getActualNodes().add(dummyNode);
       this.addProperty(dummyNode,
@@ -819,8 +784,8 @@ public class LexicalGraph extends Graph<LexicalItem> {
       questionNodes.add(dummyNode);
     }
     LexicalItem mainNode = questionNodes.iterator().next();
-    
-    // If the question node indicates a count, treat the count node as mainNode. 
+
+    // If the question node indicates a count, treat the count node as mainNode.
     LexicalItem countNode = nodeToCountNode(mainNode);
     if (countNode != null) {
       mainNode = countNode;
@@ -829,30 +794,34 @@ public class LexicalGraph extends Graph<LexicalItem> {
     for (LexicalItem entityNode : graphNodes) {
       if (entityNode.isEntity()) {
         List<Edge<LexicalItem>> shortestPath =
-            getShortestPath(mainNode, entityNode);
+            getShortestPathWithNoEntity(mainNode, entityNode);
 
         if (shortestPath.size() == 0) {
-          LexicalItem dummyNode =
-              new LexicalItem("", SentenceKeys.DUMMY_WORD,
-                  SentenceKeys.DUMMY_WORD, SentenceKeys.PUNCTUATION_TAGS
-                      .iterator().next(), "", null);
+          LexicalItem dummyNode = new LexicalItem("", SentenceKeys.DUMMY_WORD,
+              SentenceKeys.DUMMY_WORD,
+              SentenceKeys.PUNCTUATION_TAGS.iterator().next(), "", null);
           dummyNode.setWordPosition(getActualNodes().size());
           getActualNodes().add(dummyNode);
-          Edge<LexicalItem> directEdge =
-              new Edge<>(mainNode, entityNode, dummyNode, new Relation(
-                  SentenceKeys.DUMMY_WORD, SentenceKeys.DUMMY_WORD));
+          Edge<LexicalItem> directEdge = new Edge<>(mainNode, entityNode,
+              dummyNode,
+              new Relation(SentenceKeys.DUMMY_WORD, SentenceKeys.DUMMY_WORD));
           addEdge(directEdge);
           shortestPath.add(directEdge);
         }
 
-        Edge<LexicalItem> mainEdge = shortestPath.get(shortestPath.size() - 1);
-        List<Edge<LexicalItem>> entityEdges =
-            Lists.newArrayList(getEdges(entityNode));
-        for (Edge<LexicalItem> entityEdge : entityEdges) {
-          removeEdge(entityEdge);
+        if (hyperExpand) {
+          // There should exist only one edge between the main node and an
+          // entity node.
+          Edge<LexicalItem> mainEdge =
+              shortestPath.get(shortestPath.size() - 1);
+          List<Edge<LexicalItem>> entityEdges =
+              Lists.newArrayList(getEdges(entityNode));
+          for (Edge<LexicalItem> entityEdge : entityEdges) {
+            removeEdge(entityEdge);
+          }
+          addEdge(new Edge<>(mainNode, entityNode, mainEdge.getMediator(),
+              mainEdge.getRelation()));
         }
-        addEdge(new Edge<>(mainNode, entityNode, mainEdge.getMediator(),
-            mainEdge.getRelation()));
       }
     }
   }

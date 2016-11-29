@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,6 +25,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.junit.Before;
 import org.junit.Test;
+import org.maltparser.core.helper.HashSet;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -368,6 +370,55 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     }
   }
 
+  @Test
+  public void testGroundedGraphsWithMergeAndExpand() throws IOException {
+    List<JsonObject> jsonSentences = Lists.newArrayList();
+
+    JsonObject sentence =
+        jsonParser
+            .parse(
+                "{\"sentence\":\"what is the name of the founder of Stanford in California?\",\"entities\": [{\"index\": 8, \"score\": 0.56333, \"entity\": \"m.06pwq\"}, {\"index\": 10, \"score\": 0.999988, \"entity\": \"m.01n7q\"}],\"words\":[{\"word\":\"what\",\"lemma\":\"what\",\"pos\":\"PRON\",\"ner\":\"O\",\"dep\":\"root\",\"head\":0,\"index\":1},{\"word\":\"is\",\"lemma\":\"be\",\"pos\":\"VERB\",\"ner\":\"O\",\"index\":2,\"head\":1,\"dep\":\"cop\"},{\"word\":\"the\",\"lemma\":\"the\",\"pos\":\"DET\",\"ner\":\"O\",\"index\":3,\"head\":4,\"dep\":\"det\"},{\"word\":\"name\",\"lemma\":\"name\",\"pos\":\"NOUN\",\"ner\":\"O\",\"index\":4,\"head\":1,\"dep\":\"nsubj\"},{\"word\":\"of\",\"lemma\":\"of\",\"pos\":\"ADP\",\"ner\":\"O\",\"index\":5,\"head\":7,\"dep\":\"case\"},{\"word\":\"the\",\"lemma\":\"the\",\"pos\":\"DET\",\"ner\":\"O\",\"index\":6,\"head\":7,\"dep\":\"det\"},{\"word\":\"founder\",\"lemma\":\"founder\",\"pos\":\"NOUN\",\"ner\":\"O\",\"index\":7,\"head\":4,\"dep\":\"nmod\"},{\"word\":\"of\",\"lemma\":\"of\",\"pos\":\"ADP\",\"ner\":\"O\",\"index\":8,\"head\":9,\"dep\":\"case\"},{\"word\":\"Stanford\",\"lemma\":\"stanford\",\"pos\":\"PROPN\",\"ner\":\"LOCATION\",\"index\":9,\"head\":7,\"dep\":\"nmod\"},{\"word\":\"in\",\"lemma\":\"in\",\"pos\":\"ADP\",\"ner\":\"O\",\"index\":10,\"head\":9,\"dep\":\"case\"},{\"word\":\"California\",\"lemma\":\"california\",\"pos\":\"PROPN\",\"ner\":\"LOCATION\",\"index\":11,\"head\":4,\"dep\":\"nmod\"},{\"word\":\"?\",\"lemma\":\"?\",\"pos\":\"PUNCT\",\"ner\":\"O\",\"index\":12,\"head\":1,\"dep\":\"punct\",\"sentEnd\":true}],\"dependency_lambda\":[[\"QUESTION(0:x)\",\"name.arg0(3:e , 3:x)\",\"arg0(8:e , 8:m.stanford)\",\"arg0(10:e , 10:m.california)\",\"founder.arg0(6:e , 6:x)\",\"founder.nmod.of(6:e , 8:m.stanford)\",\"what.arg1(0:e , 3:x)\",\"name(3:s , 3:x)\",\"name.nmod.of(3:e , 6:x)\",\"what(0:s , 0:x)\",\"founder(6:s , 6:x)\",\"nmod.in(8:e , 10:m.california)\",\"what.arg0(0:e , 0:x)\"]]}")
+            .getAsJsonObject();
+    jsonSentences.add(sentence);
+
+    for (JsonObject jsonSentence : jsonSentences) {
+      List<LexicalGraph> graphs =
+          graphCreator.buildUngroundedGraph(jsonSentence,
+              SentenceKeys.DEPENDENCY_LAMBDA, 1, logger);
+
+      System.out.println("# Ungrounded Graphs");
+      Set<LexicalGraph> totalUGraphs = new HashSet<>();
+      if (graphs.size() > 0) {
+        for (LexicalGraph ungroundedGraph : graphs) {
+          System.out.println(ungroundedGraph);
+          if (ungroundedGraph.getQuestionNode().iterator().hasNext()) {
+            List<LexicalGraph> groundedGraphs =
+                graphCreator.createGroundedGraph(ungroundedGraph, null, 1000,
+                    10000, true, true, false, false, false, false, true, false);
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
+
+            for (LexicalGraph groundedGraph : groundedGraphs) {
+              System.out.println(groundedGraph.getParallelGraph());
+              totalUGraphs.add(groundedGraph.getParallelGraph());
+              System.out.println(groundedGraph);
+              System.out.println("Graph Query: "
+                  + GraphToSparqlConverter.convertGroundedGraph(groundedGraph,
+                      schema, 200));
+              System.out.println("Features: " + groundedGraph.getFeatures());
+            }
+
+            System.out.println("# Total number of Grounded Graphs: "
+                + groundedGraphs.size());
+            System.out.println();
+          }
+          System.out.println(totalUGraphs);
+        }
+      }
+    }
+  }
+
+  
 
   @Test
   public void testUngroundedFromDependency() throws IOException {

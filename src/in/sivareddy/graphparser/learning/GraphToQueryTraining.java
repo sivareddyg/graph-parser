@@ -137,7 +137,7 @@ public class GraphToQueryTraining {
       boolean paraphraseScoreFlag, boolean paraphraseClassifierScoreFlag,
       boolean allowMerging, boolean useGoldRelations,
       boolean evaluateOnlyTheFirstBest, boolean handleEventEventEdges,
-      boolean useBackOffGraph, boolean useHyperExpand,
+      boolean useExpand, boolean useHyperExpand,
       double initialEdgeWeight, double initialTypeWeight,
       double initialWordWeight, double stemFeaturesWeight,
       RdfGraphTools rdfGraphTools, List<String> kbGraphUri) throws IOException {
@@ -199,7 +199,7 @@ public class GraphToQueryTraining {
             duplicateEdgesFlag, ignorePronouns, handleNumbers, entityScoreFlag,
             entityWordOverlapFlag, paraphraseScoreFlag,
             paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
-            useBackOffGraph, useHyperExpand, initialEdgeWeight,
+            useExpand, useHyperExpand, initialEdgeWeight,
             initialTypeWeight, initialWordWeight, stemFeaturesWeight);
   }
 

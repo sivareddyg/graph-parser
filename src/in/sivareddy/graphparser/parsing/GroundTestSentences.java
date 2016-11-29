@@ -82,7 +82,7 @@ public class GroundTestSentences {
 
     boolean allowMerging = false;
     boolean handleEventEventEdges = false;
-    boolean useBackOffGraph = false;
+    boolean useExpand = false;
     boolean useHyperExpand = false;
     
     double initialEdgeWeight = -1.0;
@@ -108,7 +108,7 @@ public class GroundTestSentences {
             ignorePronouns, handleNumbers, entityScoreFlag,
             entityWordOverlapFlag, paraphraseScoreFlag,
             paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
-            useBackOffGraph, useHyperExpand, initialEdgeWeight,
+            useExpand, useHyperExpand, initialEdgeWeight,
             initialTypeWeight, initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new

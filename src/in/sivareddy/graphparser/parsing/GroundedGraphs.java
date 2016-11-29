@@ -131,7 +131,7 @@ public class GroundedGraphs {
   private boolean paraphraseClassifierScoreFlag = false;
   private boolean allowMerging = false;
   private boolean handleEventEventEdges = false;
-  private boolean useBackOffGraph = false;
+  private boolean useExpand = false;
   private boolean useHyperExpand = false;
 
   private StructuredPercepton learningModel;
@@ -163,7 +163,7 @@ public class GroundedGraphs {
       boolean ignorePronouns, boolean handleNumbers, boolean entityScoreFlag,
       boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
       boolean paraphraseClassifierScoreFlag, boolean allowMerging,
-      boolean handleEventEventEdges, boolean useBackOffGraph,
+      boolean handleEventEventEdges, boolean useExpand,
       boolean useHyperExpand, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
       double stemFeaturesWeight) throws IOException {
@@ -208,7 +208,7 @@ public class GroundedGraphs {
     this.duplicateEdgesFlag = duplicateEdgesFlag;
     this.allowMerging = allowMerging;
     this.handleEventEventEdges = handleEventEventEdges;
-    this.useBackOffGraph = useBackOffGraph;
+    this.useExpand = useExpand;
     this.useHyperExpand = useHyperExpand;
 
     this.entityScoreFlag = entityScoreFlag;
@@ -399,39 +399,18 @@ public class GroundedGraphs {
     // multiple question nodes, and retain only the one that appear first.
     graphs.forEach(g -> g.removeMultipleQuestionNodes());
 
-    if ((useBackOffGraph)
+    if ((useExpand)
         && (key.equals(SentenceKeys.CCG_PARSES) || key
             .equals(SentenceKeys.DEPENDENCY_LAMBDA))) {
-      // If there is no path found between question and entity nodes, use a
-      // backoff graph.
-      boolean graphHasPath = false;
+      // Expand the graph with new edges.
       for (LexicalGraph graph : graphs) {
-        graphHasPath |= graph.hasPathBetweenQuestionAndEntityNodes();
-      }
-
-      if (!graphHasPath) {
-        JsonArray semPars = new JsonArray();
-        graphs.forEach(x -> semPars.add(jsonParser.parse(gson.toJson(x
-            .getSemanticParse()))));
-        graphs.clear();
-        for (JsonElement semPar : semPars) {
-          JsonArray predicates = semPar.getAsJsonArray();
-          Set<String> semanticParse = new HashSet<>();
-          predicates.forEach(x -> semanticParse.add(x.getAsString()));
-          LexicalGraph backOffGraph =
-              buildBackOffUngroundedGraph(jsonSentence, semanticParse);
-          if (backOffGraph != null) {
-            graphs.add(backOffGraph);
-          }
-        }
+          graph.expand(false);
       }
     }
 
     if (useHyperExpand) {
-      // If there is no path found between question and entity nodes, use a
-      // backoff graph.
       for (LexicalGraph graph : graphs) {
-        graph.hyperExpand();
+        graph.expand(true);
       }
     }
 
@@ -1538,15 +1517,15 @@ public class GroundedGraphs {
 
     // See if there are any question nodes and ignore the graphs that do not
     // have an edge from question node
-    Map<LexicalItem, Set<Property>> graphProperties = graph.getProperties();
     LexicalItem questionOrCountNode = null;
-    for (LexicalItem node : graphProperties.keySet()) {
-      questionOrCountNode =
-          graph.isQuestionNode(node) || graph.isCountNode(node) ? node : null;
-      if (questionOrCountNode != null)
-        break;
+    HashSet<LexicalItem> questionNodes = graph.getQuestionNode();
+    if (questionNodes != null && questionNodes.size() > 0) {
+      questionOrCountNode = questionNodes.iterator().next();
     }
-
+    LexicalItem countNode = graph.nodeToCountNode(questionOrCountNode);
+    if (countNode != null) 
+      questionOrCountNode = countNode;
+    
     LexicalGraph groundedGraph = new LexicalGraph();
     groundedGraph.setParallelGraph(graph);
 
@@ -1558,7 +1537,8 @@ public class GroundedGraphs {
         .getParallelGraph().hashCode()), true);
     // graphsSoFar.add(groundedGraph);
 
-    Set<Edge<LexicalItem>> mergableEdges = graph.getMergeableEdges();
+    Map<Edge<LexicalItem>, Edge<LexicalItem>> mergableEdges =
+        graph.getMergeableEdges(questionOrCountNode);
 
     Set<LexicalItem> nodesCovered = Sets.newHashSet();
     for (Edge<LexicalItem> edge : edges) {
@@ -1567,9 +1547,9 @@ public class GroundedGraphs {
 
       // Graphs formed using MERGE operation.
       List<LexicalGraph> mergedGraphs = new ArrayList<>();
-      if (allowMerging && mergableEdges.contains(edge)) {
+      if (allowMerging && mergableEdges.containsKey(edge)) {
         mergedGraphs =
-            mergeEdge(groundedGraphs, edge, restrictedNodes,
+            mergeEdge(groundedGraphs, mergableEdges.get(edge), restrictedNodes,
                 edgeGroundingConstraints, nonMergableNodes, graphsSoFar,
                 nbestEdges, nbestGraphs, useEntityTypes, useKB,
                 groundFreeVariables, groundEntityVariableEdges,
@@ -1761,43 +1741,11 @@ public class GroundedGraphs {
     for (LexicalGraph gGraph : groundedGraphs) {
       LexicalItem node1 = gGraph.getUnifiedNode(node1Old);
       LexicalItem node2 = gGraph.getUnifiedNode(node2Old);
-
-      if (!node1.isEntity() && !node2.isEntity()) {
-        // The way you combine two nodes should be consistent, or else you will
-        // end up with conflicting features. This effect is empirically
-        // significant.
-        int order =
-            edge.getRelation().getLeft()
-                .compareTo(edge.getRelation().getRight());
-        if (order == 0) {
-          order = node1.getPos().compareTo(node2.getPos());
-        }
-
-        if (order <= 0) {
-          mergedGraphs.addAll(mergeNodes(gGraph, node1, node2, restrictedNodes,
-              edgeGroundingConstraints, nonMergableNodes, graphsSoFar,
-              nbestEdges, nbestGraphs, useEntityTypes, useKB,
-              groundFreeVariables, groundEntityVariableEdges,
-              groundEntityEntityEdges, testing, ignoreTypes));
-        } else {
-          mergedGraphs.addAll(mergeNodes(gGraph, node2, node1, restrictedNodes,
-              edgeGroundingConstraints, nonMergableNodes, graphsSoFar,
-              nbestEdges, nbestGraphs, useEntityTypes, useKB,
-              groundFreeVariables, groundEntityVariableEdges,
-              groundEntityEntityEdges, testing, ignoreTypes));
-        }
-      } else {
-        mergedGraphs.addAll(mergeNodes(gGraph, node1, node2, restrictedNodes,
-            edgeGroundingConstraints, nonMergableNodes, graphsSoFar,
-            nbestEdges, nbestGraphs, useEntityTypes, useKB,
-            groundFreeVariables, groundEntityVariableEdges,
-            groundEntityEntityEdges, testing, ignoreTypes));
-        mergedGraphs.addAll(mergeNodes(gGraph, node2, node1, restrictedNodes,
-            edgeGroundingConstraints, nonMergableNodes, graphsSoFar,
-            nbestEdges, nbestGraphs, useEntityTypes, useKB,
-            groundFreeVariables, groundEntityVariableEdges,
-            groundEntityEntityEdges, testing, ignoreTypes));
-      }
+      mergedGraphs.addAll(mergeNodes(gGraph, node1, node2, restrictedNodes,
+          edgeGroundingConstraints, nonMergableNodes, graphsSoFar, nbestEdges,
+          nbestGraphs, useEntityTypes, useKB, groundFreeVariables,
+          groundEntityVariableEdges, groundEntityEntityEdges, testing,
+          ignoreTypes));
     }
     return mergedGraphs;
   }

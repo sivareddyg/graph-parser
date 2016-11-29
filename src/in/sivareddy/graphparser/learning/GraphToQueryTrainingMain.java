@@ -89,7 +89,7 @@ public class GraphToQueryTrainingMain {
       boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
       boolean paraphraseClassifierScoreFlag, boolean allowMerging,
       boolean useGoldRelations, boolean evaluateOnlyTheFirstBest,
-      boolean handleEventEventEdges, boolean useBackOffGraph,
+      boolean handleEventEventEdges, boolean useExpand,
       boolean useHyperExpand, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
       double stemFeaturesWeight) throws IOException {
@@ -145,7 +145,7 @@ public class GraphToQueryTrainingMain {
             addBagOfWordsGraph, addOnlyBagOfWordsGraph, handleNumbers,
             entityScoreFlag, entityWordOverlapFlag, paraphraseScoreFlag,
             paraphraseClassifierScoreFlag, allowMerging, useGoldRelations,
-            evaluateOnlyTheFirstBest, handleEventEventEdges, useBackOffGraph,
+            evaluateOnlyTheFirstBest, handleEventEventEdges, useExpand,
             useHyperExpand, initialEdgeWeight, initialTypeWeight,
             initialWordWeight, stemFeaturesWeight, rdfGraphTools, kbGraphUri);
     bestModelSoFar = currentIterationModel.serialClone();

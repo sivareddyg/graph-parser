@@ -76,7 +76,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
       String schemaFile, String endPointName, String semanticParseKey,
       String goldOutputFile, String lexiconFileName, int nthreads,
       boolean allowMerging, boolean handleEventEventEdges,
-      boolean useBackoffGraph, boolean useHyperExpand) throws IOException {
+      boolean useExpand, boolean useHyperExpand) throws IOException {
 
     Schema schema = new Schema(schemaFile);
     RdfGraphTools endPoint =
@@ -116,7 +116,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
             true, true, true, true, true, true, true, true, true, true, true,
             true, true, true, true, true, true, true, true, true, true, true,
             true, true, true, true, true, true, allowMerging,
-            handleEventEventEdges, useBackoffGraph, useHyperExpand, 10.0, 1.0,
+            handleEventEventEdges, useExpand, useHyperExpand, 10.0, 1.0,
             0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
@@ -402,9 +402,9 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     String lexiconFileName = args[4];
     int nthreads = 20;
     boolean allowMerging = Boolean.parseBoolean(args[5]);
-    boolean useBackoffGraph = true;
+    boolean useExpand = true;
     if (args.length > 6)
-      useBackoffGraph = Boolean.parseBoolean(args[6]);
+      useExpand = Boolean.parseBoolean(args[6]);
     
     boolean useHyperExpand = false;
     if (args.length > 7)
@@ -414,7 +414,7 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     EvaluateGraphParserOracleUsingGoldMidAndGoldRelations engine =
         new EvaluateGraphParserOracleUsingGoldMidAndGoldRelations(schemaFile,
             endPointName, semanticParseKey, goldOutputFile, lexiconFileName,
-            nthreads, allowMerging, handleEventEventEdges, useBackoffGraph,
+            nthreads, allowMerging, handleEventEventEdges, useExpand,
             useHyperExpand);
     engine.evaluateAll(System.in, System.out);
   }

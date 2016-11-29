@@ -303,7 +303,7 @@ gq_ccg_with_hyperexpand.32.stem:
 	-useGoldRelations false \
 	-allowMerging false \
 	-handleEventEventEdges false \
-	-useBackOffGraph false \
+	-useExpand false \
 	-useHyperExpand true \
 	-evaluateBeforeTraining false \
 	-entityScoreFlag true \
