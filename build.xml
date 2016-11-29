@@ -556,6 +556,11 @@
             <classpath refid="graph-parser.classpath"/>
         </junit>
     </target>
+    <target name="DumpDatabaseFromEntities">
+        <java classname="in.sivareddy.scripts.DumpDatabaseFromEntities" failonerror="true" fork="yes">
+            <classpath refid="graph-parser.classpath"/>
+        </java>
+    </target>
     <target name="junitreport">
         <junitreport todir="${junit.output.dir}">
             <fileset dir="${junit.output.dir}">
