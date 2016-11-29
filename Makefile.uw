@@ -246,4 +246,77 @@ gq_bow_supervised_without_merge_without_expand:
 	-logFile ../working/gq_bow_supervised_without_merge_without_expand/all.log.txt \
 	> ../working/gq_bow_supervised_without_merge_without_expand/all.txt
 
+gq_ccg_with_hyperexpand.32.stem:
+	rm -rf ../working/gq_ccg_with_hyperexpand.32.stem
+	mkdir -p ../working/gq_ccg_with_hyperexpand.32.stem
+	java -Xms2048m -cp bin:lib/* in.sivareddy.graphparser.cli.RunGraphToQueryTrainingMain \
+	-pointWiseF1Threshold 0.2 \
+	-semanticParseKey synPars \
+	-ccgLexiconQuestions lib_data/lexicon_specialCases_questions_vanilla.txt \
+	-schema data/freebase/schema/sempre2_schema_gp_format.txt \
+	-relationTypesFile lib_data/dummy.txt \
+	-mostFrequentTypesFile data/freebase/stats/freebase_most_frequent_types.txt \
+	-lexicon lib_data/dummy.txt \
+	-domain "http://rdf.freebase.com" \
+	-typeKey "fb:type.object.type" \
+	-nthreads 20 \
+	-trainingSampleSize 2000 \
+	-iterations 10 \
+	-nBestTrainSyntacticParses 1 \
+	-nBestTestSyntacticParses 1 \
+	-nbestGraphs 100 \
+	-forestSize 10 \
+	-ngramLength 1 \
+	-useSchema true \
+	-useKB true \
+	-addBagOfWordsGraph false \
+	-ngramGrelPartFlag true \
+	-groundFreeVariables false \
+	-groundEntityVariableEdges false \
+	-groundEntityEntityEdges false \
+	-useEmptyTypes false \
+	-ignoreTypes true \
+	-urelGrelFlag false \
+	-urelPartGrelPartFlag false \
+	-utypeGtypeFlag false \
+	-gtypeGrelFlag false \
+	-wordGrelPartFlag true \
+	-wordGrelFlag false \
+	-eventTypeGrelPartFlag false \
+	-argGrelPartFlag true \
+	-argGrelFlag false \
+	-questionTypeGrelPartFlag false \
+	-stemMatchingFlag true \
+	-mediatorStemGrelPartMatchingFlag true \
+	-argumentStemMatchingFlag true \
+	-argumentStemGrelPartMatchingFlag true \
+	-graphIsConnectedFlag false \
+	-graphHasEdgeFlag true \
+	-countNodesFlag false \
+	-edgeNodeCountFlag false \
+	-duplicateEdgesFlag true \
+	-grelGrelFlag true \
+	-useLexiconWeightsRel false \
+	-useLexiconWeightsType false \
+	-validQueryFlag true \
+	-useAnswerTypeQuestionWordFlag false \
+	-useGoldRelations false \
+	-allowMerging false \
+	-handleEventEventEdges false \
+	-useBackOffGraph false \
+	-useHyperExpand true \
+	-evaluateBeforeTraining false \
+	-entityScoreFlag true \
+	-entityWordOverlapFlag false \
+	-initialEdgeWeight -0.5 \
+	-initialTypeWeight -2.0 \
+	-initialWordWeight 0.0 \
+	-stemFeaturesWeight 0.05 \
+	-endpoint localhost \
+    	-evaluateOnlyTheFirstBest false \
+	-supervisedCorpus "working/graphquestions.training.easyccg.forest.json" \
+	-contentWordPosTags "NOUN;VERB;ADJ;ADP;ADV;PRON" \
+	-devFile working/graphquestions.testing.easyccg.forest.json \
+	-logFile ../working/gq_ccg_with_hyperexpand.32.stem/all.log.txt \
+	> ../working/gq_ccg_with_hyperexpand.32.stem/all.txt
 
