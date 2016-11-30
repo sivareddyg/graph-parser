@@ -1500,12 +1500,11 @@ public class GroundedGraphs {
       boolean groundFreeVariables, boolean groundEntityVariableEdges,
       boolean groundEntityEntityEdges, boolean useEmtpyTypes,
       boolean ignoreTypes, boolean testing) {
-
     TreeSet<Edge<LexicalItem>> edges = graph.getEdges();
     List<LexicalGraph> groundedGraphs = Lists.newArrayList();
     if (edges.size() == 0)
       return groundedGraphs;
-
+    
     // See if there are any question nodes and ignore the graphs that do not
     // have an edge from question node
     LexicalItem questionOrCountNode = null;
@@ -1532,6 +1531,13 @@ public class GroundedGraphs {
         graph.getMergeableEdges(questionOrCountNode);
 
     Set<LexicalItem> nodesCovered = Sets.newHashSet();
+
+    // If we set groundEntityVariableEdges to false, the order in which we
+    // traverse the graph matters.
+    if (!groundEntityVariableEdges) {
+      edges = setEntityEdgesToLowerPriority(edges);
+    }
+
     for (Edge<LexicalItem> edge : edges) {
       LexicalItem node1 = edge.getLeft();
       LexicalItem node2 = edge.getRight();
@@ -1714,6 +1720,27 @@ public class GroundedGraphs {
       gGraph.setSemanticParse(graph.getSemanticParse());
     }
     return groundedGraphs;
+  }
+
+  /**
+   * Sorts the edges that contains entities below the edges that don't contain
+   * entities. This traversal scheme is useful when groundEnityVariable is set
+   * false.
+   * 
+   * @param edges
+   * @return
+   */
+  private TreeSet<Edge<LexicalItem>> setEntityEdgesToLowerPriority(
+      TreeSet<Edge<LexicalItem>> edges) {
+    TreeSet<Edge<LexicalItem>> sortedEdges = new TreeSet<>();
+    for (Edge<LexicalItem> edge : edges) {
+      Relation relation = edge.getRelation();
+      if (edge.getLeft().isEntity() || edge.getRight().isEntity()) {
+        relation.setWeight(-0.01);
+      }
+      sortedEdges.add(edge);
+    }
+    return sortedEdges;
   }
 
   private List<LexicalGraph> mergeEdge(
