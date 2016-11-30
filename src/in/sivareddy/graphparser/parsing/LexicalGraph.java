@@ -620,6 +620,36 @@ public class LexicalGraph extends Graph<LexicalItem> {
     }
     return false;
   }
+  
+  public boolean hasPathBetweenQuestionAndEntityNodes() {
+    Set<LexicalItem> realQuestionNodes = getQuestionNode();
+    Set<LexicalItem> questionNodes =
+        realQuestionNodes.stream().filter(x -> !x.isEntity())
+            .collect(Collectors.toSet());
+
+    if (questionNodes.size() == 0) {
+      return false;
+    }
+
+    Set<LexicalItem> entityNodes =
+        this.getActualNodes().stream().filter(x -> x.isEntity())
+            .collect(Collectors.toSet());
+
+    if (entityNodes.size() == 0)
+      return false;
+
+    boolean hasPath = true;
+    for (LexicalItem questionNode : questionNodes) {
+      LexicalItem countNode = nodeToCountNode(questionNode);
+      if (countNode != null)
+        questionNode = countNode;
+      for (LexicalItem entityNode : entityNodes) {
+        hasPath &= hasPathWithNoIntermediateEntity(questionNode, entityNode);
+      }
+    }
+
+    return hasPath;
+  }
 
   public boolean removeMultipleQuestionNodes() {
     List<LexicalItem> questionNodes = new ArrayList<>(getQuestionNode());
