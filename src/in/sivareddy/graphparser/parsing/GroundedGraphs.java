@@ -1880,7 +1880,9 @@ public class GroundedGraphs {
               .getRelation().getRight(), childIsEntity, parentIsEntity);
       MergedEdgeFeature mergedFeature = new MergedEdgeFeature(key, 1.0);
       mergedGraph.addFeature(mergedFeature);
-      learningModel.setWeightIfAbsent(mergedFeature, -3.0);
+      
+      // Merging is encouraged for WebQuestions, Free917 and GraphQuestions.
+      learningModel.setWeightIfAbsent(mergedFeature, 3.0);
 
       /*-key =
           Lists.newArrayList(childNode.getPos(), parentNode.getPos(),
