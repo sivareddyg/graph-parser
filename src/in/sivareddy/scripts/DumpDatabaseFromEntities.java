@@ -2,14 +2,12 @@ package in.sivareddy.scripts;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -97,11 +95,10 @@ public class DumpDatabaseFromEntities extends ProcessStreamInterface {
           GraphToSparqlConverter.convertGroundedGraph(graph, schema, 100000000);
       List<Map<String, String>> answers = endPoint.runQueryHttpSolutions(query);
 
-      List<Map<String, String>> e1Name =
+      /*-List<Map<String, String>> e1Name =
           endPoint.runQueryHttpSolutions(String.format(
               "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?x1name  WHERE { OPTIONAL {FILTER(langMatches(lang(?x1name), \"en\")) . FILTER(!langMatches(lang(?x1name), \"en-gb\")) . fb:%s fb:type.object.name ?x1name . } } LIMIT 100000",
-              mid));
-
+              mid));*/
 
       List<String> relationTriple = new ArrayList<>();
       relationTriple.add(relation.getLeft());

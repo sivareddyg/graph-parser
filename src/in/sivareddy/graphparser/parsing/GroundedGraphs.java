@@ -1,5 +1,42 @@
 package in.sivareddy.graphparser.parsing;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.Logger;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import edu.stanford.nlp.international.Language;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.trees.GrammaticalRelation;
+import edu.stanford.nlp.trees.TypedDependency;
 import in.sivareddy.graphparser.ccg.CategoryIndex;
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
 import in.sivareddy.graphparser.ccg.CcgParseTree;
@@ -49,46 +86,6 @@ import in.sivareddy.ml.learning.StructuredPercepton;
 import in.sivareddy.util.PorterStemmer;
 import in.sivareddy.util.SentenceKeys;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Logger;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.IndexedWord;
-import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.trees.GrammaticalRelation;
-import edu.stanford.nlp.international.Language;
-import edu.stanford.nlp.trees.TypedDependency;
-
 public class GroundedGraphs {
   private Schema schema;
   private GroundedLexicon groundedLexicon;
@@ -98,9 +95,6 @@ public class GroundedGraphs {
 
   private static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "NNPS",
       "PROPN");
-  private static Gson gson = new Gson();
-  private static JsonParser jsonParser = new JsonParser();
-
   private boolean urelGrelFlag = true;
   private boolean urelPartGrelPartFlag = true;
   private boolean utypeGtypeFlag = true;
@@ -399,18 +393,15 @@ public class GroundedGraphs {
     // multiple question nodes, and retain only the one that appear first.
     graphs.forEach(g -> g.removeMultipleQuestionNodes());
 
-    if ((useExpand)
-        && (key.equals(SentenceKeys.CCG_PARSES) || key
-            .equals(SentenceKeys.DEPENDENCY_LAMBDA))) {
+    if ((useExpand || useHyperExpand) && (key.equals(SentenceKeys.CCG_PARSES)
+        || key.equals(SentenceKeys.DEPENDENCY_LAMBDA))) {
       // Expand the graph with new edges.
       for (LexicalGraph graph : graphs) {
+        if (useHyperExpand) {
+          graph.expand(true);
+        } else {
           graph.expand(false);
-      }
-    }
-
-    if (useHyperExpand) {
-      for (LexicalGraph graph : graphs) {
-        graph.expand(true);
+        }
       }
     }
 
