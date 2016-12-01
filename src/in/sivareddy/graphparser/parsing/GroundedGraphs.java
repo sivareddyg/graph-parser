@@ -1882,7 +1882,7 @@ public class GroundedGraphs {
       mergedGraph.addFeature(mergedFeature);
       
       // Merging is encouraged for WebQuestions, Free917 and GraphQuestions.
-      learningModel.setWeightIfAbsent(mergedFeature, 3.0);
+      learningModel.setWeightIfAbsent(mergedFeature, 0.0);
 
       /*-key =
           Lists.newArrayList(childNode.getPos(), parentNode.getPos(),
