@@ -139,7 +139,8 @@ public class GraphToQueryTraining {
       boolean useGoldRelations, boolean evaluateOnlyTheFirstBest,
       boolean handleEventEventEdges, boolean useExpand, boolean useHyperExpand,
       double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double stemFeaturesWeight,
+      double initialWordWeight, double mergeEdgeWeight,
+      double stemFeaturesWeight,
       RdfGraphTools rdfGraphTools, List<String> kbGraphUri) throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
@@ -199,7 +200,7 @@ public class GraphToQueryTraining {
         entityWordOverlapFlag, paraphraseScoreFlag,
         paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
         useExpand, useHyperExpand, initialEdgeWeight, initialTypeWeight,
-        initialWordWeight, stemFeaturesWeight);
+        initialWordWeight, mergeEdgeWeight, stemFeaturesWeight);
   }
 
 

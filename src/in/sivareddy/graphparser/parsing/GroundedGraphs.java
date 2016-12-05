@@ -135,6 +135,7 @@ public class GroundedGraphs {
   public double initialEdgeWeight;
   public double initialTypeWeight;
   public double initialWordWeight;
+  private double mergeEdgeWeight; 
   public double stemFeaturesWeight;
   public Logger logger;
 
@@ -162,7 +163,7 @@ public class GroundedGraphs {
       boolean allowMerging, boolean handleEventEventEdges, boolean useExpand,
       boolean useHyperExpand, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight) throws IOException {
+      double mergeEdgeWeight, double stemFeaturesWeight) throws IOException {
 
     // ccg parser initialisation
     String[] argumentLexicalIdenfiers = {"mid"};
@@ -220,6 +221,7 @@ public class GroundedGraphs {
     this.initialEdgeWeight = initialEdgeWeight;
     this.initialTypeWeight = initialTypeWeight;
     this.initialWordWeight = initialWordWeight;
+    this.mergeEdgeWeight = mergeEdgeWeight;
     this.stemFeaturesWeight = stemFeaturesWeight;
 
     this.logger = Logger.getLogger(this.getClass());
@@ -1907,7 +1909,7 @@ public class GroundedGraphs {
       mergedGraph.addFeature(mergedFeature);
       
       // Merging is encouraged for WebQuestions, Free917 and GraphQuestions.
-      learningModel.setWeightIfAbsent(mergedFeature, 0.0);
+      learningModel.setWeightIfAbsent(mergedFeature, mergeEdgeWeight);
 
       /*-key =
           Lists.newArrayList(childNode.getPos(), parentNode.getPos(),

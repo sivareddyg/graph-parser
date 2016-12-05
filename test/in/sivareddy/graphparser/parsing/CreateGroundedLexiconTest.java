@@ -37,7 +37,7 @@ public class CreateGroundedLexiconTest {
         false, false, false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false, false, false,
-        false, 0.0, 0.0, 0.0, 0.0);
+        false, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     CreateGroundedLexicon engine =
         new CreateGroundedLexicon(graphCreator, kb, "dependency_lambda", true,

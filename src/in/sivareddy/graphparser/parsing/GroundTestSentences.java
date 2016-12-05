@@ -89,27 +89,28 @@ public class GroundTestSentences {
     double initialEdgeWeight = -1.0;
     double initialTypeWeight = -1.0;
     double initialWordWeight = -1.0;
+    double mergeEdgeWeight = 0.0;
     double stemFeaturesWeight = 0.0;
 
     StructuredPercepton learningModel = new StructuredPercepton();
 
     // GroundedLexicon groundedLexicon = null;
-    GroundedGraphs graphCreator =
-        new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
-            questionCcgAutoLexicon, relationLexicalIdentifiers,
-            relationTypingIdentifiers, learningModel, ngramLength, urelGrelFlag,
-            urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
-            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
-            argGrelFlag, questionTypeGrelPartFlag, wordBigramGrelPartFlag,
-            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
-            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
-            ngramStemMatchingFlag, graphIsConnectedFlag, graphHasEdgeFlag,
-            countNodesFlag, edgeNodeCountFlag, useLexiconWeightsRel,
-            useLexiconWeightsType, duplicateEdgesFlag, ignorePronouns,
-            handleNumbers, entityScoreFlag, entityWordOverlapFlag,
-            paraphraseScoreFlag, paraphraseClassifierScoreFlag, allowMerging,
-            handleEventEventEdges, useExpand, useHyperExpand, initialEdgeWeight,
-            initialTypeWeight, initialWordWeight, stemFeaturesWeight);
+    GroundedGraphs graphCreator = new GroundedGraphs(schema, kb,
+        groundedLexicon, normalCcgAutoLexicon, questionCcgAutoLexicon,
+        relationLexicalIdentifiers, relationTypingIdentifiers, learningModel,
+        ngramLength, urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag,
+        gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag, wordGrelPartFlag,
+        wordGrelFlag, argGrelPartFlag, argGrelFlag, questionTypeGrelPartFlag,
+        wordBigramGrelPartFlag, stemMatchingFlag,
+        mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
+        argumentStemGrelPartMatchingFlag, ngramStemMatchingFlag,
+        graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
+        edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
+        duplicateEdgesFlag, ignorePronouns, handleNumbers, entityScoreFlag,
+        entityWordOverlapFlag, paraphraseScoreFlag,
+        paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
+        useExpand, useHyperExpand, initialEdgeWeight, initialTypeWeight,
+        initialWordWeight, mergeEdgeWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));

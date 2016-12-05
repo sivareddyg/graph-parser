@@ -92,7 +92,7 @@ public class GraphToQueryTrainingMain {
       boolean evaluateOnlyTheFirstBest, boolean handleEventEventEdges,
       boolean useExpand, boolean useHyperExpand, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
-      double stemFeaturesWeight) throws IOException {
+      double mergeEdgeWeight, double stemFeaturesWeight) throws IOException {
 
     this.semanticParseKey = sematicParseKey;
     this.nBestTestSyntacticParses = nBestTestSyntacticParses;
@@ -145,7 +145,8 @@ public class GraphToQueryTrainingMain {
         paraphraseScoreFlag, paraphraseClassifierScoreFlag, allowMerging,
         useGoldRelations, evaluateOnlyTheFirstBest, handleEventEventEdges,
         useExpand, useHyperExpand, initialEdgeWeight, initialTypeWeight,
-        initialWordWeight, stemFeaturesWeight, rdfGraphTools, kbGraphUri);
+        initialWordWeight, mergeEdgeWeight, stemFeaturesWeight, rdfGraphTools,
+        kbGraphUri);
     bestModelSoFar = currentIterationModel.serialClone();
     currentModelIsTheBestModel = true;
 
@@ -548,6 +549,7 @@ public class GraphToQueryTrainingMain {
     double initialEdgeWeight = 0.0;
     double initialTypeWeight = 0.0;
     double initialWordWeight = -1.0;
+    double mergeEdgeWeight = 0.0;
     double stemFeaturesWeight = 0.0;
 
     // Denotation feature
@@ -598,7 +600,7 @@ public class GraphToQueryTrainingMain {
         paraphraseClassifierScoreFlag, allowMerging, useGoldRelations,
         evaluateOnlyTheFirstBest, handleEventEventEdges, useBackOffGraph,
         useHyperExpand, initialEdgeWeight, initialTypeWeight, initialWordWeight,
-        stemFeaturesWeight);
+        mergeEdgeWeight, stemFeaturesWeight);
 
     int iterations = 10;
     int nthreads = 1;

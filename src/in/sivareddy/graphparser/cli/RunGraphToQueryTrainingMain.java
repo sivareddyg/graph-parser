@@ -139,6 +139,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Double> initialEdgeWeight;
   private OptionSpec<Double> initialTypeWeight;
   private OptionSpec<Double> initialWordWeight;
+  private OptionSpec<Double> mergeEdgeWeight;
   private OptionSpec<Double> stemFeaturesWeight;
 
   // Denotation feature
@@ -544,6 +545,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("initialWordWeight",
                 "set to a negative value to avoid overgenerating edges")
             .withRequiredArg().ofType(Double.class).defaultsTo(-1.0);
+    mergeEdgeWeight =
+        parser
+            .accepts("mergeEdgeWeight",
+                "initial weight for merging edges")
+            .withRequiredArg().ofType(Double.class).defaultsTo(0.0);
+    
     stemFeaturesWeight =
         parser
             .accepts("stemFeaturesWeight", "initial weight of stem features.")
@@ -786,6 +793,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       double initialEdgeWeightVal = options.valueOf(initialEdgeWeight);
       double initialTypeWeightVal = options.valueOf(initialTypeWeight);
       double initialWordWeightVal = options.valueOf(initialWordWeight);
+      double mergeEdgeWeightVal = options.valueOf(mergeEdgeWeight);
       double stemFeaturesWeightVal = options.valueOf(stemFeaturesWeight);
 
       // Denotation feature
@@ -854,7 +862,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           allowMergingVal, useGoldRelationsVal, evaluateOnlyTheFirstBestVal,
           handleEventEventEdgesVal, useBackOffGraphVal, useHyperExpandVal,
           initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
-          stemFeaturesWeightVal);
+          mergeEdgeWeightVal, stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount,
           evaluateBeforeTrainingVal);
 

@@ -82,7 +82,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
         new StructuredPercepton(), 1, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, true, true, true, true,
-        true, true, false, 10.0, 1.0, 0.0, 0.0);
+        true, true, false, 10.0, 1.0, 0.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
     Appender stdoutAppender = new ConsoleAppender(layout);
@@ -465,7 +465,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
         new StructuredPercepton(), 1, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, false, false, false,
-        false, false, false, true, 10.0, 1.0, 0.0, 0.0);
+        false, false, false, true, 10.0, 1.0, 0.0, 0.0, 0.0);
     JsonObject sentence =
         jsonParser
             .parse(
@@ -500,7 +500,7 @@ public class CreateGroundedGraphsFromSemanticParseTest {
         new StructuredPercepton(), 1, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, false, false, false,
-        false, false, false, true, 10.0, 1.0, 0.0, 0.0);
+        false, false, false, true, 10.0, 1.0, 0.0, 0.0, 0.0);
     JsonObject sentence =
         jsonParser
             .parse(
