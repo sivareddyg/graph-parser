@@ -42,11 +42,15 @@ for line in sys.stdin:
                 if "id" in entity:
                     entity_ids.add(entity["id"].split("/")[-1])
             # print entity_ids
-            gold_entity = sentence["goldMid"]
+            gold_entities = []
+            if "goldMid" in sentence:
+                gold_entities.append(sentence["goldMid"])
+            if "goldMids" in sentence:
+                gold_entities += sentence["goldMids"]
             # gold_entity_id = sentence["url"].split("/")[-1]
             if len(entity_ids) == 0:
                 print sentence['sentence']
-            if gold_entity in entity_ids:  # or gold_entity_id in entity_ids:
+            if len(set(gold_entities).intersection(set(entity_ids))) > 0:  # or gold_entity_id in entity_ids:
                 answer_found_sentences.add(sentence_id)
                 if index_count not in sentence_position_to_accuracy:
                     sentence_position_to_accuracy[index_count] = 0

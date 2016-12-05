@@ -20,7 +20,9 @@ for question in questions:
     question["sentence"] = question["question"]
     question['goldMids'] = []
     question['id'] = question['qid']
+    question['answerF1'] = question['answer']
     del question['question']
+    del question['answer']
     for node in question['graph_query']['nodes']:
         # print node
         if node['node_type'] == 'entity':
