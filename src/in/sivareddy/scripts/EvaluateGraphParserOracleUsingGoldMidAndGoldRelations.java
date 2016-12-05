@@ -109,15 +109,14 @@ public class EvaluateGraphParserOracleUsingGoldMidAndGoldRelations {
     String[] relationTypingIdentifiers = {};
 
     this.semanticParseKey = semanticParseKey;
-    this.graphCreator =
-        new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
-            questionCcgAutoLexicon, relationLexicalIdentifiers,
-            relationTypingIdentifiers, new StructuredPercepton(), 1, true,
-            true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, true, true, allowMerging,
-            handleEventEventEdges, useExpand, useHyperExpand, 10.0, 1.0,
-            0.0, 0.0);
+    this.graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
+        normalCcgAutoLexicon, questionCcgAutoLexicon,
+        relationLexicalIdentifiers, relationTypingIdentifiers,
+        new StructuredPercepton(), 1, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true,
+        allowMerging, handleEventEventEdges, useExpand, useHyperExpand, 10.0,
+        1.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
     logger.removeAllAppenders();

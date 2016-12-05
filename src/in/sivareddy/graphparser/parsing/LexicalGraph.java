@@ -152,6 +152,15 @@ public class LexicalGraph extends Graph<LexicalItem> {
       super(key, value);
     }
   }
+  
+  public static class NgramStemMatchingFeature extends AbstractFeature {
+    private static final long serialVersionUID = 3250492736860001834L;
+    private static List<String> key = Lists.newArrayList("NgramStem");
+    
+    public NgramStemMatchingFeature(Double value) {
+      super(key, value);
+    }
+  }
 
   public static class WordGrelFeature extends AbstractFeature {
     private static final long serialVersionUID = 6481934970173246526L;

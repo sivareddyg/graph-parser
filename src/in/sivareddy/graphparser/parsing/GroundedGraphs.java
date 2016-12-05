@@ -65,6 +65,7 @@ import in.sivareddy.graphparser.parsing.LexicalGraph.HasQuestionEntityEdgeFeatur
 import in.sivareddy.graphparser.parsing.LexicalGraph.MediatorStemGrelPartMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.MergedEdgeFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.NgramGrelFeature;
+import in.sivareddy.graphparser.parsing.LexicalGraph.NgramStemMatchingFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.ParaphraseClassifierScoreFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.ParaphraseScoreFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.StemMatchingFeature;
@@ -111,6 +112,7 @@ public class GroundedGraphs {
   private boolean mediatorStemGrelPartMatchingFlag = true;
   private boolean argumentStemMatchingFlag = true;
   private boolean argumentStemGrelPartMatchingFlag = true;
+  private boolean ngramStemMatchingFlag = false;
   private boolean graphIsConnectedFlag = false;
   private boolean graphHasEdgeFlag = false;
   private boolean countNodesFlag = false;
@@ -127,7 +129,7 @@ public class GroundedGraphs {
   private boolean handleEventEventEdges = false;
   private boolean useExpand = false;
   private boolean useHyperExpand = false;
-
+  
   private StructuredPercepton learningModel;
   private int ngramLength = 2;
   public double initialEdgeWeight;
@@ -150,14 +152,14 @@ public class GroundedGraphs {
       boolean eventTypeGrelPartFlag, boolean stemMatchingFlag,
       boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
-      boolean argumentStemGrelPartMatchingFlag, boolean graphIsConnectedFlag,
-      boolean graphHasEdgeFlag, boolean countNodesFlag,
-      boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
-      boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
-      boolean ignorePronouns, boolean handleNumbers, boolean entityScoreFlag,
-      boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
-      boolean paraphraseClassifierScoreFlag, boolean allowMerging,
-      boolean handleEventEventEdges, boolean useExpand,
+      boolean argumentStemGrelPartMatchingFlag, boolean ngramStemMatchingFlag,
+      boolean graphIsConnectedFlag, boolean graphHasEdgeFlag,
+      boolean countNodesFlag, boolean edgeNodeCountFlag,
+      boolean useLexiconWeightsRel, boolean useLexiconWeightsType,
+      boolean duplicateEdgesFlag, boolean ignorePronouns, boolean handleNumbers,
+      boolean entityScoreFlag, boolean entityWordOverlapFlag,
+      boolean paraphraseScoreFlag, boolean paraphraseClassifierScoreFlag,
+      boolean allowMerging, boolean handleEventEventEdges, boolean useExpand,
       boolean useHyperExpand, double initialEdgeWeight,
       double initialTypeWeight, double initialWordWeight,
       double stemFeaturesWeight) throws IOException {
@@ -194,6 +196,7 @@ public class GroundedGraphs {
     this.mediatorStemGrelPartMatchingFlag = mediatorStemGrelPartMatchingFlag;
     this.argumentStemMatchingFlag = argumentStemMatchingFlag;
     this.argumentStemGrelPartMatchingFlag = argumentStemGrelPartMatchingFlag;
+    this.ngramStemMatchingFlag = ngramStemMatchingFlag;
 
     this.graphIsConnectedFlag = graphIsConnectedFlag;
     this.graphHasEdgeFlag = graphHasEdgeFlag;
@@ -513,7 +516,7 @@ public class GroundedGraphs {
     buildUngroundeGraphFromSemanticParse(parse, leaves, 0.0, graphs);
 
     Set<String> countStyledParse =
-        createCountStyledSemanticParse(jsonSentence, parse);
+        createCountStyledSemanticParse(leaves, parse);
 
     if (countStyledParse != null) {
       buildUngroundeGraphFromSemanticParse(countStyledParse, leaves, 0.0,
@@ -527,16 +530,17 @@ public class GroundedGraphs {
 
 
   public static Set<String> createCountStyledSemanticParse(
-      JsonObject jsonSentence, Set<String> originalParse) {
-    StringBuilder sentenceBuilder = new StringBuilder();
-    JsonArray words = jsonSentence.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
-    words.forEach(x -> {
-      sentenceBuilder.append(x.getAsJsonObject().get(SentenceKeys.WORD_KEY)
-          .getAsString().toLowerCase());
+      List<LexicalItem> leaves, Set<String> originalParse) {
+    StringBuilder sentenceBuilder = new StringBuilder(); 
+    leaves.forEach(x -> {
+      sentenceBuilder.append(x.getWord().toLowerCase());
       sentenceBuilder.append(" ");
     });
 
-    if (sentenceBuilder.toString().contains("how many")) {
+    String sentenceString = sentenceBuilder.toString();
+    if (sentenceString.contains("how many") || sentenceString.contains("count")
+        || sentenceString.contains("number")
+        || sentenceString.contains("total")) {
       // If the sentence has "how many", add an additional graph with COUNT.
       String questionPredicate = null;
       for (String parsePart : originalParse) {
@@ -549,13 +553,17 @@ public class GroundedGraphs {
       if (questionPredicate != null) {
         Set<String> newParse = new HashSet<>(originalParse);
         newParse.remove(questionPredicate);
-        String questionVar =
+        String oldQuestionVar =
             questionPredicate.replace("QUESTION(", "").replace(")", "");
-        String countVar =
-            questionVar.equals("0:x") ? String.format("%d:x", words.size() - 1)
-                : "0:x";
-        newParse.add(String.format("QUESTION(%s)", countVar));
-        newParse.add(String.format("COUNT(%s , %s)", questionVar, countVar));
+        LexicalItem newQuestionNode =
+            new LexicalItem("", SentenceKeys.BLANK_WORD, SentenceKeys.BLANK_WORD,
+                "NUM", "", null);
+        leaves.add(newQuestionNode);
+        int newQuestionWordIndex = leaves.size() - 1;
+        newQuestionNode.setWordPosition(newQuestionWordIndex);
+        
+        newParse.add(String.format("QUESTION(%d:x)", newQuestionWordIndex));
+        newParse.add(String.format("COUNT(%s , %d:x)", oldQuestionVar, newQuestionWordIndex));
         return newParse;
       }
     }
@@ -598,14 +606,31 @@ public class GroundedGraphs {
     }
 
     for (LexicalItem leaf : leaves) {
-      if (leaf.getMid().startsWith("type.")) {
-        String edge =
-            String.format("dummy.edge.entity(%d:e , %d:%s)", questionWordIndex,
-                leaf.getWordPosition(), leaf.getMid());
+      if (leaf.isStandardEntity()) {
+        String edge = String.format("dummy.edge.entity(%d:e , %d:%s)",
+            questionWordIndex, leaf.getWordPosition(), leaf.getMid());
         parse.add(edge);
+      } else if (!leaf.isEntity()) { // a normal word
+        if (CONTENT_WORD_POS.size() > 0
+            && !CONTENT_WORD_POS.contains(leaf.getPos())) {
+          // Current word is not content word.
+          continue;
+        }
+
+        String wordString = leaf.getLemma();
+        if (wordString.equals(SentenceKeys.BLANK_WORD)
+            || stopWordsUniversal.contains(wordString)
+            || punctuation.matcher(wordString).matches()
+            || SentenceKeys.PUNCTUATION_TAGS.contains(leaf.getPos())) {
+          continue;
+        }
+        
+        String type = String.format("%s(%d:s , %d:x)", wordString,
+            leaf.getWordPosition(), questionWordIndex);
+        parse.add(type);
       }
     }
-
+    
     parse.add(String.format("dummy.edge.question(%d:e , %d:x)",
         questionWordIndex, questionWordIndex));
     parse.add(String.format("QUESTION(%d:x)", questionWordIndex));
@@ -705,7 +730,7 @@ public class GroundedGraphs {
 
     if (isQuestion) {
       Set<String> countStyledParse =
-          createCountStyledSemanticParse(jsonSentence, semanticParse);
+          createCountStyledSemanticParse(leaves, semanticParse);
       if (countStyledParse != null) {
         buildUngroundeGraphFromSemanticParse(countStyledParse, leaves, 0.0,
             graphs);
@@ -3292,6 +3317,57 @@ public class GroundedGraphs {
                     nodeType.getParentNode()).size() + 1.0));
             features.add(s);
           }
+        }
+      }
+    }
+    
+    if (ngramStemMatchingFlag) {
+      String grelLeftStripped = grelLeft;
+      String grelRightStripped = grelRight;
+      if (grelLeft.length() == grelRight.length()) {
+        grelLeftStripped = grelLeftStripped.replaceAll("\\.[12]$", "");
+        grelRightStripped = grelRightStripped.replaceAll("\\.[12]$", "");
+      }
+
+      String grelLeftInverse =
+          schema.getRelation2Inverse(grelLeftStripped) != null
+              ? schema.getRelation2Inverse(grelLeftStripped) : grelLeftStripped;
+      String grelRightInverse =
+          schema.getRelation2Inverse(grelRightStripped) != null
+              ? schema.getRelation2Inverse(grelRightStripped)
+              : grelRightStripped;
+      List<String> parts =
+          Lists.newArrayList(Splitter.on(".").split(grelLeftStripped));
+      int toIndex = parts.size();
+      int fromIndex = toIndex - 2 < 0 ? 0 : toIndex - 2;
+      grelLeftStripped = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
+
+      parts = Lists.newArrayList(Splitter.on(".").split(grelLeftInverse));
+      toIndex = parts.size();
+      fromIndex = toIndex - 2 < 0 ? 0 : toIndex - 2;
+      grelLeftInverse = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
+
+      parts = Lists.newArrayList(Splitter.on(".").split(grelRightStripped));
+      toIndex = parts.size();
+      fromIndex = toIndex - 2 < 0 ? 0 : toIndex - 2;
+      grelRightStripped =
+          Joiner.on(".").join(parts.subList(fromIndex, toIndex));
+
+      parts = Lists.newArrayList(Splitter.on(".").split(grelRightInverse));
+      toIndex = parts.size();
+      fromIndex = toIndex - 2 < 0 ? 0 : toIndex - 2;
+      grelRightInverse = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
+
+      for (String unigram : getNgrams(uGraph.getActualNodes(), 1)) {
+        if ((stringContainsWord(grelLeftStripped, unigram)
+            || stringContainsWord(grelLeftInverse, unigram))
+            && (stringContainsWord(grelRightStripped, unigram)
+                || stringContainsWord(grelRightInverse, unigram))) {
+          NgramStemMatchingFeature s =
+              new NgramStemMatchingFeature(2.0 / (Math.max(
+                  uGraph.getEdges(node1).size() + uGraph.getEdges(node2).size(),
+                  2.0)));
+          features.add(s);
         }
       }
     }

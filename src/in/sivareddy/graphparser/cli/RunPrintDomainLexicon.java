@@ -174,7 +174,7 @@ public class RunPrintDomainLexicon extends AbstractCli {
               normalCcgAutoLexicon, questionCcgAutoLexicon,
               relationLexicalIdentifiers, relationTypingIdentifiers, null, 1,
               false, false, false, false, false, false, false, false, false,
-              false, false, false, false, false, false, false, false, false,
+              false, false, false, false, false, false, false, false, false, false,
               false, false, false, false, false, false, false, false, false,
               false, false, false, false, false, false, 0.0, 0.0, 0.0, 0.0);
 

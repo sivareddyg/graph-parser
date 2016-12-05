@@ -76,14 +76,13 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
 
-    graphCreator =
-        new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
-            questionCcgAutoLexicon, relationLexicalIdentifiers,
-            relationTypingIdentifiers, new StructuredPercepton(), 1, true,
-            true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, true, true, true, true, true, true, true,
-            true, true, true, true, true, true, true, true, true, false, 10.0,
-            1.0, 0.0, 0.0);
+    graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
+        normalCcgAutoLexicon, questionCcgAutoLexicon,
+        relationLexicalIdentifiers, relationTypingIdentifiers,
+        new StructuredPercepton(), 1, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true,
+        true, true, false, 10.0, 1.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
     Appender stdoutAppender = new ConsoleAppender(layout);
@@ -91,10 +90,11 @@ public class CreateGroundedGraphsFromSemanticParseTest {
   }
 
   @Test
-  public void testGroundedGraphs() throws IOException {
+  public void testBoWGroundedGraphs() throws IOException {
     // GroundedLexicon groundedLexicon = null;
     String line =
         "{\"index\": \"bf14eac129d0642f6fb4d8aad17f0614\", \"sentence\": \"what are major religions in the united states?\", \"url\": \"http://www.freebase.com/view/en/united_states\", \"goldRelations\": [{\"relationLeft\": \"location.statistical_region.religions.inverse\", \"score\": 1.0, \"relationRight\": \"location.religion_percentage.religion\"}], \"forest\": [{\"index\": \"bf14eac129d0642f6fb4d8aad17f0614:1\", \"sentence\": \"what are major religions in the united states?\", \"url\": \"http://www.freebase.com/view/en/united_states\", \"synPars\": [{\"synPar\": \"(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP ba 0 2> (<T NP lex 0 1> (<T N fa 1 2> (<L N/N major major JJ O O N/N>) (<L N religions religion NNS O O N>) ) ) (<T NP\\\\NP fa 0 2> (<L (NP\\\\NP)/NP in in IN O O (NP\\\\NP)/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) ) ) \", \"score\": 1.0}, {\"synPar\": \"(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP ba 0 2> (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N major major JJ O O N/N>) (<L N religions religion NNS O O N>) ) ) ) (<T (S/NP)\\\\(S/NP) fa 0 2> (<L ((S/NP)\\\\(S/NP))/NP in in IN O O ((S/NP)\\\\(S/NP))/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) ) \", \"score\": 1.0}, {\"synPar\": \"(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP[nb] ba 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N major major JJ O O NP[nb]/N>) (<L N religions religion NNS O O N>) ) (<T NP\\\\NP fa 0 2> (<L (NP\\\\NP)/NP in in IN O O (NP\\\\NP)/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) ) ) \", \"score\": 1.0}, {\"synPar\": \"(<T S[wq] ba 0 2> (<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N major major JJ O O N/N>) (<L N religions religion NNS O O N>) ) ) ) ) (<T S[wq]\\\\S[wq] fa 0 2> (<L (S[wq]\\\\S[wq])/NP in in IN O O (S[wq]\\\\S[wq])/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) \", \"score\": 1.0}, {\"synPar\": \"(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP bx 0 2> (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N major major JJ O O N/N>) (<L N religions religion NNS O O N>) ) ) ) (<T S\\\\S fa 0 2> (<L (S\\\\S)/NP in in IN O O (S\\\\S)/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) ) \", \"score\": 1.0}], \"goldRelations\": [{\"relationLeft\": \"location.statistical_region.religions.inverse\", \"score\": 1.0, \"relationRight\": \"location.religion_percentage.religion\"}], \"entities\": [{\"phrase\": \"united states\", \"score\": 1652.30927975584, \"index\": 6, \"name\": \"United States\", \"entity\": \"m.04sg45j\"}], \"words\": [{\"lemma\": \"what\", \"ner\": \"O\", \"word\": \"What\", \"pos\": \"WP\"}, {\"lemma\": \"be\", \"ner\": \"O\", \"word\": \"are\", \"pos\": \"VBP\"}, {\"lemma\": \"major\", \"ner\": \"O\", \"word\": \"major\", \"pos\": \"JJ\"}, {\"lemma\": \"religion\", \"ner\": \"O\", \"word\": \"religions\", \"pos\": \"NNS\"}, {\"lemma\": \"in\", \"ner\": \"O\", \"word\": \"in\", \"pos\": \"IN\"}, {\"lemma\": \"the\", \"ner\": \"O\", \"word\": \"the\", \"pos\": \"DT\"}, {\"lemma\": \"united_states\", \"ner\": \"LOCATION\", \"word\": \"United_States\", \"pos\": \"NNP\"}, {\"lemma\": \"?\", \"ner\": \"O\", \"word\": \"?\", \"pos\": \".\", \"sentEnd\": true}], \"targetValue\": \"(list (description \\\"Unitarian Universalism\\\") (description Judaism) (description Christianity) (description Atheism) (description Buddhism) (description Hinduism) (description Islam))\", \"goldMid\": \"m.09c7w0\"}, {\"index\": \"bf14eac129d0642f6fb4d8aad17f0614:2\", \"sentence\": \"what are major religions in the united states?\", \"url\": \"http://www.freebase.com/view/en/united_states\", \"synPars\": [{\"synPar\": \"(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP ba 0 2> (<T NP lex 0 1> (<T N fa 1 2> (<L N/N major major JJ O O N/N>) (<L N religions religion NNS O O N>) ) ) (<T NP\\\\NP fa 0 2> (<L (NP\\\\NP)/NP in in IN O O (NP\\\\NP)/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) ) ) \", \"score\": 1.0}, {\"synPar\": \"(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP ba 0 2> (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N major major JJ O O N/N>) (<L N religions religion NNS O O N>) ) ) ) (<T (S/NP)\\\\(S/NP) fa 0 2> (<L ((S/NP)\\\\(S/NP))/NP in in IN O O ((S/NP)\\\\(S/NP))/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) ) \", \"score\": 1.0}, {\"synPar\": \"(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP[nb] ba 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N major major JJ O O NP[nb]/N>) (<L N religions religion NNS O O N>) ) (<T NP\\\\NP fa 0 2> (<L (NP\\\\NP)/NP in in IN O O (NP\\\\NP)/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) ) ) \", \"score\": 1.0}, {\"synPar\": \"(<T S[wq] ba 0 2> (<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N major major JJ O O N/N>) (<L N religions religion NNS O O N>) ) ) ) ) (<T S[wq]\\\\S[wq] fa 0 2> (<L (S[wq]\\\\S[wq])/NP in in IN O O (S[wq]\\\\S[wq])/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) \", \"score\": 1.0}, {\"synPar\": \"(<T S[wq] fa 0 2> (<L S[wq]/(S[q]/NP) What What WP O O S[wq]/(S[q]/NP)>) (<T S[q]/NP bx 0 2> (<T S[q]/NP fa 0 2> (<L (S[q]/NP)/NP are be VBP O O (S[q]/NP)/NP>) (<T NP lex 0 1> (<T N fa 1 2> (<L N/N major major JJ O O N/N>) (<L N religions religion NNS O O N>) ) ) ) (<T S\\\\S fa 0 2> (<L (S\\\\S)/NP in in IN O O (S\\\\S)/NP>) (<T NP[nb] rp 0 2> (<T NP[nb] fa 0 2> (<L NP[nb]/N the the DT O O NP[nb]/N>) (<L N United_States United-States NNP O O N>) ) (<L . ? ? . O O .>) ) ) ) ) \", \"score\": 1.0}], \"goldRelations\": [{\"relationLeft\": \"location.statistical_region.religions.inverse\", \"score\": 1.0, \"relationRight\": \"location.religion_percentage.religion\"}], \"entities\": [{\"index\": 6, \"name\": \"United States\", \"entity\": \"m.09c7w0\", \"score\": 1652.30927975584, \"phrase\": \"united states\", \"id\": \"/en/united_states_of_america\"}], \"words\": [{\"lemma\": \"what\", \"ner\": \"O\", \"word\": \"What\", \"pos\": \"WP\"}, {\"lemma\": \"be\", \"ner\": \"O\", \"word\": \"are\", \"pos\": \"VBP\"}, {\"lemma\": \"major\", \"ner\": \"O\", \"word\": \"major\", \"pos\": \"JJ\"}, {\"lemma\": \"religion\", \"ner\": \"O\", \"word\": \"religions\", \"pos\": \"NNS\"}, {\"lemma\": \"in\", \"ner\": \"O\", \"word\": \"in\", \"pos\": \"IN\"}, {\"lemma\": \"the\", \"ner\": \"O\", \"word\": \"the\", \"pos\": \"DT\"}, {\"lemma\": \"united_states\", \"ner\": \"LOCATION\", \"word\": \"United_States\", \"pos\": \"NNP\"}, {\"lemma\": \"?\", \"ner\": \"O\", \"word\": \"?\", \"pos\": \".\", \"sentEnd\": true}], \"targetValue\": \"(list (description \\\"Unitarian Universalism\\\") (description Judaism) (description Christianity) (description Atheism) (description Buddhism) (description Hinduism) (description Islam))\", \"goldMid\": \"m.09c7w0\"}], \"targetValue\": \"(list (description \\\"Unitarian Universalism\\\") (description Judaism) (description Christianity) (description Atheism) (description Buddhism) (description Hinduism) (description Islam))\", \"goldMid\": \"m.09c7w0\"}";
+    line = "{\"sentence\":\"portable document format is supported by how many computing platforms?\",\"qid\":97000400,\"num_node\":2,\"num_edge\":1,\"words\":[{\"pos\":\"PROPN\",\"word\":\"PortableDocumentFormat\",\"lemma\":\"PortableDocumentFormat\"},{\"lemma\":\"be\",\"word\":\"is\",\"pos\":\"AUX\"},{\"lemma\":\"support\",\"word\":\"supported\",\"pos\":\"VERB\"},{\"lemma\":\"by\",\"word\":\"by\",\"pos\":\"ADP\"},{\"lemma\":\"how\",\"word\":\"how\",\"pos\":\"ADV\"},{\"lemma\":\"many\",\"word\":\"many\",\"pos\":\"ADJ\"},{\"lemma\":\"compute\",\"word\":\"computing\",\"pos\":\"NOUN\"},{\"lemma\":\"platform\",\"word\":\"platforms\",\"pos\":\"NOUN\"},{\"lemma\":\"?\",\"word\":\"?\",\"pos\":\"PUNCT\",\"sentEnd\":true}],\"answer\":[\"2\"],\"goldMids\":[\"m.0600q\"],\"id\":97000400,\"index\":\"6bcdba240354ae7a4b85dff04e1ed69d:1\",\"entities\":[{\"entity\":\"m.050_gqz\",\"score\":17.335253697667465,\"phrase\":\"portable document format\",\"name\":\"Portable document format reference manual\",\"index\":0}]}";
 
     JsonObject jsonSentence = jsonParser.parse(line).getAsJsonObject();
 
@@ -459,13 +459,13 @@ public class CreateGroundedGraphsFromSemanticParseTest {
   public void testHyperExpand() throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
-    graphCreator = new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
-        questionCcgAutoLexicon, relationLexicalIdentifiers,
-        relationTypingIdentifiers, new StructuredPercepton(), 1, true,
-        true, true, true, true, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true,
-        true, true, true, false, false, false, false, false, false, true, 10.0,
-        1.0, 0.0, 0.0);
+    graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
+        normalCcgAutoLexicon, questionCcgAutoLexicon,
+        relationLexicalIdentifiers, relationTypingIdentifiers,
+        new StructuredPercepton(), 1, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, false, false, false,
+        false, false, false, true, 10.0, 1.0, 0.0, 0.0);
     JsonObject sentence =
         jsonParser
             .parse(
@@ -494,13 +494,13 @@ public class CreateGroundedGraphsFromSemanticParseTest {
   public void testHyperExpandWithCount() throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
-    graphCreator = new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
-        questionCcgAutoLexicon, relationLexicalIdentifiers,
-        relationTypingIdentifiers, new StructuredPercepton(), 1, true,
-        true, true, true, true, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true,
-        true, true, true, false, false, false, false, false, false, true, 10.0,
-        1.0, 0.0, 0.0);
+    graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
+        normalCcgAutoLexicon, questionCcgAutoLexicon,
+        relationLexicalIdentifiers, relationTypingIdentifiers,
+        new StructuredPercepton(), 1, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, false, false, false,
+        false, false, false, true, 10.0, 1.0, 0.0, 0.0);
     JsonObject sentence =
         jsonParser
             .parse(

@@ -104,14 +104,13 @@ public class RunGraphParserKunData {
     Schema schema = null;
     KnowledgeBaseCached kb = new KnowledgeBaseCached(null, null);
     GroundedLexicon groundedLexicon = new GroundedLexicon(null);
-    graphCreator =
-        new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
-            questionCcgAutoLexicon, relationLexicalIdentifiers,
-            relationTypingIdentifiers, null, 1, false, false, false, false,
-            false, false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false, false,
-            false, false, 10.0, 1.0, 0.0, 0.0);
+    graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
+        normalCcgAutoLexicon, questionCcgAutoLexicon,
+        relationLexicalIdentifiers, relationTypingIdentifiers, null, 1, false,
+        false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false,
+        false, false, false, 10.0, 1.0, 0.0, 0.0);
   }
 
   public void processSentence(JsonObject sentence) {

@@ -118,6 +118,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> mediatorStemGrelPartMatchingFlag;
   private OptionSpec<Boolean> argumentStemMatchingFlag;
   private OptionSpec<Boolean> argumentStemGrelPartMatchingFlag;
+  private OptionSpec<Boolean> ngramStemMatchingFlag;
 
   // Graph features
   private OptionSpec<Boolean> graphIsConnectedFlag;
@@ -393,7 +394,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
     // Alignment Features
     urelGrelFlag =
         parser
-            .accepts("urelGrelFlag", "Edge Alignment features - a good feature")
+            .accepts("urelGrelFlag", "Edge Alignment features")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
     urelPartGrelPartFlag =
         parser
@@ -403,7 +404,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
     utypeGtypeFlag =
         parser
             .accepts("utypeGtypeFlag",
-                "type alignment features - a good feature").withRequiredArg()
+                "type alignment features").withRequiredArg()
             .ofType(Boolean.class).defaultsTo(true);
     // gtypeGrel imposes strong biases - do not use for cai-yates
     gtypeGrelFlag =
@@ -420,27 +421,27 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
     wordGrelPartFlag =
         parser
             .accepts("wordGrelPartFlag",
-                "event word and edge feature - a good feature")
+                "event word and edge feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
     wordGrelFlag =
         parser
             .accepts("wordGrelFlag",
-                "event word and edge feature - a good feature")
+                "event word and edge feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
     eventTypeGrelPartFlag =
         parser
             .accepts("eventTypeGrelPartFlag",
-                "contextual features of a mediator node - a good feature")
+                "contextual features of a mediator node")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
     argGrelPartFlag =
         parser
             .accepts("argGrelPartFlag",
-                "argument word and edge feature - a good feature")
+                "argument word and edge feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
     argGrelFlag =
         parser
             .accepts("argGrelFlag",
-                "argument word and edge feature - a good feature")
+                "argument word and edge feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
     questionTypeGrelPartFlag =
         parser
@@ -452,23 +453,28 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
     stemMatchingFlag =
         parser
             .accepts("stemMatchingFlag",
-                "edge stem matching feature - a good feature")
+                "edge stem matching feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
     mediatorStemGrelPartMatchingFlag =
         parser
             .accepts("mediatorStemGrelPartMatchingFlag",
-                "subedge stem matching feature - a good feature")
+                "subedge stem matching feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
     argumentStemMatchingFlag =
         parser
             .accepts("argumentStemMatchingFlag",
-                "argument word and edge stem matching feature - a good feature")
+                "argument word and edge stem matching feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
     argumentStemGrelPartMatchingFlag =
         parser
             .accepts("argumentStemGrelPartMatchingFlag",
-                "argument word and subedge stem matching feature - a good feature")
+                "argument word and subedge stem matching feature")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+    ngramStemMatchingFlag =
+        parser
+            .accepts("ngramStemMatchingFlag",
+                "use stem overlaps between words in the sentence and grounded edges")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     // Graph features
     graphIsConnectedFlag =
@@ -507,7 +513,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
     useLexiconWeightsRel =
         parser
             .accepts("useLexiconWeightsRel",
-                "use noisy lexicon to initialise edge weights - a good feature")
+                "use noisy lexicon to initialise edge weights")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
     useLexiconWeightsType =
         parser
@@ -757,6 +763,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           options.valueOf(argumentStemMatchingFlag);
       boolean argumentStemGrelPartMatchingFlagVal =
           options.valueOf(argumentStemGrelPartMatchingFlag);
+      boolean ngramStemMatchingFlagVal = options.valueOf(ngramStemMatchingFlag);
 
       // Graph features
       boolean graphIsConnectedFlagVal = options.valueOf(graphIsConnectedFlag);
@@ -819,37 +826,35 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       GraphToQueryTraining.setPointWiseF1Threshold(options
           .valueOf(pointWiseF1Threshold));
 
-      GraphToQueryTrainingMain graphToQueryModel =
-          new GraphToQueryTrainingMain(schemaObj, kb, groundedLexicon,
-              normalCcgAutoLexicon, questionCcgAutoLexicon, rdfGraphTools,
-              kbGraphUri, testfile, devfile, supervisedTrainingFile,
-              corupusTrainingFile, groundInputCorporaFiles,
-              semanticParseKeyString, goldParsesFileVal,
-              mostFrequentTypesFileVal, debugEnabled,
-              groundTrainingCorpusInTheEndVal, trainingSampleSizeCount,
-              logfile, loadModelFromFileVal, nBestTrainSyntacticParsesVal,
-              nBestTestSyntacticParsesVal, nbestEdgesVal, nbestGraphsVal,
-              forestSizeVal, ngramLengthVal, useSchemaVal, useKBVal,
-              groundFreeVariablesVal, groundEntityVariableEdgesVal,
-              groundEntityEntityEdgesVal, useEmptyTypesVal, ignoreTypesVal,
-              urelGrelFlagVal, urelPartGrelPartFlagVal, utypeGtypeFlagVal,
-              gtypeGrelFlagVal, ngramGrelPartFlagVal, wordGrelPartFlagVal,
-              wordGrelFlagVal, eventTypeGrelPartFlagVal, argGrelPartFlagVal,
-              argGrelFlagVal, questionTypeGrelPartFlagVal, stemMatchingFlagVal,
-              mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
-              argumentStemGrelPartMatchingFlagVal, graphIsConnectedFlagVal,
-              graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
-              duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
-              useLexiconWeightsTypeVal, validQueryFlagVal,
-              useAnswerTypeQuestionWordFlagVal, useNbestGraphsVal,
-              addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
-              handleNumbersFlagVal, entityScoreFlagVal,
-              entityWordOverlapFlagVal, paraphraseScoreFlagVal,
-              paraphraseClassifierScoreFlagVal, allowMergingVal,
-              useGoldRelationsVal, evaluateOnlyTheFirstBestVal,
-              handleEventEventEdgesVal, useBackOffGraphVal, useHyperExpandVal,
-              initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
-              stemFeaturesWeightVal);
+      GraphToQueryTrainingMain graphToQueryModel = new GraphToQueryTrainingMain(
+          schemaObj, kb, groundedLexicon, normalCcgAutoLexicon,
+          questionCcgAutoLexicon, rdfGraphTools, kbGraphUri, testfile, devfile,
+          supervisedTrainingFile, corupusTrainingFile, groundInputCorporaFiles,
+          semanticParseKeyString, goldParsesFileVal, mostFrequentTypesFileVal,
+          debugEnabled, groundTrainingCorpusInTheEndVal,
+          trainingSampleSizeCount, logfile, loadModelFromFileVal,
+          nBestTrainSyntacticParsesVal, nBestTestSyntacticParsesVal,
+          nbestEdgesVal, nbestGraphsVal, forestSizeVal, ngramLengthVal,
+          useSchemaVal, useKBVal, groundFreeVariablesVal,
+          groundEntityVariableEdgesVal, groundEntityEntityEdgesVal,
+          useEmptyTypesVal, ignoreTypesVal, urelGrelFlagVal,
+          urelPartGrelPartFlagVal, utypeGtypeFlagVal, gtypeGrelFlagVal,
+          ngramGrelPartFlagVal, wordGrelPartFlagVal, wordGrelFlagVal,
+          eventTypeGrelPartFlagVal, argGrelPartFlagVal, argGrelFlagVal,
+          questionTypeGrelPartFlagVal, stemMatchingFlagVal,
+          mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
+          argumentStemGrelPartMatchingFlagVal, ngramStemMatchingFlagVal,
+          graphIsConnectedFlagVal, graphHasEdgeFlagVal, countNodesFlagVal,
+          edgeNodeCountFlagVal, duplicateEdgesFlagVal, grelGrelFlagVal,
+          useLexiconWeightsRelVal, useLexiconWeightsTypeVal, validQueryFlagVal,
+          useAnswerTypeQuestionWordFlagVal, useNbestGraphsVal,
+          addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
+          handleNumbersFlagVal, entityScoreFlagVal, entityWordOverlapFlagVal,
+          paraphraseScoreFlagVal, paraphraseClassifierScoreFlagVal,
+          allowMergingVal, useGoldRelationsVal, evaluateOnlyTheFirstBestVal,
+          handleEventEventEdgesVal, useBackOffGraphVal, useHyperExpandVal,
+          initialEdgeWeightVal, initialTypeWeightVal, initialWordWeightVal,
+          stemFeaturesWeightVal);
       graphToQueryModel.train(iterationCount, threadCount,
           evaluateBeforeTrainingVal);
 

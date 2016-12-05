@@ -62,6 +62,7 @@ public class GroundTestSentences {
     boolean mediatorStemGrelPartMatchingFlag = true;
     boolean argumentStemMatchingFlag = true;
     boolean argumentStemGrelPartMatchingFlag = true;
+    boolean ngramStemMatchingFlag = false;
 
     boolean graphIsConnectedFlag = false;
     boolean graphHasEdgeFlag = false;
@@ -96,19 +97,18 @@ public class GroundTestSentences {
     GroundedGraphs graphCreator =
         new GroundedGraphs(schema, kb, groundedLexicon, normalCcgAutoLexicon,
             questionCcgAutoLexicon, relationLexicalIdentifiers,
-            relationTypingIdentifiers, learningModel, ngramLength,
-            urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag,
-            grelGrelFlag, ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag,
-            argGrelPartFlag, argGrelFlag, questionTypeGrelPartFlag,
-            wordBigramGrelPartFlag, stemMatchingFlag,
-            mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-            argumentStemGrelPartMatchingFlag, graphIsConnectedFlag,
-            graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
-            useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
-            ignorePronouns, handleNumbers, entityScoreFlag,
-            entityWordOverlapFlag, paraphraseScoreFlag,
-            paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
-            useExpand, useHyperExpand, initialEdgeWeight,
+            relationTypingIdentifiers, learningModel, ngramLength, urelGrelFlag,
+            urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
+            ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
+            argGrelFlag, questionTypeGrelPartFlag, wordBigramGrelPartFlag,
+            stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
+            argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
+            ngramStemMatchingFlag, graphIsConnectedFlag, graphHasEdgeFlag,
+            countNodesFlag, edgeNodeCountFlag, useLexiconWeightsRel,
+            useLexiconWeightsType, duplicateEdgesFlag, ignorePronouns,
+            handleNumbers, entityScoreFlag, entityWordOverlapFlag,
+            paraphraseScoreFlag, paraphraseClassifierScoreFlag, allowMerging,
+            handleEventEventEdges, useExpand, useHyperExpand, initialEdgeWeight,
             initialTypeWeight, initialWordWeight, stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
