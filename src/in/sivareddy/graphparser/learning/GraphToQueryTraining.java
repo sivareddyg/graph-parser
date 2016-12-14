@@ -2199,6 +2199,7 @@ public class GraphToQueryTraining {
       int count = 0;
 
       Map<String, LinkedHashSet<String>> firstBestPredictions = null;
+      Map<String, LinkedHashSet<String>> bestPredictedResults = null;
       for (Pair<LexicalGraph, Map<String, LinkedHashSet<String>>> gGraphPair : gGraphsAndResults) {
         LexicalGraph gGraph = gGraphPair.getLeft();
         Map<String, LinkedHashSet<String>> predResults = gGraphPair.getRight();
@@ -2238,6 +2239,7 @@ public class GraphToQueryTraining {
         if (pointWiseF1 > 0.9) {
           logger.info("CORRECT!!");
           foundAnswer = true;
+          bestPredictedResults = predResults;
           break;
         } else {
           logger.info("WRONG!!");
@@ -2262,7 +2264,7 @@ public class GraphToQueryTraining {
 
           // Store the results.
           results.get(sentCount).put(nthBest,
-              RdfGraphTools.getCleanedResults(goldResults, goldResults));
+              RdfGraphTools.getCleanedResults(goldResults, bestPredictedResults));
         } else if (gGraphs.size() > 0) {
           Integer value =
               negatives.containsKey(nthBest) ? negatives.get(nthBest) : 0;
