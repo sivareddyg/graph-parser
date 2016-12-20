@@ -129,11 +129,12 @@ public class EvaluateBoWOracleUsingGoldMidAndGoldRelations {
     }
 
     String goldMid = sentence.get(SentenceKeys.GOLD_MID).getAsString();
-    LexicalItem goldEntityNode = new LexicalItem("", "", "", "", "", null);
+    LexicalItem goldEntityNode = new LexicalItem("", "", "", "", "", "", null);
     goldEntityNode.setMid(goldMid);
     goldEntityNode.setWordPosition(0);
 
-    LexicalItem answerEntityNode = new LexicalItem("", "", "", "", "", null);
+    LexicalItem answerEntityNode =
+        new LexicalItem("", "", "", "", "", "", null);
     answerEntityNode.setWordPosition(1);
 
     JsonObject relationMap =

@@ -71,14 +71,17 @@ public class DumpDatabaseFromEntities extends ProcessStreamInterface {
     JsonArray triples = new JsonArray();
     for (Relation relation : relations) {
       LexicalGraph graph = new LexicalGraph();
-      LexicalItem entityNode = new LexicalItem("", mid, mid, "NNP", "", null);
+      LexicalItem entityNode =
+          new LexicalItem("", mid, mid, "NNP", "", "", null);
       entityNode.setWordPosition(0);
       entityNode.setMid(mid);
 
-      LexicalItem questionNode = new LexicalItem("", "q", "q", "NNP", "", null);
+      LexicalItem questionNode =
+          new LexicalItem("", "q", "q", "NNP", "", "", null);
       questionNode.setWordPosition(1);
 
-      LexicalItem mediatorNode = new LexicalItem("", "m", "m", "1", "", null);
+      LexicalItem mediatorNode =
+          new LexicalItem("", "m", "m", "1", "", "", null);
       mediatorNode.setWordPosition(2);
 
       Edge<LexicalItem> edge =

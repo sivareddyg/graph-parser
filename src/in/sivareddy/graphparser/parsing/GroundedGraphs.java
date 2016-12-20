@@ -570,8 +570,8 @@ public class GroundedGraphs {
         String oldQuestionVar =
             questionPredicate.replace("QUESTION(", "").replace(")", "");
         LexicalItem newQuestionNode =
-            new LexicalItem("", SentenceKeys.BLANK_WORD, SentenceKeys.BLANK_WORD,
-                "NUM", "", null);
+            new LexicalItem("", SentenceKeys.BLANK_WORD,
+                SentenceKeys.BLANK_WORD, "NUM", "", "", null);
         leaves.add(newQuestionNode);
         int newQuestionWordIndex = leaves.size() - 1;
         newQuestionNode.setWordPosition(newQuestionWordIndex);
@@ -592,9 +592,8 @@ public class GroundedGraphs {
    */
   public static Set<String> getBagOfWordsUngroundedSemanticParse(
       JsonObject jsonSentence, List<LexicalItem> leaves) {
-    LexicalItem dummyNode =
-        new LexicalItem("", SentenceKeys.BLANK_WORD, SentenceKeys.BLANK_WORD,
-            "NNP", "", null);
+    LexicalItem dummyNode = new LexicalItem("", SentenceKeys.BLANK_WORD,
+        SentenceKeys.BLANK_WORD, "NNP", "", "", null);
     leaves.add(dummyNode);
     int questionWordIndex = leaves.size() - 1;
     dummyNode.setWordPosition(questionWordIndex);
@@ -768,7 +767,7 @@ public class GroundedGraphs {
     return getNgrams(words, nGram, false);
   }
   
-  public static List<String> getNgrams(List<LexicalItem> words, int nGram, boolean useWord) {
+  public static List<String> getNgrams(List<LexicalItem> words, int nGram, boolean useWordAndLanguage) {
     List<String> wordStrings = new ArrayList<>();
     for (LexicalItem word : words) {
       if (word.isEntity() && !word.getMid().equals("x")) {
@@ -782,13 +781,17 @@ public class GroundedGraphs {
         continue;
       }
 
-      String wordString = useWord ? word.getWord() : word.getLemma();
+      String wordString = useWordAndLanguage ? word.getWord() : word.getLemma();
       if (stopWordsUniversal.contains(wordString)
           || punctuation.matcher(wordString).matches()
           || SentenceKeys.PUNCTUATION_TAGS.contains(word.getPos())) {
         continue;
       }
-      wordStrings.add(wordString);
+      if (useWordAndLanguage) {
+        wordStrings.add(String.format("%s:%s", word.getLang(), wordString));
+      } else {
+        wordStrings.add(wordString);
+      }
     }
 
     if (nGram == 1)
@@ -846,7 +849,10 @@ public class GroundedGraphs {
       String ner =
           wordObject.has(SentenceKeys.NER_KEY) ? wordObject.get(
               SentenceKeys.NER_KEY).getAsString() : "";
-      LexicalItem lex = new LexicalItem("", word, lemma, pos, ner, null);
+      String lang = wordObject.has(SentenceKeys.LANGUAGE_CODE)
+          ? wordObject.get(SentenceKeys.LANGUAGE_CODE).getAsString()
+          : SentenceKeys.ENGLISH_LANGUAGE_CODE;
+      LexicalItem lex = new LexicalItem("", word, lemma, pos, ner, lang, null);
       lex.setWordPosition(i);
       if (tokenToEntity.containsKey(i)) {
         lex.setMid(tokenToEntity.get(i));
@@ -1178,7 +1184,7 @@ public class GroundedGraphs {
     if (questionIndices.size() == 0) {
       LexicalItem dummyNode =
           new LexicalItem("", SentenceKeys.DUMMY_WORD, SentenceKeys.DUMMY_WORD,
-              SentenceKeys.PUNCTUATION_TAGS.iterator().next(), "", null);
+              SentenceKeys.PUNCTUATION_TAGS.iterator().next(), "", "", null);
       dummyNode.setWordPosition(leaves.size());
       leaves.add(dummyNode);
       questionIndices.add(leaves.size() - 1);
@@ -2253,7 +2259,6 @@ public class GroundedGraphs {
   }
 
   public boolean stringContainsWord(String grelLeftStripped, String modifierWord) {
-    modifierWord = modifierWord.replaceFirst("[.*]+?:", "");
     if (!stems.containsKey(modifierWord))
       stems.put(modifierWord, PorterStemmer.getStem(modifierWord));
     String modifierStem = stems.get(modifierWord);

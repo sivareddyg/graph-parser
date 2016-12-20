@@ -10,6 +10,7 @@ public class SentenceKeys {
   public static String POS_KEY = "pos";
   public static String LEMMA_KEY = "lemma";
   public static String NER_KEY = "ner";
+  public static final String LANGUAGE_CODE = "lang";
   public static String SENTENCE_KEY = "sentence";
   public static String INDEX_KEY = "index";
   public static String HEAD_KEY = "head";

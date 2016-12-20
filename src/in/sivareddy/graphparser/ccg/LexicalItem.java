@@ -4,9 +4,8 @@ import java.io.Serializable;
 
 import com.google.common.base.Objects;
 
-/**
- * Created by bisk1 on 1/26/15.
- */
+import in.sivareddy.util.SentenceKeys;
+
 public class LexicalItem extends CcgParseTree implements
     Comparable<LexicalItem>, Serializable {
   private static final long serialVersionUID = 16874271356455052L;
@@ -15,6 +14,7 @@ public class LexicalItem extends CcgParseTree implements
   String word;
   String lemma;
   String pos;
+  private String lang;
 
   // named entity type
   String neType;
@@ -34,7 +34,7 @@ public class LexicalItem extends CcgParseTree implements
   LexicalItem copula;
 
   public LexicalItem(String synCat, String word, String lemma, String pos,
-      String neType, Category cat) {
+      String neType, String lang, Category cat) {
     // (<L N Titanic Titanic NNP O I-NP N>)
     super();
     this.synCat = synCat;
@@ -47,6 +47,7 @@ public class LexicalItem extends CcgParseTree implements
     }
     this.pos = pos;
     this.neType = neType;
+    this.lang = lang;
     this.currentCategory = cat;
     key = getNodeCount();
     nodesIndexMap.put(key, this);
@@ -67,7 +68,7 @@ public class LexicalItem extends CcgParseTree implements
       copyCat = currentCategory.shallowCopy();
     }
     LexicalItem item =
-        new LexicalItem(synCat, word, lemma, pos, neType, copyCat);
+        new LexicalItem(synCat, word, lemma, pos, neType, lang, copyCat);
     return item;
   };
 
@@ -132,6 +133,10 @@ public class LexicalItem extends CcgParseTree implements
   public void setLemma(String lemma) {
     this.lemma = lemma;
   }
+  
+  public void setLang(String lang) {
+    this.lang = lang;
+  }
 
   public String getPos() {
     return pos;
@@ -151,6 +156,10 @@ public class LexicalItem extends CcgParseTree implements
 
   public String getMid() {
     return mid;
+  }
+  
+  public String getLang() {
+    return lang;
   }
 
   public void setMid(String mid) {

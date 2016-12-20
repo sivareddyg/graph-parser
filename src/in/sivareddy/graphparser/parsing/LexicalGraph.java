@@ -815,7 +815,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
       // Add a dummy question node.
       LexicalItem dummyNode =
           new LexicalItem("", SentenceKeys.DUMMY_WORD, SentenceKeys.DUMMY_WORD,
-              SentenceKeys.PUNCTUATION_TAGS.iterator().next(), "", null);
+              SentenceKeys.PUNCTUATION_TAGS.iterator().next(), "", "", null);
       dummyNode.setWordPosition(getActualNodes().size());
       getActualNodes().add(dummyNode);
       this.addProperty(dummyNode,
@@ -838,7 +838,7 @@ public class LexicalGraph extends Graph<LexicalItem> {
         if (shortestPath.size() == 0) {
           LexicalItem dummyNode = new LexicalItem("", SentenceKeys.DUMMY_WORD,
               SentenceKeys.DUMMY_WORD,
-              SentenceKeys.PUNCTUATION_TAGS.iterator().next(), "", null);
+              SentenceKeys.PUNCTUATION_TAGS.iterator().next(), "", "", null);
           dummyNode.setWordPosition(getActualNodes().size());
           getActualNodes().add(dummyNode);
           Edge<LexicalItem> directEdge = new Edge<>(mainNode, entityNode,

@@ -2,6 +2,7 @@ package in.sivareddy.graphparser.ccg;
 
 import in.sivareddy.graphparser.ccg.SyntacticCategory.BadParseException;
 import in.sivareddy.graphparser.ccg.SyntacticCategory.Direction;
+import in.sivareddy.util.SentenceKeys;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -74,7 +75,8 @@ public class CcgParseTree {
         autoLexicon.getCategory(lemma.toLowerCase(), pos, synCat);
     List<LexicalItem> lexItems = new ArrayList<>();
     for (Category cat : currentCategories) {
-      LexicalItem lex = new LexicalItem(synCat, word, lemma, pos, neType, cat);
+      LexicalItem lex = new LexicalItem(synCat, word, lemma, pos, neType,
+          SentenceKeys.ENGLISH_LANGUAGE_CODE, cat);
       lexItems.add(lex);
     }
     return lexItems;
