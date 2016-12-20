@@ -309,6 +309,10 @@ public class NlpPipeline extends ProcessStreamInterface {
           String ner = token.get(NamedEntityTagAnnotation.class);
           wordObject.addProperty(SentenceKeys.NER_KEY, ner);
         }
+        if (options.containsKey(LANGUAGE_KEY)) {
+          wordObject.addProperty(SentenceKeys.LANGUAGE_CODE,
+              options.get(LANGUAGE_KEY));
+        }
         wordCount += 1;
       }
 

@@ -4,8 +4,6 @@ import java.io.Serializable;
 
 import com.google.common.base.Objects;
 
-import in.sivareddy.util.SentenceKeys;
-
 public class LexicalItem extends CcgParseTree implements
     Comparable<LexicalItem>, Serializable {
   private static final long serialVersionUID = 16874271356455052L;
