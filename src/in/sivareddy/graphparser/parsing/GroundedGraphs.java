@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
+import org.ejml.simple.SimpleMatrix;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
@@ -74,6 +75,7 @@ import in.sivareddy.graphparser.parsing.LexicalGraph.UrelPartGrelPartFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.UtypeGtypeFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.WordGrelFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.WordGrelPartFeature;
+import in.sivareddy.graphparser.util.CrossLingualEmbeddingSimilarity;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.Schema;
 import in.sivareddy.graphparser.util.graph.Edge;
@@ -93,6 +95,7 @@ public class GroundedGraphs {
   private KnowledgeBase kb;
   private CcgParser normalCcgParser;
   private CcgParser questionCcgParser;
+  private final CrossLingualEmbeddingSimilarity embeddings;
 
   private static Set<String> lexicalPosTags = Sets.newHashSet("NNP", "NNPS",
       "PROPN");
@@ -113,6 +116,7 @@ public class GroundedGraphs {
   private boolean argumentStemMatchingFlag = true;
   private boolean argumentStemGrelPartMatchingFlag = true;
   private boolean ngramStemMatchingFlag = false;
+  private boolean useEmbeddingSimilarity = false;
   private boolean graphIsConnectedFlag = false;
   private boolean graphHasEdgeFlag = false;
   private boolean countNodesFlag = false;
@@ -130,6 +134,8 @@ public class GroundedGraphs {
   private boolean useExpand = false;
   private boolean useHyperExpand = false;
   
+  private String defaultKBLanguage = "en:";
+  
   private StructuredPercepton learningModel;
   private int ngramLength = 2;
   public double initialEdgeWeight;
@@ -140,30 +146,34 @@ public class GroundedGraphs {
   public Logger logger;
 
   private Map<String, String> stems = Maps.newConcurrentMap();
+  private Map<String, SimpleMatrix> edgeEmbeddings = Maps.newConcurrentMap();
+  private Map<Pair<String, String>, Double> edgeEmbeddingSimilarities = Maps.newConcurrentMap();
 
   public GroundedGraphs(Schema schema, KnowledgeBase kb,
       GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
       CcgAutoLexicon questionCcgAutoLexicon,
       String[] relationLexicalIdentifiers, String[] relationTypingIdentifiers,
-      StructuredPercepton learningModel, int ngramLength, boolean urelGrelFlag,
-      boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
-      boolean gtypeGrelPartFlag, boolean grelGrelFlag, boolean ngramGrelFlag,
-      boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
-      boolean argGrelFlag, boolean questionTypeGrelPartFlag,
-      boolean eventTypeGrelPartFlag, boolean stemMatchingFlag,
-      boolean mediatorStemGrelPartMatchingFlag,
+      StructuredPercepton learningModel,
+      CrossLingualEmbeddingSimilarity embeddings, int ngramLength,
+      boolean urelGrelFlag, boolean urelPartGrelPartFlag,
+      boolean utypeGtypeFlag, boolean gtypeGrelPartFlag, boolean grelGrelFlag,
+      boolean ngramGrelFlag, boolean wordGrelPartFlag, boolean wordGrelFlag,
+      boolean argGrelPartFlag, boolean argGrelFlag,
+      boolean questionTypeGrelPartFlag, boolean eventTypeGrelPartFlag,
+      boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean ngramStemMatchingFlag,
-      boolean graphIsConnectedFlag, boolean graphHasEdgeFlag,
-      boolean countNodesFlag, boolean edgeNodeCountFlag,
-      boolean useLexiconWeightsRel, boolean useLexiconWeightsType,
-      boolean duplicateEdgesFlag, boolean ignorePronouns, boolean handleNumbers,
-      boolean entityScoreFlag, boolean entityWordOverlapFlag,
-      boolean paraphraseScoreFlag, boolean paraphraseClassifierScoreFlag,
-      boolean allowMerging, boolean handleEventEventEdges, boolean useExpand,
-      boolean useHyperExpand, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight,
-      double mergeEdgeWeight, double stemFeaturesWeight) throws IOException {
+      boolean useEmbeddingSimilarity, boolean graphIsConnectedFlag,
+      boolean graphHasEdgeFlag, boolean countNodesFlag,
+      boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
+      boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
+      boolean ignorePronouns, boolean handleNumbers, boolean entityScoreFlag,
+      boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
+      boolean paraphraseClassifierScoreFlag, boolean allowMerging,
+      boolean handleEventEventEdges, boolean useExpand, boolean useHyperExpand,
+      double initialEdgeWeight, double initialTypeWeight,
+      double initialWordWeight, double mergeEdgeWeight,
+      double stemFeaturesWeight) throws IOException {
 
     // ccg parser initialisation
     String[] argumentLexicalIdenfiers = {"mid"};
@@ -180,6 +190,7 @@ public class GroundedGraphs {
     this.schema = schema;
     this.learningModel =
         learningModel != null ? learningModel : new StructuredPercepton();
+    this.embeddings = embeddings;
 
     this.urelGrelFlag = urelGrelFlag;
     this.urelPartGrelPartFlag = urelPartGrelPartFlag;
@@ -198,6 +209,7 @@ public class GroundedGraphs {
     this.argumentStemMatchingFlag = argumentStemMatchingFlag;
     this.argumentStemGrelPartMatchingFlag = argumentStemGrelPartMatchingFlag;
     this.ngramStemMatchingFlag = ngramStemMatchingFlag;
+    this.useEmbeddingSimilarity = useEmbeddingSimilarity;
 
     this.graphIsConnectedFlag = graphIsConnectedFlag;
     this.graphHasEdgeFlag = graphHasEdgeFlag;
@@ -753,9 +765,13 @@ public class GroundedGraphs {
   // "VBG", "NNP", "NNPS");
 
   public static List<String> getNgrams(List<LexicalItem> words, int nGram) {
+    return getNgrams(words, nGram, false);
+  }
+  
+  public static List<String> getNgrams(List<LexicalItem> words, int nGram, boolean useWord) {
     List<String> wordStrings = new ArrayList<>();
     for (LexicalItem word : words) {
-      if (!word.getLemma().equals(word.getMid()) && !word.getMid().equals("x")) {
+      if (word.isEntity() && !word.getMid().equals("x")) {
         // Current word is an entity.
         continue;
       }
@@ -766,7 +782,7 @@ public class GroundedGraphs {
         continue;
       }
 
-      String wordString = word.getLemma();
+      String wordString = useWord ? word.getWord() : word.getLemma();
       if (stopWordsUniversal.contains(wordString)
           || punctuation.matcher(wordString).matches()
           || SentenceKeys.PUNCTUATION_TAGS.contains(word.getPos())) {
@@ -2237,6 +2253,7 @@ public class GroundedGraphs {
   }
 
   public boolean stringContainsWord(String grelLeftStripped, String modifierWord) {
+    modifierWord = modifierWord.replaceFirst(defaultKBLanguage, "");
     if (!stems.containsKey(modifierWord))
       stems.put(modifierWord, PorterStemmer.getStem(modifierWord));
     String modifierStem = stems.get(modifierWord);
@@ -3360,16 +3377,33 @@ public class GroundedGraphs {
       fromIndex = toIndex - 2 < 0 ? 0 : toIndex - 2;
       grelRightInverse = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
 
-      for (String unigram : getNgrams(uGraph.getActualNodes(), 1)) {
-        if ((stringContainsWord(grelLeftStripped, unigram)
-            || stringContainsWord(grelLeftInverse, unigram))
-            && (stringContainsWord(grelRightStripped, unigram)
-                || stringContainsWord(grelRightInverse, unigram))) {
-          NgramStemMatchingFeature s =
-              new NgramStemMatchingFeature(2.0 / (Math.max(
-                  uGraph.getEdges(node1).size() + uGraph.getEdges(node2).size(),
-                  2.0)));
-          features.add(s);
+      if (!useEmbeddingSimilarity) {
+        for (String unigram : getNgrams(uGraph.getActualNodes(), 1)) {
+          if ((stringContainsWord(grelLeftStripped, unigram)
+              || stringContainsWord(grelLeftInverse, unigram))
+              && (stringContainsWord(grelRightStripped, unigram)
+                  || stringContainsWord(grelRightInverse, unigram))) {
+            NgramStemMatchingFeature s = new NgramStemMatchingFeature(
+                2.0 / (Math.max(uGraph.getEdges(node1).size()
+                    + uGraph.getEdges(node2).size(), 2.0)));
+            features.add(s);
+          }
+        }
+      } else if (embeddings != null){
+        double sim = 0.0;
+        for (String unigram : getNgrams(uGraph.getActualNodes(), 1, true)) {
+          sim += computeEdgeSimilarity(unigram, grelLeftStripped);
+          sim += computeEdgeSimilarity(unigram, grelLeftInverse);
+          sim += computeEdgeSimilarity(unigram, grelRightStripped);
+          sim += computeEdgeSimilarity(unigram, grelRightInverse);
+
+          if (sim > 0) {
+            sim = sim/2.0;
+            NgramStemMatchingFeature s = new NgramStemMatchingFeature(
+                sim / (Math.max(uGraph.getEdges(node1).size()
+                    + uGraph.getEdges(node2).size(), 2.0)));
+            features.add(s);
+          }
         }
       }
     }
@@ -3377,6 +3411,51 @@ public class GroundedGraphs {
     return features;
   }
 
+  private double computeEdgeSimilarity(String word, String subEdge) {
+    Pair<String, String> key = Pair.of(word, subEdge);
+    if (edgeEmbeddingSimilarities.containsKey(key))
+      return edgeEmbeddingSimilarities.get(key);
+    
+    SimpleMatrix wordEmbedding = embeddings.get(word);
+    if (wordEmbedding == null) {
+      edgeEmbeddingSimilarities.put(key, 0.0);
+      return 0.0;
+    }
+    
+    SimpleMatrix edgeEmbedding = getEdgeEmbedding(subEdge);
+    if (edgeEmbedding == null) {
+      edgeEmbeddingSimilarities.put(key, 0.0);
+      return 0.0;
+    }
+    
+    double sim = CrossLingualEmbeddingSimilarity.cosine(edgeEmbedding, wordEmbedding);
+    edgeEmbeddingSimilarities.put(key, sim);
+    return sim;
+  }
+  
+  private SimpleMatrix getEdgeEmbedding(String subEdge) {
+    if (edgeEmbeddings.containsKey(subEdge))
+      return edgeEmbeddings.get(subEdge);
+    Iterator<String> it =
+        Splitter.on(CharMatcher.anyOf("._")).trimResults().omitEmptyStrings()
+            .split(subEdge).iterator();
+    SimpleMatrix edgeEmbedding = null;
+    while (it.hasNext()) {
+      String part = String.format("%s%s", defaultKBLanguage, it.next());
+      SimpleMatrix partEmbedding = embeddings.get(part);
+      if (partEmbedding != null) {
+        if (edgeEmbedding != null) {
+          edgeEmbedding = edgeEmbedding.plus(partEmbedding);
+        } else {
+          edgeEmbedding = partEmbedding;
+        }
+      }
+    }
+    edgeEmbeddings.put(subEdge, edgeEmbedding);
+    return edgeEmbedding;
+  }
+  
+  
   private double countMediator(LexicalItem mediator,
       TreeSet<Edge<LexicalItem>> edges) {
     double count = 0.0;

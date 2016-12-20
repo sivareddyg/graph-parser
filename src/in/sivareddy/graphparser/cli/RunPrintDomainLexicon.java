@@ -169,14 +169,13 @@ public class RunPrintDomainLexicon extends AbstractCli {
       String[] relationTypingIdentifiers = {};
 
       GroundedLexicon groundedLexicon = new GroundedLexicon(null);
-      GroundedGraphs graphCreator =
-          new GroundedGraphs(schemaObj, kb, groundedLexicon,
-              normalCcgAutoLexicon, questionCcgAutoLexicon,
-              relationLexicalIdentifiers, relationTypingIdentifiers, null, 1,
-              false, false, false, false, false, false, false, false, false,
-              false, false, false, false, false, false, false, false, false, false,
-              false, false, false, false, false, false, false, false, false,
-              false, false, false, false, false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
+      GroundedGraphs graphCreator = new GroundedGraphs(schemaObj, kb,
+          groundedLexicon, normalCcgAutoLexicon, questionCcgAutoLexicon,
+          relationLexicalIdentifiers, relationTypingIdentifiers, null, null, 1,
+          false, false, false, false, false, false, false, false, false, false,
+          false, false, false, false, false, false, false, false, false, false,
+          false, false, false, false, false, false, false, false, false, false,
+          false, false, false, false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
 
       CreateGroundedLexicon engine =
           new CreateGroundedLexicon(graphCreator, kb, semanticParseKeyString,

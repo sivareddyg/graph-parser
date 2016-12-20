@@ -79,10 +79,10 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
         normalCcgAutoLexicon, questionCcgAutoLexicon,
         relationLexicalIdentifiers, relationTypingIdentifiers,
-        new StructuredPercepton(), 1, true, true, true, true, true, true, true,
+        new StructuredPercepton(), null, 1, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, true, true, true, true,
-        true, true, false, 10.0, 1.0, 0.0, 0.0, 0.0);
+        true, true, true, true, false, 10.0, 1.0, 0.0, 0.0, 0.0);
 
     logger.setLevel(Level.DEBUG);
     Appender stdoutAppender = new ConsoleAppender(layout);
@@ -462,10 +462,10 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
         normalCcgAutoLexicon, questionCcgAutoLexicon,
         relationLexicalIdentifiers, relationTypingIdentifiers,
-        new StructuredPercepton(), 1, true, true, true, true, true, true, true,
+        new StructuredPercepton(), null, 1, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, false, false, false,
-        false, false, false, true, 10.0, 1.0, 0.0, 0.0, 0.0);
+        true, true, true, true, true, true, true, true, true, true, false,
+        false, false, false, false, false, true, 10.0, 1.0, 0.0, 0.0, 0.0);
     JsonObject sentence =
         jsonParser
             .parse(
@@ -497,10 +497,10 @@ public class CreateGroundedGraphsFromSemanticParseTest {
     graphCreator = new GroundedGraphs(schema, kb, groundedLexicon,
         normalCcgAutoLexicon, questionCcgAutoLexicon,
         relationLexicalIdentifiers, relationTypingIdentifiers,
-        new StructuredPercepton(), 1, true, true, true, true, true, true, true,
+        new StructuredPercepton(), null, 1, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, false, false, false,
-        false, false, false, true, 10.0, 1.0, 0.0, 0.0, 0.0);
+        true, true, true, true, true, true, true, true, true, true, false,
+        false, false, false, false, false, true, 10.0, 1.0, 0.0, 0.0, 0.0);
     JsonObject sentence =
         jsonParser
             .parse(

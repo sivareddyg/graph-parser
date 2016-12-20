@@ -7,6 +7,7 @@ import in.sivareddy.graphparser.parsing.GroundedGraphs;
 import in.sivareddy.graphparser.parsing.LexicalGraph;
 import in.sivareddy.graphparser.parsing.LexicalGraph.AnswerTypeQuestionWordFeature;
 import in.sivareddy.graphparser.parsing.LexicalGraph.ValidQueryFeature;
+import in.sivareddy.graphparser.util.CrossLingualEmbeddingSimilarity;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
@@ -70,6 +71,7 @@ public class GraphToQueryTraining {
   private static double POINTWISE_F1_THRESHOLD = 0.90;
 
   private StructuredPercepton learningModel;
+  private CrossLingualEmbeddingSimilarity embeddings;
   private Schema schema;
   private KnowledgeBase kb;
   private GroundedLexicon groundedLexicon;
@@ -118,7 +120,8 @@ public class GraphToQueryTraining {
       boolean useSchema, boolean useKB, boolean groundFreeVariables,
       boolean groundEntityVariableEdges, boolean groundEntityEntityEdges,
       boolean useEmtpyTypes, boolean ignoreTypes,
-      StructuredPercepton learningModel, boolean urelGrelFlag,
+      StructuredPercepton learningModel,
+      CrossLingualEmbeddingSimilarity embeddings, boolean urelGrelFlag,
       boolean urelPartGrelPartFlag, boolean utypeGtypeFlag,
       boolean gtypeGrelFlag, boolean grelGrelFlag, boolean ngramGrelPartFlag,
       boolean wordGrelPartFlag, boolean wordGrelFlag, boolean argGrelPartFlag,
@@ -127,20 +130,20 @@ public class GraphToQueryTraining {
       boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean ngramStemMatchingFlag,
-      boolean graphIsConnectedFlag, boolean graphHasEdgeFlag,
-      boolean countNodesFlag, boolean edgeNodeCountFlag,
-      boolean useLexiconWeightsRel, boolean useLexiconWeightsType,
-      boolean duplicateEdgesFlag, boolean validQueryFlag,
-      boolean useAnswerTypeQuestionWordFlag, boolean useNbestSurrogateGraphs,
-      boolean addBagOfWordsGraph, boolean addOnlyBagOfWordsGraph,
-      boolean handleNumbers, boolean entityScoreFlag,
-      boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
-      boolean paraphraseClassifierScoreFlag, boolean allowMerging,
-      boolean useGoldRelations, boolean evaluateOnlyTheFirstBest,
-      boolean handleEventEventEdges, boolean useExpand, boolean useHyperExpand,
-      double initialEdgeWeight, double initialTypeWeight,
-      double initialWordWeight, double mergeEdgeWeight,
-      double stemFeaturesWeight,
+      boolean useEmbeddingSimilarityFlag, boolean graphIsConnectedFlag,
+      boolean graphHasEdgeFlag, boolean countNodesFlag,
+      boolean edgeNodeCountFlag, boolean useLexiconWeightsRel,
+      boolean useLexiconWeightsType, boolean duplicateEdgesFlag,
+      boolean validQueryFlag, boolean useAnswerTypeQuestionWordFlag,
+      boolean useNbestSurrogateGraphs, boolean addBagOfWordsGraph,
+      boolean addOnlyBagOfWordsGraph, boolean handleNumbers,
+      boolean entityScoreFlag, boolean entityWordOverlapFlag,
+      boolean paraphraseScoreFlag, boolean paraphraseClassifierScoreFlag,
+      boolean allowMerging, boolean useGoldRelations,
+      boolean evaluateOnlyTheFirstBest, boolean handleEventEventEdges,
+      boolean useExpand, boolean useHyperExpand, double initialEdgeWeight,
+      double initialTypeWeight, double initialWordWeight,
+      double mergeEdgeWeight, double stemFeaturesWeight,
       RdfGraphTools rdfGraphTools, List<String> kbGraphUri) throws IOException {
     String[] relationLexicalIdentifiers = {"lemma"};
     String[] relationTypingIdentifiers = {};
@@ -165,6 +168,7 @@ public class GraphToQueryTraining {
     this.useAnswerTypeQuestionWordFlag = useAnswerTypeQuestionWordFlag;
 
     this.learningModel = learningModel;
+    this.embeddings = embeddings;
     this.schema = schema;
     this.kb = kb;
     this.groundedLexicon = groundedLexicon;
@@ -188,19 +192,20 @@ public class GraphToQueryTraining {
     this.graphCreator = new GroundedGraphs(this.schema, this.kb,
         this.groundedLexicon, normalCcgAutoLexicon, questionCcgAutoLexicon,
         relationLexicalIdentifiers, relationTypingIdentifiers,
-        this.learningModel, ngramLength, urelGrelFlag, urelPartGrelPartFlag,
-        utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag,
-        wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
-        questionTypeGrelPartFlag, eventTypeGrelPartFlag, stemMatchingFlag,
-        mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-        argumentStemGrelPartMatchingFlag, ngramStemMatchingFlag,
-        graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
-        edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
-        duplicateEdgesFlag, ignorePronouns, handleNumbers, entityScoreFlag,
-        entityWordOverlapFlag, paraphraseScoreFlag,
-        paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
-        useExpand, useHyperExpand, initialEdgeWeight, initialTypeWeight,
-        initialWordWeight, mergeEdgeWeight, stemFeaturesWeight);
+        this.learningModel, this.embeddings, ngramLength, urelGrelFlag,
+        urelPartGrelPartFlag, utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag,
+        ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag, argGrelPartFlag,
+        argGrelFlag, questionTypeGrelPartFlag, eventTypeGrelPartFlag,
+        stemMatchingFlag, mediatorStemGrelPartMatchingFlag,
+        argumentStemMatchingFlag, argumentStemGrelPartMatchingFlag,
+        ngramStemMatchingFlag, useEmbeddingSimilarityFlag, graphIsConnectedFlag,
+        graphHasEdgeFlag, countNodesFlag, edgeNodeCountFlag,
+        useLexiconWeightsRel, useLexiconWeightsType, duplicateEdgesFlag,
+        ignorePronouns, handleNumbers, entityScoreFlag, entityWordOverlapFlag,
+        paraphraseScoreFlag, paraphraseClassifierScoreFlag, allowMerging,
+        handleEventEventEdges, useExpand, useHyperExpand, initialEdgeWeight,
+        initialTypeWeight, initialWordWeight, mergeEdgeWeight,
+        stemFeaturesWeight);
   }
 
 

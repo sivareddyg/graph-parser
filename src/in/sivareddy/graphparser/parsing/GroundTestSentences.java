@@ -1,6 +1,7 @@
 package in.sivareddy.graphparser.parsing;
 
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.util.CrossLingualEmbeddingSimilarity;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
@@ -63,6 +64,7 @@ public class GroundTestSentences {
     boolean argumentStemMatchingFlag = true;
     boolean argumentStemGrelPartMatchingFlag = true;
     boolean ngramStemMatchingFlag = false;
+    boolean useEmbeddingSimilarityFlag = false;
 
     boolean graphIsConnectedFlag = false;
     boolean graphHasEdgeFlag = false;
@@ -93,24 +95,26 @@ public class GroundTestSentences {
     double stemFeaturesWeight = 0.0;
 
     StructuredPercepton learningModel = new StructuredPercepton();
+    CrossLingualEmbeddingSimilarity embeddings = null;
 
     // GroundedLexicon groundedLexicon = null;
     GroundedGraphs graphCreator = new GroundedGraphs(schema, kb,
         groundedLexicon, normalCcgAutoLexicon, questionCcgAutoLexicon,
         relationLexicalIdentifiers, relationTypingIdentifiers, learningModel,
-        ngramLength, urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag,
-        gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag, wordGrelPartFlag,
-        wordGrelFlag, argGrelPartFlag, argGrelFlag, questionTypeGrelPartFlag,
-        wordBigramGrelPartFlag, stemMatchingFlag,
+        embeddings, ngramLength, urelGrelFlag, urelPartGrelPartFlag,
+        utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag,
+        wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
+        questionTypeGrelPartFlag, wordBigramGrelPartFlag, stemMatchingFlag,
         mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
         argumentStemGrelPartMatchingFlag, ngramStemMatchingFlag,
-        graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
-        edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
-        duplicateEdgesFlag, ignorePronouns, handleNumbers, entityScoreFlag,
-        entityWordOverlapFlag, paraphraseScoreFlag,
-        paraphraseClassifierScoreFlag, allowMerging, handleEventEventEdges,
-        useExpand, useHyperExpand, initialEdgeWeight, initialTypeWeight,
-        initialWordWeight, mergeEdgeWeight, stemFeaturesWeight);
+        useEmbeddingSimilarityFlag, graphIsConnectedFlag, graphHasEdgeFlag,
+        countNodesFlag, edgeNodeCountFlag, useLexiconWeightsRel,
+        useLexiconWeightsType, duplicateEdgesFlag, ignorePronouns,
+        handleNumbers, entityScoreFlag, entityWordOverlapFlag,
+        paraphraseScoreFlag, paraphraseClassifierScoreFlag, allowMerging,
+        handleEventEventEdges, useExpand, useHyperExpand, initialEdgeWeight,
+        initialTypeWeight, initialWordWeight, mergeEdgeWeight,
+        stemFeaturesWeight);
     JsonParser jsonParser = new JsonParser();
     // BufferedReader br = new BufferedReader(new
     // FileReader("data/cai-yates-2013/question-and-logical-form-917/acl2014_domains/business_parse.txt"));

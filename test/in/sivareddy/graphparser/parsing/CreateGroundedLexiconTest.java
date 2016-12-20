@@ -33,11 +33,11 @@ public class CreateGroundedLexiconTest {
     GroundedLexicon groundedLexicon = new GroundedLexicon(null);
     GroundedGraphs graphCreator = new GroundedGraphs(schemaObj, kb,
         groundedLexicon, normalCcgAutoLexicon, normalCcgAutoLexicon,
-        lexicalFields, relationTypingFeilds, null, 1, false, false, false,
+        lexicalFields, relationTypingFeilds, null, null, 1, false, false, false,
         false, false, false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false, false, false,
-        false, 0.0, 0.0, 0.0, 0.0, 0.0);
+        false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     CreateGroundedLexicon engine =
         new CreateGroundedLexicon(graphCreator, kb, "dependency_lambda", true,

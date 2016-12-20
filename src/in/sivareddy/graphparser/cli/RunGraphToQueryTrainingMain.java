@@ -51,6 +51,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   // Log File
   private OptionSpec<String> logFile;
   private OptionSpec<String> loadModelFromFile;
+  private OptionSpec<String> embeddingFile;
   private OptionSpec<String> lexicon;
   private OptionSpec<String> cachedKB;
   private OptionSpec<String> testFile;
@@ -119,6 +120,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
   private OptionSpec<Boolean> argumentStemMatchingFlag;
   private OptionSpec<Boolean> argumentStemGrelPartMatchingFlag;
   private OptionSpec<Boolean> ngramStemMatchingFlag;
+  private OptionSpec<Boolean> useEmbeddingSimilarityFlag;
 
   // Graph features
   private OptionSpec<Boolean> graphIsConnectedFlag;
@@ -277,6 +279,12 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
         parser
             .accepts("loadModelFromFile",
                 "Load model from serialized model file").withRequiredArg()
+            .ofType(String.class).defaultsTo("");
+    
+    embeddingFile =
+        parser
+            .accepts("embeddingFile",
+                "Load word embeddings from file").withRequiredArg()
             .ofType(String.class).defaultsTo("");
 
     lexicon =
@@ -476,6 +484,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
             .accepts("ngramStemMatchingFlag",
                 "use stem overlaps between words in the sentence and grounded edges")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+    useEmbeddingSimilarityFlag = parser
+        .accepts("useEmbeddingSimilarityFlag",
+            "use embedding similarity between grounded edges and words or ungronded edges")
+        .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     // Graph features
     graphIsConnectedFlag =
@@ -671,21 +683,18 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       KnowledgeBase kb = null;
 
       if (!options.valueOf(cachedKB).equals("")) {
-        kb =
-            new KnowledgeBaseCached(options.valueOf(cachedKB),
-                relationTypesFileName);
+        kb = new KnowledgeBaseCached(options.valueOf(cachedKB),
+            relationTypesFileName);
       } else {
         KnowledgeBaseOnline.TYPE_KEY = options.valueOf(typeKey);
-        kb =
-            new KnowledgeBaseOnline(options.valueOf(endpoint), String.format(
-                "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
-                "dba", 50000, schemaObj);
+        kb = new KnowledgeBaseOnline(options.valueOf(endpoint),
+            String.format("http://%s:8890/sparql", options.valueOf(endpoint)),
+            "dba", "dba", 50000, schemaObj);
       }
 
-      RdfGraphTools rdfGraphTools =
-          new RdfGraphTools(options.valueOf(endpoint), String.format(
-              "http://%s:8890/sparql", options.valueOf(endpoint)), "dba",
-              "dba", options.valueOf(timeout));
+      RdfGraphTools rdfGraphTools = new RdfGraphTools(options.valueOf(endpoint),
+          String.format("http://%s:8890/sparql", options.valueOf(endpoint)),
+          "dba", "dba", options.valueOf(timeout));
       GraphToSparqlConverter.TYPE_KEY = options.valueOf(typeKey);
       GroundedGraphs.CONTENT_WORD_POS =
           Sets.newHashSet(Splitter.on(";").trimResults().omitEmptyStrings()
@@ -694,15 +703,13 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       List<String> kbGraphUri =
           Lists.newArrayList(Splitter.on(";").split(options.valueOf(domain)));
 
-      CcgAutoLexicon normalCcgAutoLexicon =
-          new CcgAutoLexicon(options.valueOf(ccgIndexedMapping),
-              options.valueOf(unaryRules), options.valueOf(binaryRules),
-              options.valueOf(ccgLexicon));
+      CcgAutoLexicon normalCcgAutoLexicon = new CcgAutoLexicon(
+          options.valueOf(ccgIndexedMapping), options.valueOf(unaryRules),
+          options.valueOf(binaryRules), options.valueOf(ccgLexicon));
 
-      CcgAutoLexicon questionCcgAutoLexicon =
-          new CcgAutoLexicon(options.valueOf(ccgIndexedMapping),
-              options.valueOf(unaryRules), options.valueOf(binaryRules),
-              options.valueOf(ccgLexiconQuestions));
+      CcgAutoLexicon questionCcgAutoLexicon = new CcgAutoLexicon(
+          options.valueOf(ccgIndexedMapping), options.valueOf(unaryRules),
+          options.valueOf(binaryRules), options.valueOf(ccgLexiconQuestions));
 
       GroundedLexicon groundedLexicon =
           new GroundedLexicon(options.valueOf(lexicon));
@@ -718,6 +725,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
 
       String logfile = options.valueOf(logFile);
       String loadModelFromFileVal = options.valueOf(loadModelFromFile);
+      String embeddingFileVal = options.valueOf(embeddingFile);
       boolean debugEnabled = options.valueOf(debugEnabledFlag);
 
       int threadCount = options.valueOf(nthreads);
@@ -771,6 +779,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
       boolean argumentStemGrelPartMatchingFlagVal =
           options.valueOf(argumentStemGrelPartMatchingFlag);
       boolean ngramStemMatchingFlagVal = options.valueOf(ngramStemMatchingFlag);
+      boolean useEmbeddingSimilarityFlagVal =
+          options.valueOf(useEmbeddingSimilarityFlag);
 
       // Graph features
       boolean graphIsConnectedFlagVal = options.valueOf(graphIsConnectedFlag);
@@ -831,8 +841,8 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           options.valueOf(groundTrainingCorpusInTheEnd);
 
       // Set pointWiseF1Threshold for learning. IMPORTANT.
-      GraphToQueryTraining.setPointWiseF1Threshold(options
-          .valueOf(pointWiseF1Threshold));
+      GraphToQueryTraining
+          .setPointWiseF1Threshold(options.valueOf(pointWiseF1Threshold));
 
       GraphToQueryTrainingMain graphToQueryModel = new GraphToQueryTrainingMain(
           schemaObj, kb, groundedLexicon, normalCcgAutoLexicon,
@@ -840,7 +850,7 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           supervisedTrainingFile, corupusTrainingFile, groundInputCorporaFiles,
           semanticParseKeyString, goldParsesFileVal, mostFrequentTypesFileVal,
           debugEnabled, groundTrainingCorpusInTheEndVal,
-          trainingSampleSizeCount, logfile, loadModelFromFileVal,
+          trainingSampleSizeCount, logfile, loadModelFromFileVal, embeddingFileVal,
           nBestTrainSyntacticParsesVal, nBestTestSyntacticParsesVal,
           nbestEdgesVal, nbestGraphsVal, forestSizeVal, ngramLengthVal,
           useSchemaVal, useKBVal, groundFreeVariablesVal,
@@ -852,9 +862,10 @@ public class RunGraphToQueryTrainingMain extends AbstractCli {
           questionTypeGrelPartFlagVal, stemMatchingFlagVal,
           mediatorStemGrelPartMatchingFlagVal, argumentStemMatchingFlagVal,
           argumentStemGrelPartMatchingFlagVal, ngramStemMatchingFlagVal,
-          graphIsConnectedFlagVal, graphHasEdgeFlagVal, countNodesFlagVal,
-          edgeNodeCountFlagVal, duplicateEdgesFlagVal, grelGrelFlagVal,
-          useLexiconWeightsRelVal, useLexiconWeightsTypeVal, validQueryFlagVal,
+          useEmbeddingSimilarityFlagVal, graphIsConnectedFlagVal,
+          graphHasEdgeFlagVal, countNodesFlagVal, edgeNodeCountFlagVal,
+          duplicateEdgesFlagVal, grelGrelFlagVal, useLexiconWeightsRelVal,
+          useLexiconWeightsTypeVal, validQueryFlagVal,
           useAnswerTypeQuestionWordFlagVal, useNbestGraphsVal,
           addBagOfWordsGraphVal, addOnlyBagOfWordsGraphVal,
           handleNumbersFlagVal, entityScoreFlagVal, entityWordOverlapFlagVal,

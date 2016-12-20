@@ -1,6 +1,7 @@
 package in.sivareddy.graphparser.learning;
 
 import in.sivareddy.graphparser.ccg.CcgAutoLexicon;
+import in.sivareddy.graphparser.util.CrossLingualEmbeddingSimilarity;
 import in.sivareddy.graphparser.util.GroundedLexicon;
 import in.sivareddy.graphparser.util.RdfGraphTools;
 import in.sivareddy.graphparser.util.Schema;
@@ -53,6 +54,7 @@ public class GraphToQueryTrainingMain {
   private int nBestTrainSyntacticParses;
   private String semanticParseKey;
   private StructuredPercepton currentIterationModel;
+  private CrossLingualEmbeddingSimilarity embeddings = null;
   private StructuredPercepton bestModelSoFar;
   private boolean currentModelIsTheBestModel;
   private Double highestPerformace = 0.0;
@@ -66,7 +68,7 @@ public class GraphToQueryTrainingMain {
       String groundInputCorpora, String sematicParseKey, String goldParsesFile,
       String mostFrequentTypesFile, boolean debugEnabled,
       boolean groundTrainingCorpusInTheEndVal, int trainingSampleSize,
-      String logFile, String loadModelFromFile, int nBestTrainSyntacticParses,
+      String logFile, String loadModelFromFile, String embeddingFile, int nBestTrainSyntacticParses,
       int nBestTestSyntacticParses, int nbestBestEdges, int nbestGraphs,
       int forrestSize, int ngramLength, boolean useSchema, boolean useKB,
       boolean groundFreeVariables, boolean groundEntityVariableEdges,
@@ -79,20 +81,21 @@ public class GraphToQueryTrainingMain {
       boolean stemMatchingFlag, boolean mediatorStemGrelPartMatchingFlag,
       boolean argumentStemMatchingFlag,
       boolean argumentStemGrelPartMatchingFlag, boolean ngramStemMatchingFlag,
-      boolean graphIsConnectedFlag, boolean graphHasEdgeFlag,
-      boolean countNodesFlag, boolean edgeNodeCountFlag,
-      boolean duplicateEdgesFlag, boolean grelGrelFlag,
-      boolean useLexiconWeightsRel, boolean useLexiconWeightsType,
-      boolean validQueryFlag, boolean useAnswerTypeQuestionWordFlag,
-      boolean useNbestGraphs, boolean addBagOfWordsGraph,
-      boolean addOnlyBagOfWordsGraph, boolean handleNumbers,
-      boolean entityScoreFlag, boolean entityWordOverlapFlag,
-      boolean paraphraseScoreFlag, boolean paraphraseClassifierScoreFlag,
-      boolean allowMerging, boolean useGoldRelations,
-      boolean evaluateOnlyTheFirstBest, boolean handleEventEventEdges,
-      boolean useExpand, boolean useHyperExpand, double initialEdgeWeight,
-      double initialTypeWeight, double initialWordWeight,
-      double mergeEdgeWeight, double stemFeaturesWeight) throws IOException {
+      boolean useEmbeddingSimilarityFlag, boolean graphIsConnectedFlag,
+      boolean graphHasEdgeFlag, boolean countNodesFlag,
+      boolean edgeNodeCountFlag, boolean duplicateEdgesFlag,
+      boolean grelGrelFlag, boolean useLexiconWeightsRel,
+      boolean useLexiconWeightsType, boolean validQueryFlag,
+      boolean useAnswerTypeQuestionWordFlag, boolean useNbestGraphs,
+      boolean addBagOfWordsGraph, boolean addOnlyBagOfWordsGraph,
+      boolean handleNumbers, boolean entityScoreFlag,
+      boolean entityWordOverlapFlag, boolean paraphraseScoreFlag,
+      boolean paraphraseClassifierScoreFlag, boolean allowMerging,
+      boolean useGoldRelations, boolean evaluateOnlyTheFirstBest,
+      boolean handleEventEventEdges, boolean useExpand, boolean useHyperExpand,
+      double initialEdgeWeight, double initialTypeWeight,
+      double initialWordWeight, double mergeEdgeWeight,
+      double stemFeaturesWeight) throws IOException {
 
     this.semanticParseKey = sematicParseKey;
     this.nBestTestSyntacticParses = nBestTestSyntacticParses;
@@ -125,18 +128,23 @@ public class GraphToQueryTrainingMain {
     } else {
       currentIterationModel = new StructuredPercepton();
     }
+    
+    if (embeddingFile != null && !embeddingFile.equals("")) {
+      embeddings = new CrossLingualEmbeddingSimilarity(embeddingFile); 
+    }
+    
     graphToQuery = new GraphToQueryTraining(schema, kb, groundedLexicon,
         normalCcgAutoLexicon, questionCcgAutoLexicon, semanticParseKey,
         goldParsesFile, mostFrequentTypesFile, this.nBestTrainSyntacticParses,
         this.nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, forrestSize,
         ngramLength, useSchema, useKB, groundFreeVariables,
         groundEntityVariableEdges, groundEntityEntityEdges, useEmtpyTypes,
-        ignoreTypes, currentIterationModel, urelGrelFlag, urelPartGrelPartFlag,
+        ignoreTypes, currentIterationModel, embeddings, urelGrelFlag, urelPartGrelPartFlag,
         utypeGtypeFlag, gtypeGrelFlag, grelGrelFlag, ngramGrelPartFlag,
         wordGrelPartFlag, wordGrelFlag, argGrelPartFlag, argGrelFlag,
         questionTypeGrelPartFlag, eventTypeGrelPartFlag, stemMatchingFlag,
         mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
-        argumentStemGrelPartMatchingFlag, ngramStemMatchingFlag,
+        argumentStemGrelPartMatchingFlag, ngramStemMatchingFlag, useEmbeddingSimilarityFlag,
         graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
         edgeNodeCountFlag, useLexiconWeightsRel, useLexiconWeightsType,
         duplicateEdgesFlag, validQueryFlag, useAnswerTypeQuestionWordFlag,
@@ -485,6 +493,7 @@ public class GraphToQueryTrainingMain {
 
     String logFile = "working/sup_easyccg.log.txt";
     String loadModelFromFile = null;
+    String embeddingFile = null;
     String semanticParseKey = "synPars";
     String goldParsesFile = null;
 
@@ -531,6 +540,7 @@ public class GraphToQueryTrainingMain {
     boolean argumentStemMatchingFlag = true;
     boolean argumentStemGrelPartMatchingFlag = true;
     boolean ngramStemMatchingFlag = false;
+    boolean useEmbeddingSimilarityFlag = false;
 
     // Graph features
     boolean graphIsConnectedFlag = false;
@@ -582,17 +592,18 @@ public class GraphToQueryTrainingMain {
         supervisedTrainingFile, corupusTrainingFile, groundInputCorpora,
         mostFrequentTypesFile, semanticParseKey, goldParsesFile, debugEnabled,
         groundTrainingCorpusInTheEndVal, trainingSampleSize, logFile,
-        loadModelFromFile, nBestTrainSyntacticParses, nBestTestSyntacticParses,
-        nbestBestEdges, nbestGraphs, forrestSize, ngramLength, useSchema, useKB,
-        groundFreeVariables, groundEntityVariableEdges, groundEntityEntityEdges,
-        useEmtpyTypes, ignoreTypes, urelGrelFlag, urelPartGrelPartFlag,
-        utypeGtypeFlag, gtypeGrelFlag, ngramGrelPartFlag, wordGrelPartFlag,
-        wordGrelFlag, eventTypeGrelPartFlag, argGrelPartFlag, argGrelFlag,
+        loadModelFromFile, embeddingFile, nBestTrainSyntacticParses,
+        nBestTestSyntacticParses, nbestBestEdges, nbestGraphs, forrestSize,
+        ngramLength, useSchema, useKB, groundFreeVariables,
+        groundEntityVariableEdges, groundEntityEntityEdges, useEmtpyTypes,
+        ignoreTypes, urelGrelFlag, urelPartGrelPartFlag, utypeGtypeFlag,
+        gtypeGrelFlag, ngramGrelPartFlag, wordGrelPartFlag, wordGrelFlag,
+        eventTypeGrelPartFlag, argGrelPartFlag, argGrelFlag,
         questionTypeGrelPartFlag, stemMatchingFlag,
         mediatorStemGrelPartMatchingFlag, argumentStemMatchingFlag,
         argumentStemGrelPartMatchingFlag, ngramStemMatchingFlag,
-        graphIsConnectedFlag, graphHasEdgeFlag, countNodesFlag,
-        edgeNodeCountFlag, duplicateEdgesFlag, grelGrelFlag,
+        useEmbeddingSimilarityFlag, graphIsConnectedFlag, graphHasEdgeFlag,
+        countNodesFlag, edgeNodeCountFlag, duplicateEdgesFlag, grelGrelFlag,
         useLexiconWeightsRel, useLexiconWeightsType, validQueryFlag,
         useAnswerTypeQuestionWordFlag, useNbestGraphs, addBagOfWordsGraph,
         addOnlyBagOfWordsGraph, handleNumbers, entityScoreFlag,
