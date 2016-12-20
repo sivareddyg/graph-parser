@@ -2253,7 +2253,7 @@ public class GroundedGraphs {
   }
 
   public boolean stringContainsWord(String grelLeftStripped, String modifierWord) {
-    modifierWord = modifierWord.replaceFirst(defaultKBLanguage, "");
+    modifierWord = modifierWord.replaceFirst("[.*]+?:", "");
     if (!stems.containsKey(modifierWord))
       stems.put(modifierWord, PorterStemmer.getStem(modifierWord));
     String modifierStem = stems.get(modifierWord);
