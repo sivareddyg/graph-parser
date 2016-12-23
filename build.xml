@@ -59,7 +59,8 @@
         <pathelement location="lib/junit-4.11.jar"/>
         <path refid="JUnit 4.libraryclasspath"/>
         <pathelement location="lib/maltparser-1.8.1.jar"/>
-        <pathelement location="lib/whatswrong-0.2.5-SNAPSHOT-standalone.jar"/>
+        <pathelement location="lib/whatswrong-0.2.4.jar"/>
+        <pathelement location="lib/ejml-0.25.jar"/>
         <pathelement location="lib/batik-awt-util-1.8.jar"/>
         <pathelement location="lib/batik-dom-1.8.jar"/>
         <pathelement location="lib/batik-ext-1.8.jar"/>
