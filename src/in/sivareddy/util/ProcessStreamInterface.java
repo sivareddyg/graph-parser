@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -29,7 +30,7 @@ public abstract class ProcessStreamInterface {
 
   public void processStream(InputStream stream, PrintStream out, int nthreads,
       boolean printOutput) throws IOException, InterruptedException {
-    Writer writer = new OutputStreamWriter(out, "UTF-8");
+    Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
     BufferedWriter fout = new BufferedWriter(writer);
 
     final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nthreads);
@@ -49,7 +50,7 @@ public abstract class ProcessStreamInterface {
     });
 
     BufferedReader br =
-        new BufferedReader(new InputStreamReader(stream, "UTF8"));
+        new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
     String line = null;
     try {
       line = br.readLine();

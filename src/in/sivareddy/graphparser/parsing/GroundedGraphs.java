@@ -134,7 +134,7 @@ public class GroundedGraphs {
   private boolean useExpand = false;
   private boolean useHyperExpand = false;
   
-  private String defaultKBLanguage = "en:";
+  private String defaultKBLanguage = SentenceKeys.ENGLISH_LANGUAGE_CODE;
   
   private StructuredPercepton learningModel;
   private int ngramLength = 2;
@@ -146,9 +146,7 @@ public class GroundedGraphs {
   public Logger logger;
 
   private Map<String, String> stems = Maps.newConcurrentMap();
-  private Map<String, SimpleMatrix> edgeEmbeddings = Maps.newConcurrentMap();
-  private Map<Pair<String, String>, Double> edgeEmbeddingSimilarities = Maps.newConcurrentMap();
-
+  
   public GroundedGraphs(Schema schema, KnowledgeBase kb,
       GroundedLexicon groundedLexicon, CcgAutoLexicon normalCcgAutoLexicon,
       CcgAutoLexicon questionCcgAutoLexicon,
@@ -240,6 +238,9 @@ public class GroundedGraphs {
 
     StemMatchingFeature stemFeature = new StemMatchingFeature(0.0);
     this.learningModel.setWeightIfAbsent(stemFeature, stemFeaturesWeight);
+    
+    NgramStemMatchingFeature ngramStemFeature = new NgramStemMatchingFeature(0.0);
+    this.learningModel.setWeightIfAbsent(ngramStemFeature, stemFeaturesWeight);
 
     ArgStemMatchingFeature argStemFeature = new ArgStemMatchingFeature(0.0);
     this.learningModel.setWeightIfAbsent(argStemFeature, stemFeaturesWeight);
@@ -516,8 +517,10 @@ public class GroundedGraphs {
   }
 
   /**
-   * Returns a bag-of-words based ungrounded graph. For questions containing
-   * "how many", this implementation returns two graphs.
+   * Returns a bag-of-words based ungrounded graph.
+   * 
+   * TODO: Handle count, argmax, argmin etc. See createCountStyledSemanticParse
+   * for inspiration.
    * 
    * @param jsonSentence
    * @return
@@ -529,19 +532,10 @@ public class GroundedGraphs {
         getBagOfWordsUngroundedSemanticParse(jsonSentence, leaves);
     buildUngroundeGraphFromSemanticParse(parse, leaves, 0.0, graphs);
 
-    Set<String> countStyledParse =
-        createCountStyledSemanticParse(leaves, parse);
-
-    if (countStyledParse != null) {
-      buildUngroundeGraphFromSemanticParse(countStyledParse, leaves, 0.0,
-          graphs);
-    }
-
     // Add ungrounded graph features.
     addUngroundedGraphFeatures(jsonSentence, graphs);
     return graphs;
   }
-
 
   public static Set<String> createCountStyledSemanticParse(
       List<LexicalItem> leaves, Set<String> originalParse) {
@@ -781,7 +775,8 @@ public class GroundedGraphs {
         continue;
       }
 
-      String wordString = useWordAndLanguage ? word.getWord() : word.getLemma();
+      String wordString = useWordAndLanguage ? word.getWord().toLowerCase()
+          : word.getLemma().toLowerCase();
       if (stopWordsUniversal.contains(wordString)
           || punctuation.matcher(wordString).matches()
           || SentenceKeys.PUNCTUATION_TAGS.contains(word.getPos())) {
@@ -3395,12 +3390,18 @@ public class GroundedGraphs {
           }
         }
       } else if (embeddings != null){
-        double sim = 0.0;
         for (String unigram : getNgrams(uGraph.getActualNodes(), 1, true)) {
-          sim += computeEdgeSimilarity(unigram, grelLeftStripped);
-          sim += computeEdgeSimilarity(unigram, grelLeftInverse);
-          sim += computeEdgeSimilarity(unigram, grelRightStripped);
-          sim += computeEdgeSimilarity(unigram, grelRightInverse);
+          double sim = 0.0;
+          sim += embeddings.computeEdgeSimilarity(unigram, grelLeftStripped,
+              defaultKBLanguage);
+          // System.out.println(String.format("%s %s = %.3f", unigram,
+          // grelLeftStripped, sim));
+          sim += embeddings.computeEdgeSimilarity(unigram, grelLeftInverse,
+              defaultKBLanguage);
+          sim += embeddings.computeEdgeSimilarity(unigram, grelRightStripped,
+              defaultKBLanguage);
+          sim += embeddings.computeEdgeSimilarity(unigram, grelRightInverse,
+              defaultKBLanguage);
 
           if (sim > 0) {
             sim = sim/2.0;
@@ -3416,49 +3417,6 @@ public class GroundedGraphs {
     return features;
   }
 
-  private double computeEdgeSimilarity(String word, String subEdge) {
-    Pair<String, String> key = Pair.of(word, subEdge);
-    if (edgeEmbeddingSimilarities.containsKey(key))
-      return edgeEmbeddingSimilarities.get(key);
-    
-    SimpleMatrix wordEmbedding = embeddings.get(word);
-    if (wordEmbedding == null) {
-      edgeEmbeddingSimilarities.put(key, 0.0);
-      return 0.0;
-    }
-    
-    SimpleMatrix edgeEmbedding = getEdgeEmbedding(subEdge);
-    if (edgeEmbedding == null) {
-      edgeEmbeddingSimilarities.put(key, 0.0);
-      return 0.0;
-    }
-    
-    double sim = CrossLingualEmbeddingSimilarity.cosine(edgeEmbedding, wordEmbedding);
-    edgeEmbeddingSimilarities.put(key, sim);
-    return sim;
-  }
-  
-  private SimpleMatrix getEdgeEmbedding(String subEdge) {
-    if (edgeEmbeddings.containsKey(subEdge))
-      return edgeEmbeddings.get(subEdge);
-    Iterator<String> it =
-        Splitter.on(CharMatcher.anyOf("._")).trimResults().omitEmptyStrings()
-            .split(subEdge).iterator();
-    SimpleMatrix edgeEmbedding = null;
-    while (it.hasNext()) {
-      String part = String.format("%s%s", defaultKBLanguage, it.next());
-      SimpleMatrix partEmbedding = embeddings.get(part);
-      if (partEmbedding != null) {
-        if (edgeEmbedding != null) {
-          edgeEmbedding = edgeEmbedding.plus(partEmbedding);
-        } else {
-          edgeEmbedding = partEmbedding;
-        }
-      }
-    }
-    edgeEmbeddings.put(subEdge, edgeEmbedding);
-    return edgeEmbedding;
-  }
   
   
   private double countMediator(LexicalItem mediator,

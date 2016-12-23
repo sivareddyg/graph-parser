@@ -129,8 +129,9 @@ public class GraphToQueryTrainingMain {
       currentIterationModel = new StructuredPercepton();
     }
     
-    if (embeddingFile != null && !embeddingFile.equals("")) {
-      embeddings = new CrossLingualEmbeddingSimilarity(embeddingFile); 
+    if (embeddingFile != null && !embeddingFile.equals("")
+        && useEmbeddingSimilarityFlag) {
+      embeddings = new CrossLingualEmbeddingSimilarity(embeddingFile);
     }
     
     graphToQuery = new GraphToQueryTraining(schema, kb, groundedLexicon,
