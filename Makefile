@@ -5,12 +5,22 @@ extract_sentences_with_multiple_entities:
         ../data/clueweb/freebase_annotated_data/ClueWeb09_English_1 \
         | gzip > ../data/clueweb/wiki-sentences.json.txt.00.gz
 
+process_clueweb_shard_basic_%:
+	mkdir -p working/google-annotations/unzipped
+	tar -xvzf working/google-annotations/$*.tgz -C working/google-annotations/unzipped
+	python scripts/freebase/extract_clueweb_sentences_containing_entities.py \
+        working/clueweb/$*/ \
+        working/google-annotations/unzipped/$* \
+        | gzip > working/$*-sentences.json.txt.gz
+	rm -rf working/google-annotations/unzipped/$*
+
 process_clueweb_split_%:
-	#python scripts/freebase/extract_clueweb_sentences_containing_entities.py \
-        #working/clueweb/ClueWeb09_English_1/ \
-        #../data/clueweb/freebase_annotated_data/ClueWeb09_English_1_split$* \
-        #| gzip > ../data/clueweb/ClueWeb09_1-sentences.json.txt.$*.gz
-	# python scripts/freebase/merge_duplicate_sentences.py ../data/clueweb/ClueWeb09_1-sentences.json.txt.$*.gz | gzip > ../data/clueweb/ClueWeb09_1-sentences.cleaned.json.txt.$*.gz
+	python scripts/freebase/extract_clueweb_sentences_containing_entities.py \
+        working/clueweb/ClueWeb09_English_1/ \
+        ../data/clueweb/freebase_annotated_data/ClueWeb09_English_1_split$* \
+        | gzip > ../data/clueweb/ClueWeb09_1-sentences.json.txt.$*.gz
+	python scripts/freebase/merge_duplicate_sentences.py ../data/clueweb/ClueWeb09_1-sentences.json.txt.$*.gz \
+		| gzip > ../data/clueweb/ClueWeb09_1-sentences.cleaned.json.txt.$*.gz
 	zcat ../data0/clueweb/ClueWeb09_1-sentences.cleaned.json.txt.$*.gz \
 		| java -cp lib/*:bin in.sivareddy.scripts.clueweb.RunTokenizerOnEntityTaggedClueweb \
 		| python scripts/cleaning/remove_longer_sentences.py \
