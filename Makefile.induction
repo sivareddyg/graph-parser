@@ -237,12 +237,8 @@ loaded_model_distant_eval_bow:
 	-testFile data/distant_eval/parses/easyccg/test.json.blank.cleaned.gz \
 	-logFile ../working/distant_eval/loaded_model_bow/business_film_people.log.txt \
 	> ../working/distant_eval/loaded_model_bow/business_film_people.txt
-	python scripts/distant-eval/get_first_prediction.py \
-		< ../working/distant_eval/loaded_model_bow/business_film_people.log.txt.eval.test.bestIteration.1best.answers.txt \
-		> data/spades/results/graphparser-bow-test.txt
-	python scripts/distant-eval/get_first_prediction.py \
-		< ../working/distant_eval/loaded_model_bow/business_film_people.log.txt.eval.dev.bestIteration.1best.answers.txt \
-		> data/spades/results/graphparser-bow-dev.txt
+	cp ../working/distant_eval/loaded_model_bow/business_film_people.log.txt.eval.test.bestIteration.1best.answers.txt data/spades/results/graphparser-bow-test.txt
+	cp ../working/distant_eval/loaded_model_bow/business_film_people.log.txt.eval.dev.bestIteration.1best.answers.txt data/spades/results/graphparser-bow-dev.txt
 
 distant_eval_%:
 	mkdir -p ../working/distant_eval
@@ -363,12 +359,12 @@ loaded_model_distant_eval_%:
 	-testFile data/distant_eval/parses/$*/test.json.blank.cleaned.gz \
 	-logFile ../working/distant_eval/loaded_model_$*/business_film_people.log.txt \
 	> ../working/distant_eval/loaded_model_$*/business_film_people.txt
-	python scripts/distant-eval/get_first_prediction.py \
-		< ../working/distant_eval/loaded_model_easyccg/business_film_people.log.txt.eval.test.bestIteration.1best.answers.txt \
-		> data/spades/results/graphparser-ccg-supervised-test.txt
-	python scripts/distant-eval/get_first_prediction.py \
-		< ../working/distant_eval/loaded_model_easyccg/business_film_people.log.txt.eval.dev.bestIteration.1best.answers.txt \
-		> data/spades/results/graphparser-ccg-supervised-dev.txt
+
+results:
+	cp ../working/distant_eval/loaded_model_easyccg/business_film_people.log.txt.eval.test.bestIteration.1best.answers.txt \
+		data/spades/results/graphparser-ccg-supervised-test.txt
+	cp ../working/distant_eval/loaded_model_easyccg/business_film_people.log.txt.eval.dev.bestIteration.1best.answers.txt \
+		data/spades/results/graphparser-ccg-supervised-dev.txt
 
 distant_evaluation_dev_%:
 	python scripts/error-analysis/entity_wise_results.py \
