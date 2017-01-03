@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
-import org.ejml.simple.SimpleMatrix;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
@@ -2820,7 +2819,12 @@ public class GroundedGraphs {
           nGramGrelFeature = new NgramGrelFeature(key, 1.0);
           features.add(nGramGrelFeature);
 
-          if (node1.getWordPosition() <= node2.getWordPosition()) {
+          // Ordering is very important.
+          if (node1.isEntity() && !node2.isEntity()) {
+            key = Lists.newArrayList(biGram, grelRight, grelLeft);
+          } else if (!node1.isEntity() && node2.isEntity()) {
+            key = Lists.newArrayList(biGram, grelLeft, grelRight);
+          } else if (node1.getWordPosition() <= node2.getWordPosition()) {
             key = Lists.newArrayList(biGram, grelLeft, grelRight);
           } else {
             key = Lists.newArrayList(biGram, grelRight, grelLeft);
@@ -2849,7 +2853,13 @@ public class GroundedGraphs {
     if (wordGrelFlag && !mediator.isEntity()
         && !mediator.getLemma().equals(SentenceKeys.DUMMY_WORD)) {
       String mediatorWord = mediator.getLemma();
-      if (node1.getWordPosition() <= node2.getWordPosition()) {
+     
+      // Ordering is very important.
+      if (node1.isEntity() && !node2.isEntity()) {
+        key = Lists.newArrayList(mediatorWord, grelRight, grelLeft);
+      } else if (!node1.isEntity() && node2.isEntity()) {
+        key = Lists.newArrayList(mediatorWord, grelLeft, grelRight);
+      } else if (node1.getWordPosition() <= node2.getWordPosition()) {
         key = Lists.newArrayList(mediatorWord, grelLeft, grelRight);
       } else {
         key = Lists.newArrayList(mediatorWord, grelRight, grelLeft);
@@ -2953,8 +2963,9 @@ public class GroundedGraphs {
           schema.getRelation2Inverse(grelLeftStripped) != null ? schema
               .getRelation2Inverse(grelLeftStripped) : grelLeftStripped;
       String grelRightInverse =
-          schema.getRelation2Inverse(grelRightStripped) != null ? schema
-              .getRelation2Inverse(grelRightStripped) : grelRightStripped;
+          schema.getRelation2Inverse(grelRightStripped) != null
+              ? schema.getRelation2Inverse(grelRightStripped)
+              : grelRightStripped;
 
       List<String> parts =
           Lists.newArrayList(Splitter.on(".").split(grelLeftStripped));
@@ -2977,54 +2988,38 @@ public class GroundedGraphs {
       toIndex = parts.size();
       fromIndex = toIndex - 2 < 0 ? 0 : toIndex - 2;
       grelRightInverse = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
-
-      String mediatorWord = mediator.getLemma();
+             
       if (!mediator.getPos().equals("IN")
           && !CcgAutoLexicon.closedVerbs.contains(mediator.getLemma())) {
-        /*-if (!stems.containsKey(mediatorWord))
-            stems.put(mediatorWord, PorterStemmer.getStem(mediatorWord));
-        String mediatorStem = stems.get(mediatorWord);*/
-        String mediatorStem = mediatorWord;
+        if (!useEmbeddingSimilarity) {
 
-        // boolean isMediatorRel =
-        // schema.hasMediatorArgument(grelLeftStripped);
-        if ((stringContainsWord(grelLeftStripped, mediatorStem) || stringContainsWord(
-            grelLeftInverse, mediatorStem))
-            && (stringContainsWord(grelRightStripped, mediatorStem) || stringContainsWord(
-                grelRightInverse, mediatorStem))) {
-          StemMatchingFeature s =
-              new StemMatchingFeature(2.0 / (countMediator(mediator,
-                  uGraph.getEdges()) + 1.0));
-          features.add(s);
-        }
-      }
+          String mediatorStem = mediator.getLemma();
+          if ((stringContainsWord(grelLeftStripped, mediatorStem)
+              || stringContainsWord(grelLeftInverse, mediatorStem))
+              && (stringContainsWord(grelRightStripped, mediatorStem)
+                  || stringContainsWord(grelRightInverse, mediatorStem))) {
+            StemMatchingFeature s = new StemMatchingFeature(
+                2.0 / (countMediator(mediator, uGraph.getEdges()) + 1.0));
+            features.add(s);
+          }
+        } else if (embeddings != null) {
+          String mediatorWord =
+              String.format("%s:%s", mediator.getLang(), mediator.getWord());
+          double sim = 0.0;
+          sim += embeddings.computeEdgeSimilarity(mediatorWord,
+              grelLeftStripped, defaultKBLanguage);
+          sim += embeddings.computeEdgeSimilarity(mediatorWord, grelLeftInverse,
+              defaultKBLanguage);
+          sim += embeddings.computeEdgeSimilarity(mediatorWord,
+              grelRightStripped, defaultKBLanguage);
+          sim += embeddings.computeEdgeSimilarity(mediatorWord,
+              grelRightInverse, defaultKBLanguage);
 
-      Set<Type<LexicalItem>> mediatorTypes = uGraph.getTypes(mediator);
-      if (mediatorTypes != null) {
-        // birth place, place of birth (from madeup type
-        // modifiers in function getUngroundedGraph)
-        for (Type<LexicalItem> type : mediatorTypes) {
-          LexicalItem modifierNode = type.getModifierNode();
-          if (modifierNode.getPos().equals("IN")
-              || CcgAutoLexicon.closedVerbs.contains(modifierNode.getLemma()))
-            continue;
-          String modifierNodeString = modifierNode.getLemma();
-          if (modifierNodeString.equals(mediatorWord))
-            // (place, place , grelLeft) feature is useless
-            // since (place, grelLeft) is already present
-            continue;
-          /*-if (!stems.containsKey(modifierNodeString))
-            stems.put(modifierNodeString, PorterStemmer.getStem(modifierNodeString));
-          String modifierStem = stems.get(modifierNodeString);*/
-          String modifierStem = modifierNodeString;
-
-          if ((stringContainsWord(grelLeftStripped, modifierStem) || stringContainsWord(
-              grelLeftInverse, modifierStem))
-              && (stringContainsWord(grelRightStripped, modifierStem) || stringContainsWord(
-                  grelRightInverse, modifierStem))) {
-            StemMatchingFeature s =
-                new StemMatchingFeature(2.0 / (countMediator(mediator,
-                    uGraph.getEdges()) + 1.0));
+          if (sim > 0) {
+            sim = sim / 2.0;
+            StemMatchingFeature s = new StemMatchingFeature(
+                sim / (Math.max(uGraph.getEdges(node1).size()
+                    + uGraph.getEdges(node2).size(), 2.0)));
             features.add(s);
           }
         }
@@ -3116,37 +3111,6 @@ public class GroundedGraphs {
           features.add(s);
         }
       }
-
-      Set<Type<LexicalItem>> mediatorTypes = uGraph.getTypes(mediator);
-      if (mediatorTypes != null) {
-        // birth place, place of birth (from madeup type
-        // modifiers in function getUngroundedGraph)
-        for (Type<LexicalItem> type : mediatorTypes) {
-          LexicalItem modifierNode = type.getModifierNode();
-          if (modifierNode.getPos().equals("IN")
-              || CcgAutoLexicon.closedVerbs.contains(modifierNode.getLemma()))
-            continue;
-          String modifierNodeString = modifierNode.getLemma();
-          if (modifierNodeString.equals(mediatorWord))
-            // (place, place , grelLeft) feature is useless
-            // since (place, grelLeft) is already present
-            continue;
-          /*-if (!stems.containsKey(modifierNodeString))
-            stems.put(modifierNodeString, PorterStemmer.getStem(modifierNodeString));
-          String modifierStem = stems.get(modifierNodeString);*/
-          String modifierStem = modifierNodeString;
-
-          if ((stringContainsWord(grelLeftStripped, modifierStem) && stringContainsWord(
-              grelLeftInverse, modifierStem))
-              || (stringContainsWord(grelRightStripped, modifierStem) && stringContainsWord(
-                  grelRightInverse, modifierStem))) {
-            MediatorStemGrelPartMatchingFeature s =
-                new MediatorStemGrelPartMatchingFeature(2.0 / (countMediator(
-                    mediator, uGraph.getEdges()) + 1.0));
-            features.add(s);
-          }
-        }
-      }
     }
 
     if (argumentStemMatchingFlag) {
@@ -3172,8 +3136,9 @@ public class GroundedGraphs {
             schema.getRelation2Inverse(grelLeftStripped) != null ? schema
                 .getRelation2Inverse(grelLeftStripped) : grelLeftStripped;
         String grelRightInverse =
-            schema.getRelation2Inverse(grelRightStripped) != null ? schema
-                .getRelation2Inverse(grelRightStripped) : grelRightStripped;
+            schema.getRelation2Inverse(grelRightStripped) != null
+                ? schema.getRelation2Inverse(grelRightStripped)
+                : grelRightStripped;
 
         List<String> parts =
             Lists.newArrayList(Splitter.on(".").split(grelLeftStripped));
@@ -3200,6 +3165,8 @@ public class GroundedGraphs {
         grelRightInverse =
             Joiner.on(".").join(parts.subList(fromIndex, toIndex));
 
+
+                
         for (Type<LexicalItem> nodeType : nodeTypes) {
           LexicalItem modifierNode = nodeType.getModifierNode();
 
@@ -3207,22 +3174,37 @@ public class GroundedGraphs {
               || CcgAutoLexicon.closedVerbs.contains(modifierNode.getLemma())) {
             continue;
           }
+          
+          if (!useEmbeddingSimilarity) {
+            String modifierStem = modifierNode.getLemma();
+            if ((stringContainsWord(grelLeftStripped, modifierStem)
+                || stringContainsWord(grelLeftInverse, modifierStem))
+                && (stringContainsWord(grelRightStripped, modifierStem)
+                    || stringContainsWord(grelRightInverse, modifierStem))) {
+              ArgStemMatchingFeature s = new ArgStemMatchingFeature(2.0
+                  / (uGraph.getEdges(nodeType.getParentNode()).size() + 1.0));
+              features.add(s);
+            }
+          } else if (embeddings != null) {
+            String modifierWord = String.format("%s:%s", modifierNode.getLang(),
+                modifierNode.getWord());
+            double sim = 0.0;
+            sim += embeddings.computeEdgeSimilarity(modifierWord,
+                grelLeftStripped, defaultKBLanguage);
+            sim += embeddings.computeEdgeSimilarity(modifierWord,
+                grelLeftInverse, defaultKBLanguage);
+            sim += embeddings.computeEdgeSimilarity(modifierWord,
+                grelRightStripped, defaultKBLanguage);
+            sim += embeddings.computeEdgeSimilarity(modifierWord,
+                grelRightInverse, defaultKBLanguage);
 
-          String modifierWord = modifierNode.getLemma();
-          /*-if (!stems.containsKey(modifierWord)) {
-            stems.put(modifierWord, PorterStemmer.getStem(modifierWord));
-          }
-          String modifierStem = stems.get(modifierWord);*/
-          String modifierStem = modifierWord;
-
-          if ((stringContainsWord(grelLeftStripped, modifierStem) || stringContainsWord(
-              grelLeftInverse, modifierStem))
-              && (stringContainsWord(grelRightStripped, modifierStem) || stringContainsWord(
-                  grelRightInverse, modifierStem))) {
-            ArgStemMatchingFeature s =
-                new ArgStemMatchingFeature(2.0 / (uGraph.getEdges(
-                    nodeType.getParentNode()).size() + 1.0));
-            features.add(s);
+            if (sim > 0) {
+              sim = sim / 2.0;
+              ArgStemMatchingFeature s = new ArgStemMatchingFeature(
+                  sim / (Math.max(uGraph.getEdges(node1).size()
+                      + uGraph.getEdges(node2).size(), 2.0)));
+              features.add(s);
+            }
           }
         }
       }
@@ -3355,6 +3337,7 @@ public class GroundedGraphs {
           schema.getRelation2Inverse(grelRightStripped) != null
               ? schema.getRelation2Inverse(grelRightStripped)
               : grelRightStripped;
+
       List<String> parts =
           Lists.newArrayList(Splitter.on(".").split(grelLeftStripped));
       int toIndex = parts.size();
@@ -3376,8 +3359,8 @@ public class GroundedGraphs {
       toIndex = parts.size();
       fromIndex = toIndex - 2 < 0 ? 0 : toIndex - 2;
       grelRightInverse = Joiner.on(".").join(parts.subList(fromIndex, toIndex));
-
-      if (!useEmbeddingSimilarity) {
+              
+      if (!useEmbeddingSimilarity) {        
         for (String unigram : getNgrams(uGraph.getActualNodes(), 1)) {
           if ((stringContainsWord(grelLeftStripped, unigram)
               || stringContainsWord(grelLeftInverse, unigram))
