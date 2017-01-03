@@ -109,6 +109,12 @@ public class CrossLingualEmbeddingSimilarity extends Embedding {
     System.out.println(embeddings.cosine("de:männer", "es:mujer"));
     System.out.println(embeddings.cosine("en:house", "en:city"));
     System.out.println(embeddings.cosine("en:home", "en:city"));
+    System.out.println(embeddings.cosine("en:of", "en:city"));
+    System.out.println(embeddings.cosine("en:he", "en:city"));
+    System.out.println(embeddings.cosine("en:it", "en:city"));
+    System.out.println(embeddings.cosine("en:is", "en:city"));
+    System.out.println(embeddings.cosine("en:place", "en:city"));
+    System.out.println(embeddings.cosine("en:village", "en:city"));
   }
 
 }
