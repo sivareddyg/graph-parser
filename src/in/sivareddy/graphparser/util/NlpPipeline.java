@@ -64,6 +64,8 @@ public class NlpPipeline extends ProcessStreamInterface {
       "preprocess.capitalizeUsingPosTags";
   public static String PREPROCESS_ADD_DATE_ENTITIES =
       "preprocess.addDateEntities";
+  public static String PREPROCESS_ADD_NAMED_ENTITIES =
+      "preprocess.addNamedEntities";
   public static String PREPROCESS_LOWERCASE = "preprocess.lowerCase";
   public static String PREPROCESS_CAPITALIZE_ENTITIES =
       "preprocess.capitalizeEntities";
@@ -227,6 +229,12 @@ public class NlpPipeline extends ProcessStreamInterface {
     if (options.containsKey(PREPROCESS_ADD_DATE_ENTITIES)
         && options.get(PREPROCESS_ADD_DATE_ENTITIES).equals("true")) {
       EntityAnnotator.addDateEntities(jsonSentence);
+    }
+
+    // Add named entities identified by the named entity recognizer
+    if (options.containsKey(PREPROCESS_ADD_NAMED_ENTITIES)
+        && options.get(PREPROCESS_ADD_NAMED_ENTITIES).equals("true")) {
+      EntityAnnotator.addNamedEntities(jsonSentence);
     }
 
     // Merge entity words to single sentence.

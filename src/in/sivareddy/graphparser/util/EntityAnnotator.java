@@ -492,6 +492,66 @@ public class EntityAnnotator {
     entities.forEach(x -> entitiesArr.add(x));
     sentenceObj.add(SentenceKeys.ENTITIES, entitiesArr);
   }
+  
+  public static void addNamedEntities(JsonObject sentenceObj) {
+    Set<Integer> positionIsEntity = new HashSet<>();
+    List<JsonObject> entities = new ArrayList<>();
+    if (sentenceObj.has(SentenceKeys.ENTITIES)) {
+      for (JsonElement entity : sentenceObj.get(SentenceKeys.ENTITIES)
+          .getAsJsonArray()) {
+        JsonObject entityObj = entity.getAsJsonObject();
+        for (int i = entityObj.get(SentenceKeys.START).getAsInt(); i <= entityObj
+            .get(SentenceKeys.END).getAsInt(); i++) {
+          positionIsEntity.add(i);
+        }
+        entities.add(entityObj);
+      }
+    }
+
+    JsonArray words = sentenceObj.get(SentenceKeys.WORDS_KEY).getAsJsonArray();
+
+    for (int i = 0; i < words.size(); i++) {
+      JsonObject word = words.get(i).getAsJsonObject();
+      if (!word.has(SentenceKeys.NER_KEY))
+        continue;
+      String currentEntityType = word.get(SentenceKeys.NER_KEY).getAsString(); 
+      if (!positionIsEntity.contains(i)
+          && !currentEntityType.equals(MergeEntity.NON_NAMED_ENTITY)) {
+        StringBuilder phraseBuilder = new StringBuilder();
+        phraseBuilder.append(word.get(SentenceKeys.WORD_KEY).getAsString());
+        int entityEnd = i;
+        for (int j = i + 1; j < words.size(); j++) {
+          JsonObject nextWord = words.get(j).getAsJsonObject();
+          if (positionIsEntity.contains(j)
+              || !nextWord.has(SentenceKeys.NER_KEY)
+              || !nextWord.get(SentenceKeys.NER_KEY).getAsString()
+              .equals(currentEntityType)) {
+            break;
+          } else {
+            phraseBuilder.append(" ");
+            phraseBuilder.append(nextWord.get(SentenceKeys.WORD_KEY)
+                .getAsString());
+            entityEnd = j;
+          }
+        }
+
+        String phrase = phraseBuilder.toString();
+        JsonObject entityObj = new JsonObject();
+        entityObj.addProperty(SentenceKeys.PHRASE, phrase);
+        entityObj.addProperty(SentenceKeys.START, i);
+        entityObj.addProperty(SentenceKeys.END, entityEnd);
+        entities.add(entityObj);
+
+        i = entityEnd;
+      }
+    }
+
+    entities.sort(Comparator.comparing(x -> x.get(SentenceKeys.START)
+        .getAsInt()));
+    JsonArray entitiesArr = new JsonArray();
+    entities.forEach(x -> entitiesArr.add(x));
+    sentenceObj.add(SentenceKeys.ENTITIES, entitiesArr);
+  }
 
   public static void main(String[] args) throws IOException {
     System.err.println(args[0]);
