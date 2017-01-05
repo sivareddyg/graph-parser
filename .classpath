@@ -45,12 +45,13 @@
 	<classpathentry kind="lib" path="lib/junit-4.11.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/maltparser-1.8.1.jar"/>
-	<classpathentry kind="lib" path="lib/whatswrong-0.2.5-SNAPSHOT-standalone.jar"/>
 	<classpathentry kind="lib" path="lib/batik-awt-util-1.8.jar"/>
 	<classpathentry kind="lib" path="lib/batik-dom-1.8.jar"/>
 	<classpathentry kind="lib" path="lib/batik-ext-1.8.jar"/>
 	<classpathentry kind="lib" path="lib/batik-svggen-1.8.jar"/>
 	<classpathentry kind="lib" path="lib/batik-util-1.8.jar"/>
 	<classpathentry kind="lib" path="lib/batik-xml-1.8.jar"/>
+	<classpathentry kind="lib" path="lib/ejml-0.25.jar"/>
+	<classpathentry kind="lib" path="lib/whatswrong-0.2.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
