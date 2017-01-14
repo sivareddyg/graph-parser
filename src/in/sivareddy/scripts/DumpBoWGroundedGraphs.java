@@ -142,7 +142,16 @@ public class DumpBoWGroundedGraphs extends ProcessStreamInterface {
       sentence.remove("original");
     if (sentence.has("goldMid"))
       sentence.remove("goldMid");
-
+    if (sentence.has("commonness"))
+      sentence.remove("commonness");
+    if (sentence.has("sparql_query"))
+      sentence.remove("sparql_query");
+    if (sentence.has("graph_query"))
+      sentence.remove("graph_query");
+    if (sentence.has("num_node"))
+      sentence.remove("num_node");
+    if (sentence.has("num_edge"))
+      sentence.remove("num_edge");
   }
 
   public void processIndividualSentence(JsonObject jsonSentence) {
@@ -181,8 +190,13 @@ public class DumpBoWGroundedGraphs extends ProcessStreamInterface {
                 .getWordPosition());
             edgeObject.addProperty(SentenceKeys.RELATION_LEFT, edge
                 .getRelation().getRight());
+            edgeObject.addProperty(SentenceKeys.RELATION_LEFT + "Inverse",
+                schema.getRelation2Inverse(edge.getRelation().getRight()));
             edgeObject.addProperty(SentenceKeys.RELATION_RIGHT, edge
                 .getRelation().getLeft());
+            edgeObject.addProperty(SentenceKeys.RELATION_RIGHT + "Inverse",
+                schema.getRelation2Inverse(edge.getRelation().getLeft()));
+            
             edgesArray.add(edgeObject);
           }
           graphObj.add("graph", edgesArray);
@@ -213,6 +227,17 @@ public class DumpBoWGroundedGraphs extends ProcessStreamInterface {
       jsonSentence.remove("goldMid");
     if (jsonSentence.has("sentence"))
       jsonSentence.remove("sentence");
+    if (jsonSentence.has("commonness"))
+      jsonSentence.remove("commonness");
+    if (jsonSentence.has("sparql_query"))
+      jsonSentence.remove("sparql_query");
+    if (jsonSentence.has("graph_query"))
+      jsonSentence.remove("graph_query");
+    if (jsonSentence.has("num_node"))
+      jsonSentence.remove("num_node");
+    if (jsonSentence.has("num_edge"))
+      jsonSentence.remove("num_edge");
+    
 
     for (JsonElement wordElm : jsonSentence.get(SentenceKeys.WORDS_KEY)
         .getAsJsonArray()) {
