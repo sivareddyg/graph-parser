@@ -116,8 +116,6 @@ public class DumpBoWGroundedGraphs extends ProcessStreamInterface {
 
     sentence.add("answer",
         jsonParser.parse(gson.toJson(cleanedResults.getLeft())));
-    sentence.add("answerEntities",
-        jsonParser.parse(gson.toJson(cleanedResults.getRight())));
 
     if (sentence.has(SentenceKeys.FOREST)) {
       for (JsonElement sentElm : sentence.get(SentenceKeys.FOREST)
@@ -179,6 +177,7 @@ public class DumpBoWGroundedGraphs extends ProcessStreamInterface {
         Pair<Set<String>, Set<String>> cleanedResults =
             RdfGraphTools
                 .getCleanedResults(goldResultsMap, predictedResultsMap);
+        Set<String> predictedResultsMid = RdfGraphTools.getMidsFromResults(predictedResultsMap);
         // System.out.println(graph);
         // System.out.println(cleanedResults.getRight());
 
@@ -205,6 +204,7 @@ public class DumpBoWGroundedGraphs extends ProcessStreamInterface {
           JsonElement answerArray =
               jsonParser.parse(gson.toJson(cleanedResults.getRight()));
           graphObj.add("denotation", answerArray);
+          graphObj.add("denotationMids", jsonParser.parse(gson.toJson(predictedResultsMid)));
           graphsArray.add(graphObj);
         }
       }

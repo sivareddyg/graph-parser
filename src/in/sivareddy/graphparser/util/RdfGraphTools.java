@@ -410,6 +410,19 @@ public class RdfGraphTools {
     }
     return Pair.of(goldAnswers, predAnswersCleaned);
   }
+  
+  public static Set<String> getMidsFromResults(Map<String, LinkedHashSet<String>> results) {
+    String varKey = null;
+    for (String key : results.keySet()) {
+      if (!key.contains("name")) {
+        varKey = key;
+      }
+    }
+    if (varKey != null)
+      return results.get(varKey);
+    else
+      return new LinkedHashSet<>();
+  }
 
   /**
    * Useful in the case of questions with single variable
@@ -596,12 +609,12 @@ public class RdfGraphTools {
   public static void main(String[] args) {
     String url;
     if (args.length == 0) {
-      url = "jdbc:virtuoso://rockall:1111";
+      url = "jdbc:virtuoso://buck.inf.ed.ac.uk:1111";
     } else {
       url = args[0];
     }
 
-    String httpUrl = "http://rockall:8890/sparql";
+    String httpUrl = "http://buck.inf.ed.ac.uk:8890/sparql";
 
     String query =
         "PREFIX fb: <http://rdf.freebase.com/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?rel1 ?rel2 from <http://rdf.freebase.com> WHERE { fb:m.017nt ?rel1 ?m . ?m fb:type.object.type ?z . ?z fb:freebase.type_hints.mediator true . ?m ?rel2 fb:m.04sv4 . }";
