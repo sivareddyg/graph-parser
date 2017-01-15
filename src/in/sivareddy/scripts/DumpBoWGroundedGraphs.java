@@ -116,6 +116,8 @@ public class DumpBoWGroundedGraphs extends ProcessStreamInterface {
 
     sentence.add("answer",
         jsonParser.parse(gson.toJson(cleanedResults.getLeft())));
+    sentence.add("answerEntities",
+        jsonParser.parse(gson.toJson(cleanedResults.getRight())));
 
     if (sentence.has(SentenceKeys.FOREST)) {
       for (JsonElement sentElm : sentence.get(SentenceKeys.FOREST)
