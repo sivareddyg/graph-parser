@@ -410,8 +410,7 @@ public class GroundedGraphs {
     // multiple question nodes, and retain only the one that appear first.
     graphs.forEach(g -> g.removeMultipleQuestionNodes());
 
-    if ((useExpand || useHyperExpand) && (key.equals(SentenceKeys.CCG_PARSES)
-        || key.equals(SentenceKeys.DEPENDENCY_LAMBDA))) {
+    if (useExpand || useHyperExpand) {
       // Expand the graph with new edges.
       for (LexicalGraph graph : graphs) {
         if (useHyperExpand) {
