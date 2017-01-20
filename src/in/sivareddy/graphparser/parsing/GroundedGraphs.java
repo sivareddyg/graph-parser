@@ -332,7 +332,7 @@ public class GroundedGraphs {
             ccgParses = questionCcgParser.parseFromString(synParse);
         } catch (FunnyCombinatorException | BadParseException
             | TooManyParsesException e) {
-          // bad parse
+          logger.debug(String.format("Could not parse: %s", synParse));
           continue;
         }
 

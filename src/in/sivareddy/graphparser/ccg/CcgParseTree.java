@@ -122,16 +122,20 @@ public class CcgParseTree {
       throws FunnyCombinatorException, BadParseException,
       TooManyParsesException {
     // System.err.println(treeString);
-    List<CcgParseTree> nodes = parseFromStringHidden(treeString);
-    for (CcgParseTree node : nodes) {
-      node.leaves = node.getLeafNodes();
-      int wordPosition = 0;
-      for (LexicalItem leaf : node.leaves) {
-        leaf.wordPosition = wordPosition;
-        wordPosition += 1;
+    try {
+      List<CcgParseTree> nodes = parseFromStringHidden(treeString);
+      for (CcgParseTree node : nodes) {
+        node.leaves = node.getLeafNodes();
+        int wordPosition = 0;
+        for (LexicalItem leaf : node.leaves) {
+          leaf.wordPosition = wordPosition;
+          wordPosition += 1;
+        }
       }
+      return nodes;
+    } catch (Exception e) {
+      throw new BadParseException(treeString);
     }
-    return nodes;
   }
 
   private List<CcgParseTree> parseFromStringHidden(String treeString)
