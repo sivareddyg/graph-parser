@@ -1,5 +1,6 @@
 # Reference
 
+http://sivareddy.in/papers/bisk2016evaluating.pdf
 ```
 @inproceedings{bisk2016evaluating,
     author = {Bisk, Yonatan and Reddy, Siva and Blitzer, John and Hockenmaier, Julia and Steedman, Mark},
@@ -8,6 +9,5 @@
     month={November},
     address={Austin, TX},
     year = {2016},
-    url = {http://sivareddy.in/papers/bisk2016evaluating.pdf}
 }
 ```
