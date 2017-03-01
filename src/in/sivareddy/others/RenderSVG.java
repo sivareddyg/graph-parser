@@ -38,7 +38,9 @@ public class RenderSVG {
   private String drawSVGTree(List<JsonObject> words) throws IOException {
     NLPInstance instance = new NLPInstance();
     instance.addToken().addProperty(SentenceKeys.WORD_KEY, "[root]")
-        .addProperty(SentenceKeys.INDEX_KEY, "0");
+        .addProperty(SentenceKeys.POS_KEY, "pos")
+        .addProperty(SentenceKeys.NER_KEY, "ner")
+        .addProperty(SentenceKeys.INDEX_KEY, "i-1");
 
     int sentStart = 1;
     if (words.size() > 0 && words.get(0).has(SentenceKeys.INDEX_KEY))
@@ -61,7 +63,8 @@ public class RenderSVG {
 
       if (word.has(SentenceKeys.INDEX_KEY)) {
         token.addProperty(SentenceKeys.INDEX_KEY,
-            word.get(SentenceKeys.INDEX_KEY).getAsString());
+            new Integer(word.get(SentenceKeys.INDEX_KEY).getAsInt() - 1)
+                .toString());
       }
     }
 
