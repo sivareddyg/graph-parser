@@ -122,6 +122,8 @@ public class DumpBoWGroundedGraphs extends ProcessStreamInterface {
           .getAsJsonArray()) {
         processIndividualSentence(sentElm.getAsJsonObject());
       }
+    } else {
+      processIndividualSentence(sentence);
     }
 
     if (sentence.has("goldRelations"))

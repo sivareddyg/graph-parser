@@ -22,6 +22,15 @@ dump_gq_bow_graphs_%:
 		< ../udeplambda/data/GraphQuestions/en/en-bilty-bist-graphquestions.$*.deplambda.forest.json \
 		> working/gq.bow.graphs.$*.json
 
+dump_spades_bow_graphs_%:
+	zcat data/spades/$*.json.gz \
+		| java -cp bin:lib/* in.sivareddy.scripts.DumpBoWGroundedGraphs \
+		data/freebase/schema/business_film_people_schema.txt \
+		buck \
+		20 \
+		| gzip \
+		> working/spades.bow.graphs.$*.json.gz
+
 spades_predicates_%:
 	zcat data/distant_eval/parses/$*/dev.json.blank.cleaned.gz \
 		| java -cp bin:lib/* in.sivareddy.graphparser.cli.RunDumpPredicatesCli  \
